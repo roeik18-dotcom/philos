@@ -92,8 +92,8 @@ export async function createRequest(formData) {
   return data;
 }
 
-// Update request status
-export async function updateRequestStatus(requestId, status) {
+// Update request status with optional condition check
+export async function updateRequestStatus(requestId, status, requireCurrentStatus = null) {
   const updates = { status };
   const now = new Date().toISOString();
   
@@ -105,18 +105,30 @@ export async function updateRequestStatus(requestId, status) {
     updates.completed_at = now;
   }
 
-  const { data, error } = await supabase
+  // Build query
+  let query = supabase
     .from('requests')
     .update(updates)
-    .eq('id', requestId)
-    .select()
-    .single();
+    .eq('id', requestId);
+  
+  // Add conditional check if required (for preventing race conditions)
+  if (requireCurrentStatus) {
+    query = query.eq('status', requireCurrentStatus);
+  }
+  
+  const { data, error, count } = await query.select();
 
   if (error) {
     console.error('Error updating request status:', error);
     throw error;
   }
-  return data;
+  
+  // Check if any rows were updated
+  if (!data || data.length === 0) {
+    return { success: false, data: null };
+  }
+  
+  return { success: true, data: data[0] };
 }
 
 // Check if device has active request for a person
