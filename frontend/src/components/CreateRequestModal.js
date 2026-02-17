@@ -61,7 +61,8 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-[100] flex items-end md:items-center justify-center"
+      className="fixed inset-0 bg-foreground/20 backdrop-blur-sm flex items-end md:items-center justify-center"
+      style={{ zIndex: 10000 }}
       onClick={onClose}
       data-testid="create-request-modal"
     >
