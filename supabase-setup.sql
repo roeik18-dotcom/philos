@@ -27,17 +27,24 @@ create index if not exists requests_created_idx on public.requests(created_at de
 -- Enable Row Level Security
 alter table public.requests enable row level security;
 
--- Policy: Anyone can read all requests
-create policy "Anyone can read requests"
-  on public.requests for select
-  using (true);
+-- כולם יכולים לקרוא בקשות (כדי לראות "ממתינה")
+create policy "public read requests"
+on public.requests
+for select
+to anon
+using (true);
 
--- Policy: Anyone can insert requests (v1 - no auth)
-create policy "Anyone can create requests"
-  on public.requests for insert
-  with check (true);
+-- כולם יכולים ליצור בקשה
+create policy "public insert requests"
+on public.requests
+for insert
+to anon
+with check (true);
 
--- Policy: Anyone can update requests (v1 - no auth)
-create policy "Anyone can update requests"
-  on public.requests for update
-  using (true);
+-- כולם יכולים לעדכן סטטוס (v1 פיילוט). נשדרג אחר כך.
+create policy "public update requests"
+on public.requests
+for update
+to anon
+using (true)
+with check (true);
