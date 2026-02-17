@@ -72,13 +72,24 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
 
   const handleStartTimer = async () => {
     try {
-      // Update status to 'in_progress' when timer starts
+      // Update status to 'in_progress' - only if currently 'accepted'
       if (currentRequest && currentRequest.id) {
-        await updateRequestStatus(currentRequest.id, 'in_progress');
+        const result = await updateRequestStatus(currentRequest.id, 'in_progress', 'accepted');
+        
+        if (!result.success) {
+          // Status is not 'accepted' - cannot start timer
+          alert('אי אפשר להתחיל — הבקשה לא התקבלה');
+          // Return to home
+          handleNewRequest();
+          return;
+        }
+        
         console.log('Request in progress:', currentRequest.id);
       }
     } catch (error) {
       console.error('Error updating to in_progress:', error);
+      alert('שגיאה בהתחלת הטיימר. נסה שוב.');
+      handleNewRequest();
     }
   };
 
