@@ -1,6 +1,6 @@
 import { format, parseISO, startOfDay, isSameDay } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { Heart, Circle, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { Heart, Circle, Clock, Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
 
 export default function HistoryPage({ history }) {
   const groupedByDate = history.reduce((acc, request) => {
@@ -16,6 +16,20 @@ export default function HistoryPage({ history }) {
   const sortedDates = Object.keys(groupedByDate).sort((a, b) => 
     new Date(b) - new Date(a)
   );
+
+  // Helper function to check if this is a repeat request
+  const isRepeatRequest = (currentRequest, currentDate) => {
+    const completedHistory = history.filter(r => r.status === 'completed');
+    const currentRequestDate = parseISO(currentDate);
+    
+    // Find if the same person was helped before this date
+    const previousHelps = completedHistory.filter(r => {
+      const rDate = parseISO(r.completedAt || r.startedAt);
+      return r.name === currentRequest.name && rDate < currentRequestDate;
+    });
+    
+    return previousHelps.length > 0;
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -74,21 +88,37 @@ export default function HistoryPage({ history }) {
               </div>
 
               <div className="flex flex-col gap-2">
-                {requests.map((request, idx) => (
-                  <div 
-                    key={`${request.id}-${idx}`}
-                    className="flex items-center justify-between p-3 rounded-2xl bg-background/30"
-                  >
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(request.status)}
-                      <div className="flex flex-col">
-                        <span className="text-base text-foreground">{request.name} - {request.need}</span>
-                        <span className="text-sm text-muted-foreground">{request.minutes} דקות</span>
+                {requests.map((request, idx) => {
+                  const isRepeat = request.status === 'completed' && isRepeatRequest(request, dateKey);
+                  
+                  return (
+                    <div 
+                      key={`${request.id}-${idx}`}
+                      className="flex items-center justify-between p-3 rounded-2xl bg-background/30"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        {getStatusIcon(request.status)}
+                        <div className="flex flex-col flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-base text-foreground">{request.name} - {request.need}</span>
+                            {isRepeat && (
+                              <span 
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                                style={{ backgroundColor: '#A7C4BC20', color: '#2C4A40' }}
+                                data-testid="repeat-badge"
+                              >
+                                <RefreshCw className="w-3 h-3" />
+                                בקשה חוזרת
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-sm text-muted-foreground">{request.minutes} דקות</span>
+                        </div>
                       </div>
+                      <span className="text-sm text-muted-foreground mr-2">{getStatusLabel(request.status)}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground">{getStatusLabel(request.status)}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );
