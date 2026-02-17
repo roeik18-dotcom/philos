@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import CategoryCard from '../components/CategoryCard';
 import RequestCard from '../components/RequestCard';
 import Timer from '../components/Timer';
 import DailySummary from '../components/DailySummary';
 import CreateRequestModal from '../components/CreateRequestModal';
-import { getRandomRequestByCategory } from '../data/requests';
-import { fetchWaitingRequests, updateRequestStatus, createRequest, hasActiveRequest } from '../lib/supabase';
+import { fetchWaitingRequest, updateRequestStatus, createRequest, hasActiveRequest } from '../lib/supabase';
 import { ChevronRight, HandHeart, Loader2 } from 'lucide-react';
 
 export default function HomePage({ todayRequests, onSaveRequest }) {
@@ -19,22 +18,11 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
   const handleCategorySelect = async (category) => {
     setLoading(true);
     try {
-      // Fetch waiting requests from Supabase
-      const supabaseRequests = await fetchWaitingRequests(category);
+      // Fetch ONE waiting request from Supabase
+      const request = await fetchWaitingRequest(category);
       
-      // Combine with preset requests
-      const allRequests = [...supabaseRequests];
-      const presetRequest = getRandomRequestByCategory(category);
-      if (presetRequest) {
-        allRequests.push(presetRequest);
-      }
-      
-      const request = allRequests.length > 0
-        ? allRequests[Math.floor(Math.random() * allRequests.length)]
-        : presetRequest;
-      
-      // Transform Supabase request to match our format
-      if (request && request.description) {
+      if (request) {
+        // Transform to match our UI format
         request.need = request.description;
         request.isSupabaseRequest = true;
       }
@@ -44,7 +32,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       setTimerActive(false);
       setShowSummary(false);
     } catch (error) {
-      console.error('Error fetching requests:', error);
+      console.error('Error fetching request:', error);
       alert('שגיאה בטעינת בקשות. נסה שוב.');
     } finally {
       setLoading(false);
@@ -53,12 +41,15 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
 
   const handleAcceptRequest = async () => {
     try {
-      // Update Supabase request status to 'accepted'
-      if (currentRequest.isSupabaseRequest) {
+      // Update status to 'accepted'
+      if (currentRequest && currentRequest.id) {
         await updateRequestStatus(currentRequest.id, 'accepted');
+        console.log('Request accepted:', currentRequest.id);
       }
       
       setTimerActive(true);
+      
+      // Save to local history for stats
       onSaveRequest({
         ...currentRequest,
         status: 'partial',
@@ -66,14 +57,16 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       });
     } catch (error) {
       console.error('Error accepting request:', error);
+      alert('שגיאה בקבלת הבקשה. נסה שוב.');
     }
   };
 
   const handleStartTimer = async () => {
     try {
-      // Update request status to 'in_progress' when timer actually starts
-      if (currentRequest.isSupabaseRequest) {
+      // Update status to 'in_progress' when timer starts
+      if (currentRequest && currentRequest.id) {
         await updateRequestStatus(currentRequest.id, 'in_progress');
+        console.log('Request in progress:', currentRequest.id);
       }
     } catch (error) {
       console.error('Error updating to in_progress:', error);
@@ -82,16 +75,18 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
 
   const handleFinishRequest = async () => {
     try {
+      // Update status to 'completed'
+      if (currentRequest && currentRequest.id) {
+        await updateRequestStatus(currentRequest.id, 'completed');
+        console.log('Request completed:', currentRequest.id);
+      }
+      
+      // Save to local history for stats
       onSaveRequest({
         ...currentRequest,
         status: 'completed',
         completedAt: new Date().toISOString(),
       });
-      
-      // Update request status to 'completed'
-      if (currentRequest.isSupabaseRequest) {
-        await updateRequestStatus(currentRequest.id, 'completed');
-      }
       
       setTimerActive(false);
       setShowSummary(true);
@@ -126,7 +121,8 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       }
 
       // Create request in Supabase
-      await createRequest(formData);
+      const newRequest = await createRequest(formData);
+      console.log('Request created:', newRequest.id);
       alert('הבקשה נשלחה בהצלחה! מישהו בקהילה יעזור לך בקרוב.');
     } catch (error) {
       console.error('Error creating request:', error);
@@ -189,8 +185,9 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
           {currentRequest ? (
             <RequestCard request={currentRequest} onAccept={handleAcceptRequest} />
           ) : (
-            <div className="text-center p-8 text-muted-foreground">
-              אין בקשות זמינות בתחום זה
+            <div className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-[2rem] p-8 text-center">
+              <p className="text-lg text-muted-foreground mb-2">אין בקשות זמינות בתחום זה</p>
+              <p className="text-sm text-muted-foreground/70">נסה תחום אחר או חזור מאוחר יותר</p>
             </div>
           )}
         </>

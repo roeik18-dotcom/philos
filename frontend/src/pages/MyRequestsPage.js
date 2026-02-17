@@ -1,32 +1,48 @@
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle2, UserCheck, AlertCircle, Loader2 } from 'lucide-react';
-import { fetchMyRequests } from '../lib/supabase';
+import { Clock, CheckCircle2, UserCheck, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
+import { fetchMyRequests, getDeviceId } from '../lib/supabase';
 
 export default function MyRequestsPage() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadMyRequests();
     
-    // Refresh every 10 seconds to see status updates
-    const interval = setInterval(loadMyRequests, 10000);
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(() => {
+      loadMyRequests(true);
+    }, 10000);
+    
     return () => clearInterval(interval);
   }, []);
 
-  const loadMyRequests = async () => {
+  const loadMyRequests = async (isAutoRefresh = false) => {
+    if (!isAutoRefresh) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+    
     try {
+      const deviceId = getDeviceId();
+      console.log('Loading requests for device:', deviceId);
+      
       const data = await fetchMyRequests();
-      // Transform to match our format
+      
+      // Transform to match our UI format
       const transformed = data.map(req => ({
         ...req,
         need: req.description,
       }));
+      
       setRequests(transformed);
     } catch (error) {
       console.error('Error loading requests:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -86,7 +102,7 @@ export default function MyRequestsPage() {
     );
   }
 
-  // Sort: waiting first, then in_progress, accepted, completed
+  // Sort: waiting first, then accepted, in_progress, completed
   const sortedRequests = [...requests].sort((a, b) => {
     const statusOrder = { waiting: 0, accepted: 1, in_progress: 2, completed: 3 };
     return statusOrder[a.status || 'waiting'] - statusOrder[b.status || 'waiting'];
@@ -109,10 +125,12 @@ export default function MyRequestsPage() {
           הבקשות שלי
         </h1>
         <button
-          onClick={loadMyRequests}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => loadMyRequests()}
+          disabled={refreshing}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
         >
-          רענן
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <span>רענן</span>
         </button>
       </div>
 
