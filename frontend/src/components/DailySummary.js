@@ -1,9 +1,9 @@
-import { CheckCircle2, Circle, Clock } from 'lucide-react';
+import { Heart, Circle, Clock } from 'lucide-react';
 
-export default function DailySummary({ todayTasks, onNewTask }) {
-  const completed = todayTasks.filter(t => t.status === 'completed').length;
-  const partial = todayTasks.filter(t => t.status === 'partial').length;
-  const notCompleted = todayTasks.filter(t => t.status === 'not_completed').length;
+export default function DailySummary({ todayRequests, onNewRequest }) {
+  const helped = todayRequests.filter(t => t.status === 'completed').length;
+  const started = todayRequests.filter(t => t.status === 'partial').length;
+  const notHelped = todayRequests.filter(t => t.status === 'not_completed').length;
 
   return (
     <div 
@@ -15,35 +15,35 @@ export default function DailySummary({ todayTasks, onNewTask }) {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between p-4 rounded-2xl bg-background/50">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-6 h-6 text-[#A7C4BC]" />
-            <span className="text-lg">הושלמו</span>
+            <Heart className="w-6 h-6 text-[#A7C4BC]" />
+            <span className="text-lg">עזרתי</span>
           </div>
-          <span className="text-2xl font-bold text-foreground">{completed}</span>
+          <span className="text-2xl font-bold text-foreground">{helped}</span>
         </div>
 
         <div className="flex items-center justify-between p-4 rounded-2xl bg-background/50">
           <div className="flex items-center gap-3">
             <Clock className="w-6 h-6 text-[#E6CBA5]" />
-            <span className="text-lg">חלקיות</span>
+            <span className="text-lg">התחלתי</span>
           </div>
-          <span className="text-2xl font-bold text-foreground">{partial}</span>
+          <span className="text-2xl font-bold text-foreground">{started}</span>
         </div>
 
         <div className="flex items-center justify-between p-4 rounded-2xl bg-background/50">
           <div className="flex items-center gap-3">
             <Circle className="w-6 h-6 text-muted-foreground" />
-            <span className="text-lg">לא הושלמו</span>
+            <span className="text-lg">לא עזרתי</span>
           </div>
-          <span className="text-2xl font-bold text-foreground">{notCompleted}</span>
+          <span className="text-2xl font-bold text-foreground">{notHelped}</span>
         </div>
       </div>
 
       <button
-        data-testid="new-task-button"
-        onClick={onNewTask}
+        data-testid="new-request-button"
+        onClick={onNewRequest}
         className="mt-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 shadow-md hover:shadow-lg transition-all active:scale-95 text-lg font-medium tracking-wide"
       >
-        משימה חדשה
+        בקשה נוספת
       </button>
     </div>
   );

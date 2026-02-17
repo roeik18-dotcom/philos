@@ -1,37 +1,37 @@
 import { useState } from 'react';
 import CategoryCard from '../components/CategoryCard';
-import TaskCard from '../components/TaskCard';
+import RequestCard from '../components/RequestCard';
 import Timer from '../components/Timer';
 import DailySummary from '../components/DailySummary';
-import { getRandomTaskByCategory } from '../data/tasks';
+import { getRandomRequestByCategory } from '../data/requests';
 import { ChevronRight } from 'lucide-react';
 
-export default function HomePage({ todayTasks, onSaveTask }) {
+export default function HomePage({ todayRequests, onSaveRequest }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [currentTask, setCurrentTask] = useState(null);
+  const [currentRequest, setCurrentRequest] = useState(null);
   const [timerActive, setTimerActive] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
   const handleCategorySelect = (category) => {
-    const task = getRandomTaskByCategory(category);
+    const request = getRandomRequestByCategory(category);
     setSelectedCategory(category);
-    setCurrentTask(task);
+    setCurrentRequest(request);
     setTimerActive(false);
     setShowSummary(false);
   };
 
-  const handleStartTask = () => {
+  const handleAcceptRequest = () => {
     setTimerActive(true);
-    onSaveTask({
-      ...currentTask,
+    onSaveRequest({
+      ...currentRequest,
       status: 'partial',
       startedAt: new Date().toISOString(),
     });
   };
 
-  const handleFinishTask = () => {
-    onSaveTask({
-      ...currentTask,
+  const handleFinishRequest = () => {
+    onSaveRequest({
+      ...currentRequest,
       status: 'completed',
       completedAt: new Date().toISOString(),
     });
@@ -39,19 +39,19 @@ export default function HomePage({ todayTasks, onSaveTask }) {
     setShowSummary(true);
   };
 
-  const handleNewTask = () => {
+  const handleNewRequest = () => {
     setSelectedCategory(null);
-    setCurrentTask(null);
+    setCurrentRequest(null);
     setTimerActive(false);
     setShowSummary(false);
   };
 
   const handleBack = () => {
     if (timerActive) {
-      const confirmed = window.confirm('האם אתה בטוח? התקדמותך תישמר כחלקית');
+      const confirmed = window.confirm('האם אתה בטוח? ההתקדמות תישמר כהתחלתי');
       if (!confirmed) return;
     }
-    handleNewTask();
+    handleNewRequest();
   };
 
   return (
@@ -60,10 +60,10 @@ export default function HomePage({ todayTasks, onSaveTask }) {
         <>
           <div className="text-center mb-6">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-none text-foreground mb-3">
-              המקלט היומי
+              עזרה לקהילה
             </h1>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-              בחר תחום לתרגול היום
+              בחר תחום לעזרה היום
             </p>
           </div>
           
@@ -85,9 +85,9 @@ export default function HomePage({ todayTasks, onSaveTask }) {
             >
               <ChevronRight className="w-6 h-6" />
             </button>
-            <h2 className="text-2xl font-semibold text-foreground">המשימה שלך</h2>
+            <h2 className="text-2xl font-semibold text-foreground">בקשת עזרה</h2>
           </div>
-          <TaskCard task={currentTask} onStart={handleStartTask} />
+          <RequestCard request={currentRequest} onAccept={handleAcceptRequest} />
         </>
       )}
 
@@ -101,14 +101,14 @@ export default function HomePage({ todayTasks, onSaveTask }) {
             >
               <ChevronRight className="w-6 h-6" />
             </button>
-            <h2 className="text-2xl font-semibold text-foreground">תרגול פעיל</h2>
+            <h2 className="text-2xl font-semibold text-foreground">עוזר עכשיו</h2>
           </div>
-          <Timer task={currentTask} onFinish={handleFinishTask} />
+          <Timer request={currentRequest} onFinish={handleFinishRequest} />
         </>
       )}
 
       {showSummary && (
-        <DailySummary todayTasks={todayTasks} onNewTask={handleNewTask} />
+        <DailySummary todayRequests={todayRequests} onNewRequest={handleNewRequest} />
       )}
     </div>
   );

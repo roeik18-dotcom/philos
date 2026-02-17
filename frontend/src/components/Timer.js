@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Check, Clock } from 'lucide-react';
 
-export default function Timer({ task, onFinish }) {
-  const [secondsLeft, setSecondsLeft] = useState(task.minutes * 60);
+export default function Timer({ request, onFinish }) {
+  const [secondsLeft, setSecondsLeft] = useState(request.minutes * 60);
   const [isRunning, setIsRunning] = useState(true);
   const intervalRef = useRef(null);
   const hasShownAlertRef = useRef(false);
@@ -35,7 +35,7 @@ export default function Timer({ task, onFinish }) {
 
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
-  const progress = ((task.minutes * 60 - secondsLeft) / (task.minutes * 60)) * 100;
+  const progress = ((request.minutes * 60 - secondsLeft) / (request.minutes * 60)) * 100;
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -46,16 +46,19 @@ export default function Timer({ task, onFinish }) {
     return colors[category] || colors.body;
   };
 
-  const colors = getCategoryColor(task.category);
+  const colors = getCategoryColor(request.category);
 
   return (
     <div 
       data-testid="timer-active"
       className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-[2rem] p-8 flex flex-col items-center gap-6"
     >
-      <h3 className="text-xl font-medium text-foreground text-center leading-relaxed">
-        {task.title}
-      </h3>
+      <div className="text-center">
+        <h3 className="text-xl font-medium text-foreground mb-2">
+          עוזר ל{request.name}
+        </h3>
+        <p className="text-base text-muted-foreground">{request.need}</p>
+      </div>
 
       <div className="relative w-48 h-48 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full transform -rotate-90">

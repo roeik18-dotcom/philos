@@ -1,15 +1,15 @@
 import { format, parseISO, startOfDay, isSameDay } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { CheckCircle2, Circle, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { Heart, Circle, Clock, Calendar as CalendarIcon } from 'lucide-react';
 
 export default function HistoryPage({ history }) {
-  const groupedByDate = history.reduce((acc, task) => {
-    const date = startOfDay(parseISO(task.completedAt || task.startedAt));
+  const groupedByDate = history.reduce((acc, request) => {
+    const date = startOfDay(parseISO(request.completedAt || request.startedAt));
     const dateKey = date.toISOString();
     if (!acc[dateKey]) {
       acc[dateKey] = [];
     }
-    acc[dateKey].push(task);
+    acc[dateKey].push(request);
     return acc;
   }, {});
 
@@ -20,7 +20,7 @@ export default function HistoryPage({ history }) {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="w-5 h-5 text-[#A7C4BC]" />;
+        return <Heart className="w-5 h-5 text-[#A7C4BC]" />;
       case 'partial':
         return <Clock className="w-5 h-5 text-[#E6CBA5]" />;
       default:
@@ -31,11 +31,11 @@ export default function HistoryPage({ history }) {
   const getStatusLabel = (status) => {
     switch (status) {
       case 'completed':
-        return 'הושלם';
+        return 'עזרתי';
       case 'partial':
-        return 'חלקי';
+        return 'התחלתי';
       default:
-        return 'לא הושלם';
+        return 'לא עזרתי';
     }
   };
 
@@ -44,7 +44,7 @@ export default function HistoryPage({ history }) {
       <div className="flex-1 px-6 py-8 pb-24 flex flex-col items-center justify-center gap-4">
         <CalendarIcon className="w-16 h-16 text-muted-foreground" />
         <p className="text-lg text-muted-foreground text-center">אין היסטוריה עדיין</p>
-        <p className="text-base text-muted-foreground/70 text-center">התחל משימה ראשונה כדי לראות את ההתקדמות שלך</p>
+        <p className="text-base text-muted-foreground/70 text-center">קבל בקשת עזרה ראשונה כדי לראות את ההיסטוריה שלך</p>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function HistoryPage({ history }) {
       <div className="flex flex-col gap-4">
         {sortedDates.map(dateKey => {
           const date = parseISO(dateKey);
-          const tasks = groupedByDate[dateKey];
+          const requests = groupedByDate[dateKey];
           const isToday = isSameDay(date, new Date());
 
           return (
@@ -74,19 +74,19 @@ export default function HistoryPage({ history }) {
               </div>
 
               <div className="flex flex-col gap-2">
-                {tasks.map((task, idx) => (
+                {requests.map((request, idx) => (
                   <div 
-                    key={`${task.id}-${idx}`}
+                    key={`${request.id}-${idx}`}
                     className="flex items-center justify-between p-3 rounded-2xl bg-background/30"
                   >
                     <div className="flex items-center gap-3">
-                      {getStatusIcon(task.status)}
+                      {getStatusIcon(request.status)}
                       <div className="flex flex-col">
-                        <span className="text-base text-foreground">{task.title}</span>
-                        <span className="text-sm text-muted-foreground">{task.minutes} דקות</span>
+                        <span className="text-base text-foreground">{request.name} - {request.need}</span>
+                        <span className="text-sm text-muted-foreground">{request.minutes} דקות</span>
                       </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">{getStatusLabel(task.status)}</span>
+                    <span className="text-sm text-muted-foreground">{getStatusLabel(request.status)}</span>
                   </div>
                 ))}
               </div>

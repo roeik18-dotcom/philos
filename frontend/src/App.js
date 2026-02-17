@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
@@ -8,32 +8,32 @@ import './App.css';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
-  const [history, setHistory] = useLocalStorage('task-history', []);
+  const [history, setHistory] = useLocalStorage('community-help-history', []);
 
-  const getTodayTasks = () => {
+  const getTodayRequests = () => {
     const today = new Date().toISOString().split('T')[0];
-    return history.filter(task => {
-      const taskDate = new Date(task.startedAt || task.completedAt).toISOString().split('T')[0];
-      return taskDate === today;
+    return history.filter(request => {
+      const requestDate = new Date(request.startedAt || request.completedAt).toISOString().split('T')[0];
+      return requestDate === today;
     });
   };
 
-  const handleSaveTask = (task) => {
+  const handleSaveRequest = (request) => {
     setHistory(prev => {
-      const existingTaskIndex = prev.findIndex(t => 
-        t.id === task.id && 
-        new Date(t.startedAt).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
+      const existingRequestIndex = prev.findIndex(r => 
+        r.id === request.id && 
+        new Date(r.startedAt).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
       );
 
-      if (existingTaskIndex >= 0) {
+      if (existingRequestIndex >= 0) {
         const updated = [...prev];
-        updated[existingTaskIndex] = {
-          ...updated[existingTaskIndex],
-          ...task,
+        updated[existingRequestIndex] = {
+          ...updated[existingRequestIndex],
+          ...request,
         };
         return updated;
       } else {
-        return [...prev, task];
+        return [...prev, request];
       }
     });
   };
@@ -42,8 +42,8 @@ function App() {
     <div className="max-w-md mx-auto min-h-screen flex flex-col relative overflow-hidden bg-background">
       {currentPage === 'home' && (
         <HomePage 
-          todayTasks={getTodayTasks()} 
-          onSaveTask={handleSaveTask}
+          todayRequests={getTodayRequests()} 
+          onSaveRequest={handleSaveRequest}
         />
       )}
       {currentPage === 'history' && <HistoryPage history={history} />}

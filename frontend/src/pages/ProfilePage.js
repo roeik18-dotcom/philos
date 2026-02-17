@@ -1,22 +1,21 @@
-import { Activity, Heart, Brain, TrendingUp, Target } from 'lucide-react';
+import { Activity, Heart, Brain, TrendingUp, Users } from 'lucide-react';
 
 export default function ProfilePage({ history }) {
-  const totalCompleted = history.filter(t => t.status === 'completed').length;
-  const totalPartial = history.filter(t => t.status === 'partial').length;
-  const totalStarted = totalCompleted + totalPartial;
+  const totalHelped = history.filter(t => t.status === 'completed').length;
+  const totalStarted = history.filter(t => t.status === 'partial').length;
   
-  const bodyTasks = history.filter(t => t.category === 'body' && t.status === 'completed').length;
-  const emotionTasks = history.filter(t => t.category === 'emotion' && t.status === 'completed').length;
-  const mindTasks = history.filter(t => t.category === 'mind' && t.status === 'completed').length;
+  const bodyHelped = history.filter(t => t.category === 'body' && t.status === 'completed').length;
+  const emotionHelped = history.filter(t => t.category === 'emotion' && t.status === 'completed').length;
+  const mindHelped = history.filter(t => t.category === 'mind' && t.status === 'completed').length;
   
   const totalMinutes = history
     .filter(t => t.status === 'completed')
     .reduce((sum, t) => sum + t.minutes, 0);
 
   const categoryStats = [
-    { label: 'גוף', count: bodyTasks, icon: Activity, color: '#A7C4BC' },
-    { label: 'רגש', count: emotionTasks, icon: Heart, color: '#D4A5A5' },
-    { label: 'מחשבה', count: mindTasks, icon: Brain, color: '#A0C1D1' },
+    { label: 'גוף', count: bodyHelped, icon: Activity, color: '#A7C4BC' },
+    { label: 'רגש', count: emotionHelped, icon: Heart, color: '#D4A5A5' },
+    { label: 'מחשבה', count: mindHelped, icon: Brain, color: '#A0C1D1' },
   ];
 
   return (
@@ -27,20 +26,20 @@ export default function ProfilePage({ history }) {
 
       <div className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-3xl p-6 flex flex-col items-center gap-4">
         <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-          <Target className="w-10 h-10 text-primary" />
+          <Users className="w-10 h-10 text-primary" />
         </div>
         <h2 className="text-2xl font-semibold text-foreground">הסטטיסטיקות שלי</h2>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-sm rounded-3xl p-6 flex flex-col items-center gap-2">
-          <span className="text-4xl font-bold text-foreground">{totalCompleted}</span>
-          <span className="text-base text-muted-foreground text-center">משימות הושלמו</span>
+          <span className="text-4xl font-bold text-foreground">{totalHelped}</span>
+          <span className="text-base text-muted-foreground text-center">אנשים שעזרתי</span>
         </div>
 
         <div className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-sm rounded-3xl p-6 flex flex-col items-center gap-2">
           <span className="text-4xl font-bold text-foreground">{totalMinutes}</span>
-          <span className="text-base text-muted-foreground text-center">דקות תרגול</span>
+          <span className="text-base text-muted-foreground text-center">דקות תרומה</span>
         </div>
       </div>
 
