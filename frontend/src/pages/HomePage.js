@@ -41,9 +41,18 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
 
   const handleAcceptRequest = async () => {
     try {
-      // Update status to 'accepted'
+      // Update status to 'accepted' - only if currently 'waiting'
       if (currentRequest && currentRequest.id) {
-        await updateRequestStatus(currentRequest.id, 'accepted');
+        const result = await updateRequestStatus(currentRequest.id, 'accepted', 'waiting');
+        
+        if (!result.success) {
+          // Someone else already accepted it
+          alert('מישהו כבר קיבל את הבקשה');
+          // Go back to category selection
+          handleNewRequest();
+          return;
+        }
+        
         console.log('Request accepted:', currentRequest.id);
       }
       
