@@ -87,7 +87,13 @@ export default function HistoryPage({ history }) {
 
               <div className="flex flex-col gap-2">
                 {requests.map((request, idx) => {
-                  const isRepeat = request.status === 'completed' && isRepeatRequest(request, dateKey);
+                  // Get the global index in history for proper repeat detection
+                  const globalIndex = history.findIndex(h => 
+                    h.id === request.id && 
+                    h.startedAt === request.startedAt &&
+                    h.completedAt === request.completedAt
+                  );
+                  const isRepeat = request.status === 'completed' && isRepeatRequest(request, globalIndex);
                   
                   return (
                     <div 
