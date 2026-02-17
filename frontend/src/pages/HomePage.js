@@ -95,9 +95,17 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
 
   const handleFinishRequest = async () => {
     try {
-      // Update status to 'completed'
+      // Update status to 'completed' - only if currently 'in_progress'
       if (currentRequest && currentRequest.id) {
-        await updateRequestStatus(currentRequest.id, 'completed');
+        const result = await updateRequestStatus(currentRequest.id, 'completed', 'in_progress');
+        
+        if (!result.success) {
+          // Status is not 'in_progress' - something went wrong
+          alert('שגיאה בסיום הבקשה. הבקשה לא הייתה בתהליך.');
+          handleNewRequest();
+          return;
+        }
+        
         console.log('Request completed:', currentRequest.id);
       }
       
@@ -112,6 +120,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       setShowSummary(true);
     } catch (error) {
       console.error('Error completing request:', error);
+      alert('שגיאה בסיום הבקשה. נסה שוב.');
     }
   };
 
