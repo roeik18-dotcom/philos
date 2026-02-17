@@ -26,3 +26,8 @@
     text-wrap: balance;
   }
 }
+
+/* Fix for Emergent badge overlay issue */
+#emergent-badge {
+  pointer-events: none !important;
+}
