@@ -3,17 +3,36 @@ import CategoryCard from '../components/CategoryCard';
 import RequestCard from '../components/RequestCard';
 import Timer from '../components/Timer';
 import DailySummary from '../components/DailySummary';
+import CreateRequestModal from '../components/CreateRequestModal';
 import { getRandomRequestByCategory } from '../data/requests';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, HandHeart } from 'lucide-react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export default function HomePage({ todayRequests, onSaveRequest }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentRequest, setCurrentRequest] = useState(null);
   const [timerActive, setTimerActive] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [userRequests, setUserRequests] = useLocalStorage('user-submitted-requests', []);
 
   const handleCategorySelect = (category) => {
-    const request = getRandomRequestByCategory(category);
+    // Combine preset requests with user-submitted requests
+    const availableUserRequests = userRequests.filter(
+      req => req.category === category && !req.completed
+    );
+    
+    // Randomly choose between preset and user-submitted
+    const allRequests = [...availableUserRequests];
+    const presetRequest = getRandomRequestByCategory(category);
+    if (presetRequest) {
+      allRequests.push(presetRequest);
+    }
+    
+    const request = allRequests.length > 0
+      ? allRequests[Math.floor(Math.random() * allRequests.length)]
+      : presetRequest;
+    
     setSelectedCategory(category);
     setCurrentRequest(request);
     setTimerActive(false);
@@ -35,6 +54,18 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       status: 'completed',
       completedAt: new Date().toISOString(),
     });
+    
+    // Mark user-submitted request as completed
+    if (currentRequest.isUserSubmitted) {
+      setUserRequests(prev => 
+        prev.map(req => 
+          req.id === currentRequest.id 
+            ? { ...req, completed: true, completedBy: new Date().toISOString() }
+            : req
+        )
+      );
+    }
+    
     setTimerActive(false);
     setShowSummary(true);
   };
@@ -52,6 +83,29 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       if (!confirmed) return;
     }
     handleNewRequest();
+  };
+
+  const handleCreateRequest = (formData) => {
+    // Check if person already has an active request
+    const existingActiveRequest = userRequests.find(
+      req => req.name === formData.name && !req.completed
+    );
+    
+    if (existingActiveRequest) {
+      alert(`${formData.name} כבר יש בקשה פעילה. נא להמתין עד שמישהו יעזור לך.`);
+      return;
+    }
+
+    const newRequest = {
+      id: `user-${Date.now()}`,
+      ...formData,
+      isUserSubmitted: true,
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+
+    setUserRequests(prev => [...prev, newRequest]);
+    alert('הבקשה נשלחה בהצלחה! מישהו בקהילה יעזור לך בקרוב.');
   };
 
   return (
@@ -72,6 +126,16 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
             <CategoryCard category="emotion" onClick={() => handleCategorySelect('emotion')} />
             <CategoryCard category="mind" onClick={() => handleCategorySelect('mind')} />
           </div>
+
+          {/* Create Request Button */}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="mt-6 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 h-14 px-8 shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-3 text-lg font-medium tracking-wide border-2 border-border/50"
+            data-testid="open-create-request-button"
+          >
+            <HandHeart className="w-6 h-6" />
+            <span>צריך עזרה?</span>
+          </button>
         </>
       )}
 
@@ -110,6 +174,12 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       {showSummary && (
         <DailySummary todayRequests={todayRequests} onNewRequest={handleNewRequest} />
       )}
+
+      <CreateRequestModal 
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateRequest}
+      />
     </div>
   );
 }
