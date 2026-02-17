@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CategoryCard from '../components/CategoryCard';
 import RequestCard from '../components/RequestCard';
 import Timer from '../components/Timer';
 import DailySummary from '../components/DailySummary';
 import CreateRequestModal from '../components/CreateRequestModal';
 import { getRandomRequestByCategory } from '../data/requests';
-import { ChevronRight, HandHeart } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { fetchWaitingRequests, updateRequestStatus, createRequest, hasActiveRequest } from '../lib/supabase';
+import { ChevronRight, HandHeart, Loader2 } from 'lucide-react';
 
 export default function HomePage({ todayRequests, onSaveRequest }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -14,84 +14,90 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
   const [timerActive, setTimerActive] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [userRequests, setUserRequests] = useLocalStorage('user-submitted-requests', []);
+  const [loading, setLoading] = useState(false);
 
-  const handleCategorySelect = (category) => {
-    // Combine preset requests with user-submitted requests that are waiting
-    const availableUserRequests = userRequests.filter(
-      req => req.category === category && req.status === 'waiting'
-    );
-    
-    // Randomly choose between preset and user-submitted
-    const allRequests = [...availableUserRequests];
-    const presetRequest = getRandomRequestByCategory(category);
-    if (presetRequest) {
-      allRequests.push(presetRequest);
-    }
-    
-    const request = allRequests.length > 0
-      ? allRequests[Math.floor(Math.random() * allRequests.length)]
-      : presetRequest;
-    
-    setSelectedCategory(category);
-    setCurrentRequest(request);
-    setTimerActive(false);
-    setShowSummary(false);
-  };
-
-  const handleAcceptRequest = () => {
-    // Update request status to 'accepted'
-    if (currentRequest.isUserSubmitted) {
-      setUserRequests(prev => 
-        prev.map(req => 
-          req.id === currentRequest.id 
-            ? { ...req, status: 'accepted', acceptedAt: new Date().toISOString() }
-            : req
-        )
-      );
-    }
-    
-    setTimerActive(true);
-    onSaveRequest({
-      ...currentRequest,
-      status: 'partial',
-      startedAt: new Date().toISOString(),
-    });
-  };
-
-  const handleStartTimer = () => {
-    // Update request status to 'in_progress' when timer actually starts
-    if (currentRequest.isUserSubmitted) {
-      setUserRequests(prev => 
-        prev.map(req => 
-          req.id === currentRequest.id 
-            ? { ...req, status: 'in_progress', inProgressAt: new Date().toISOString() }
-            : req
-        )
-      );
+  const handleCategorySelect = async (category) => {
+    setLoading(true);
+    try {
+      // Fetch waiting requests from Supabase
+      const supabaseRequests = await fetchWaitingRequests(category);
+      
+      // Combine with preset requests
+      const allRequests = [...supabaseRequests];
+      const presetRequest = getRandomRequestByCategory(category);
+      if (presetRequest) {
+        allRequests.push(presetRequest);
+      }
+      
+      const request = allRequests.length > 0
+        ? allRequests[Math.floor(Math.random() * allRequests.length)]
+        : presetRequest;
+      
+      // Transform Supabase request to match our format
+      if (request && request.description) {
+        request.need = request.description;
+        request.isSupabaseRequest = true;
+      }
+      
+      setSelectedCategory(category);
+      setCurrentRequest(request);
+      setTimerActive(false);
+      setShowSummary(false);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      alert('שגיאה בטעינת בקשות. נסה שוב.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleFinishRequest = () => {
-    onSaveRequest({
-      ...currentRequest,
-      status: 'completed',
-      completedAt: new Date().toISOString(),
-    });
-    
-    // Update request status to 'completed'
-    if (currentRequest.isUserSubmitted) {
-      setUserRequests(prev => 
-        prev.map(req => 
-          req.id === currentRequest.id 
-            ? { ...req, status: 'completed', completedAt: new Date().toISOString() }
-            : req
-        )
-      );
+  const handleAcceptRequest = async () => {
+    try {
+      // Update Supabase request status to 'accepted'
+      if (currentRequest.isSupabaseRequest) {
+        await updateRequestStatus(currentRequest.id, 'accepted');
+      }
+      
+      setTimerActive(true);
+      onSaveRequest({
+        ...currentRequest,
+        status: 'partial',
+        startedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error accepting request:', error);
     }
-    
-    setTimerActive(false);
-    setShowSummary(true);
+  };
+
+  const handleStartTimer = async () => {
+    try {
+      // Update request status to 'in_progress' when timer actually starts
+      if (currentRequest.isSupabaseRequest) {
+        await updateRequestStatus(currentRequest.id, 'in_progress');
+      }
+    } catch (error) {
+      console.error('Error updating to in_progress:', error);
+    }
+  };
+
+  const handleFinishRequest = async () => {
+    try {
+      onSaveRequest({
+        ...currentRequest,
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+      });
+      
+      // Update request status to 'completed'
+      if (currentRequest.isSupabaseRequest) {
+        await updateRequestStatus(currentRequest.id, 'completed');
+      }
+      
+      setTimerActive(false);
+      setShowSummary(true);
+    } catch (error) {
+      console.error('Error completing request:', error);
+    }
   };
 
   const handleNewRequest = () => {
@@ -109,30 +115,25 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
     handleNewRequest();
   };
 
-  const handleCreateRequest = (formData) => {
-    // Check if person already has an active request (not completed)
-    const existingActiveRequest = userRequests.find(
-      req => req.name === formData.name && req.status !== 'completed'
-    );
-    
-    if (existingActiveRequest) {
-      alert(`${formData.name} כבר יש בקשה פעילה. נא להמתין עד שמישהו יעזור לך.`);
-      return;
+  const handleCreateRequest = async (formData) => {
+    try {
+      // Check if person already has an active request
+      const hasActive = await hasActiveRequest(formData.name);
+      
+      if (hasActive) {
+        alert(`${formData.name} כבר יש בקשה פעילה. נא להמתין עד שמישהו יעזור לך.`);
+        return;
+      }
+
+      // Create request in Supabase
+      await createRequest(formData);
+      alert('הבקשה נשלחה בהצלחה! מישהו בקהילה יעזור לך בקרוב.');
+    } catch (error) {
+      console.error('Error creating request:', error);
+      alert('שגיאה ביצירת הבקשה. נסה שוב.');
     }
-
-    const newRequest = {
-      id: `user-${Date.now()}`,
-      ...formData,
-      isUserSubmitted: true,
-      status: 'waiting',
-      createdAt: new Date().toISOString()
-    };
-
-    setUserRequests(prev => [...prev, newRequest]);
-    alert('הבקשה נשלחה בהצלחה! מישהו בקהילה יעזור לך בקרוב.');
   };
 
-  // Call handleStartTimer when timer component mounts
   const onTimerMount = () => {
     handleStartTimer();
   };
@@ -156,7 +157,6 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
             <CategoryCard category="mind" onClick={() => handleCategorySelect('mind')} />
           </div>
 
-          {/* Create Request Button */}
           <button
             onClick={() => setShowCreateModal(true)}
             className="mt-6 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 h-14 px-8 shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-3 text-lg font-medium tracking-wide border-2 border-border/50"
@@ -168,7 +168,13 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
         </>
       )}
 
-      {selectedCategory && !timerActive && !showSummary && (
+      {loading && (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </div>
+      )}
+
+      {!loading && selectedCategory && !timerActive && !showSummary && (
         <>
           <div className="flex items-center gap-4 mb-4">
             <button
@@ -180,7 +186,13 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
             </button>
             <h2 className="text-2xl font-semibold text-foreground">בקשת עזרה</h2>
           </div>
-          <RequestCard request={currentRequest} onAccept={handleAcceptRequest} />
+          {currentRequest ? (
+            <RequestCard request={currentRequest} onAccept={handleAcceptRequest} />
+          ) : (
+            <div className="text-center p-8 text-muted-foreground">
+              אין בקשות זמינות בתחום זה
+            </div>
+          )}
         </>
       )}
 

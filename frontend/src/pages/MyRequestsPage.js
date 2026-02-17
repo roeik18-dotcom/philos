@@ -1,6 +1,35 @@
-import { Clock, CheckCircle2, UserCheck, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Clock, CheckCircle2, UserCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { fetchMyRequests } from '../lib/supabase';
 
-export default function MyRequestsPage({ userRequests }) {
+export default function MyRequestsPage() {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadMyRequests();
+    
+    // Refresh every 10 seconds to see status updates
+    const interval = setInterval(loadMyRequests, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadMyRequests = async () => {
+    try {
+      const data = await fetchMyRequests();
+      // Transform to match our format
+      const transformed = data.map(req => ({
+        ...req,
+        need: req.description,
+      }));
+      setRequests(transformed);
+    } catch (error) {
+      console.error('Error loading requests:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'completed':
@@ -49,13 +78,21 @@ export default function MyRequestsPage({ userRequests }) {
     return labels[category] || category;
   };
 
+  if (loading) {
+    return (
+      <div className="flex-1 px-6 py-8 pb-24 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
   // Sort: waiting first, then in_progress, accepted, completed
-  const sortedRequests = [...userRequests].sort((a, b) => {
+  const sortedRequests = [...requests].sort((a, b) => {
     const statusOrder = { waiting: 0, accepted: 1, in_progress: 2, completed: 3 };
     return statusOrder[a.status || 'waiting'] - statusOrder[b.status || 'waiting'];
   });
 
-  if (userRequests.length === 0) {
+  if (requests.length === 0) {
     return (
       <div className="flex-1 px-6 py-8 pb-24 flex flex-col items-center justify-center gap-4">
         <AlertCircle className="w-16 h-16 text-muted-foreground" />
@@ -67,9 +104,17 @@ export default function MyRequestsPage({ userRequests }) {
 
   return (
     <div data-testid="my-requests-page" className="flex-1 px-6 py-8 pb-24 flex flex-col gap-6">
-      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-        הבקשות שלי
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+          הבקשות שלי
+        </h1>
+        <button
+          onClick={loadMyRequests}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          רענן
+        </button>
+      </div>
 
       <div className="flex flex-col gap-3">
         {sortedRequests.map((request) => (
