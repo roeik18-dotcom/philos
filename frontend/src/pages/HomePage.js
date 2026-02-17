@@ -152,7 +152,14 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       // Create request in Supabase
       const newRequest = await createRequest(formData);
       console.log('Request created:', newRequest.id);
-      alert('הבקשה נשלחה בהצלחה! מישהו בקהילה יעזור לך בקרוב.');
+      
+      // Show success message with pilot info
+      alert(
+        'הבקשה נשלחה בהצלחה!\n\n' +
+        'זו גרסת פיילוט קהילתית.\n' +
+        'ייתכן שלא יימצא עוזר באופן מיידי.\n' +
+        'הסטטוס יתעדכן כאן ברגע שמישהו יקבל את הבקשה.'
+      );
     } catch (error) {
       console.error('Error creating request:', error);
       alert('שגיאה ביצירת הבקשה. נסה שוב.');
