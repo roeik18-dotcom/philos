@@ -100,8 +100,8 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
         const result = await updateRequestStatus(currentRequest.id, 'completed', 'in_progress');
         
         if (!result.success) {
-          // Status is not 'in_progress' - something went wrong
-          alert('שגיאה בסיום הבקשה. הבקשה לא הייתה בתהליך.');
+          // Status is not 'in_progress' - cannot finish
+          alert('אי אפשר לסיים — הפעולה לא התחילה');
           handleNewRequest();
           return;
         }
