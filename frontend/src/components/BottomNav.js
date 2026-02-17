@@ -1,8 +1,9 @@
-import { Home, Calendar, User } from 'lucide-react';
+import { Home, Calendar, User, FileText } from 'lucide-react';
 
 export default function BottomNav({ currentPage, onNavigate }) {
   const navItems = [
     { id: 'home', label: 'בית', icon: Home },
+    { id: 'my-requests', label: 'הבקשות שלי', icon: FileText },
     { id: 'history', label: 'היסטוריה', icon: Calendar },
     { id: 'profile', label: 'פרופיל', icon: User },
   ];
@@ -22,13 +23,13 @@ export default function BottomNav({ currentPage, onNavigate }) {
             key={item.id}
             data-testid={`nav-${item.id}-button`}
             onClick={() => onNavigate(item.id)}
-            className="flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all active:scale-95"
+            className="flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all active:scale-95"
             style={{
               backgroundColor: isActive ? '#E6E2DD' : 'transparent',
             }}
           >
             <Icon 
-              className="w-6 h-6" 
+              className="w-5 h-5" 
               style={{ color: isActive ? '#4A4238' : '#8C867D' }}
             />
             <span 

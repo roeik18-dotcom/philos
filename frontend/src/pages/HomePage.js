@@ -17,9 +17,9 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
   const [userRequests, setUserRequests] = useLocalStorage('user-submitted-requests', []);
 
   const handleCategorySelect = (category) => {
-    // Combine preset requests with user-submitted requests
+    // Combine preset requests with user-submitted requests that are waiting
     const availableUserRequests = userRequests.filter(
-      req => req.category === category && !req.completed
+      req => req.category === category && req.status === 'waiting'
     );
     
     // Randomly choose between preset and user-submitted
@@ -40,12 +40,36 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
   };
 
   const handleAcceptRequest = () => {
+    // Update request status to 'accepted'
+    if (currentRequest.isUserSubmitted) {
+      setUserRequests(prev => 
+        prev.map(req => 
+          req.id === currentRequest.id 
+            ? { ...req, status: 'accepted', acceptedAt: new Date().toISOString() }
+            : req
+        )
+      );
+    }
+    
     setTimerActive(true);
     onSaveRequest({
       ...currentRequest,
       status: 'partial',
       startedAt: new Date().toISOString(),
     });
+  };
+
+  const handleStartTimer = () => {
+    // Update request status to 'in_progress' when timer actually starts
+    if (currentRequest.isUserSubmitted) {
+      setUserRequests(prev => 
+        prev.map(req => 
+          req.id === currentRequest.id 
+            ? { ...req, status: 'in_progress', inProgressAt: new Date().toISOString() }
+            : req
+        )
+      );
+    }
   };
 
   const handleFinishRequest = () => {
@@ -55,12 +79,12 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       completedAt: new Date().toISOString(),
     });
     
-    // Mark user-submitted request as completed
+    // Update request status to 'completed'
     if (currentRequest.isUserSubmitted) {
       setUserRequests(prev => 
         prev.map(req => 
           req.id === currentRequest.id 
-            ? { ...req, completed: true, completedBy: new Date().toISOString() }
+            ? { ...req, status: 'completed', completedAt: new Date().toISOString() }
             : req
         )
       );
@@ -86,9 +110,9 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
   };
 
   const handleCreateRequest = (formData) => {
-    // Check if person already has an active request
+    // Check if person already has an active request (not completed)
     const existingActiveRequest = userRequests.find(
-      req => req.name === formData.name && !req.completed
+      req => req.name === formData.name && req.status !== 'completed'
     );
     
     if (existingActiveRequest) {
@@ -100,12 +124,17 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       id: `user-${Date.now()}`,
       ...formData,
       isUserSubmitted: true,
-      completed: false,
+      status: 'waiting',
       createdAt: new Date().toISOString()
     };
 
     setUserRequests(prev => [...prev, newRequest]);
     alert('הבקשה נשלחה בהצלחה! מישהו בקהילה יעזור לך בקרוב.');
+  };
+
+  // Call handleStartTimer when timer component mounts
+  const onTimerMount = () => {
+    handleStartTimer();
   };
 
   return (
@@ -167,7 +196,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
             </button>
             <h2 className="text-2xl font-semibold text-foreground">עוזר עכשיו</h2>
           </div>
-          <Timer request={currentRequest} onFinish={handleFinishRequest} />
+          <Timer request={currentRequest} onFinish={handleFinishRequest} onMount={onTimerMount} />
         </>
       )}
 

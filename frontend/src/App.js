@@ -3,12 +3,14 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import ProfilePage from './pages/ProfilePage';
+import MyRequestsPage from './pages/MyRequestsPage';
 import BottomNav from './components/BottomNav';
 import './App.css';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [history, setHistory] = useLocalStorage('community-help-history', []);
+  const [userRequests] = useLocalStorage('user-submitted-requests', []);
 
   const getTodayRequests = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -46,6 +48,7 @@ function App() {
           onSaveRequest={handleSaveRequest}
         />
       )}
+      {currentPage === 'my-requests' && <MyRequestsPage userRequests={userRequests} />}
       {currentPage === 'history' && <HistoryPage history={history} />}
       {currentPage === 'profile' && <ProfilePage history={history} />}
       

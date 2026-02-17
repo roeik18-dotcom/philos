@@ -1,11 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { Check, Clock } from 'lucide-react';
 
-export default function Timer({ request, onFinish }) {
+export default function Timer({ request, onFinish, onMount }) {
   const [secondsLeft, setSecondsLeft] = useState(request.minutes * 60);
   const [isRunning, setIsRunning] = useState(true);
   const intervalRef = useRef(null);
   const hasShownAlertRef = useRef(false);
+  const hasMountedRef = useRef(false);
+
+  useEffect(() => {
+    // Call onMount only once when component first mounts
+    if (!hasMountedRef.current && onMount) {
+      onMount();
+      hasMountedRef.current = true;
+    }
+  }, [onMount]);
 
   useEffect(() => {
     if (isRunning && secondsLeft > 0) {
