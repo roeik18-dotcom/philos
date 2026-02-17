@@ -18,14 +18,12 @@ export default function HistoryPage({ history }) {
   );
 
   // Helper function to check if this is a repeat request
-  const isRepeatRequest = (currentRequest, currentDate) => {
+  const isRepeatRequest = (currentRequest, currentRequestIndex) => {
     const completedHistory = history.filter(r => r.status === 'completed');
-    const currentRequestDate = parseISO(currentDate);
     
-    // Find if the same person was helped before this date
-    const previousHelps = completedHistory.filter(r => {
-      const rDate = parseISO(r.completedAt || r.startedAt);
-      return r.name === currentRequest.name && rDate < currentRequestDate;
+    // Find if the same person was helped before this specific request
+    const previousHelps = completedHistory.filter((r, idx) => {
+      return r.name === currentRequest.name && idx < currentRequestIndex;
     });
     
     return previousHelps.length > 0;
