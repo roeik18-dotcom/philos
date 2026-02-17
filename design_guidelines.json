@@ -1,0 +1,171 @@
+{
+  "identity": {
+    "name": "E1: The Anti-AI Designer",
+    "persona": "Creative Designer who prioritizes fusion, emotion, and context-aware design. Anti-pattern: purple/teal gradients, generic layouts, unstyled HTML.",
+    "mission": "Create a 'Daily Sanctuary' - a minimal, offline-first Hebrew mindfulness tool that feels like a physical object, not an app."
+  },
+  "typography": {
+    "primary_font": "Rubik",
+    "secondary_font": "Heebo",
+    "font_weights": {
+      "light": 300,
+      "regular": 400,
+      "medium": 500,
+      "bold": 700
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight leading-none",
+      "h2": "text-3xl md:text-4xl font-semibold tracking-tight",
+      "h3": "text-2xl font-medium",
+      "body": "text-base md:text-lg leading-relaxed",
+      "caption": "text-sm text-muted-foreground tracking-wide",
+      "button": "text-lg font-medium tracking-wide"
+    },
+    "instructions": "Import 'Rubik' and 'Heebo' from Google Fonts. Apply 'Rubik' to all headings (h1-h3) and buttons. Apply 'Heebo' to body text. Use 'dir=rtl' on the body tag for correct Hebrew rendering."
+  },
+  "colors": {
+    "palette": {
+      "background": "#F9F7F2",
+      "foreground": "#4A4238",
+      "primary": "#4A4238",
+      "primary_foreground": "#F9F7F2",
+      "card": "#FFFFFF",
+      "card_foreground": "#4A4238",
+      "popover": "#FFFFFF",
+      "popover_foreground": "#4A4238",
+      "secondary": "#E6E2DD",
+      "secondary_foreground": "#4A4238",
+      "muted": "#EFEBE6",
+      "muted_foreground": "#8C867D",
+      "accent": "#E6E2DD",
+      "accent_foreground": "#4A4238",
+      "destructive": "#D4A5A5",
+      "destructive_foreground": "#F9F7F2",
+      "border": "#E6E2DD",
+      "input": "#E6E2DD",
+      "ring": "#A7C4BC",
+      "chart_1": "#A7C4BC",
+      "chart_2": "#D4A5A5",
+      "chart_3": "#A0C1D1",
+      "chart_4": "#E6CBA5",
+      "chart_5": "#9E9E9E"
+    },
+    "category_colors": {
+      "body": {
+        "bg": "#E8F0ED",
+        "text": "#2C4A40",
+        "accent": "#A7C4BC"
+      },
+      "emotion": {
+        "bg": "#F7EBEB",
+        "text": "#5A3A3A",
+        "accent": "#D4A5A5"
+      },
+      "mind": {
+        "bg": "#EBF4F8",
+        "text": "#2A4550",
+        "accent": "#A0C1D1"
+      }
+    },
+    "usage_rules": "Avoid pure black (#000000). Use #4A4238 (Deep Mocha) for text. Backgrounds should be warm off-white (#F9F7F2). Use category specific pastel backgrounds for their respective sections."
+  },
+  "layout": {
+    "structure": {
+      "container": "max-w-md mx-auto min-h-screen flex flex-col relative overflow-hidden bg-background",
+      "header": "h-16 flex items-center justify-between px-6 sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40",
+      "main": "flex-1 px-6 py-8 flex flex-col gap-6",
+      "footer": "h-20 flex items-center justify-around px-6 sticky bottom-0 z-50 bg-background/90 backdrop-blur-xl border-t border-border/40 pb-safe"
+    },
+    "spacing": {
+      "section_gap": "gap-8",
+      "card_padding": "p-6",
+      "element_gap": "gap-4"
+    },
+    "rtl_strategy": "Use 'dir=\"rtl\"' on the root HTML/Body. Tailwind logic: Use 'flex-row' (it automatically reverses in RTL mode if dir=rtl is set, but be careful with absolute positioning). Prefer logical properties 'ms-' (margin-start) and 'me-' (margin-end) over 'ml-'/'mr-' if available, or manually handle directions."
+  },
+  "components": {
+    "buttons": {
+      "primary": "rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 shadow-md hover:shadow-lg transition-all active:scale-95",
+      "secondary": "rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 h-12 px-6 shadow-sm transition-all active:scale-95",
+      "ghost": "rounded-full hover:bg-muted text-muted-foreground hover:text-foreground h-10 w-10 p-0 flex items-center justify-center transition-all",
+      "category_card": "relative overflow-hidden rounded-3xl aspect-[4/3] flex flex-col justify-end p-6 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group cursor-pointer border border-border/50"
+    },
+    "cards": {
+      "base": "bg-card text-card-foreground rounded-3xl border border-border/50 shadow-sm p-6",
+      "task": "bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-[2rem] p-8 text-center flex flex-col items-center gap-6"
+    },
+    "inputs": {
+      "default": "rounded-2xl border-border bg-white/50 px-4 py-3 text-base focus:ring-2 focus:ring-ring focus:border-transparent transition-all placeholder:text-muted-foreground/50"
+    },
+    "navigation": {
+      "bar": "fixed bottom-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-lg border-t border-white/20 flex items-center justify-around pb-4 pt-2 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]"
+    }
+  },
+  "motion": {
+    "guidelines": "Animations should be slow, organic, and 'breathing'. No springy/bouncy physics. Use ease-in-out curves.",
+    "classes": {
+      "fade_in": "animate-in fade-in duration-700 ease-in-out fill-mode-forwards",
+      "slide_up": "animate-in slide-in-from-bottom-8 fade-in duration-700 ease-out fill-mode-forwards",
+      "breathe": "animate-pulse duration-[4000ms] ease-in-out infinite",
+      "scale_in": "animate-in zoom-in-95 fade-in duration-500 ease-out"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm",
+    "soft_shadow": "shadow-[0_8px_30px_rgba(0,0,0,0.04)]",
+    "noise_texture": "Use a subtle noise SVG overlay on the background at 2% opacity to remove digital flatness."
+  },
+  "assets": {
+    "images": [
+      {
+        "category": "body_bg",
+        "url": "https://images.unsplash.com/photo-1593068415562-8b5db003f219?q=80&w=800&auto=format&fit=crop",
+        "description": "Greyscale succulent - texture and grounding for Body category",
+        "usage": "Use as background for Body card with overlay-90 (heavily faded)"
+      },
+      {
+        "category": "emotion_bg",
+        "url": "https://images.unsplash.com/photo-1648993880088-37d4a048e6d5?q=80&w=800&auto=format&fit=crop",
+        "description": "White cup and saucer - warmth and care for Emotion category",
+        "usage": "Use as background for Emotion card with overlay-90"
+      },
+      {
+        "category": "mind_bg",
+        "url": "https://images.unsplash.com/photo-1761468720849-5abc8533343c?q=80&w=800&auto=format&fit=crop",
+        "description": "Tree reflection in water - clarity for Mind category",
+        "usage": "Use as background for Mind card with overlay-90"
+      }
+    ],
+    "icons": {
+      "library": "lucide-react",
+      "mapping": {
+        "body": "Activity",
+        "emotion": "Heart",
+        "mind": "Brain",
+        "home": "Home",
+        "history": "Calendar",
+        "profile": "User",
+        "start": "Play",
+        "finish": "Check",
+        "back": "ArrowRight" 
+      },
+      "note": "Since RTL, ArrowRight acts as 'Back' arrow pointing to the start of flow visually if not mirrored. Better to use 'ChevronRight' for back in RTL context?"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Ensure 'lucide-react', 'clsx', 'tailwind-merge' are installed. Install 'date-fns' for calendar logic.",
+    "2. THEME: Implement the 'Daily Sanctuary' theme. Modify 'tailwind.config.js' to add the custom colors (mocha, sage, clay, dusty blue).",
+    "3. HEBREW/RTL: Set 'dir=rtl' on the root div/body. Ensure all text is Hebrew. Use the translations: Body=גוף, Emotion=רגש, Mind=mחשבה, Start=התחל, Finish=סיום, History=היסטוריה, Profile=פרופיל.",
+    "4. ROUTING: Use simple conditional rendering or 'react-router-dom' if available. Structure: Home (Categories -> Task -> Timer -> Summary) | History | Profile.",
+    "5. STORAGE: Create a 'useLocalStorage' hook to persist 'tasks', 'history', and 'user_stats'. No backend calls needed for MVP.",
+    "6. COMPONENTS: Create 'CategoryCard', 'Timer', 'DailySummary', 'BottomNav'. Use the visual guidelines for styling.",
+    "7. TESTING: Add 'data-testid' to all buttons and cards."
+  ],
+  "universal_guidelines": [
+    "Do not use gradients for backgrounds. Use solid soft colors.",
+    "Use 2-3x more padding than usual.",
+    "Rounded corners should be 'xl' or '2xl' or '3xl'.",
+    "All text must be legible against backgrounds (check contrast).",
+    "No AI emojis in UI."
+  ]
+}
