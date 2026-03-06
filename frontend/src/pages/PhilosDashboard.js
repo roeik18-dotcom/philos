@@ -10,6 +10,7 @@ export default function PhilosDashboard() {
   });
   const [actionText, setActionText] = useState("");
   const [decisionResult, setDecisionResult] = useState(null);
+  const [history, setHistory] = useState([]);
 
   const evaluateAction = () => {
     if (!actionText) {
@@ -70,7 +71,7 @@ export default function PhilosDashboard() {
       ego_collective: newEgoCollective
     }));
 
-    setDecisionResult({
+    const newResult = {
       decision,
       action: actionText,
       reasons,
@@ -78,7 +79,21 @@ export default function PhilosDashboard() {
         chaos_order: newChaosOrder,
         ego_collective: newEgoCollective
       }
-    });
+    };
+
+    setDecisionResult(newResult);
+
+    // Add to history (limit to last 5)
+    setHistory(prev => [
+      {
+        action: actionText,
+        decision: decision,
+        chaos_order: newChaosOrder,
+        ego_collective: newEgoCollective,
+        time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+      },
+      ...prev
+    ].slice(0, 5));
   };
 
   const handleReset = () => {
@@ -245,6 +260,41 @@ export default function PhilosDashboard() {
             gapType={state.gap_type}
           />
         </section>
+
+        {/* Decision History */}
+        {history.length > 0 && (
+          <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
+            <h3 className="text-xl font-semibold text-foreground mb-4">Decision History</h3>
+            
+            <div className="space-y-3">
+              {history.map((item, idx) => (
+                <div 
+                  key={idx} 
+                  className="p-3 bg-muted/20 rounded-xl border border-border/50"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-muted-foreground">{item.time}</span>
+                    <span className={`text-sm font-bold ${item.decision === 'Allowed' ? 'text-green-600' : 'text-red-600'}`}>
+                      {item.decision}
+                    </span>
+                  </div>
+                  <p className="font-medium text-foreground mb-1">{item.action}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {item.chaos_order !== 0 && (
+                      <span>order {item.chaos_order > 0 ? '+' : ''}{item.chaos_order} </span>
+                    )}
+                    {item.ego_collective !== 0 && (
+                      <span>| collective {item.ego_collective > 0 ? '+' : ''}{item.ego_collective}</span>
+                    )}
+                    {item.chaos_order === 0 && item.ego_collective === 0 && (
+                      <span>balanced</span>
+                    )}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
       </div>
     </div>
