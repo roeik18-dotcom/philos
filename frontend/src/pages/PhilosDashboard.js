@@ -246,6 +246,28 @@ export default function PhilosDashboard() {
           </div>
         </section>
 
+        {/* Quick Actions */}
+        <section className="bg-white rounded-3xl p-4 shadow-sm border border-border">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Quick Actions</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              'Help a friend',
+              'Take a walk',
+              'Send angry message',
+              'Ignore someone',
+              'Organize your desk'
+            ].map((action) => (
+              <button
+                key={action}
+                onClick={() => setActionText(action)}
+                className="px-3 py-2 text-sm bg-muted/50 hover:bg-muted text-foreground rounded-lg transition-all"
+              >
+                {action}
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Action Evaluation */}
         <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
           <h3 className="text-xl font-semibold text-foreground mb-4">Action Evaluation</h3>
