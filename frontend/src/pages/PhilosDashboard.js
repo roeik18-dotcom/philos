@@ -64,26 +64,48 @@ const calculateSuggestedVector = (chaosOrder, egoCollective) => {
   };
 };
 
-// Value tagging logic
-const getValueTag = (action) => {
+// Value tagging logic with expanded keywords and smart fallbacks
+const getValueTag = (action, gapType = 'energy') => {
   const actionLower = action.toLowerCase();
   
-  if (actionLower.match(/help|support|friend|share|call|message.*positive/)) {
-    return 'contribution';
-  }
-  if (actionLower.match(/walk|breathe|breathing|stretch|water|rest|relax|meditate/)) {
-    return 'recovery';
-  }
-  if (actionLower.match(/angry|attack|insult|fight|yell|scream/)) {
+  // Check harm first (prioritize negative actions)
+  if (actionLower.match(/angry|attack|insult|shout|hurt|revenge|fight|yell|scream|curse|blame|criticize|hostile|aggressive/)) {
     return 'harm';
   }
-  if (actionLower.match(/organize|clean|focus|plan|work|project|desk/)) {
-    return 'order';
-  }
-  if (actionLower.match(/avoid|ignore|skip|cancel/)) {
+  
+  // Avoidance: escaping, postponing, hiding
+  if (actionLower.match(/ignore|avoid|delay|scroll|escape|postpone|hide|skip|cancel|procrastinate|distract/)) {
     return 'avoidance';
   }
-  return 'neutral';
+  
+  // Recovery: self-care, rest, restoration
+  if (actionLower.match(/walk|breathe|breathing|stretch|water|rest|sleep|pause|calm|relax|meditate|nap|break/)) {
+    return 'recovery';
+  }
+  
+  // Order: organizing, structuring, focusing
+  if (actionLower.match(/organize|clean|plan|focus|work|structure|sort|tidy|arrange|schedule|prioritize|desk|project/)) {
+    return 'order';
+  }
+  
+  // Contribution: helping, supporting, connecting with others (check last as "message" is generic)
+  if (actionLower.match(/help|support|friend|give|assist|share|care|call|connect|encourage|listen|positive/)) {
+    return 'contribution';
+  }
+  
+  // Smart fallbacks based on gap_type
+  if (gapType === 'energy') {
+    return 'recovery';
+  }
+  if (gapType === 'clarity' || gapType === 'order') {
+    return 'order';
+  }
+  if (gapType === 'relation') {
+    return 'contribution';
+  }
+  
+  // Default fallback
+  return 'recovery';
 };
 
 // Analyze personal patterns
@@ -225,7 +247,7 @@ export default function PhilosDashboard() {
     }));
 
     const newBalanceScore = 100 - (Math.abs(newChaosOrder) + Math.abs(newEgoCollective));
-    const valueTag = getValueTag(actionText);
+    const valueTag = getValueTag(actionText, state.gap_type);
 
     const newResult = {
       decision,
@@ -500,6 +522,19 @@ export default function PhilosDashboard() {
               <p className="text-foreground">
                 <span className="text-muted-foreground">Projection → ego/collective:</span>{' '}
                 {decisionResult.projection.ego_collective}
+              </p>
+              <p className="text-foreground">
+                <span className="text-muted-foreground">Value Tag:</span>{' '}
+                <span className={`px-2 py-0.5 rounded-full text-sm font-medium ${
+                  decisionResult.value_tag === 'contribution' ? 'bg-green-100 text-green-700' :
+                  decisionResult.value_tag === 'recovery' ? 'bg-blue-100 text-blue-700' :
+                  decisionResult.value_tag === 'order' ? 'bg-indigo-100 text-indigo-700' :
+                  decisionResult.value_tag === 'harm' ? 'bg-red-100 text-red-700' :
+                  decisionResult.value_tag === 'avoidance' ? 'bg-gray-100 text-gray-700' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {decisionResult.value_tag}
+                </span>
               </p>
             </div>
           )}
