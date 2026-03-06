@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { toPng } from 'html-to-image';
 import DecisionMap from '../components/philos/DecisionMap';
 
 // Optimal zone definition
@@ -63,6 +64,94 @@ const calculateSuggestedVector = (chaosOrder, egoCollective) => {
   };
 };
 
+// Value tagging logic
+const getValueTag = (action) => {
+  const actionLower = action.toLowerCase();
+  
+  if (actionLower.match(/help|support|friend|share|call|message.*positive/)) {
+    return 'contribution';
+  }
+  if (actionLower.match(/walk|breathe|breathing|stretch|water|rest|relax|meditate/)) {
+    return 'recovery';
+  }
+  if (actionLower.match(/angry|attack|insult|fight|yell|scream/)) {
+    return 'harm';
+  }
+  if (actionLower.match(/organize|clean|focus|plan|work|project|desk/)) {
+    return 'order';
+  }
+  if (actionLower.match(/avoid|ignore|skip|cancel/)) {
+    return 'avoidance';
+  }
+  return 'neutral';
+};
+
+// Analyze personal patterns
+const analyzePersonalMap = (historyData) => {
+  if (historyData.length === 0) {
+    return {
+      dominantOrder: 'balanced',
+      dominantCollective: 'balanced',
+      topValueTags: [],
+      patternSummary: []
+    };
+  }
+
+  // Calculate averages
+  const avgOrder = historyData.reduce((sum, h) => sum + h.chaos_order, 0) / historyData.length;
+  const avgCollective = historyData.reduce((sum, h) => sum + h.ego_collective, 0) / historyData.length;
+
+  // Dominant direction
+  const dominantOrder = avgOrder > 10 ? 'order' : avgOrder < -10 ? 'chaos' : 'balanced';
+  const dominantCollective = avgCollective > 10 ? 'collective' : avgCollective < -10 ? 'ego' : 'balanced';
+
+  // Count value tags
+  const tagCounts = {};
+  historyData.forEach(h => {
+    if (h.value_tag && h.value_tag !== 'neutral') {
+      tagCounts[h.value_tag] = (tagCounts[h.value_tag] || 0) + 1;
+    }
+  });
+
+  // Top 3 value tags
+  const topValueTags = Object.entries(tagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([tag, count]) => ({ tag, count }));
+
+  // Find unstable moments pattern
+  const unstableMoments = historyData.filter(h => h.balance_score < 40);
+  let unstablePattern = '';
+  if (unstableMoments.length > 0) {
+    const unstableAvgOrder = unstableMoments.reduce((sum, h) => sum + h.chaos_order, 0) / unstableMoments.length;
+    const unstableAvgCollective = unstableMoments.reduce((sum, h) => sum + h.ego_collective, 0) / unstableMoments.length;
+    const orderDir = unstableAvgOrder < 0 ? 'chaos' : 'order';
+    const collectiveDir = unstableAvgCollective < 0 ? 'ego' : 'collective';
+    unstablePattern = `${orderDir}/${collectiveDir}`;
+  }
+
+  // Build pattern summary
+  const patternSummary = [];
+  if (dominantOrder !== 'balanced') {
+    patternSummary.push(`You tend toward ${dominantOrder}.`);
+  }
+  if (topValueTags.length > 0) {
+    patternSummary.push(`You often act from ${topValueTags[0].tag}.`);
+  }
+  if (unstablePattern) {
+    patternSummary.push(`Your unstable moments move toward ${unstablePattern}.`);
+  }
+
+  return {
+    dominantOrder,
+    dominantCollective,
+    topValueTags,
+    patternSummary,
+    avgOrder: Math.round(avgOrder),
+    avgCollective: Math.round(avgCollective)
+  };
+};
+
 export default function PhilosDashboard() {
   const [state, setState] = useState({
     physical_capacity: 50,
@@ -73,6 +162,8 @@ export default function PhilosDashboard() {
   const [actionText, setActionText] = useState("");
   const [decisionResult, setDecisionResult] = useState(null);
   const [history, setHistory] = useState([]);
+  const [showShareCard, setShowShareCard] = useState(false);
+  const shareCardRef = useRef(null);
 
   const evaluateAction = () => {
     if (!actionText) {
@@ -133,6 +224,9 @@ export default function PhilosDashboard() {
       ego_collective: newEgoCollective
     }));
 
+    const newBalanceScore = 100 - (Math.abs(newChaosOrder) + Math.abs(newEgoCollective));
+    const valueTag = getValueTag(actionText);
+
     const newResult = {
       decision,
       action: actionText,
@@ -140,22 +234,27 @@ export default function PhilosDashboard() {
       projection: {
         chaos_order: newChaosOrder,
         ego_collective: newEgoCollective
-      }
+      },
+      value_tag: valueTag,
+      balance_score: newBalanceScore
     };
 
     setDecisionResult(newResult);
 
-    // Add to history (limit to last 5)
+    // Add to history (limit to last 20 for personal map)
     setHistory(prev => [
       {
         action: actionText,
         decision: decision,
         chaos_order: newChaosOrder,
         ego_collective: newEgoCollective,
-        time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+        balance_score: newBalanceScore,
+        value_tag: valueTag,
+        time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date().toISOString()
       },
       ...prev
-    ].slice(0, 5));
+    ].slice(0, 20));
   };
 
   const handleReset = () => {
@@ -203,6 +302,23 @@ export default function PhilosDashboard() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Download share card as image
+  const downloadShareCard = async () => {
+    if (shareCardRef.current === null) return;
+    try {
+      const dataUrl = await toPng(shareCardRef.current, { quality: 0.95 });
+      const link = document.createElement('a');
+      link.download = `philos-decision-${new Date().toISOString().slice(0,10)}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Error generating image:', err);
+    }
+  };
+
+  // Calculate balance score
+  const balanceScore = 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective));
 
   return (
     <div className="min-h-screen bg-background p-6 pb-24">
@@ -694,7 +810,229 @@ export default function PhilosDashboard() {
           >
             <span>📥</span> Export Session (JSON)
           </button>
+
+          {/* Share Decision Button */}
+          <button
+            onClick={() => setShowShareCard(true)}
+            disabled={!decisionResult}
+            className="w-full px-4 py-3 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 mt-3"
+          >
+            <span>🔗</span> Share Decision
+          </button>
         </section>
+
+        {/* Personal Map */}
+        {history.length >= 3 && (
+          <section className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-5 shadow-sm border border-amber-200">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Personal Map</h3>
+            
+            {(() => {
+              const analysis = analyzePersonalMap(history);
+              return (
+                <>
+                  {/* Direction Indicators */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-white/70 rounded-xl p-3 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Order vs Chaos</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-xs text-orange-500">chaos</span>
+                        <div className="w-20 h-2 bg-gray-200 rounded-full relative">
+                          <div 
+                            className="absolute top-0 h-2 bg-blue-500 rounded-full transition-all"
+                            style={{ 
+                              left: '50%',
+                              width: `${Math.abs(analysis.avgOrder || 0) / 2}%`,
+                              marginLeft: analysis.avgOrder >= 0 ? '0' : `-${Math.abs(analysis.avgOrder || 0) / 2}%`
+                            }}
+                          />
+                          <div className="absolute top-1/2 left-1/2 w-1 h-3 bg-gray-400 -translate-x-1/2 -translate-y-1/2" />
+                        </div>
+                        <span className="text-xs text-blue-500">order</span>
+                      </div>
+                      <p className={`text-sm font-bold mt-1 ${
+                        analysis.dominantOrder === 'order' ? 'text-blue-600' : 
+                        analysis.dominantOrder === 'chaos' ? 'text-orange-600' : 'text-gray-500'
+                      }`}>
+                        {analysis.dominantOrder}
+                      </p>
+                    </div>
+                    
+                    <div className="bg-white/70 rounded-xl p-3 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Ego vs Collective</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-xs text-purple-500">ego</span>
+                        <div className="w-20 h-2 bg-gray-200 rounded-full relative">
+                          <div 
+                            className="absolute top-0 h-2 bg-green-500 rounded-full transition-all"
+                            style={{ 
+                              left: '50%',
+                              width: `${Math.abs(analysis.avgCollective || 0) / 2}%`,
+                              marginLeft: analysis.avgCollective >= 0 ? '0' : `-${Math.abs(analysis.avgCollective || 0) / 2}%`
+                            }}
+                          />
+                          <div className="absolute top-1/2 left-1/2 w-1 h-3 bg-gray-400 -translate-x-1/2 -translate-y-1/2" />
+                        </div>
+                        <span className="text-xs text-green-500">collective</span>
+                      </div>
+                      <p className={`text-sm font-bold mt-1 ${
+                        analysis.dominantCollective === 'collective' ? 'text-green-600' : 
+                        analysis.dominantCollective === 'ego' ? 'text-purple-600' : 'text-gray-500'
+                      }`}>
+                        {analysis.dominantCollective}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Top Value Tags */}
+                  {analysis.topValueTags.length > 0 && (
+                    <div className="bg-white/70 rounded-xl p-3 mb-4">
+                      <p className="text-xs text-muted-foreground mb-2">Top Values</p>
+                      <div className="flex flex-wrap gap-2">
+                        {analysis.topValueTags.map((item, idx) => (
+                          <span 
+                            key={idx}
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              item.tag === 'contribution' ? 'bg-green-100 text-green-700' :
+                              item.tag === 'recovery' ? 'bg-blue-100 text-blue-700' :
+                              item.tag === 'order' ? 'bg-indigo-100 text-indigo-700' :
+                              item.tag === 'harm' ? 'bg-red-100 text-red-700' :
+                              item.tag === 'avoidance' ? 'bg-gray-100 text-gray-700' :
+                              'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            {item.tag} ({item.count})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mini Timeline */}
+                  <div className="bg-white/70 rounded-xl p-3 mb-4">
+                    <p className="text-xs text-muted-foreground mb-2">Decision Timeline (last {history.length})</p>
+                    <div className="flex gap-1 overflow-x-auto pb-1">
+                      {[...history].reverse().map((item, idx) => (
+                        <div 
+                          key={idx}
+                          className={`w-3 h-8 rounded-sm flex-shrink-0 ${
+                            item.decision === 'Allowed' ? 'bg-green-400' : 'bg-red-400'
+                          }`}
+                          style={{
+                            opacity: 0.4 + (idx / history.length) * 0.6
+                          }}
+                          title={`${item.time}: ${item.action}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>oldest</span>
+                      <span>newest</span>
+                    </div>
+                  </div>
+
+                  {/* Your Pattern Summary */}
+                  {analysis.patternSummary.length > 0 && (
+                    <div className="bg-amber-100/50 border border-amber-200 rounded-xl p-4">
+                      <p className="text-sm font-semibold text-amber-800 mb-2">Your Pattern</p>
+                      <div className="space-y-1">
+                        {analysis.patternSummary.map((line, idx) => (
+                          <p key={idx} className="text-sm text-amber-700">{line}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </section>
+        )}
+
+        {/* Share Card Modal */}
+        {showShareCard && decisionResult && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Share Card Preview</h3>
+                <button
+                  onClick={() => setShowShareCard(false)}
+                  className="text-muted-foreground hover:text-foreground text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Share Card Content */}
+              <div 
+                ref={shareCardRef}
+                className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-2xl p-6 border border-indigo-100"
+                style={{ direction: 'rtl' }}
+              >
+                {/* Header */}
+                <div className="text-center mb-4">
+                  <h4 className="text-xl font-bold text-indigo-600">Philos Orientation</h4>
+                  <p className="text-xs text-muted-foreground">Mental Navigation System</p>
+                </div>
+
+                {/* Action */}
+                <div className="bg-white rounded-xl p-4 mb-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Action</p>
+                  <p className="text-lg font-semibold text-foreground">{decisionResult.action}</p>
+                </div>
+
+                {/* Decision Result */}
+                <div className={`rounded-xl p-4 mb-3 text-center ${
+                  decisionResult.decision === 'Allowed' 
+                    ? 'bg-green-100' 
+                    : 'bg-red-100'
+                }`}>
+                  <p className="text-xs text-muted-foreground mb-1">Decision</p>
+                  <p className={`text-2xl font-bold ${
+                    decisionResult.decision === 'Allowed' 
+                      ? 'text-green-600' 
+                      : 'text-red-600'
+                  }`}>
+                    {decisionResult.decision === 'Allowed' ? '✓ Allowed' : '✗ Blocked'}
+                  </p>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="bg-white rounded-xl p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Balance</p>
+                    <p className={`text-xl font-bold ${
+                      balanceScore >= 70 ? 'text-green-600' : balanceScore >= 40 ? 'text-yellow-500' : 'text-red-500'
+                    }`}>{balanceScore}</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Trajectory</p>
+                    <p className="text-sm font-bold text-purple-600">{getTrajectoryDirection()}</p>
+                  </div>
+                </div>
+
+                {/* Projection */}
+                <div className="bg-white rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Projection</p>
+                  <p className="text-sm font-medium text-foreground">
+                    order {decisionResult.projection.chaos_order} | collective {decisionResult.projection.ego_collective}
+                  </p>
+                </div>
+
+                {/* Footer */}
+                <div className="text-center mt-4 pt-3 border-t border-indigo-100">
+                  <p className="text-xs text-muted-foreground">philos-orientation.app</p>
+                </div>
+              </div>
+
+              {/* Download Button */}
+              <button
+                onClick={downloadShareCard}
+                className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 mt-4"
+              >
+                <span>📷</span> Download Image
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground pt-4">
