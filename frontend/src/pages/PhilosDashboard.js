@@ -167,6 +167,7 @@ export default function PhilosDashboard() {
     });
     setActionText("");
     setDecisionResult(null);
+    setHistory([]);
   };
 
   return (
@@ -374,7 +375,15 @@ export default function PhilosDashboard() {
 
         {/* Orientation Status Panel */}
         <section className="bg-white rounded-3xl p-4 shadow-sm border border-border">
-          <h3 className="text-lg font-semibold text-foreground mb-3">Orientation Status</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-foreground">Orientation Status</h3>
+            <button
+              onClick={handleReset}
+              className="px-4 py-2 text-sm bg-muted hover:bg-muted/80 text-foreground rounded-xl transition-all"
+            >
+              Start New Session
+            </button>
+          </div>
           
           <div className="grid grid-cols-3 gap-3">
             {/* Order */}
