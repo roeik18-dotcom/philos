@@ -1,6 +1,68 @@
 import { useState } from 'react';
 import DecisionMap from '../components/philos/DecisionMap';
 
+// Optimal zone definition
+const OPTIMAL_ZONE = {
+  order: { min: 20, max: 60 },
+  collective: { min: 10, max: 50 }
+};
+
+// Calculate suggested vector toward optimal zone
+const calculateSuggestedVector = (chaosOrder, egoCollective) => {
+  let suggestedOrder = 0;
+  let suggestedCollective = 0;
+  let suggestions = [];
+  let reasons = [];
+
+  // Check order axis (chaos_order)
+  if (chaosOrder < OPTIMAL_ZONE.order.min) {
+    suggestedOrder = Math.min(20, OPTIMAL_ZONE.order.min - chaosOrder);
+    suggestions.push("Take a short walk");
+    suggestions.push("Organize something small");
+    reasons.push("moves toward order");
+    reasons.push("reduces chaos");
+  } else if (chaosOrder > OPTIMAL_ZONE.order.max) {
+    suggestedOrder = -Math.min(15, chaosOrder - OPTIMAL_ZONE.order.max);
+    suggestions.push("Rest for a moment");
+    suggestions.push("Let go of control");
+    reasons.push("allows flexibility");
+    reasons.push("reduces rigidity");
+  }
+
+  // Check collective axis (ego_collective)
+  if (egoCollective < OPTIMAL_ZONE.collective.min) {
+    suggestedCollective = Math.min(20, OPTIMAL_ZONE.collective.min - egoCollective);
+    suggestions.push("Help someone nearby");
+    suggestions.push("Share an idea");
+    reasons.push("increases collective balance");
+  } else if (egoCollective > OPTIMAL_ZONE.collective.max) {
+    suggestedCollective = -Math.min(15, egoCollective - OPTIMAL_ZONE.collective.max);
+    suggestions.push("Take time for yourself");
+    suggestions.push("Reflect quietly");
+    reasons.push("restores personal balance");
+  }
+
+  // Check if in optimal zone
+  const inOptimalZone = 
+    chaosOrder >= OPTIMAL_ZONE.order.min && 
+    chaosOrder <= OPTIMAL_ZONE.order.max &&
+    egoCollective >= OPTIMAL_ZONE.collective.min && 
+    egoCollective <= OPTIMAL_ZONE.collective.max;
+
+  if (inOptimalZone) {
+    suggestions = ["Maintain current balance"];
+    reasons = ["You are in the optimal zone"];
+  }
+
+  return {
+    suggestedOrder,
+    suggestedCollective,
+    suggestions: suggestions.slice(0, 2),
+    reasons: reasons.slice(0, 3),
+    inOptimalZone
+  };
+};
+
 export default function PhilosDashboard() {
   const [state, setState] = useState({
     physical_capacity: 50,
@@ -250,6 +312,64 @@ export default function PhilosDashboard() {
               </div>
             </div>
           )}
+
+          {/* Vector Suggestion Engine */}
+          {(() => {
+            const suggestion = calculateSuggestedVector(state.chaos_order, state.ego_collective);
+            return (
+              <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
+                <h4 className="text-lg font-semibold text-foreground mb-3">Suggested Next Action</h4>
+                
+                {suggestion.inOptimalZone ? (
+                  <div className="text-center py-2">
+                    <p className="text-green-600 font-medium">✓ You are in the optimal zone</p>
+                    <p className="text-sm text-muted-foreground mt-1">Maintain current balance</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Suggestions */}
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Suggestion:</p>
+                      <div className="space-y-1">
+                        {suggestion.suggestions.map((s, idx) => (
+                          <p key={idx} className="text-foreground font-medium">
+                            {idx === 0 ? '' : 'or '}{s}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Reasons */}
+                    <div className="pt-2 border-t border-blue-200">
+                      <p className="text-sm text-muted-foreground mb-1">Reason:</p>
+                      <ul className="text-sm text-foreground">
+                        {suggestion.reasons.map((r, idx) => (
+                          <li key={idx}>• {r}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Suggested Vector */}
+                    <div className="pt-2 border-t border-blue-200">
+                      <p className="text-sm text-muted-foreground mb-1">Suggested Vector:</p>
+                      <div className="flex gap-4 text-sm font-mono">
+                        {suggestion.suggestedOrder !== 0 && (
+                          <span className="text-foreground">
+                            → order {suggestion.suggestedOrder > 0 ? '+' : ''}{suggestion.suggestedOrder}
+                          </span>
+                        )}
+                        {suggestion.suggestedCollective !== 0 && (
+                          <span className="text-foreground">
+                            → collective {suggestion.suggestedCollective > 0 ? '+' : ''}{suggestion.suggestedCollective}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </section>
 
         {/* Decision Map */}
