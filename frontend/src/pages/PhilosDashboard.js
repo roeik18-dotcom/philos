@@ -372,6 +372,37 @@ export default function PhilosDashboard() {
           })()}
         </section>
 
+        {/* Orientation Status Panel */}
+        <section className="bg-white rounded-3xl p-4 shadow-sm border border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-3">Orientation Status</h3>
+          
+          <div className="grid grid-cols-3 gap-3">
+            {/* Order */}
+            <div className="text-center p-3 bg-muted/20 rounded-xl">
+              <p className="text-xs text-muted-foreground mb-1">Order</p>
+              <p className={`text-2xl font-bold ${state.chaos_order >= 0 ? 'text-blue-600' : 'text-orange-500'}`}>
+                {state.chaos_order >= 0 ? '+' : ''}{state.chaos_order}
+              </p>
+            </div>
+            
+            {/* Collective */}
+            <div className="text-center p-3 bg-muted/20 rounded-xl">
+              <p className="text-xs text-muted-foreground mb-1">Collective</p>
+              <p className={`text-2xl font-bold ${state.ego_collective >= 0 ? 'text-green-600' : 'text-purple-500'}`}>
+                {state.ego_collective >= 0 ? '+' : ''}{state.ego_collective}
+              </p>
+            </div>
+            
+            {/* Energy Gap */}
+            <div className="text-center p-3 bg-muted/20 rounded-xl">
+              <p className="text-xs text-muted-foreground mb-1">Energy</p>
+              <p className={`text-2xl font-bold ${state.physical_capacity >= 30 ? 'text-green-600' : 'text-red-500'}`}>
+                {state.physical_capacity}%
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Decision Map */}
         <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
           <DecisionMap 
