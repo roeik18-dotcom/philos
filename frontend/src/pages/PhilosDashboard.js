@@ -246,6 +246,52 @@ export default function PhilosDashboard() {
           </div>
         </section>
 
+        {/* How do you feel right now? */}
+        <section className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-4 shadow-sm border border-purple-200">
+          <h3 className="text-sm font-medium text-foreground mb-3">How do you feel right now?</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setState(prev => ({ ...prev, chaos_order: Math.min(100, prev.chaos_order + 20) }))}
+              className="px-4 py-2 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-all"
+            >
+              😌 Calm
+            </button>
+            <button
+              onClick={() => setState(prev => ({ ...prev, chaos_order: Math.max(-100, prev.chaos_order - 20) }))}
+              className="px-4 py-2 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-all"
+            >
+              😰 Stressed
+            </button>
+            <button
+              onClick={() => setState(prev => ({ ...prev, chaos_order: Math.max(-100, prev.chaos_order - 10) }))}
+              className="px-4 py-2 text-sm bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-all"
+            >
+              😕 Confused
+            </button>
+          </div>
+        </section>
+
+        {/* Micro Actions */}
+        <section className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-3xl p-4 shadow-sm border border-blue-200">
+          <h3 className="text-sm font-medium text-foreground mb-3">Micro Actions</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { text: 'Drink water', icon: '💧' },
+              { text: 'Take 5 deep breaths', icon: '🌬️' },
+              { text: 'Stand up and stretch', icon: '🧘' },
+              { text: 'Send a positive message', icon: '💬' }
+            ].map((action) => (
+              <button
+                key={action.text}
+                onClick={() => setActionText(action.text)}
+                className="px-3 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-all"
+              >
+                {action.icon} {action.text}
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Quick Actions */}
         <section className="bg-white rounded-3xl p-4 shadow-sm border border-border">
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Quick Actions</h3>
