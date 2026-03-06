@@ -493,6 +493,83 @@ export default function PhilosDashboard() {
               </div>
             );
           })()}
+
+          {/* Suggested Stabilizing Action - show when balance < 30 */}
+          {(() => {
+            const balanceScore = 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective));
+            if (balanceScore >= 30) return null;
+            return (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm font-semibold text-red-700 mb-2">⚠️ Suggested Stabilizing Action</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    'Take a short walk',
+                    'Drink water',
+                    'Write it but don\'t send',
+                    'Pause for 2 minutes'
+                  ].map(action => (
+                    <button
+                      key={action}
+                      onClick={() => setActionText(action)}
+                      className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-all"
+                    >
+                      {action}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </section>
+
+        {/* Recover Energy */}
+        <section className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-4 shadow-sm border border-emerald-200">
+          <h3 className="text-sm font-medium text-foreground mb-2">Recover Energy (+10)</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { text: 'Deep breathing', icon: '🌬️' },
+              { text: 'Short walk', icon: '🚶' },
+              { text: 'Stretch', icon: '🧘' },
+              { text: 'Drink water', icon: '💧' }
+            ].map(action => (
+              <button
+                key={action.text}
+                onClick={() => {
+                  setActionText(action.text);
+                  setState(prev => ({ ...prev, physical_capacity: Math.min(100, prev.physical_capacity + 10) }));
+                }}
+                className="px-3 py-2 text-sm bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-all"
+              >
+                {action.icon} {action.text}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Daily Loop */}
+        <section className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-3xl p-4 shadow-sm border border-slate-200">
+          <h3 className="text-sm font-medium text-foreground mb-3">Daily Loop</h3>
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">1</span>
+              <span className="text-muted-foreground">Check state</span>
+            </div>
+            <span className="text-muted-foreground">→</span>
+            <div className="flex items-center gap-1">
+              <span className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold">2</span>
+              <span className="text-muted-foreground">Take action</span>
+            </div>
+            <span className="text-muted-foreground">→</span>
+            <div className="flex items-center gap-1">
+              <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">3</span>
+              <span className="text-muted-foreground">Evaluate</span>
+            </div>
+            <span className="text-muted-foreground">→</span>
+            <div className="flex items-center gap-1">
+              <span className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">4</span>
+              <span className="text-muted-foreground">Repeat</span>
+            </div>
+          </div>
         </section>
 
         {/* Decision Map */}
