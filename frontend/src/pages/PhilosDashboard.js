@@ -478,6 +478,21 @@ export default function PhilosDashboard() {
               </p>
             </div>
           </div>
+
+          {/* Balance Score */}
+          {(() => {
+            const balanceScore = 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective));
+            const scoreColor = balanceScore >= 70 ? 'text-green-600' : balanceScore >= 40 ? 'text-yellow-500' : 'text-red-500';
+            const scoreBg = balanceScore >= 70 ? 'bg-green-100' : balanceScore >= 40 ? 'bg-yellow-100' : 'bg-red-100';
+            const scoreLabel = balanceScore >= 70 ? 'Balanced' : balanceScore >= 40 ? 'Unstable' : 'Conflict';
+            return (
+              <div className={`mt-3 p-3 ${scoreBg} rounded-xl text-center`}>
+                <p className="text-xs text-muted-foreground mb-1">Balance Score</p>
+                <p className={`text-3xl font-bold ${scoreColor}`}>{balanceScore}</p>
+                <p className={`text-sm font-medium ${scoreColor}`}>{scoreLabel}</p>
+              </div>
+            );
+          })()}
         </section>
 
         {/* Decision Map */}
