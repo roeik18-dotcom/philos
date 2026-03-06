@@ -170,6 +170,40 @@ export default function PhilosDashboard() {
     setHistory([]);
   };
 
+  // Calculate trajectory direction
+  const getTrajectoryDirection = () => {
+    if (history.length < 2) return 'starting';
+    const latest = history[0];
+    const previous = history[1];
+    const orderDelta = latest.chaos_order - previous.chaos_order;
+    const collectiveDelta = latest.ego_collective - previous.ego_collective;
+    
+    if (orderDelta > 0) return 'toward order';
+    if (orderDelta < 0) return 'toward chaos';
+    if (collectiveDelta > 0) return 'toward collective';
+    if (collectiveDelta < 0) return 'toward ego';
+    return 'stable';
+  };
+
+  // Export session data
+  const exportSession = () => {
+    const sessionData = {
+      timestamp: new Date().toISOString(),
+      state: state,
+      history: history,
+      balanceScore: 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective)),
+      trajectory: getTrajectoryDirection(),
+      totalActions: history.length
+    };
+    const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `philos-session-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-background p-6 pb-24">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -177,6 +211,8 @@ export default function PhilosDashboard() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground">Philos Orientation</h1>
+          <p className="text-lg text-primary font-medium mt-1">Mental Navigation System</p>
+          <p className="text-sm text-muted-foreground mt-1">Navigate your decisions in real time</p>
         </div>
 
         {/* State Sliders */}
@@ -617,6 +653,54 @@ export default function PhilosDashboard() {
             </div>
           </section>
         )}
+
+        {/* Session Summary */}
+        <section className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-indigo-200">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Session Summary</h3>
+          
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-white/60 rounded-xl p-3 text-center">
+              <p className="text-xs text-muted-foreground">Actions</p>
+              <p className="text-2xl font-bold text-indigo-600">{history.length}</p>
+            </div>
+            <div className="bg-white/60 rounded-xl p-3 text-center">
+              <p className="text-xs text-muted-foreground">Balance Score</p>
+              <p className={`text-2xl font-bold ${
+                100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective)) >= 70 
+                  ? 'text-green-600' 
+                  : 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective)) >= 40 
+                    ? 'text-yellow-500' 
+                    : 'text-red-500'
+              }`}>
+                {100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective))}
+              </p>
+            </div>
+            <div className="bg-white/60 rounded-xl p-3 text-center">
+              <p className="text-xs text-muted-foreground">Trajectory</p>
+              <p className="text-sm font-bold text-purple-600">{getTrajectoryDirection()}</p>
+            </div>
+            <div className="bg-white/60 rounded-xl p-3 text-center">
+              <p className="text-xs text-muted-foreground">Energy</p>
+              <p className={`text-sm font-bold ${state.physical_capacity >= 50 ? 'text-green-600' : state.physical_capacity >= 30 ? 'text-yellow-500' : 'text-red-500'}`}>
+                {state.physical_capacity >= 50 ? 'stable' : state.physical_capacity >= 30 ? 'low' : 'critical'}
+              </p>
+            </div>
+          </div>
+
+          {/* Export Button */}
+          <button
+            onClick={exportSession}
+            className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+          >
+            <span>📥</span> Export Session (JSON)
+          </button>
+        </section>
+
+        {/* Footer */}
+        <div className="text-center text-xs text-muted-foreground pt-4">
+          <p>Interactive Decision Engine</p>
+          <p className="mt-1">Deploy → test with real decisions</p>
+        </div>
 
       </div>
     </div>
