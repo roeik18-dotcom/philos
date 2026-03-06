@@ -1,4 +1,4 @@
-export default function DecisionMap({ state, decisionState, gapType }) {
+export default function DecisionMap({ state, decisionState, gapType, history = [] }) {
   if (!state) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -17,6 +17,13 @@ export default function DecisionMap({ state, decisionState, gapType }) {
   const isAllowed = decisionState?.result?.status === 'allowed';
   const dotColor = isAllowed ? '#22c55e' : '#ef4444'; // green-500 : red-500
   const dotBgColor = isAllowed ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+
+  // Convert history to trajectory points (reverse to get chronological order)
+  const trajectoryPoints = [...history].reverse().map(item => ({
+    x: ((item.ego_collective + 100) / 200) * 100,
+    y: ((item.chaos_order + 100) / 200) * 100,
+    decision: item.decision
+  }));
 
   return (
     <div className="space-y-4">
@@ -48,6 +55,46 @@ export default function DecisionMap({ state, decisionState, gapType }) {
           />
         </svg>
 
+        {/* Trajectory Path SVG */}
+        {trajectoryPoints.length > 1 && (
+          <svg 
+            className="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)]" 
+            style={{ pointerEvents: 'none' }}
+          >
+            {/* Trajectory line connecting points */}
+            <polyline
+              points={trajectoryPoints.map(p => `${p.x}%,${p.y}%`).join(' ')}
+              fill="none"
+              stroke="#9ca3af"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="4 2"
+              style={{ 
+                opacity: 0.5,
+                transition: 'all 0.5s ease-out'
+              }}
+            />
+          </svg>
+        )}
+
+        {/* Previous decision dots (trajectory) */}
+        {trajectoryPoints.slice(0, -1).map((point, idx) => (
+          <div
+            key={idx}
+            className="absolute w-3 h-3 rounded-full"
+            style={{
+              left: `${point.x}%`,
+              top: `${point.y}%`,
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: point.decision === 'Allowed' ? '#86efac' : '#fca5a5',
+              opacity: 0.4 + (idx * 0.1),
+              transition: 'all 0.3s ease-out',
+              boxShadow: '0 0 4px rgba(0,0,0,0.2)'
+            }}
+          />
+        ))}
+
         {/* Axes Labels (Hebrew RTL) */}
         <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-medium text-muted-foreground">
           chaos ↑
@@ -62,9 +109,9 @@ export default function DecisionMap({ state, decisionState, gapType }) {
           collective →
         </div>
 
-        {/* Position Dot */}
+        {/* Current Position Dot */}
         <div
-          className="absolute w-8 h-8 -mt-4 -ml-4"
+          className="absolute w-8 h-8 -mt-4 -ml-4 z-10"
           style={{
             left: `${xPosition}%`,
             top: `${yPosition}%`,

@@ -258,6 +258,7 @@ export default function PhilosDashboard() {
             state={state}
             decisionState={decisionResult ? { result: { status: decisionResult.decision.toLowerCase() } } : null}
             gapType={state.gap_type}
+            history={history}
           />
         </section>
 
