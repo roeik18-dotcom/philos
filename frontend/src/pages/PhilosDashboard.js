@@ -18,15 +18,17 @@ export default function PhilosDashboard() {
     }
 
     let decision = "Allowed";
+    let reasons = [];
 
     // Evaluate based on gap type and capacity
     if (state.gap_type === "energy" && state.physical_capacity < 30) {
       decision = "Blocked";
+      reasons.push("Energy gap blocks action - physical capacity too low");
+    } else {
+      reasons.push("Energy gap allows the action");
     }
 
     // Calculate new projection values based on action
-    // Move toward order when taking structured action
-    // Move toward collective when action benefits others
     const actionLower = actionText.toLowerCase();
     
     let newChaosOrder = state.chaos_order;
@@ -35,21 +37,30 @@ export default function PhilosDashboard() {
     // Actions that increase order
     if (actionLower.includes('walk') || actionLower.includes('exercise') || actionLower.includes('organize')) {
       newChaosOrder = Math.min(100, state.chaos_order + 20);
+      reasons.push("The action increases order and structure");
     }
     
     // Actions that increase collective orientation
     if (actionLower.includes('help') || actionLower.includes('share') || actionLower.includes('call')) {
       newEgoCollective = Math.min(100, state.ego_collective + 20);
+      reasons.push("The action increases collective orientation");
     }
 
     // Actions that increase chaos/spontaneity  
     if (actionLower.includes('rest') || actionLower.includes('sleep') || actionLower.includes('relax')) {
       newChaosOrder = Math.max(-100, state.chaos_order - 15);
+      reasons.push("The action allows for spontaneity and rest");
     }
 
     // Actions that increase ego focus
     if (actionLower.includes('meditate') || actionLower.includes('journal') || actionLower.includes('think')) {
       newEgoCollective = Math.max(-100, state.ego_collective - 15);
+      reasons.push("The action focuses on self-reflection");
+    }
+
+    // Default reason if no specific match
+    if (reasons.length === 1) {
+      reasons.push("Action maintains current orientation balance");
     }
 
     // Update state with new projection values
@@ -61,6 +72,8 @@ export default function PhilosDashboard() {
 
     setDecisionResult({
       decision,
+      action: actionText,
+      reasons,
       projection: {
         chaos_order: newChaosOrder,
         ego_collective: newEgoCollective
@@ -190,6 +203,36 @@ export default function PhilosDashboard() {
                 <span className="text-muted-foreground">Projection → ego/collective:</span>{' '}
                 {decisionResult.projection.ego_collective}
               </p>
+            </div>
+          )}
+
+          {/* Decision Explanation */}
+          {decisionResult && (
+            <div className="mt-4 p-4 bg-white border border-border rounded-2xl">
+              <h4 className="text-lg font-semibold text-foreground mb-3">Decision Explanation</h4>
+              
+              <div className="space-y-2 text-sm">
+                <p className="text-foreground">
+                  <span className="text-muted-foreground">Action:</span>{' '}
+                  <span className="font-medium">{decisionResult.action}</span>
+                </p>
+                
+                <p className="text-foreground">
+                  <span className="text-muted-foreground">Decision:</span>{' '}
+                  <span className={`font-bold ${decisionResult.decision === 'Allowed' ? 'text-green-600' : 'text-red-600'}`}>
+                    {decisionResult.decision}
+                  </span>
+                </p>
+                
+                <div className="mt-3 pt-3 border-t border-border">
+                  <p className="text-muted-foreground mb-2">Explanation:</p>
+                  <ul className="space-y-1">
+                    {decisionResult.reasons.map((reason, idx) => (
+                      <li key={idx} className="text-foreground">• {reason}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
         </section>
