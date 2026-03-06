@@ -930,6 +930,111 @@ export default function PhilosDashboard() {
                     </div>
                   </div>
 
+                  {/* Value Graph */}
+                  <div className="bg-white/70 rounded-xl p-3 mb-4">
+                    <p className="text-xs text-muted-foreground mb-2">Value Graph</p>
+                    <div className="relative" style={{ height: '200px' }}>
+                      <svg width="100%" height="100%" viewBox="0 0 300 200" className="overflow-visible">
+                        {/* Background zones */}
+                        <text x="150" y="20" textAnchor="middle" className="fill-indigo-400 text-xs" fontSize="10">order</text>
+                        <text x="280" y="100" textAnchor="end" className="fill-blue-400 text-xs" fontSize="10">recovery</text>
+                        <text x="230" y="35" textAnchor="middle" className="fill-green-400 text-xs" fontSize="10">contribution</text>
+                        <text x="150" y="190" textAnchor="middle" className="fill-red-400 text-xs" fontSize="10">harm</text>
+                        <text x="20" y="100" textAnchor="start" className="fill-gray-400 text-xs" fontSize="10">avoidance</text>
+                        
+                        {/* Center point */}
+                        <circle cx="150" cy="100" r="3" fill="#d1d5db" />
+                        
+                        {/* Connection lines */}
+                        {[...history].reverse().slice(0, 20).map((item, idx, arr) => {
+                          if (idx === 0) return null;
+                          const prev = arr[idx - 1];
+                          
+                          const getPosition = (tag, index) => {
+                            const jitter = (index * 17) % 30 - 15;
+                            switch(tag) {
+                              case 'order': return { x: 150 + jitter, y: 40 + (index * 3) };
+                              case 'recovery': return { x: 240 + jitter/2, y: 80 + (index * 4) };
+                              case 'contribution': return { x: 220 + jitter, y: 45 + (index * 3) };
+                              case 'harm': return { x: 150 + jitter, y: 160 + (index * 2) };
+                              case 'avoidance': return { x: 60 + jitter/2, y: 100 + (index * 3) };
+                              default: return { x: 150 + jitter, y: 100 + (index * 2) };
+                            }
+                          };
+                          
+                          const prevPos = getPosition(prev.value_tag, idx - 1);
+                          const currPos = getPosition(item.value_tag, idx);
+                          
+                          return (
+                            <line
+                              key={`line-${idx}`}
+                              x1={prevPos.x}
+                              y1={prevPos.y}
+                              x2={currPos.x}
+                              y2={currPos.y}
+                              stroke="#94a3b8"
+                              strokeWidth="1"
+                              strokeDasharray="2 2"
+                              opacity={0.4 + (idx / arr.length) * 0.4}
+                            />
+                          );
+                        })}
+                        
+                        {/* Decision nodes */}
+                        {[...history].reverse().slice(0, 20).map((item, idx) => {
+                          const getPosition = (tag, index) => {
+                            const jitter = (index * 17) % 30 - 15;
+                            switch(tag) {
+                              case 'order': return { x: 150 + jitter, y: 40 + (index * 3) };
+                              case 'recovery': return { x: 240 + jitter/2, y: 80 + (index * 4) };
+                              case 'contribution': return { x: 220 + jitter, y: 45 + (index * 3) };
+                              case 'harm': return { x: 150 + jitter, y: 160 + (index * 2) };
+                              case 'avoidance': return { x: 60 + jitter/2, y: 100 + (index * 3) };
+                              default: return { x: 150 + jitter, y: 100 + (index * 2) };
+                            }
+                          };
+                          
+                          const pos = getPosition(item.value_tag, idx);
+                          const color = item.decision === 'Allowed' ? '#22c55e' : '#ef4444';
+                          const size = 6 + (idx / Math.max(history.length, 1)) * 6;
+                          
+                          return (
+                            <g key={`node-${idx}`} className="cursor-pointer">
+                              {/* Outer glow */}
+                              <circle
+                                cx={pos.x}
+                                cy={pos.y}
+                                r={size + 2}
+                                fill={color}
+                                opacity={0.2}
+                              />
+                              {/* Main node */}
+                              <circle
+                                cx={pos.x}
+                                cy={pos.y}
+                                r={size}
+                                fill={color}
+                                opacity={0.7 + (idx / Math.max(history.length, 1)) * 0.3}
+                                stroke="white"
+                                strokeWidth="2"
+                              >
+                                <title>{`${item.time}: ${item.action}\nDecision: ${item.decision}\nBalance: ${item.balance_score}\nValue: ${item.value_tag}`}</title>
+                              </circle>
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    </div>
+                    <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-green-500"></span> Allowed
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span> Blocked
+                      </span>
+                    </div>
+                  </div>
+
                   {/* Your Pattern Summary */}
                   {analysis.patternSummary.length > 0 && (
                     <div className="bg-amber-100/50 border border-amber-200 rounded-xl p-4">
