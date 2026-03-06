@@ -933,32 +933,39 @@ export default function PhilosDashboard() {
                   {/* Value Graph */}
                   <div className="bg-white/70 rounded-xl p-3 mb-4">
                     <p className="text-xs text-muted-foreground mb-2">Value Graph</p>
-                    <div className="relative" style={{ height: '200px' }}>
-                      <svg width="100%" height="100%" viewBox="0 0 300 200" className="overflow-visible">
-                        {/* Background zones */}
-                        <text x="150" y="20" textAnchor="middle" className="fill-indigo-400 text-xs" fontSize="10">order</text>
-                        <text x="280" y="100" textAnchor="end" className="fill-blue-400 text-xs" fontSize="10">recovery</text>
-                        <text x="230" y="35" textAnchor="middle" className="fill-green-400 text-xs" fontSize="10">contribution</text>
-                        <text x="150" y="190" textAnchor="middle" className="fill-red-400 text-xs" fontSize="10">harm</text>
-                        <text x="20" y="100" textAnchor="start" className="fill-gray-400 text-xs" fontSize="10">avoidance</text>
+                    <div className="relative" style={{ height: '220px' }}>
+                      <svg width="100%" height="100%" viewBox="0 0 300 220" className="overflow-hidden">
+                        {/* Safe area boundary (for reference) */}
+                        <rect x="30" y="25" width="240" height="170" fill="none" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 4" rx="8" />
                         
-                        {/* Center point */}
-                        <circle cx="150" cy="100" r="3" fill="#d1d5db" />
+                        {/* Background zone labels */}
+                        <text x="150" y="18" textAnchor="middle" className="fill-indigo-500" fontSize="11" fontWeight="500">order</text>
+                        <text x="255" y="110" textAnchor="middle" className="fill-blue-500" fontSize="11" fontWeight="500">recovery</text>
+                        <text x="230" y="40" textAnchor="middle" className="fill-green-500" fontSize="11" fontWeight="500">contribution</text>
+                        <text x="150" y="212" textAnchor="middle" className="fill-red-500" fontSize="11" fontWeight="500">harm</text>
+                        <text x="45" y="110" textAnchor="middle" className="fill-gray-500" fontSize="11" fontWeight="500">avoidance</text>
+                        
+                        {/* Center crosshair */}
+                        <line x1="150" y1="85" x2="150" y2="135" stroke="#e5e7eb" strokeWidth="1" />
+                        <line x1="100" y1="110" x2="200" y2="110" stroke="#e5e7eb" strokeWidth="1" />
+                        <circle cx="150" cy="110" r="4" fill="#d1d5db" />
                         
                         {/* Connection lines */}
                         {[...history].reverse().slice(0, 20).map((item, idx, arr) => {
                           if (idx === 0) return null;
                           const prev = arr[idx - 1];
                           
+                          // Safe positioning function with padding
                           const getPosition = (tag, index) => {
-                            const jitter = (index * 17) % 30 - 15;
+                            const spread = Math.min(index * 2, 15);
+                            const jitter = ((index * 13) % 20) - 10;
                             switch(tag) {
-                              case 'order': return { x: 150 + jitter, y: 40 + (index * 3) };
-                              case 'recovery': return { x: 240 + jitter/2, y: 80 + (index * 4) };
-                              case 'contribution': return { x: 220 + jitter, y: 45 + (index * 3) };
-                              case 'harm': return { x: 150 + jitter, y: 160 + (index * 2) };
-                              case 'avoidance': return { x: 60 + jitter/2, y: 100 + (index * 3) };
-                              default: return { x: 150 + jitter, y: 100 + (index * 2) };
+                              case 'order': return { x: 150 + jitter, y: 45 + spread };
+                              case 'recovery': return { x: 220 + jitter/2, y: 90 + spread };
+                              case 'contribution': return { x: 200 + jitter, y: 55 + spread };
+                              case 'harm': return { x: 150 + jitter, y: 170 - spread };
+                              case 'avoidance': return { x: 80 + jitter/2, y: 100 + spread };
+                              default: return { x: 150 + jitter, y: 110 + (spread/2) };
                             }
                           };
                           
@@ -973,30 +980,32 @@ export default function PhilosDashboard() {
                               x2={currPos.x}
                               y2={currPos.y}
                               stroke="#94a3b8"
-                              strokeWidth="1"
-                              strokeDasharray="2 2"
-                              opacity={0.4 + (idx / arr.length) * 0.4}
+                              strokeWidth="1.5"
+                              strokeDasharray="3 2"
+                              opacity={0.3 + (idx / arr.length) * 0.5}
                             />
                           );
                         })}
                         
                         {/* Decision nodes */}
                         {[...history].reverse().slice(0, 20).map((item, idx) => {
+                          // Safe positioning function with padding
                           const getPosition = (tag, index) => {
-                            const jitter = (index * 17) % 30 - 15;
+                            const spread = Math.min(index * 2, 15);
+                            const jitter = ((index * 13) % 20) - 10;
                             switch(tag) {
-                              case 'order': return { x: 150 + jitter, y: 40 + (index * 3) };
-                              case 'recovery': return { x: 240 + jitter/2, y: 80 + (index * 4) };
-                              case 'contribution': return { x: 220 + jitter, y: 45 + (index * 3) };
-                              case 'harm': return { x: 150 + jitter, y: 160 + (index * 2) };
-                              case 'avoidance': return { x: 60 + jitter/2, y: 100 + (index * 3) };
-                              default: return { x: 150 + jitter, y: 100 + (index * 2) };
+                              case 'order': return { x: 150 + jitter, y: 45 + spread };
+                              case 'recovery': return { x: 220 + jitter/2, y: 90 + spread };
+                              case 'contribution': return { x: 200 + jitter, y: 55 + spread };
+                              case 'harm': return { x: 150 + jitter, y: 170 - spread };
+                              case 'avoidance': return { x: 80 + jitter/2, y: 100 + spread };
+                              default: return { x: 150 + jitter, y: 110 + (spread/2) };
                             }
                           };
                           
                           const pos = getPosition(item.value_tag, idx);
                           const color = item.decision === 'Allowed' ? '#22c55e' : '#ef4444';
-                          const size = 6 + (idx / Math.max(history.length, 1)) * 6;
+                          const size = 7 + (idx / Math.max(history.length, 1)) * 5;
                           
                           return (
                             <g key={`node-${idx}`} className="cursor-pointer">
@@ -1004,9 +1013,9 @@ export default function PhilosDashboard() {
                               <circle
                                 cx={pos.x}
                                 cy={pos.y}
-                                r={size + 2}
+                                r={size + 3}
                                 fill={color}
-                                opacity={0.2}
+                                opacity={0.15}
                               />
                               {/* Main node */}
                               <circle
@@ -1014,12 +1023,23 @@ export default function PhilosDashboard() {
                                 cy={pos.y}
                                 r={size}
                                 fill={color}
-                                opacity={0.7 + (idx / Math.max(history.length, 1)) * 0.3}
+                                opacity={0.8}
                                 stroke="white"
                                 strokeWidth="2"
                               >
                                 <title>{`${item.time}: ${item.action}\nDecision: ${item.decision}\nBalance: ${item.balance_score}\nValue: ${item.value_tag}`}</title>
                               </circle>
+                              {/* Node number */}
+                              <text
+                                x={pos.x}
+                                y={pos.y + 3}
+                                textAnchor="middle"
+                                fontSize="8"
+                                fill="white"
+                                fontWeight="bold"
+                              >
+                                {idx + 1}
+                              </text>
                             </g>
                           );
                         })}
@@ -1027,10 +1047,10 @@ export default function PhilosDashboard() {
                     </div>
                     <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-green-500"></span> Allowed
+                        <span className="w-3 h-3 rounded-full bg-green-500"></span> Allowed
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-red-500"></span> Blocked
+                        <span className="w-3 h-3 rounded-full bg-red-500"></span> Blocked
                       </span>
                     </div>
                   </div>
