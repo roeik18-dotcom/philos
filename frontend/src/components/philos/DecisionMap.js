@@ -1,4 +1,4 @@
-export default function DecisionMap({ state, decisionState, gapType, history = [] }) {
+export default function DecisionMap({ state, decisionState, gapType, history = [], suggestion = null }) {
   if (!state) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -24,6 +24,26 @@ export default function DecisionMap({ state, decisionState, gapType, history = [
     y: ((item.chaos_order + 100) / 200) * 100,
     decision: item.decision
   }));
+
+  // Calculate arrow endpoint based on suggestion vector
+  const arrowLength = 15; // percentage of map
+  let arrowEndX = xPosition;
+  let arrowEndY = yPosition;
+  
+  if (suggestion && !suggestion.inOptimalZone) {
+    // Convert suggestion deltas to direction
+    // suggestedCollective > 0 means move left (toward collective)
+    // suggestedOrder > 0 means move down (toward order)
+    const deltaX = suggestion.suggestedCollective > 0 ? -1 : (suggestion.suggestedCollective < 0 ? 1 : 0);
+    const deltaY = suggestion.suggestedOrder > 0 ? 1 : (suggestion.suggestedOrder < 0 ? -1 : 0);
+    
+    // Normalize and scale the arrow
+    const magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    if (magnitude > 0) {
+      arrowEndX = xPosition + (deltaX / magnitude) * arrowLength;
+      arrowEndY = yPosition + (deltaY / magnitude) * arrowLength;
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -76,6 +96,76 @@ export default function DecisionMap({ state, decisionState, gapType, history = [
               }}
             />
           </svg>
+        )}
+
+        {/* Suggestion Vector Arrow - using div positioning */}
+        {suggestion && !suggestion.inOptimalZone && (arrowEndX !== xPosition || arrowEndY !== yPosition) && (
+          <div
+            className="absolute"
+            style={{
+              left: `calc(${xPosition}% + 1rem)`,
+              top: `calc(${yPosition}% + 1rem)`,
+              width: '0',
+              height: '0',
+              zIndex: 5
+            }}
+          >
+            {/* Arrow line */}
+            <svg
+              width="100"
+              height="100"
+              style={{
+                position: 'absolute',
+                left: '-50px',
+                top: '-50px',
+                overflow: 'visible'
+              }}
+            >
+              <defs>
+                <marker
+                  id="arrowhead"
+                  markerWidth="8"
+                  markerHeight="6"
+                  refX="7"
+                  refY="3"
+                  orient="auto"
+                >
+                  <polygon
+                    points="0 0, 8 3, 0 6"
+                    fill="#3b82f6"
+                  />
+                </marker>
+              </defs>
+              <line
+                x1="50"
+                y1="50"
+                x2={50 + (arrowEndX - xPosition) * 3}
+                y2={50 + (arrowEndY - yPosition) * 3}
+                stroke="#3b82f6"
+                strokeWidth="3"
+                strokeLinecap="round"
+                markerEnd="url(#arrowhead)"
+                style={{ opacity: 0.7 }}
+              />
+            </svg>
+          </div>
+        )}
+        
+        {/* Optimal zone glow */}
+        {suggestion && suggestion.inOptimalZone && (
+          <div
+            className="absolute rounded-full"
+            style={{
+              left: `calc(${xPosition}% + 1rem - 20px)`,
+              top: `calc(${yPosition}% + 1rem - 20px)`,
+              width: '40px',
+              height: '40px',
+              border: '2px solid #22c55e',
+              opacity: 0.5,
+              animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+              zIndex: 4
+            }}
+          />
         )}
 
         {/* Previous decision dots (trajectory) */}

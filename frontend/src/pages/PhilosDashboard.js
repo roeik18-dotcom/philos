@@ -379,6 +379,7 @@ export default function PhilosDashboard() {
             decisionState={decisionResult ? { result: { status: decisionResult.decision.toLowerCase() } } : null}
             gapType={state.gap_type}
             history={history}
+            suggestion={calculateSuggestedVector(state.chaos_order, state.ego_collective)}
           />
         </section>
 
