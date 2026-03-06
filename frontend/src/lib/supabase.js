@@ -3,11 +3,19 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase credentials. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env file');
+// Only log warning in development
+if ((!supabaseUrl || !supabaseAnonKey) && process.env.NODE_ENV === 'development') {
+  console.warn('⚠️  Supabase credentials not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env file');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+// Create client with placeholder values if not configured (prevents crashes)
+const placeholderUrl = 'https://placeholder.supabase.co';
+const placeholderKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.placeholder';
+
+export const supabase = createClient(
+  supabaseUrl || placeholderUrl,
+  supabaseAnonKey || placeholderKey
+);
 
 // Generate UUID v4
 function generateUUID() {
