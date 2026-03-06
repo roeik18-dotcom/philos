@@ -19,15 +19,51 @@ export default function PhilosDashboard() {
 
     let decision = "Allowed";
 
+    // Evaluate based on gap type and capacity
     if (state.gap_type === "energy" && state.physical_capacity < 30) {
       decision = "Blocked";
     }
 
+    // Calculate new projection values based on action
+    // Move toward order when taking structured action
+    // Move toward collective when action benefits others
+    const actionLower = actionText.toLowerCase();
+    
+    let newChaosOrder = state.chaos_order;
+    let newEgoCollective = state.ego_collective;
+
+    // Actions that increase order
+    if (actionLower.includes('walk') || actionLower.includes('exercise') || actionLower.includes('organize')) {
+      newChaosOrder = Math.min(100, state.chaos_order + 20);
+    }
+    
+    // Actions that increase collective orientation
+    if (actionLower.includes('help') || actionLower.includes('share') || actionLower.includes('call')) {
+      newEgoCollective = Math.min(100, state.ego_collective + 20);
+    }
+
+    // Actions that increase chaos/spontaneity  
+    if (actionLower.includes('rest') || actionLower.includes('sleep') || actionLower.includes('relax')) {
+      newChaosOrder = Math.max(-100, state.chaos_order - 15);
+    }
+
+    // Actions that increase ego focus
+    if (actionLower.includes('meditate') || actionLower.includes('journal') || actionLower.includes('think')) {
+      newEgoCollective = Math.max(-100, state.ego_collective - 15);
+    }
+
+    // Update state with new projection values
+    setState(prev => ({
+      ...prev,
+      chaos_order: newChaosOrder,
+      ego_collective: newEgoCollective
+    }));
+
     setDecisionResult({
       decision,
       projection: {
-        chaos_order: state.chaos_order,
-        ego_collective: state.ego_collective
+        chaos_order: newChaosOrder,
+        ego_collective: newEgoCollective
       }
     });
   };

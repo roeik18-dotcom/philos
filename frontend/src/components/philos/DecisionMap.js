@@ -64,10 +64,11 @@ export default function DecisionMap({ state, decisionState, gapType }) {
 
         {/* Position Dot */}
         <div
-          className="absolute w-8 h-8 -mt-4 -ml-4 transition-all duration-300 ease-out"
+          className="absolute w-8 h-8 -mt-4 -ml-4"
           style={{
             left: `${xPosition}%`,
-            top: `${yPosition}%`
+            top: `${yPosition}%`,
+            transition: 'left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}
         >
           {/* Pulse effect */}
@@ -98,19 +99,21 @@ export default function DecisionMap({ state, decisionState, gapType }) {
 
         {/* Crosshair at position */}
         <div
-          className="absolute w-px h-full transition-all duration-300"
+          className="absolute w-px h-full"
           style={{ 
             left: `${xPosition}%`,
             backgroundColor: dotColor,
-            opacity: 0.2
+            opacity: 0.2,
+            transition: 'left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}
         />
         <div
-          className="absolute h-px w-full transition-all duration-300"
+          className="absolute h-px w-full"
           style={{ 
             top: `${yPosition}%`,
             backgroundColor: dotColor,
-            opacity: 0.2
+            opacity: 0.2,
+            transition: 'top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}
         />
       </div>
