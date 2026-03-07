@@ -268,6 +268,152 @@ async def get_philos_data(user_id: str):
         logger.error(f"Get data error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# Session Library Models
+class SavedSession(BaseModel):
+    session_id: str
+    user_id: str
+    date: str
+    total_decisions: int
+    dominant_value: str
+    order_drift: int
+    collective_drift: int
+    history: List[Dict[str, Any]]
+    created_at: str
+
+class SavedSessionSummary(BaseModel):
+    session_id: str
+    date: str
+    total_decisions: int
+    dominant_value: str
+    order_drift: int
+    collective_drift: int
+    created_at: str
+
+class SessionListResponse(BaseModel):
+    success: bool
+    sessions: List[SavedSessionSummary]
+
+
+# Session Library Endpoints
+@api_router.post("/philos/sessions/save")
+async def save_session(user_id: str, history: List[Dict[str, Any]]):
+    """
+    Save a completed session to the library.
+    """
+    try:
+        if not history or len(history) == 0:
+            raise HTTPException(status_code=400, detail="Cannot save empty session")
+        
+        # Calculate session metrics
+        tag_counts = {'contribution': 0, 'recovery': 0, 'harm': 0, 'order': 0, 'avoidance': 0}
+        total_order = 0
+        total_collective = 0
+        
+        for h in history:
+            tag = h.get('value_tag', '')
+            if tag in tag_counts:
+                tag_counts[tag] += 1
+            total_order += h.get('chaos_order', 0)
+            total_collective += h.get('ego_collective', 0)
+        
+        # Find dominant value
+        dominant_value = max(tag_counts.items(), key=lambda x: x[1])[0] if any(tag_counts.values()) else 'neutral'
+        
+        # Calculate drifts
+        order_drift = (tag_counts['order'] + tag_counts['recovery']) - (tag_counts['harm'] + tag_counts['avoidance'])
+        collective_drift = tag_counts['contribution'] - tag_counts['harm']
+        
+        now = datetime.now(timezone.utc)
+        session_id = str(uuid.uuid4())
+        
+        session = {
+            'session_id': session_id,
+            'user_id': user_id,
+            'date': now.strftime('%Y-%m-%d'),
+            'total_decisions': len(history),
+            'dominant_value': dominant_value,
+            'order_drift': order_drift,
+            'collective_drift': collective_drift,
+            'history': history,
+            'created_at': now.isoformat()
+        }
+        
+        await db.philos_saved_sessions.insert_one(session)
+        
+        return {"success": True, "session_id": session_id}
+        
+    except Exception as e:
+        logger.error(f"Save session error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/philos/sessions/{user_id}", response_model=SessionListResponse)
+async def list_sessions(user_id: str):
+    """
+    List all saved sessions for a user.
+    """
+    try:
+        sessions = await db.philos_saved_sessions.find(
+            {"user_id": user_id},
+            {"_id": 0, "history": 0}  # Exclude history for list view
+        ).sort("created_at", -1).to_list(100)
+        
+        return SessionListResponse(
+            success=True,
+            sessions=[SavedSessionSummary(**s) for s in sessions]
+        )
+        
+    except Exception as e:
+        logger.error(f"List sessions error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/philos/sessions/{user_id}/{session_id}")
+async def get_session(user_id: str, session_id: str):
+    """
+    Get a specific saved session with full history.
+    """
+    try:
+        session = await db.philos_saved_sessions.find_one(
+            {"user_id": user_id, "session_id": session_id},
+            {"_id": 0}
+        )
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {"success": True, "session": session}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get session error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/philos/sessions/{user_id}/{session_id}")
+async def delete_session(user_id: str, session_id: str):
+    """
+    Delete a saved session.
+    """
+    try:
+        result = await db.philos_saved_sessions.delete_one(
+            {"user_id": user_id, "session_id": session_id}
+        )
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {"success": True, "deleted": True}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete session error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 

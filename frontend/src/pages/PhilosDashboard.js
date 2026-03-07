@@ -9,7 +9,8 @@ import {
   OrientationFieldSection,
   GlobalValueFieldSection,
   GlobalTrendSection,
-  SessionSummarySection
+  SessionSummarySection,
+  SessionLibrarySection
 } from '../components/philos/sections';
 import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
 
@@ -530,6 +531,35 @@ export default function PhilosDashboard() {
     }
   };
 
+  // Load a session from the library
+  const loadSessionFromLibrary = (sessionHistory) => {
+    if (window.confirm('טעינת סשן תחליף את הנתונים הנוכחיים. להמשיך?')) {
+      setHistory(sessionHistory);
+      
+      // Recalculate state from the loaded session
+      if (sessionHistory.length > 0) {
+        const lastDecision = sessionHistory[0];
+        setState(prev => ({
+          ...prev,
+          chaos_order: lastDecision.chaos_order || 0,
+          ego_collective: lastDecision.ego_collective || 0
+        }));
+        setDecisionResult({
+          decision: lastDecision.decision,
+          action: lastDecision.action,
+          reasons: [],
+          projection: {
+            chaos_order: lastDecision.chaos_order,
+            ego_collective: lastDecision.ego_collective
+          },
+          value_tag: lastDecision.value_tag,
+          balance_score: lastDecision.balance_score
+        });
+      }
+      setActionText('');
+    }
+  };
+
   const evaluateAction = () => {
     if (!actionText) {
       alert('יש להזין פעולה');
@@ -1046,6 +1076,13 @@ export default function PhilosDashboard() {
           exportSession={exportSession}
           setShowShareCard={setShowShareCard}
           decisionResult={decisionResult}
+        />
+
+        {/* Session Library Section */}
+        <SessionLibrarySection
+          currentHistory={history}
+          onLoadSession={loadSessionFromLibrary}
+          cloudAvailable={syncStatus.cloudAvailable}
         />
 
         {/* Personal Map Section */}

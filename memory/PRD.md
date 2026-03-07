@@ -86,7 +86,8 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
 │           ├── OrientationFieldSection.js
 │           ├── GlobalValueFieldSection.js
 │           ├── GlobalTrendSection.js
-│           └── SessionSummarySection.js
+│           ├── SessionSummarySection.js
+│           └── SessionLibrarySection.js
 └── App.js
 ```
 
@@ -189,6 +190,14 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
     - Sync status indicator in header (מסונכרן לענן / מסנכרן... / מצב לא מקוון)
     - localStorage remains as fallback cache
     - Syncs: history, globalStats, trendHistory
+30. ✅ Built Session Library feature
+    - New API endpoints: POST /api/philos/sessions/save, GET /api/philos/sessions/{user_id}, DELETE /api/philos/sessions/{user_id}/{session_id}
+    - SessionLibrarySection component with expandable UI
+    - Save current session to cloud library
+    - Browse saved sessions as cards showing: date, decisions count, dominant value, order drift, collective drift
+    - "פתח סשן" (Open Session) button to load saved sessions
+    - Delete sessions with confirmation
+    - Hebrew RTL layout preserved
 
 ## Backlog / Future Tasks
 

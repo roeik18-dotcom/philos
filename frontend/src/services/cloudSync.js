@@ -90,4 +90,86 @@ export const isCloudAvailable = async () => {
   }
 };
 
+// Session Library Functions
+
+// Save a session to the library
+export const saveSessionToLibrary = async (history) => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/philos/sessions/save?user_id=${userId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(history)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Save failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Save session error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// List all saved sessions
+export const listSavedSessions = async () => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/philos/sessions/${userId}`);
+    
+    if (!response.ok) {
+      throw new Error(`List failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('List sessions error:', error);
+    return { success: false, sessions: [], error: error.message };
+  }
+};
+
+// Get a specific session with full history
+export const getSessionById = async (sessionId) => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/philos/sessions/${userId}/${sessionId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Get session failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Get session error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Delete a saved session
+export const deleteSession = async (sessionId) => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/philos/sessions/${userId}/${sessionId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Delete failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Delete session error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 export { getUserId };
