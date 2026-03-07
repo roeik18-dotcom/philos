@@ -81,6 +81,7 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
 │           ├── CollectiveValueMapSection.js
 │           ├── OrientationFieldSection.js
 │           ├── GlobalValueFieldSection.js
+│           ├── GlobalTrendSection.js
 │           └── SessionSummarySection.js
 └── App.js
 ```
@@ -105,6 +106,12 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
 - **Harm Pressure Long Term**: Global harm count / total global decisions
 - **Recovery Stability Long Term**: Global recovery count / total global decisions
 - **Dominant Value Cluster**: Most frequent value tag across all sessions
+
+### Global Trend Metrics (Time Series)
+- **Order Drift Trend**: Direction of order drift change over sessions
+- **Collective Drift Trend**: Direction of social orientation over time
+- **Harm Pressure Trend**: Whether harm actions are increasing or decreasing
+- **Recovery Stability Trend**: Consistency of recovery actions over time
 
 ### Optimal Zone
 - Order: 20-60
@@ -158,11 +165,23 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
       - GlobalValueFieldSection
       - SessionSummarySection
     - All behavior and UI unchanged
+28. ✅ Added Global Trend Over Time section
+    - Sparkline bar charts for 4 metrics:
+      - Order Drift (סחף סדר)
+      - Collective Drift (סחף חברתי)
+      - Harm Pressure (לחץ נזק)
+      - Recovery Stability (יציבות התאוששות)
+    - Shows last 10 sessions
+    - Trend direction indicators (↑ עולה / ↓ יורד / → יציב)
+    - Trend Insight summary box with actionable insights
+    - Auto-saves session snapshots every 5 decisions
+    - Persisted in localStorage (philos_trend_history)
 
 ## Backlog / Future Tasks
 
 ### P1 - High Priority
-- [x] Refactor PhilosDashboard.js into smaller components (DONE - reduced from 1727 to 912 lines)
+- [x] Refactor PhilosDashboard.js into smaller components (DONE)
+- [x] Historical trend analysis (DONE - Global Trend section)
 - [ ] User authentication
 - [ ] Cloud sync for session data
 - [ ] Multi-device support

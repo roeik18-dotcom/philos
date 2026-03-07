@@ -5,4 +5,5 @@ export { default as PersonalMapSection } from './PersonalMapSection';
 export { default as CollectiveValueMapSection } from './CollectiveValueMapSection';
 export { default as OrientationFieldSection } from './OrientationFieldSection';
 export { default as GlobalValueFieldSection } from './GlobalValueFieldSection';
+export { default as GlobalTrendSection } from './GlobalTrendSection';
 export { default as SessionSummarySection } from './SessionSummarySection';

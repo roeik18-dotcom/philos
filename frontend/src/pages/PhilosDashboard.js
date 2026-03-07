@@ -8,12 +8,14 @@ import {
   CollectiveValueMapSection,
   OrientationFieldSection,
   GlobalValueFieldSection,
+  GlobalTrendSection,
   SessionSummarySection
 } from '../components/philos/sections';
 
 // LocalStorage keys
 const STORAGE_KEY = 'philos_session_data';
 const GLOBAL_STORAGE_KEY = 'philos_global_data';
+const TREND_STORAGE_KEY = 'philos_trend_history';
 
 // Optimal zone definition
 const OPTIMAL_ZONE = {
@@ -222,6 +224,19 @@ export default function PhilosDashboard() {
     };
   };
 
+  // Load trend history from localStorage
+  const loadTrendHistory = () => {
+    try {
+      const saved = localStorage.getItem(TREND_STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Error loading trend history:', e);
+    }
+    return [];
+  };
+
   const savedData = loadFromStorage();
 
   const [state, setState] = useState(savedData?.state || {
@@ -234,6 +249,7 @@ export default function PhilosDashboard() {
   const [decisionResult, setDecisionResult] = useState(savedData?.decisionResult || null);
   const [history, setHistory] = useState(savedData?.history || []);
   const [globalStats, setGlobalStats] = useState(loadGlobalStats);
+  const [trendHistory, setTrendHistory] = useState(loadTrendHistory);
   const [showShareCard, setShowShareCard] = useState(false);
   const shareCardRef = useRef(null);
 
@@ -261,6 +277,22 @@ export default function PhilosDashboard() {
     }
   }, [globalStats]);
 
+  // Save trend history to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(TREND_STORAGE_KEY, JSON.stringify(trendHistory));
+    } catch (e) {
+      console.error('Error saving trend history:', e);
+    }
+  }, [trendHistory]);
+
+  // Auto-save session snapshot when significant decisions are made (every 5 decisions)
+  useEffect(() => {
+    if (history.length > 0 && history.length % 5 === 0) {
+      saveSessionSnapshotSilent();
+    }
+  }, [history.length]);
+
   // Update global stats when a new decision is made
   const updateGlobalStats = (valueTag) => {
     setGlobalStats(prev => ({
@@ -270,9 +302,81 @@ export default function PhilosDashboard() {
     }));
   };
 
+  // Save session snapshot silently (without confirmation)
+  const saveSessionSnapshotSilent = () => {
+    if (history.length < 3) return;
+    
+    const tagCounts = { contribution: 0, recovery: 0, harm: 0, order: 0, avoidance: 0 };
+    history.forEach(h => {
+      if (tagCounts.hasOwnProperty(h.value_tag)) {
+        tagCounts[h.value_tag]++;
+      }
+    });
+    
+    const today = new Date().toISOString().slice(0, 10);
+    const existingIndex = trendHistory.findIndex(s => s.date === today);
+    
+    const snapshot = {
+      date: today,
+      timestamp: new Date().toISOString(),
+      totalDecisions: history.length,
+      ...tagCounts
+    };
+    
+    if (existingIndex >= 0) {
+      setTrendHistory(prev => {
+        const updated = [...prev];
+        updated[existingIndex] = snapshot;
+        return updated.slice(-30);
+      });
+    } else {
+      setTrendHistory(prev => [...prev, snapshot].slice(-30));
+    }
+  };
+
+  // Save session snapshot to trend history
+  const saveSessionSnapshot = () => {
+    if (history.length < 3) return; // Only save sessions with at least 3 decisions
+    
+    // Calculate session metrics
+    const tagCounts = { contribution: 0, recovery: 0, harm: 0, order: 0, avoidance: 0 };
+    history.forEach(h => {
+      if (tagCounts.hasOwnProperty(h.value_tag)) {
+        tagCounts[h.value_tag]++;
+      }
+    });
+    
+    const today = new Date().toISOString().slice(0, 10);
+    
+    // Check if we already have a snapshot for today
+    const existingIndex = trendHistory.findIndex(s => s.date === today);
+    
+    const snapshot = {
+      date: today,
+      timestamp: new Date().toISOString(),
+      totalDecisions: history.length,
+      ...tagCounts
+    };
+    
+    if (existingIndex >= 0) {
+      // Update existing snapshot for today
+      setTrendHistory(prev => {
+        const updated = [...prev];
+        updated[existingIndex] = snapshot;
+        return updated.slice(-30); // Keep last 30 sessions
+      });
+    } else {
+      // Add new snapshot
+      setTrendHistory(prev => [...prev, snapshot].slice(-30));
+    }
+  };
+
   // Reset session - clear localStorage and reset state
   const resetSession = () => {
     if (window.confirm('Are you sure you want to reset the session? All data will be lost.')) {
+      // Save snapshot before resetting
+      saveSessionSnapshot();
+      
       localStorage.removeItem(STORAGE_KEY);
       setState({
         physical_capacity: 50,
@@ -290,6 +394,7 @@ export default function PhilosDashboard() {
   const resetGlobalStats = () => {
     if (window.confirm('Reset all global statistics? This cannot be undone.')) {
       localStorage.removeItem(GLOBAL_STORAGE_KEY);
+      localStorage.removeItem(TREND_STORAGE_KEY);
       setGlobalStats({
         contribution: 0,
         recovery: 0,
@@ -299,6 +404,7 @@ export default function PhilosDashboard() {
         totalDecisions: 0,
         sessions: 0
       });
+      setTrendHistory([]);
     }
   };
 
@@ -812,6 +918,9 @@ export default function PhilosDashboard() {
           globalStats={globalStats}
           resetGlobalStats={resetGlobalStats}
         />
+
+        {/* Global Trend Section */}
+        <GlobalTrendSection trendHistory={trendHistory} />
 
         {/* Share Card Modal */}
         {showShareCard && decisionResult && (
