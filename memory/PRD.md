@@ -89,6 +89,13 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
 - **Harm Pressure**: harm / total decisions
 - **Recovery Stability**: recovery / total decisions
 
+### Global Value Field Metrics (Cross-Session)
+- **Global Order Drift**: Aggregated (order + recovery) - (harm + avoidance) from all sessions
+- **Global Collective Drift**: Aggregated contribution - harm from all sessions
+- **Harm Pressure Long Term**: Global harm count / total global decisions
+- **Recovery Stability Long Term**: Global recovery count / total global decisions
+- **Dominant Value Cluster**: Most frequent value tag across all sessions
+
 ### Optimal Zone
 - Order: 20-60
 - Collective: 10-50
@@ -120,10 +127,20 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
 23. ✅ Added Orientation Field metrics
 24. ✅ Improved value_tag detection
 25. ✅ Added session persistence (localStorage)
+26. ✅ Added Global Value Field (cross-session analytics)
+    - Global Order Drift: (order + recovery) - (harm + avoidance) across all sessions
+    - Global Collective Drift: contribution - harm across all sessions
+    - Harm Pressure Long Term: harm / total percentage
+    - Recovery Stability Long Term: recovery / total percentage
+    - Dominant Value Cluster visualization
+    - Global Value Distribution circles
+    - Reset global stats button
+    - Persisted in localStorage separately from session data
 
 ## Backlog / Future Tasks
 
 ### P1 - High Priority
+- [ ] Refactor PhilosDashboard.js (1600+ lines) into smaller components
 - [ ] User authentication
 - [ ] Cloud sync for session data
 - [ ] Multi-device support
@@ -141,4 +158,4 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
 - [ ] AI-powered suggestions
 
 ## Preview URL
-https://orientation-map-1.preview.emergentagent.com
+https://wisdom-dashboard.preview.emergentagent.com
