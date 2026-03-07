@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { toPng } from 'html-to-image';
-import DecisionMap from '../components/philos/DecisionMap';
+import {
+  DailyOrientationSection,
+  ActionEvaluationSection,
+  DecisionMapSection,
+  PersonalMapSection,
+  CollectiveValueMapSection,
+  OrientationFieldSection,
+  GlobalValueFieldSection,
+  SessionSummarySection
+} from '../components/philos/sections';
 
 // LocalStorage keys
 const STORAGE_KEY = 'philos_session_data';
@@ -475,7 +484,7 @@ export default function PhilosDashboard() {
               onClick={resetSession}
               className="px-4 py-2 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded-xl transition-all"
             >
-              🔄 Reset Session
+              Reset Session
             </button>
           </div>
         )}
@@ -514,10 +523,10 @@ export default function PhilosDashboard() {
             />
           </div>
 
-          {/* Chaos ↔ Order */}
+          {/* Chaos / Order */}
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-sm font-medium text-foreground">chaos ←→ order</label>
+              <label className="text-sm font-medium text-foreground">chaos / order</label>
               <span className="text-sm font-bold">{state.chaos_order}</span>
             </div>
             <input
@@ -530,10 +539,10 @@ export default function PhilosDashboard() {
             />
           </div>
 
-          {/* Ego ↔ Collective */}
+          {/* Ego / Collective */}
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-sm font-medium text-foreground">ego ←→ collective</label>
+              <label className="text-sm font-medium text-foreground">ego / collective</label>
               <span className="text-sm font-bold">{state.ego_collective}</span>
             </div>
             <input
@@ -555,19 +564,19 @@ export default function PhilosDashboard() {
               onClick={() => setState(prev => ({ ...prev, chaos_order: Math.min(100, prev.chaos_order + 20) }))}
               className="px-4 py-2 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-all"
             >
-              😌 Calm
+              Calm
             </button>
             <button
               onClick={() => setState(prev => ({ ...prev, chaos_order: Math.max(-100, prev.chaos_order - 20) }))}
               className="px-4 py-2 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-all"
             >
-              😰 Stressed
+              Stressed
             </button>
             <button
               onClick={() => setState(prev => ({ ...prev, chaos_order: Math.max(-100, prev.chaos_order - 10) }))}
               className="px-4 py-2 text-sm bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-all"
             >
-              😕 Confused
+              Confused
             </button>
           </div>
         </section>
@@ -577,17 +586,17 @@ export default function PhilosDashboard() {
           <h3 className="text-sm font-medium text-foreground mb-3">Micro Actions</h3>
           <div className="flex flex-wrap gap-2">
             {[
-              { text: 'Drink water', icon: '💧' },
-              { text: 'Take 5 deep breaths', icon: '🌬️' },
-              { text: 'Stand up and stretch', icon: '🧘' },
-              { text: 'Send a positive message', icon: '💬' }
+              { text: 'Drink water', icon: '' },
+              { text: 'Take 5 deep breaths', icon: '' },
+              { text: 'Stand up and stretch', icon: '' },
+              { text: 'Send a positive message', icon: '' }
             ].map((action) => (
               <button
                 key={action.text}
                 onClick={() => setActionText(action.text)}
                 className="px-3 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-all"
               >
-                {action.icon} {action.text}
+                {action.text}
               </button>
             ))}
           </div>
@@ -615,145 +624,15 @@ export default function PhilosDashboard() {
           </div>
         </section>
 
-        {/* Action Evaluation */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
-          <h3 className="text-xl font-semibold text-foreground mb-4">Action Evaluation</h3>
-          
-          <input
-            type="text"
-            placeholder="Enter action..."
-            value={actionText}
-            onChange={(e) => setActionText(e.target.value)}
-            className="w-full px-4 py-3 border border-border rounded-xl text-lg mb-4"
-          />
-          
-          <button
-            onClick={evaluateAction}
-            className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all"
-          >
-            Evaluate Decision
-          </button>
-
-          {decisionResult && (
-            <div className="mt-6 p-4 bg-muted/30 rounded-2xl space-y-2">
-              <p className="text-foreground">
-                <span className="text-muted-foreground">Decision:</span>{' '}
-                <span className={`font-bold ${decisionResult.decision === 'Allowed' ? 'text-green-600' : 'text-red-600'}`}>
-                  {decisionResult.decision}
-                </span>
-              </p>
-              <p className="text-foreground">
-                <span className="text-muted-foreground">Projection → chaos/order:</span>{' '}
-                {decisionResult.projection.chaos_order}
-              </p>
-              <p className="text-foreground">
-                <span className="text-muted-foreground">Projection → ego/collective:</span>{' '}
-                {decisionResult.projection.ego_collective}
-              </p>
-              <p className="text-foreground">
-                <span className="text-muted-foreground">Value Tag:</span>{' '}
-                <span className={`px-2 py-0.5 rounded-full text-sm font-medium ${
-                  decisionResult.value_tag === 'contribution' ? 'bg-green-100 text-green-700' :
-                  decisionResult.value_tag === 'recovery' ? 'bg-blue-100 text-blue-700' :
-                  decisionResult.value_tag === 'order' ? 'bg-indigo-100 text-indigo-700' :
-                  decisionResult.value_tag === 'harm' ? 'bg-red-100 text-red-700' :
-                  decisionResult.value_tag === 'avoidance' ? 'bg-gray-100 text-gray-700' :
-                  'bg-gray-100 text-gray-600'
-                }`}>
-                  {decisionResult.value_tag}
-                </span>
-              </p>
-            </div>
-          )}
-
-          {/* Decision Explanation */}
-          {decisionResult && (
-            <div className="mt-4 p-4 bg-white border border-border rounded-2xl">
-              <h4 className="text-lg font-semibold text-foreground mb-3">Decision Explanation</h4>
-              
-              <div className="space-y-2 text-sm">
-                <p className="text-foreground">
-                  <span className="text-muted-foreground">Action:</span>{' '}
-                  <span className="font-medium">{decisionResult.action}</span>
-                </p>
-                
-                <p className="text-foreground">
-                  <span className="text-muted-foreground">Decision:</span>{' '}
-                  <span className={`font-bold ${decisionResult.decision === 'Allowed' ? 'text-green-600' : 'text-red-600'}`}>
-                    {decisionResult.decision}
-                  </span>
-                </p>
-                
-                <div className="mt-3 pt-3 border-t border-border">
-                  <p className="text-muted-foreground mb-2">Explanation:</p>
-                  <ul className="space-y-1">
-                    {decisionResult.reasons.map((reason, idx) => (
-                      <li key={idx} className="text-foreground">• {reason}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Vector Suggestion Engine */}
-          {(() => {
-            const suggestion = calculateSuggestedVector(state.chaos_order, state.ego_collective);
-            return (
-              <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
-                <h4 className="text-lg font-semibold text-foreground mb-3">Suggested Next Action</h4>
-                
-                {suggestion.inOptimalZone ? (
-                  <div className="text-center py-2">
-                    <p className="text-green-600 font-medium">✓ You are in the optimal zone</p>
-                    <p className="text-sm text-muted-foreground mt-1">Maintain current balance</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {/* Suggestions */}
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">Suggestion:</p>
-                      <div className="space-y-1">
-                        {suggestion.suggestions.map((s, idx) => (
-                          <p key={idx} className="text-foreground font-medium">
-                            {idx === 0 ? '' : 'or '}{s}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Reasons */}
-                    <div className="pt-2 border-t border-blue-200">
-                      <p className="text-sm text-muted-foreground mb-1">Reason:</p>
-                      <ul className="text-sm text-foreground">
-                        {suggestion.reasons.map((r, idx) => (
-                          <li key={idx}>• {r}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Suggested Vector */}
-                    <div className="pt-2 border-t border-blue-200">
-                      <p className="text-sm text-muted-foreground mb-1">Suggested Vector:</p>
-                      <div className="flex gap-4 text-sm font-mono">
-                        {suggestion.suggestedOrder !== 0 && (
-                          <span className="text-foreground">
-                            → order {suggestion.suggestedOrder > 0 ? '+' : ''}{suggestion.suggestedOrder}
-                          </span>
-                        )}
-                        {suggestion.suggestedCollective !== 0 && (
-                          <span className="text-foreground">
-                            → collective {suggestion.suggestedCollective > 0 ? '+' : ''}{suggestion.suggestedCollective}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-        </section>
+        {/* Action Evaluation Section */}
+        <ActionEvaluationSection
+          actionText={actionText}
+          setActionText={setActionText}
+          evaluateAction={evaluateAction}
+          decisionResult={decisionResult}
+          state={state}
+          calculateSuggestedVector={calculateSuggestedVector}
+        />
 
         {/* Orientation Status Panel */}
         <section className="bg-white rounded-3xl p-4 shadow-sm border border-border">
@@ -795,14 +674,14 @@ export default function PhilosDashboard() {
 
           {/* Balance Score */}
           {(() => {
-            const balanceScore = 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective));
-            const scoreColor = balanceScore >= 70 ? 'text-green-600' : balanceScore >= 40 ? 'text-yellow-500' : 'text-red-500';
-            const scoreBg = balanceScore >= 70 ? 'bg-green-100' : balanceScore >= 40 ? 'bg-yellow-100' : 'bg-red-100';
-            const scoreLabel = balanceScore >= 70 ? 'Balanced' : balanceScore >= 40 ? 'Unstable' : 'Conflict';
+            const score = 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective));
+            const scoreColor = score >= 70 ? 'text-green-600' : score >= 40 ? 'text-yellow-500' : 'text-red-500';
+            const scoreBg = score >= 70 ? 'bg-green-100' : score >= 40 ? 'bg-yellow-100' : 'bg-red-100';
+            const scoreLabel = score >= 70 ? 'Balanced' : score >= 40 ? 'Unstable' : 'Conflict';
             return (
               <div className={`mt-3 p-3 ${scoreBg} rounded-xl text-center`}>
                 <p className="text-xs text-muted-foreground mb-1">Balance Score</p>
-                <p className={`text-3xl font-bold ${scoreColor}`}>{balanceScore}</p>
+                <p className={`text-3xl font-bold ${scoreColor}`}>{score}</p>
                 <p className={`text-sm font-medium ${scoreColor}`}>{scoreLabel}</p>
               </div>
             );
@@ -810,11 +689,11 @@ export default function PhilosDashboard() {
 
           {/* Suggested Stabilizing Action - show when balance < 30 */}
           {(() => {
-            const balanceScore = 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective));
-            if (balanceScore >= 30) return null;
+            const score = 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective));
+            if (score >= 30) return null;
             return (
               <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-sm font-semibold text-red-700 mb-2">⚠️ Suggested Stabilizing Action</p>
+                <p className="text-sm font-semibold text-red-700 mb-2">Suggested Stabilizing Action</p>
                 <div className="flex flex-wrap gap-2">
                   {[
                     'Take a short walk',
@@ -841,10 +720,10 @@ export default function PhilosDashboard() {
           <h3 className="text-sm font-medium text-foreground mb-2">Recover Energy (+10)</h3>
           <div className="flex flex-wrap gap-2">
             {[
-              { text: 'Deep breathing', icon: '🌬️' },
-              { text: 'Short walk', icon: '🚶' },
-              { text: 'Stretch', icon: '🧘' },
-              { text: 'Drink water', icon: '💧' }
+              { text: 'Deep breathing', icon: '' },
+              { text: 'Short walk', icon: '' },
+              { text: 'Stretch', icon: '' },
+              { text: 'Drink water', icon: '' }
             ].map(action => (
               <button
                 key={action.text}
@@ -854,48 +733,22 @@ export default function PhilosDashboard() {
                 }}
                 className="px-3 py-2 text-sm bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-all"
               >
-                {action.icon} {action.text}
+                {action.text}
               </button>
             ))}
           </div>
         </section>
 
-        {/* Daily Loop */}
-        <section className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-3xl p-4 shadow-sm border border-slate-200">
-          <h3 className="text-sm font-medium text-foreground mb-3">Daily Loop</h3>
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1">
-              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">1</span>
-              <span className="text-muted-foreground">Check state</span>
-            </div>
-            <span className="text-muted-foreground">→</span>
-            <div className="flex items-center gap-1">
-              <span className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold">2</span>
-              <span className="text-muted-foreground">Take action</span>
-            </div>
-            <span className="text-muted-foreground">→</span>
-            <div className="flex items-center gap-1">
-              <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">3</span>
-              <span className="text-muted-foreground">Evaluate</span>
-            </div>
-            <span className="text-muted-foreground">→</span>
-            <div className="flex items-center gap-1">
-              <span className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">4</span>
-              <span className="text-muted-foreground">Repeat</span>
-            </div>
-          </div>
-        </section>
+        {/* Daily Orientation Section */}
+        <DailyOrientationSection />
 
-        {/* Decision Map */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
-          <DecisionMap 
-            state={state}
-            decisionState={decisionResult ? { result: { status: decisionResult.decision.toLowerCase() } } : null}
-            gapType={state.gap_type}
-            history={history}
-            suggestion={calculateSuggestedVector(state.chaos_order, state.ego_collective)}
-          />
-        </section>
+        {/* Decision Map Section */}
+        <DecisionMapSection
+          state={state}
+          decisionResult={decisionResult}
+          history={history}
+          calculateSuggestedVector={calculateSuggestedVector}
+        />
 
         {/* Decision History */}
         {history.length > 0 && (
@@ -932,700 +785,33 @@ export default function PhilosDashboard() {
           </section>
         )}
 
-        {/* Session Summary */}
-        <section className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-indigo-200">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Session Summary</h3>
-          
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-white/60 rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground">Actions</p>
-              <p className="text-2xl font-bold text-indigo-600">{history.length}</p>
-            </div>
-            <div className="bg-white/60 rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground">Balance Score</p>
-              <p className={`text-2xl font-bold ${
-                100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective)) >= 70 
-                  ? 'text-green-600' 
-                  : 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective)) >= 40 
-                    ? 'text-yellow-500' 
-                    : 'text-red-500'
-              }`}>
-                {100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective))}
-              </p>
-            </div>
-            <div className="bg-white/60 rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground">Trajectory</p>
-              <p className="text-sm font-bold text-purple-600">{getTrajectoryDirection()}</p>
-            </div>
-            <div className="bg-white/60 rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground">Energy</p>
-              <p className={`text-sm font-bold ${state.physical_capacity >= 50 ? 'text-green-600' : state.physical_capacity >= 30 ? 'text-yellow-500' : 'text-red-500'}`}>
-                {state.physical_capacity >= 50 ? 'stable' : state.physical_capacity >= 30 ? 'low' : 'critical'}
-              </p>
-            </div>
-          </div>
+        {/* Session Summary Section */}
+        <SessionSummarySection
+          history={history}
+          state={state}
+          getTrajectoryDirection={getTrajectoryDirection}
+          exportSession={exportSession}
+          setShowShareCard={setShowShareCard}
+          decisionResult={decisionResult}
+        />
 
-          {/* Export Button */}
-          <button
-            onClick={exportSession}
-            className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-          >
-            <span>📥</span> Export Session (JSON)
-          </button>
+        {/* Personal Map Section */}
+        <PersonalMapSection
+          history={history}
+          analyzePersonalMap={analyzePersonalMap}
+        />
 
-          {/* Share Decision Button */}
-          <button
-            onClick={() => setShowShareCard(true)}
-            disabled={!decisionResult}
-            className="w-full px-4 py-3 bg-pink-500 hover:bg-pink-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 mt-3"
-          >
-            <span>🔗</span> Share Decision
-          </button>
-        </section>
+        {/* Orientation Field Section */}
+        <OrientationFieldSection history={history} />
 
-        {/* Personal Map */}
-        {history.length >= 3 && (
-          <section className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-5 shadow-sm border border-amber-200">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Personal Map</h3>
-            
-            {(() => {
-              const analysis = analyzePersonalMap(history);
-              return (
-                <>
-                  {/* Direction Indicators */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-white/70 rounded-xl p-3 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Order vs Chaos</p>
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-xs text-orange-500">chaos</span>
-                        <div className="w-20 h-2 bg-gray-200 rounded-full relative">
-                          <div 
-                            className="absolute top-0 h-2 bg-blue-500 rounded-full transition-all"
-                            style={{ 
-                              left: '50%',
-                              width: `${Math.abs(analysis.avgOrder || 0) / 2}%`,
-                              marginLeft: analysis.avgOrder >= 0 ? '0' : `-${Math.abs(analysis.avgOrder || 0) / 2}%`
-                            }}
-                          />
-                          <div className="absolute top-1/2 left-1/2 w-1 h-3 bg-gray-400 -translate-x-1/2 -translate-y-1/2" />
-                        </div>
-                        <span className="text-xs text-blue-500">order</span>
-                      </div>
-                      <p className={`text-sm font-bold mt-1 ${
-                        analysis.dominantOrder === 'order' ? 'text-blue-600' : 
-                        analysis.dominantOrder === 'chaos' ? 'text-orange-600' : 'text-gray-500'
-                      }`}>
-                        {analysis.dominantOrder}
-                      </p>
-                    </div>
-                    
-                    <div className="bg-white/70 rounded-xl p-3 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Ego vs Collective</p>
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-xs text-purple-500">ego</span>
-                        <div className="w-20 h-2 bg-gray-200 rounded-full relative">
-                          <div 
-                            className="absolute top-0 h-2 bg-green-500 rounded-full transition-all"
-                            style={{ 
-                              left: '50%',
-                              width: `${Math.abs(analysis.avgCollective || 0) / 2}%`,
-                              marginLeft: analysis.avgCollective >= 0 ? '0' : `-${Math.abs(analysis.avgCollective || 0) / 2}%`
-                            }}
-                          />
-                          <div className="absolute top-1/2 left-1/2 w-1 h-3 bg-gray-400 -translate-x-1/2 -translate-y-1/2" />
-                        </div>
-                        <span className="text-xs text-green-500">collective</span>
-                      </div>
-                      <p className={`text-sm font-bold mt-1 ${
-                        analysis.dominantCollective === 'collective' ? 'text-green-600' : 
-                        analysis.dominantCollective === 'ego' ? 'text-purple-600' : 'text-gray-500'
-                      }`}>
-                        {analysis.dominantCollective}
-                      </p>
-                    </div>
-                  </div>
+        {/* Collective Value Map Section */}
+        <CollectiveValueMapSection history={history} />
 
-                  {/* Top Value Tags */}
-                  {analysis.topValueTags.length > 0 && (
-                    <div className="bg-white/70 rounded-xl p-3 mb-4">
-                      <p className="text-xs text-muted-foreground mb-2">Top Values</p>
-                      <div className="flex flex-wrap gap-2">
-                        {analysis.topValueTags.map((item, idx) => (
-                          <span 
-                            key={idx}
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              item.tag === 'contribution' ? 'bg-green-100 text-green-700' :
-                              item.tag === 'recovery' ? 'bg-blue-100 text-blue-700' :
-                              item.tag === 'order' ? 'bg-indigo-100 text-indigo-700' :
-                              item.tag === 'harm' ? 'bg-red-100 text-red-700' :
-                              item.tag === 'avoidance' ? 'bg-gray-100 text-gray-700' :
-                              'bg-gray-100 text-gray-600'
-                            }`}
-                          >
-                            {item.tag} ({item.count})
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Mini Timeline */}
-                  <div className="bg-white/70 rounded-xl p-3 mb-4">
-                    <p className="text-xs text-muted-foreground mb-2">Decision Timeline (last {history.length})</p>
-                    <div className="flex gap-1 overflow-x-auto pb-1">
-                      {[...history].reverse().map((item, idx) => (
-                        <div 
-                          key={idx}
-                          className={`w-3 h-8 rounded-sm flex-shrink-0 ${
-                            item.decision === 'Allowed' ? 'bg-green-400' : 'bg-red-400'
-                          }`}
-                          style={{
-                            opacity: 0.4 + (idx / history.length) * 0.6
-                          }}
-                          title={`${item.time}: ${item.action}`}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>oldest</span>
-                      <span>newest</span>
-                    </div>
-                  </div>
-
-                  {/* Value Graph */}
-                  <div className="bg-white/70 rounded-xl p-3 mb-4">
-                    <p className="text-xs text-muted-foreground mb-2">Value Graph</p>
-                    <div className="relative" style={{ height: '220px' }}>
-                      <svg width="100%" height="100%" viewBox="0 0 300 220" className="overflow-hidden">
-                        {/* Safe area boundary (for reference) */}
-                        <rect x="30" y="25" width="240" height="170" fill="none" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 4" rx="8" />
-                        
-                        {/* Background zone labels */}
-                        <text x="150" y="18" textAnchor="middle" className="fill-indigo-500" fontSize="11" fontWeight="500">order</text>
-                        <text x="255" y="110" textAnchor="middle" className="fill-blue-500" fontSize="11" fontWeight="500">recovery</text>
-                        <text x="230" y="40" textAnchor="middle" className="fill-green-500" fontSize="11" fontWeight="500">contribution</text>
-                        <text x="150" y="212" textAnchor="middle" className="fill-red-500" fontSize="11" fontWeight="500">harm</text>
-                        <text x="45" y="110" textAnchor="middle" className="fill-gray-500" fontSize="11" fontWeight="500">avoidance</text>
-                        
-                        {/* Center crosshair */}
-                        <line x1="150" y1="85" x2="150" y2="135" stroke="#e5e7eb" strokeWidth="1" />
-                        <line x1="100" y1="110" x2="200" y2="110" stroke="#e5e7eb" strokeWidth="1" />
-                        <circle cx="150" cy="110" r="4" fill="#d1d5db" />
-                        
-                        {/* Connection lines */}
-                        {[...history].reverse().slice(0, 20).map((item, idx, arr) => {
-                          if (idx === 0) return null;
-                          const prev = arr[idx - 1];
-                          
-                          // Safe positioning function with padding
-                          const getPosition = (tag, index) => {
-                            const spread = Math.min(index * 2, 15);
-                            const jitter = ((index * 13) % 20) - 10;
-                            switch(tag) {
-                              case 'order': return { x: 150 + jitter, y: 45 + spread };
-                              case 'recovery': return { x: 220 + jitter/2, y: 90 + spread };
-                              case 'contribution': return { x: 200 + jitter, y: 55 + spread };
-                              case 'harm': return { x: 150 + jitter, y: 170 - spread };
-                              case 'avoidance': return { x: 80 + jitter/2, y: 100 + spread };
-                              default: return { x: 150 + jitter, y: 110 + (spread/2) };
-                            }
-                          };
-                          
-                          const prevPos = getPosition(prev.value_tag, idx - 1);
-                          const currPos = getPosition(item.value_tag, idx);
-                          
-                          return (
-                            <line
-                              key={`line-${idx}`}
-                              x1={prevPos.x}
-                              y1={prevPos.y}
-                              x2={currPos.x}
-                              y2={currPos.y}
-                              stroke="#94a3b8"
-                              strokeWidth="1.5"
-                              strokeDasharray="3 2"
-                              opacity={0.3 + (idx / arr.length) * 0.5}
-                            />
-                          );
-                        })}
-                        
-                        {/* Decision nodes */}
-                        {[...history].reverse().slice(0, 20).map((item, idx) => {
-                          // Safe positioning function with padding
-                          const getPosition = (tag, index) => {
-                            const spread = Math.min(index * 2, 15);
-                            const jitter = ((index * 13) % 20) - 10;
-                            switch(tag) {
-                              case 'order': return { x: 150 + jitter, y: 45 + spread };
-                              case 'recovery': return { x: 220 + jitter/2, y: 90 + spread };
-                              case 'contribution': return { x: 200 + jitter, y: 55 + spread };
-                              case 'harm': return { x: 150 + jitter, y: 170 - spread };
-                              case 'avoidance': return { x: 80 + jitter/2, y: 100 + spread };
-                              default: return { x: 150 + jitter, y: 110 + (spread/2) };
-                            }
-                          };
-                          
-                          const pos = getPosition(item.value_tag, idx);
-                          const color = item.decision === 'Allowed' ? '#22c55e' : '#ef4444';
-                          const size = 7 + (idx / Math.max(history.length, 1)) * 5;
-                          
-                          return (
-                            <g key={`node-${idx}`} className="cursor-pointer">
-                              {/* Outer glow */}
-                              <circle
-                                cx={pos.x}
-                                cy={pos.y}
-                                r={size + 3}
-                                fill={color}
-                                opacity={0.15}
-                              />
-                              {/* Main node */}
-                              <circle
-                                cx={pos.x}
-                                cy={pos.y}
-                                r={size}
-                                fill={color}
-                                opacity={0.8}
-                                stroke="white"
-                                strokeWidth="2"
-                              >
-                                <title>{`${item.time}: ${item.action}\nDecision: ${item.decision}\nBalance: ${item.balance_score}\nValue: ${item.value_tag}`}</title>
-                              </circle>
-                              {/* Node number */}
-                              <text
-                                x={pos.x}
-                                y={pos.y + 3}
-                                textAnchor="middle"
-                                fontSize="8"
-                                fill="white"
-                                fontWeight="bold"
-                              >
-                                {idx + 1}
-                              </text>
-                            </g>
-                          );
-                        })}
-                      </svg>
-                    </div>
-                    <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-green-500"></span> Allowed
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-red-500"></span> Blocked
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Your Pattern Summary */}
-                  {analysis.patternSummary.length > 0 && (
-                    <div className="bg-amber-100/50 border border-amber-200 rounded-xl p-4">
-                      <p className="text-sm font-semibold text-amber-800 mb-2">Your Pattern</p>
-                      <div className="space-y-1">
-                        {analysis.patternSummary.map((line, idx) => (
-                          <p key={idx} className="text-sm text-amber-700">{line}</p>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </section>
-        )}
-
-        {/* Orientation Field */}
-        {history.length >= 3 && (
-          <section className="bg-gradient-to-br from-slate-50 to-zinc-100 rounded-3xl p-5 shadow-sm border border-slate-200">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Orientation Field</h3>
-            
-            {(() => {
-              // Count value tags
-              const tagCounts = { contribution: 0, recovery: 0, harm: 0, order: 0, avoidance: 0 };
-              history.forEach(h => {
-                if (tagCounts.hasOwnProperty(h.value_tag)) {
-                  tagCounts[h.value_tag]++;
-                }
-              });
-              
-              const total = history.length;
-              
-              // Compute metrics
-              const orderDrift = (tagCounts.order + tagCounts.recovery) - (tagCounts.harm + tagCounts.avoidance);
-              const collectiveDrift = tagCounts.contribution - tagCounts.harm;
-              const harmPressure = total > 0 ? tagCounts.harm / total : 0;
-              const recoveryStability = total > 0 ? tagCounts.recovery / total : 0;
-              
-              // Determine indicators
-              const orderDriftLabel = orderDrift > 1 ? 'positive' : orderDrift < -1 ? 'negative' : 'neutral';
-              const collectiveDriftLabel = collectiveDrift > 1 ? 'positive' : collectiveDrift < -1 ? 'negative' : 'neutral';
-              const harmPressureLabel = harmPressure > 0.3 ? 'high' : harmPressure > 0.1 ? 'medium' : 'low';
-              const recoveryStabilityLabel = recoveryStability > 0.3 ? 'high' : recoveryStability > 0.1 ? 'medium' : 'low';
-              
-              const getColor = (label, isPositiveGood = true) => {
-                if (label === 'positive' || label === 'high') {
-                  return isPositiveGood ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
-                }
-                if (label === 'negative' || label === 'low') {
-                  return isPositiveGood ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100';
-                }
-                return 'text-gray-600 bg-gray-100';
-              };
-              
-              return (
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Order Drift */}
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Order Drift</p>
-                    <p className="text-sm text-muted-foreground mb-2">(order + recovery) - (harm + avoidance)</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">{orderDrift > 0 ? '+' : ''}{orderDrift}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(orderDriftLabel, true)}`}>
-                        {orderDriftLabel}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Collective Drift */}
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Collective Drift</p>
-                    <p className="text-sm text-muted-foreground mb-2">contribution - harm</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">{collectiveDrift > 0 ? '+' : ''}{collectiveDrift}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(collectiveDriftLabel, true)}`}>
-                        {collectiveDriftLabel}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Harm Pressure */}
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Harm Pressure</p>
-                    <p className="text-sm text-muted-foreground mb-2">harm / total</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">{Math.round(harmPressure * 100)}%</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(harmPressureLabel, false)}`}>
-                        {harmPressureLabel}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Recovery Stability */}
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Recovery Stability</p>
-                    <p className="text-sm text-muted-foreground mb-2">recovery / total</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">{Math.round(recoveryStability * 100)}%</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(recoveryStabilityLabel, true)}`}>
-                        {recoveryStabilityLabel}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </section>
-        )}
-
-        {/* Collective Value Map */}
-        {history.length >= 3 && (
-          <section className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-3xl p-5 shadow-sm border border-teal-200">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Collective Value Map</h3>
-            
-            {(() => {
-              // Aggregate counts by value_tag
-              const tagCounts = {
-                contribution: 0,
-                recovery: 0,
-                harm: 0,
-                order: 0,
-                avoidance: 0
-              };
-              
-              history.forEach(h => {
-                if (tagCounts.hasOwnProperty(h.value_tag)) {
-                  tagCounts[h.value_tag]++;
-                }
-              });
-              
-              const totalDecisions = history.length;
-              const maxCount = Math.max(...Object.values(tagCounts), 1);
-              
-              // Calculate collective direction
-              const avgOrder = history.reduce((sum, h) => sum + h.chaos_order, 0) / totalDecisions;
-              const avgCollective = history.reduce((sum, h) => sum + h.ego_collective, 0) / totalDecisions;
-              
-              const collectiveOrderDir = avgOrder > 10 ? 'order' : avgOrder < -10 ? 'chaos' : 'balanced';
-              const collectiveCollectiveDir = avgCollective > 10 ? 'collective' : avgCollective < -10 ? 'ego' : 'balanced';
-              
-              // Find dominant value tag
-              const dominantTag = Object.entries(tagCounts).sort((a, b) => b[1] - a[1])[0];
-              const lowestTag = Object.entries(tagCounts).filter(([_, count]) => count > 0).sort((a, b) => a[1] - b[1])[0];
-              
-              // Build collective pattern summary
-              const collectivePattern = [];
-              if (collectiveOrderDir !== 'balanced' || collectiveCollectiveDir !== 'balanced') {
-                collectivePattern.push(`This session cluster tends toward ${collectiveOrderDir} and ${collectiveCollectiveDir}.`);
-              }
-              if (dominantTag && dominantTag[1] > 0) {
-                collectivePattern.push(`${dominantTag[0].charAt(0).toUpperCase() + dominantTag[0].slice(1)} is dominant.`);
-              }
-              if (lowestTag && lowestTag[0] !== dominantTag?.[0]) {
-                collectivePattern.push(`${lowestTag[0].charAt(0).toUpperCase() + lowestTag[0].slice(1)} is low.`);
-              }
-              
-              const tagColors = {
-                contribution: { bg: 'bg-green-500', text: 'text-green-700', light: 'bg-green-100' },
-                recovery: { bg: 'bg-blue-500', text: 'text-blue-700', light: 'bg-blue-100' },
-                harm: { bg: 'bg-red-500', text: 'text-red-700', light: 'bg-red-100' },
-                order: { bg: 'bg-indigo-500', text: 'text-indigo-700', light: 'bg-indigo-100' },
-                avoidance: { bg: 'bg-gray-500', text: 'text-gray-700', light: 'bg-gray-100' }
-              };
-              
-              return (
-                <>
-                  {/* Collective Direction */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-white/70 rounded-xl p-3 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Collective Order</p>
-                      <p className={`text-lg font-bold ${
-                        collectiveOrderDir === 'order' ? 'text-blue-600' : 
-                        collectiveOrderDir === 'chaos' ? 'text-orange-600' : 'text-gray-500'
-                      }`}>
-                        {collectiveOrderDir}
-                      </p>
-                    </div>
-                    <div className="bg-white/70 rounded-xl p-3 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Collective Focus</p>
-                      <p className={`text-lg font-bold ${
-                        collectiveCollectiveDir === 'collective' ? 'text-green-600' : 
-                        collectiveCollectiveDir === 'ego' ? 'text-purple-600' : 'text-gray-500'
-                      }`}>
-                        {collectiveCollectiveDir}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Value Tag Counts - Clustered Circles */}
-                  <div className="bg-white/70 rounded-xl p-4 mb-4">
-                    <p className="text-xs text-muted-foreground mb-3">Value Distribution ({totalDecisions} decisions)</p>
-                    <div className="flex justify-center items-end gap-3 h-24">
-                      {Object.entries(tagCounts).map(([tag, count]) => {
-                        const size = count > 0 ? 30 + (count / maxCount) * 50 : 20;
-                        const colors = tagColors[tag];
-                        return (
-                          <div key={tag} className="flex flex-col items-center gap-1">
-                            <div 
-                              className={`${colors.bg} rounded-full flex items-center justify-center text-white font-bold transition-all`}
-                              style={{ 
-                                width: `${size}px`, 
-                                height: `${size}px`,
-                                opacity: count > 0 ? 0.9 : 0.3
-                              }}
-                            >
-                              {count}
-                            </div>
-                            <span className={`text-xs ${colors.text}`}>{tag}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Collective Pattern Summary */}
-                  {collectivePattern.length > 0 && (
-                    <div className="bg-teal-100/50 border border-teal-200 rounded-xl p-4">
-                      <p className="text-sm font-semibold text-teal-800 mb-2">Collective Pattern</p>
-                      <div className="space-y-1">
-                        {collectivePattern.map((line, idx) => (
-                          <p key={idx} className="text-sm text-teal-700">{line}</p>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </section>
-        )}
-
-        {/* Global Value Field */}
-        {globalStats.totalDecisions >= 1 && (
-          <section className="bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-3xl p-5 shadow-sm border border-violet-200" data-testid="global-value-field">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">שדה ערכים גלובלי</h3>
-              <button
-                onClick={resetGlobalStats}
-                className="px-3 py-1 text-xs bg-violet-100 hover:bg-violet-200 text-violet-700 rounded-lg transition-all"
-                data-testid="reset-global-stats-btn"
-              >
-                איפוס
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">ניתוח ארוך טווח מכל הסשנים</p>
-            
-            {(() => {
-              const total = globalStats.totalDecisions || 1;
-              
-              // Calculate global metrics
-              const globalOrderDrift = (globalStats.order + globalStats.recovery) - (globalStats.harm + globalStats.avoidance);
-              const globalCollectiveDrift = globalStats.contribution - globalStats.harm;
-              const harmPressureLongTerm = globalStats.harm / total;
-              const recoveryStabilityLongTerm = globalStats.recovery / total;
-              
-              // Determine indicators
-              const orderDriftLabel = globalOrderDrift > 2 ? 'חיובי' : globalOrderDrift < -2 ? 'שלילי' : 'מאוזן';
-              const collectiveDriftLabel = globalCollectiveDrift > 2 ? 'חיובי' : globalCollectiveDrift < -2 ? 'שלילי' : 'מאוזן';
-              const harmPressureLabel = harmPressureLongTerm > 0.25 ? 'גבוה' : harmPressureLongTerm > 0.1 ? 'בינוני' : 'נמוך';
-              const recoveryStabilityLabel = recoveryStabilityLongTerm > 0.3 ? 'גבוה' : recoveryStabilityLongTerm > 0.15 ? 'בינוני' : 'נמוך';
-              
-              const getColor = (label, isPositiveGood = true) => {
-                const positiveLabels = ['חיובי', 'גבוה'];
-                const negativeLabels = ['שלילי', 'נמוך'];
-                if (positiveLabels.includes(label)) {
-                  return isPositiveGood ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
-                }
-                if (negativeLabels.includes(label)) {
-                  return isPositiveGood ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100';
-                }
-                return 'text-gray-600 bg-gray-100';
-              };
-              
-              // Find dominant global value
-              const valueCounts = {
-                contribution: globalStats.contribution,
-                recovery: globalStats.recovery,
-                order: globalStats.order,
-                harm: globalStats.harm,
-                avoidance: globalStats.avoidance
-              };
-              const dominantValue = Object.entries(valueCounts).sort((a, b) => b[1] - a[1])[0];
-              
-              const valueLabels = {
-                contribution: 'תרומה',
-                recovery: 'התאוששות',
-                order: 'סדר',
-                harm: 'נזק',
-                avoidance: 'הימנעות'
-              };
-              
-              const valueColors = {
-                contribution: 'bg-green-500',
-                recovery: 'bg-blue-500',
-                order: 'bg-indigo-500',
-                harm: 'bg-red-500',
-                avoidance: 'bg-gray-500'
-              };
-              
-              return (
-                <>
-                  {/* Total Stats Overview */}
-                  <div className="bg-white/70 rounded-xl p-4 mb-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-2">סה״כ החלטות (כל הסשנים)</p>
-                    <p className="text-3xl font-bold text-violet-600" data-testid="global-total-decisions">{globalStats.totalDecisions}</p>
-                  </div>
-                  
-                  {/* Global Metrics Grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    {/* Global Order Drift */}
-                    <div className="bg-white/70 rounded-xl p-3" data-testid="global-order-drift">
-                      <p className="text-xs text-muted-foreground mb-1">סחף סדר גלובלי</p>
-                      <p className="text-xs text-muted-foreground/70 mb-2">(סדר + התאוששות) - (נזק + הימנעות)</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-foreground">{globalOrderDrift > 0 ? '+' : ''}{globalOrderDrift}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(orderDriftLabel, true)}`}>
-                          {orderDriftLabel}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Global Collective Drift */}
-                    <div className="bg-white/70 rounded-xl p-3" data-testid="global-collective-drift">
-                      <p className="text-xs text-muted-foreground mb-1">סחף חברתי גלובלי</p>
-                      <p className="text-xs text-muted-foreground/70 mb-2">תרומה - נזק</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-foreground">{globalCollectiveDrift > 0 ? '+' : ''}{globalCollectiveDrift}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(collectiveDriftLabel, true)}`}>
-                          {collectiveDriftLabel}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Harm Pressure Long Term */}
-                    <div className="bg-white/70 rounded-xl p-3" data-testid="harm-pressure-long-term">
-                      <p className="text-xs text-muted-foreground mb-1">לחץ נזק ארוך טווח</p>
-                      <p className="text-xs text-muted-foreground/70 mb-2">נזק / סה״כ</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-foreground">{Math.round(harmPressureLongTerm * 100)}%</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(harmPressureLabel, false)}`}>
-                          {harmPressureLabel}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Recovery Stability Long Term */}
-                    <div className="bg-white/70 rounded-xl p-3" data-testid="recovery-stability-long-term">
-                      <p className="text-xs text-muted-foreground mb-1">יציבות התאוששות ארוך טווח</p>
-                      <p className="text-xs text-muted-foreground/70 mb-2">התאוששות / סה״כ</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-foreground">{Math.round(recoveryStabilityLongTerm * 100)}%</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(recoveryStabilityLabel, true)}`}>
-                          {recoveryStabilityLabel}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Dominant Global Value */}
-                  <div className="bg-white/70 rounded-xl p-4 mb-4">
-                    <p className="text-xs text-muted-foreground mb-3">אשכול ערכים דומיננטי</p>
-                    <div className="flex items-center justify-center gap-3">
-                      <div 
-                        className={`${valueColors[dominantValue[0]]} w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg`}
-                        data-testid="dominant-value-cluster"
-                      >
-                        {dominantValue[1]}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-foreground">{valueLabels[dominantValue[0]]}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {Math.round((dominantValue[1] / total) * 100)}% מכלל ההחלטות
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Global Value Distribution */}
-                  <div className="bg-white/70 rounded-xl p-4">
-                    <p className="text-xs text-muted-foreground mb-3">התפלגות ערכים גלובלית</p>
-                    <div className="flex justify-center items-end gap-2 h-20">
-                      {Object.entries(valueCounts).map(([tag, count]) => {
-                        const maxCount = Math.max(...Object.values(valueCounts), 1);
-                        const size = count > 0 ? 24 + (count / maxCount) * 40 : 16;
-                        return (
-                          <div key={tag} className="flex flex-col items-center gap-1">
-                            <div 
-                              className={`${valueColors[tag]} rounded-full flex items-center justify-center text-white font-bold text-xs transition-all`}
-                              style={{ 
-                                width: `${size}px`, 
-                                height: `${size}px`,
-                                opacity: count > 0 ? 0.9 : 0.3
-                              }}
-                              data-testid={`global-value-${tag}`}
-                            >
-                              {count}
-                            </div>
-                            <span className="text-xs text-muted-foreground">{valueLabels[tag]}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
-          </section>
-        )}
+        {/* Global Value Field Section */}
+        <GlobalValueFieldSection
+          globalStats={globalStats}
+          resetGlobalStats={resetGlobalStats}
+        />
 
         {/* Share Card Modal */}
         {showShareCard && decisionResult && (
@@ -1637,7 +823,7 @@ export default function PhilosDashboard() {
                   onClick={() => setShowShareCard(false)}
                   className="text-muted-foreground hover:text-foreground text-xl"
                 >
-                  ✕
+                  x
                 </button>
               </div>
 
@@ -1671,7 +857,7 @@ export default function PhilosDashboard() {
                       ? 'text-green-600' 
                       : 'text-red-600'
                   }`}>
-                    {decisionResult.decision === 'Allowed' ? '✓ Allowed' : '✗ Blocked'}
+                    {decisionResult.decision === 'Allowed' ? 'Allowed' : 'Blocked'}
                   </p>
                 </div>
 
@@ -1708,7 +894,7 @@ export default function PhilosDashboard() {
                 onClick={downloadShareCard}
                 className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 mt-4"
               >
-                <span>📷</span> Download Image
+                <span>Download Image</span>
               </button>
             </div>
           </div>
@@ -1717,7 +903,7 @@ export default function PhilosDashboard() {
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground pt-4">
           <p>Interactive Decision Engine</p>
-          <p className="mt-1">Deploy → test with real decisions</p>
+          <p className="mt-1">Deploy - test with real decisions</p>
         </div>
 
       </div>
