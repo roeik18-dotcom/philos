@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { toPng } from 'html-to-image';
 import {
   DailyOrientationSection,
@@ -11,11 +11,13 @@ import {
   GlobalTrendSection,
   SessionSummarySection
 } from '../components/philos/sections';
+import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
 
 // LocalStorage keys
 const STORAGE_KEY = 'philos_session_data';
 const GLOBAL_STORAGE_KEY = 'philos_global_data';
 const TREND_STORAGE_KEY = 'philos_trend_history';
+const LAST_SYNC_KEY = 'philos_last_sync';
 
 // Optimal zone definition
 const OPTIMAL_ZONE = {
@@ -251,7 +253,127 @@ export default function PhilosDashboard() {
   const [globalStats, setGlobalStats] = useState(loadGlobalStats);
   const [trendHistory, setTrendHistory] = useState(loadTrendHistory);
   const [showShareCard, setShowShareCard] = useState(false);
+  const [syncStatus, setSyncStatus] = useState({ syncing: false, lastSynced: null, cloudAvailable: false });
   const shareCardRef = useRef(null);
+  const syncTimeoutRef = useRef(null);
+
+  // Cloud sync function
+  const performCloudSync = useCallback(async (forceSync = false) => {
+    if (syncStatus.syncing && !forceSync) return;
+    
+    setSyncStatus(prev => ({ ...prev, syncing: true }));
+    
+    try {
+      const result = await syncWithCloud({
+        history,
+        globalStats,
+        trendHistory
+      });
+      
+      if (result.success) {
+        // Update local state with merged cloud data
+        if (result.history && result.history.length > 0) {
+          setHistory(result.history);
+        }
+        if (result.globalStats && Object.keys(result.globalStats).length > 0) {
+          setGlobalStats(result.globalStats);
+        }
+        if (result.trendHistory && result.trendHistory.length > 0) {
+          setTrendHistory(result.trendHistory);
+        }
+        
+        localStorage.setItem(LAST_SYNC_KEY, result.lastSynced);
+        setSyncStatus(prev => ({ 
+          ...prev, 
+          syncing: false, 
+          lastSynced: result.lastSynced,
+          cloudAvailable: true 
+        }));
+      } else {
+        setSyncStatus(prev => ({ ...prev, syncing: false }));
+      }
+    } catch (error) {
+      console.error('Cloud sync failed:', error);
+      setSyncStatus(prev => ({ ...prev, syncing: false }));
+    }
+  }, [history, globalStats, trendHistory, syncStatus.syncing]);
+
+  // Initial cloud sync on mount
+  useEffect(() => {
+    const initSync = async () => {
+      const cloudOk = await isCloudAvailable();
+      setSyncStatus(prev => ({ ...prev, cloudAvailable: cloudOk }));
+      
+      if (cloudOk) {
+        // First, fetch cloud data
+        const cloudData = await getCloudData();
+        if (cloudData.success && cloudData.lastSynced) {
+          // Merge cloud data with local
+          if (cloudData.history.length > 0) {
+            setHistory(prev => {
+              const merged = [...prev];
+              cloudData.history.forEach(ch => {
+                if (!merged.find(h => h.timestamp === ch.timestamp)) {
+                  merged.push(ch);
+                }
+              });
+              return merged.sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+              ).slice(0, 20);
+            });
+          }
+          if (cloudData.globalStats && cloudData.globalStats.totalDecisions > 0) {
+            setGlobalStats(prev => ({
+              contribution: Math.max(prev.contribution, cloudData.globalStats.contribution || 0),
+              recovery: Math.max(prev.recovery, cloudData.globalStats.recovery || 0),
+              harm: Math.max(prev.harm, cloudData.globalStats.harm || 0),
+              order: Math.max(prev.order, cloudData.globalStats.order || 0),
+              avoidance: Math.max(prev.avoidance, cloudData.globalStats.avoidance || 0),
+              totalDecisions: Math.max(prev.totalDecisions, cloudData.globalStats.totalDecisions || 0),
+              sessions: Math.max(prev.sessions, cloudData.globalStats.sessions || 0)
+            }));
+          }
+          if (cloudData.trendHistory.length > 0) {
+            setTrendHistory(prev => {
+              const trendMap = {};
+              [...prev, ...cloudData.trendHistory].forEach(t => {
+                if (t.date) {
+                  if (!trendMap[t.date] || t.totalDecisions >= trendMap[t.date].totalDecisions) {
+                    trendMap[t.date] = t;
+                  }
+                }
+              });
+              return Object.values(trendMap).sort((a, b) => a.date.localeCompare(b.date)).slice(-30);
+            });
+          }
+          setSyncStatus(prev => ({ ...prev, lastSynced: cloudData.lastSynced }));
+        }
+      }
+    };
+    
+    initSync();
+  }, []);
+
+  // Debounced sync after data changes
+  useEffect(() => {
+    if (!syncStatus.cloudAvailable) return;
+    
+    // Clear existing timeout
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+    
+    // Set new timeout for debounced sync (5 seconds after last change)
+    syncTimeoutRef.current = setTimeout(() => {
+      performCloudSync();
+    }, 5000);
+    
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [history, globalStats, trendHistory, syncStatus.cloudAvailable]);
 
   // Save to localStorage whenever state or history changes
   useEffect(() => {
@@ -581,6 +703,31 @@ export default function PhilosDashboard() {
               Session: {history.length} decisions saved
             </p>
           )}
+          {/* Cloud Sync Status */}
+          <div className="flex items-center justify-center gap-2 mt-2">
+            {syncStatus.cloudAvailable ? (
+              <>
+                <span className={`w-2 h-2 rounded-full ${syncStatus.syncing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></span>
+                <span className="text-xs text-muted-foreground">
+                  {syncStatus.syncing ? 'מסנכרן...' : 'מסונכרן לענן'}
+                </span>
+                {syncStatus.lastSynced && !syncStatus.syncing && (
+                  <button
+                    onClick={() => performCloudSync(true)}
+                    className="text-xs text-blue-500 hover:text-blue-700 underline"
+                    data-testid="manual-sync-btn"
+                  >
+                    סנכרן עכשיו
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                <span className="text-xs text-muted-foreground">מצב לא מקוון</span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Reset Session Button */}

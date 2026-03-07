@@ -48,6 +48,10 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
 - localStorage saving/loading
 - Session state preservation across page reloads
 - Reset Session functionality with confirmation
+- Cloud sync with MongoDB backend
+- Automatic sync on app load and data changes
+- Manual sync button
+- Offline fallback to localStorage
 
 #### Visualizations
 - Decision Map with animated dot movement
@@ -176,14 +180,23 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
     - Trend Insight summary box with actionable insights
     - Auto-saves session snapshots every 5 decisions
     - Persisted in localStorage (philos_trend_history)
+29. ✅ Implemented Cloud Sync for session data
+    - Backend API endpoints for sync (POST /api/philos/sync, GET /api/philos/sync/{user_id})
+    - MongoDB storage for persistent data
+    - Automatic sync on app load and after data changes (5s debounce)
+    - Manual sync button available
+    - Merges local and cloud data intelligently
+    - Sync status indicator in header (מסונכרן לענן / מסנכרן... / מצב לא מקוון)
+    - localStorage remains as fallback cache
+    - Syncs: history, globalStats, trendHistory
 
 ## Backlog / Future Tasks
 
 ### P1 - High Priority
 - [x] Refactor PhilosDashboard.js into smaller components (DONE)
 - [x] Historical trend analysis (DONE - Global Trend section)
+- [x] Cloud sync for session data (DONE)
 - [ ] User authentication
-- [ ] Cloud sync for session data
 - [ ] Multi-device support
 
 ### P2 - Medium Priority
