@@ -1431,6 +1431,218 @@ async def get_collective_layer():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================
+# Collective Layer Phase 2 - Time-Based Trends & Comparisons
+# ============================================================
+
+class DayTrend(BaseModel):
+    date: str
+    total_decisions: int = 0
+    avg_order_drift: float = 0.0
+    avg_collective_drift: float = 0.0
+    avg_harm_pressure: float = 0.0
+    avg_recovery_stability: float = 0.0
+    value_counts: Dict[str, int] = {}
+
+class PeriodComparison(BaseModel):
+    current_period: Dict[str, Any] = {}
+    previous_period: Dict[str, Any] = {}
+    changes: Dict[str, Any] = {}
+
+class CollectiveTrendsResponse(BaseModel):
+    success: bool
+    # Daily trends (last 14 days)
+    daily_trends: List[DayTrend] = []
+    # Period comparison (last 7 days vs previous 7 days)
+    comparison: PeriodComparison = PeriodComparison()
+    # Trend insights
+    insights: List[str] = []
+
+
+@api_router.get("/collective/trends", response_model=CollectiveTrendsResponse)
+async def get_collective_trends():
+    """
+    Get time-based collective trends and comparison views.
+    Aggregates data by day and compares current period vs previous period.
+    """
+    try:
+        from datetime import timedelta
+        
+        now = datetime.now(timezone.utc)
+        dates_14_days = [(now - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(14)]
+        dates_7_days = dates_14_days[:7]
+        dates_prev_7_days = dates_14_days[7:14]
+        
+        # Initialize daily aggregates
+        daily_data = {date: {
+            'total_decisions': 0,
+            'order_drifts': [],
+            'collective_drifts': [],
+            'harm_pressures': [],
+            'recovery_stabilities': [],
+            'value_counts': {'contribution': 0, 'recovery': 0, 'order': 0, 'harm': 0, 'avoidance': 0}
+        } for date in dates_14_days}
+        
+        # 1. Aggregate from philos_sessions (trend_history)
+        all_sessions = await db.philos_sessions.find(
+            {},
+            {"_id": 0, "user_id": 0}
+        ).to_list(1000)
+        
+        for session in all_sessions:
+            trends = session.get('trend_history', [])
+            for t in trends:
+                date = t.get('date', '')
+                if date in daily_data:
+                    daily_data[date]['total_decisions'] += t.get('totalDecisions', 0)
+                    daily_data[date]['value_counts']['contribution'] += t.get('contribution', 0)
+                    daily_data[date]['value_counts']['recovery'] += t.get('recovery', 0)
+                    daily_data[date]['value_counts']['order'] += t.get('order', 0)
+                    daily_data[date]['value_counts']['harm'] += t.get('harm', 0)
+                    daily_data[date]['value_counts']['avoidance'] += t.get('avoidance', 0)
+        
+        # 2. Aggregate from philos_path_learning for drift/pressure metrics
+        all_learning = await db.philos_path_learning.find(
+            {},
+            {"_id": 0, "user_id": 0}
+        ).to_list(5000)
+        
+        for entry in all_learning:
+            timestamp = entry.get('timestamp', '')
+            if timestamp:
+                date = timestamp[:10]  # Extract date part
+                if date in daily_data:
+                    if entry.get('actual_order_drift') is not None:
+                        daily_data[date]['order_drifts'].append(entry['actual_order_drift'])
+                    if entry.get('actual_collective_drift') is not None:
+                        daily_data[date]['collective_drifts'].append(entry['actual_collective_drift'])
+                    if entry.get('actual_harm_pressure') is not None:
+                        daily_data[date]['harm_pressures'].append(entry['actual_harm_pressure'])
+                    if entry.get('actual_recovery_stability') is not None:
+                        daily_data[date]['recovery_stabilities'].append(entry['actual_recovery_stability'])
+        
+        # 3. Build daily trends list
+        daily_trends = []
+        for date in sorted(dates_14_days, reverse=True):
+            data = daily_data[date]
+            trend = DayTrend(
+                date=date,
+                total_decisions=data['total_decisions'],
+                avg_order_drift=round(sum(data['order_drifts']) / len(data['order_drifts']), 1) if data['order_drifts'] else 0.0,
+                avg_collective_drift=round(sum(data['collective_drifts']) / len(data['collective_drifts']), 1) if data['collective_drifts'] else 0.0,
+                avg_harm_pressure=round(sum(data['harm_pressures']) / len(data['harm_pressures']), 1) if data['harm_pressures'] else 0.0,
+                avg_recovery_stability=round(sum(data['recovery_stabilities']) / len(data['recovery_stabilities']), 1) if data['recovery_stabilities'] else 0.0,
+                value_counts=data['value_counts']
+            )
+            daily_trends.append(trend)
+        
+        # 4. Build period comparison (last 7 days vs previous 7 days)
+        def aggregate_period(dates_list):
+            total_decisions = 0
+            order_drifts = []
+            collective_drifts = []
+            harm_pressures = []
+            recovery_stabilities = []
+            value_counts = {'contribution': 0, 'recovery': 0, 'order': 0, 'harm': 0, 'avoidance': 0}
+            
+            for date in dates_list:
+                if date in daily_data:
+                    data = daily_data[date]
+                    total_decisions += data['total_decisions']
+                    order_drifts.extend(data['order_drifts'])
+                    collective_drifts.extend(data['collective_drifts'])
+                    harm_pressures.extend(data['harm_pressures'])
+                    recovery_stabilities.extend(data['recovery_stabilities'])
+                    for k in value_counts:
+                        value_counts[k] += data['value_counts'].get(k, 0)
+            
+            return {
+                'total_decisions': total_decisions,
+                'avg_order_drift': round(sum(order_drifts) / len(order_drifts), 1) if order_drifts else 0.0,
+                'avg_collective_drift': round(sum(collective_drifts) / len(collective_drifts), 1) if collective_drifts else 0.0,
+                'avg_harm_pressure': round(sum(harm_pressures) / len(harm_pressures), 1) if harm_pressures else 0.0,
+                'avg_recovery_stability': round(sum(recovery_stabilities) / len(recovery_stabilities), 1) if recovery_stabilities else 0.0,
+                'value_counts': value_counts
+            }
+        
+        current_period = aggregate_period(dates_7_days)
+        previous_period = aggregate_period(dates_prev_7_days)
+        
+        # Calculate changes
+        def safe_change(current, previous):
+            if previous == 0:
+                return current
+            return round(current - previous, 1)
+        
+        def safe_percent_change(current, previous):
+            if previous == 0:
+                return 100 if current > 0 else 0
+            return round(((current - previous) / abs(previous)) * 100, 1)
+        
+        changes = {
+            'decisions_change': safe_change(current_period['total_decisions'], previous_period['total_decisions']),
+            'decisions_percent': safe_percent_change(current_period['total_decisions'], previous_period['total_decisions']),
+            'order_drift_change': safe_change(current_period['avg_order_drift'], previous_period['avg_order_drift']),
+            'collective_drift_change': safe_change(current_period['avg_collective_drift'], previous_period['avg_collective_drift']),
+            'harm_pressure_change': safe_change(current_period['avg_harm_pressure'], previous_period['avg_harm_pressure']),
+            'recovery_stability_change': safe_change(current_period['avg_recovery_stability'], previous_period['avg_recovery_stability'])
+        }
+        
+        comparison = PeriodComparison(
+            current_period=current_period,
+            previous_period=previous_period,
+            changes=changes
+        )
+        
+        # 5. Generate Hebrew insights based on comparison
+        insights = []
+        
+        # Order drift insight
+        if changes['order_drift_change'] > 3:
+            insights.append("השדה הקולקטיבי נע השבוע יותר לכיוון סדר.")
+        elif changes['order_drift_change'] < -3:
+            insights.append("השדה הקולקטיבי נע השבוע יותר לכיוון כאוס.")
+        
+        # Harm pressure insight
+        if changes['harm_pressure_change'] < -5:
+            insights.append("לחץ הנזק ירד ביחס לתקופה הקודמת.")
+        elif changes['harm_pressure_change'] > 5:
+            insights.append("לחץ הנזק עלה ביחס לתקופה הקודמת.")
+        
+        # Recovery stability insight
+        if changes['recovery_stability_change'] > 5:
+            insights.append("יש עלייה בהתאוששות הקולקטיבית.")
+        elif changes['recovery_stability_change'] < -5:
+            insights.append("יש ירידה בהתאוששות הקולקטיבית.")
+        
+        # Collective drift insight
+        if changes['collective_drift_change'] > 3:
+            insights.append("הכיוון הקולקטיבי מתחזק.")
+        elif changes['collective_drift_change'] < -3:
+            insights.append("יש ירידה בכיוון הקולקטיבי.")
+        
+        # Activity insight
+        if changes['decisions_percent'] > 20:
+            insights.append("פעילות גבוהה יותר השבוע.")
+        elif changes['decisions_percent'] < -20:
+            insights.append("פעילות נמוכה יותר השבוע.")
+        
+        # Stability insight
+        if not insights:
+            insights.append("השדה הקולקטיבי יציב יחסית לתקופה הקודמת.")
+        
+        return CollectiveTrendsResponse(
+            success=True,
+            daily_trends=daily_trends,
+            comparison=comparison,
+            insights=insights
+        )
+        
+    except Exception as e:
+        logger.error(f"Get collective trends error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 

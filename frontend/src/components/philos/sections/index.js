@@ -15,3 +15,4 @@ export { default as DecisionPathEngineSection } from './DecisionPathEngineSectio
 export { default as PathLearningSection } from './PathLearningSection';
 export { default as AdaptiveLearningSection } from './AdaptiveLearningSection';
 export { default as CollectiveLayerSection } from './CollectiveLayerSection';
+export { default as CollectiveTrendsSection } from './CollectiveTrendsSection';
