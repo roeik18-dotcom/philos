@@ -20,7 +20,8 @@ import {
   CollectiveLayerSection,
   CollectiveTrendsSection,
   GlobalFieldSection,
-  DecisionHistorySection
+  DecisionHistorySection,
+  DecisionTreeSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -191,6 +192,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           history={history}
           onAddFollowUp={handleAddFollowUp}
         />
+
+        {/* Decision Tree Visualization */}
+        <DecisionTreeSection history={history} />
 
         {/* Decision Path Engine Section */}
         <DecisionPathEngineSection

@@ -114,6 +114,9 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Visual chain indicators and follow-up counts
 - [x] "Add follow-up" action on each history item
 - [x] Decision History Section component
+- [x] Decision Tree Visualization (branching tree view)
+- [x] Color-coded nodes by value_tag
+- [x] Parent-child connectors with status indicators
 
 ---
 

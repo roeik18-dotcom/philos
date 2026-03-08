@@ -43,3 +43,9 @@
   - Visual chain indicator in history
   - "Add follow-up" action per decision
   - Chain count badges
+- Decision Tree Visualization (COMPLETED)
+  - HTML/CSS tree rendering
+  - Color-coded nodes by value_tag
+  - Parent-child connectors
+  - Status indicators (allowed/blocked)
+  - Positive/negative rings
