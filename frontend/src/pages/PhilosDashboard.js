@@ -16,7 +16,8 @@ import {
   WeeklySummarySection,
   DecisionPathEngineSection,
   PathLearningSection,
-  AdaptiveLearningSection
+  AdaptiveLearningSection,
+  CollectiveLayerSection
 } from '../components/philos/sections';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
 
@@ -224,6 +225,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           globalStats={globalStats}
           resetGlobalStats={resetGlobalStats}
         />
+
+        {/* Collective Layer - Cross-User Analytics */}
+        <CollectiveLayerSection />
 
         {/* Global Trend Over Time */}
         <GlobalTrendSection trendHistory={trendHistory} />

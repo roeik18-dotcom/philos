@@ -1246,6 +1246,191 @@ async def full_sync_user_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================
+# Collective Layer - Cross-User Aggregated Analytics
+# ============================================================
+
+class CollectiveLayerResponse(BaseModel):
+    success: bool
+    total_users: int = 0
+    total_decisions: int = 0
+    # Value tag counts
+    value_counts: Dict[str, int] = {}
+    # Averages
+    avg_order_drift: float = 0.0
+    avg_collective_drift: float = 0.0
+    avg_harm_pressure: float = 0.0
+    avg_recovery_stability: float = 0.0
+    # Dominant values
+    dominant_value: str = ""
+    dominant_direction: str = ""
+    # Time-based trends (last 7 days)
+    recent_trend: Dict[str, Any] = {}
+    # Summary insights
+    insights: List[str] = []
+
+
+@api_router.get("/collective/layer", response_model=CollectiveLayerResponse)
+async def get_collective_layer():
+    """
+    Get aggregated anonymized data across all authenticated users.
+    No usernames or identifying information is returned.
+    """
+    try:
+        # 1. Aggregate from philos_sessions (global_stats)
+        all_sessions = await db.philos_sessions.find(
+            {},
+            {"_id": 0, "user_id": 0}  # Exclude identifying info
+        ).to_list(1000)
+        
+        total_users = len(all_sessions)
+        total_decisions = 0
+        value_counts = {
+            'contribution': 0,
+            'recovery': 0,
+            'order': 0,
+            'harm': 0,
+            'avoidance': 0
+        }
+        
+        for session in all_sessions:
+            gs = session.get('global_stats', {})
+            total_decisions += gs.get('totalDecisions', 0)
+            value_counts['contribution'] += gs.get('contribution', 0)
+            value_counts['recovery'] += gs.get('recovery', 0)
+            value_counts['order'] += gs.get('order', 0)
+            value_counts['harm'] += gs.get('harm', 0)
+            value_counts['avoidance'] += gs.get('avoidance', 0)
+        
+        # 2. Aggregate from philos_path_learning for drift/pressure metrics
+        all_learning = await db.philos_path_learning.find(
+            {},
+            {"_id": 0, "user_id": 0}  # Exclude identifying info
+        ).to_list(5000)
+        
+        order_drifts = []
+        collective_drifts = []
+        harm_pressures = []
+        recovery_stabilities = []
+        
+        for entry in all_learning:
+            if entry.get('actual_order_drift') is not None:
+                order_drifts.append(entry['actual_order_drift'])
+            if entry.get('actual_collective_drift') is not None:
+                collective_drifts.append(entry['actual_collective_drift'])
+            if entry.get('actual_harm_pressure') is not None:
+                harm_pressures.append(entry['actual_harm_pressure'])
+            if entry.get('actual_recovery_stability') is not None:
+                recovery_stabilities.append(entry['actual_recovery_stability'])
+        
+        # Calculate averages
+        avg_order_drift = sum(order_drifts) / len(order_drifts) if order_drifts else 0.0
+        avg_collective_drift = sum(collective_drifts) / len(collective_drifts) if collective_drifts else 0.0
+        avg_harm_pressure = sum(harm_pressures) / len(harm_pressures) if harm_pressures else 0.0
+        avg_recovery_stability = sum(recovery_stabilities) / len(recovery_stabilities) if recovery_stabilities else 0.0
+        
+        # 3. Determine dominant value
+        positive_values = {k: v for k, v in value_counts.items() if k not in ['harm', 'avoidance']}
+        dominant_value = max(positive_values, key=positive_values.get) if positive_values and max(positive_values.values()) > 0 else 'recovery'
+        
+        # 4. Determine dominant direction
+        if avg_order_drift > 5:
+            dominant_direction = 'order'
+        elif avg_order_drift < -5:
+            dominant_direction = 'chaos'
+        elif avg_collective_drift > 5:
+            dominant_direction = 'collective'
+        elif avg_collective_drift < -5:
+            dominant_direction = 'ego'
+        else:
+            dominant_direction = 'balanced'
+        
+        # 5. Calculate recent trend (last 7 days from trend_history)
+        recent_trend = {
+            'total_recent_decisions': 0,
+            'trend_direction': 'stable'
+        }
+        
+        from datetime import timedelta
+        seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()[:10]
+        
+        recent_values = {'contribution': 0, 'recovery': 0, 'order': 0, 'harm': 0, 'avoidance': 0}
+        
+        for session in all_sessions:
+            trends = session.get('trend_history', [])
+            for t in trends:
+                if t.get('date', '') >= seven_days_ago:
+                    recent_trend['total_recent_decisions'] += t.get('totalDecisions', 0)
+                    recent_values['contribution'] += t.get('contribution', 0)
+                    recent_values['recovery'] += t.get('recovery', 0)
+                    recent_values['order'] += t.get('order', 0)
+                    recent_values['harm'] += t.get('harm', 0)
+                    recent_values['avoidance'] += t.get('avoidance', 0)
+        
+        if recent_values['order'] > recent_values['recovery']:
+            recent_trend['trend_direction'] = 'order_rising'
+        elif recent_values['recovery'] > recent_values['order']:
+            recent_trend['trend_direction'] = 'recovery_rising'
+        
+        # 6. Generate Hebrew insights
+        insights = []
+        
+        # Value insight
+        value_labels = {
+            'contribution': 'תרומה',
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'harm': 'נזק',
+            'avoidance': 'הימנעות'
+        }
+        
+        if dominant_value:
+            top_values = sorted(positive_values.items(), key=lambda x: x[1], reverse=True)[:2]
+            if len(top_values) >= 2 and top_values[1][1] > 0:
+                insights.append(f"השדה הקולקטיבי נוטה כעת ל{value_labels.get(top_values[0][0], '')} ו{value_labels.get(top_values[1][0], '')}.")
+            elif top_values:
+                insights.append(f"השדה הקולקטיבי נוטה כעת ל{value_labels.get(top_values[0][0], '')}.")
+        
+        # Harm pressure insight
+        if avg_harm_pressure < 0:
+            insights.append("לחץ הנזק הממוצע נמוך.")
+        elif avg_harm_pressure > 10:
+            insights.append("לחץ הנזק הממוצע גבוה יחסית.")
+        else:
+            insights.append("לחץ הנזק הממוצע בינוני.")
+        
+        # Direction insight
+        if dominant_direction == 'order':
+            insights.append("יש עלייה קלה בכיוון סדר.")
+        elif dominant_direction == 'collective':
+            insights.append("יש עלייה קלה בכיוון קולקטיבי.")
+        elif dominant_direction == 'balanced':
+            insights.append("הכיוון הממוצע מאוזן.")
+        
+        # Recovery insight
+        if avg_recovery_stability > 10:
+            insights.append("יציבות ההתאוששות הקולקטיבית גבוהה.")
+        
+        return CollectiveLayerResponse(
+            success=True,
+            total_users=total_users,
+            total_decisions=total_decisions,
+            value_counts=value_counts,
+            avg_order_drift=round(avg_order_drift, 1),
+            avg_collective_drift=round(avg_collective_drift, 1),
+            avg_harm_pressure=round(avg_harm_pressure, 1),
+            avg_recovery_stability=round(avg_recovery_stability, 1),
+            dominant_value=dominant_value,
+            dominant_direction=dominant_direction,
+            recent_trend=recent_trend,
+            insights=insights
+        )
+        
+    except Exception as e:
+        logger.error(f"Get collective layer error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
