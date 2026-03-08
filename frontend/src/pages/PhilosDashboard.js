@@ -19,7 +19,8 @@ import {
   AdaptiveLearningSection,
   CollectiveLayerSection,
   CollectiveTrendsSection,
-  GlobalFieldSection
+  GlobalFieldSection,
+  DecisionHistorySection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -42,6 +43,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
     performCloudSync,
     showShareCard,
     setShowShareCard,
+    parentDecision,
+    setParentDecision,
+    handleAddFollowUp,
     balanceScore,
     evaluateAction,
     resetSession,
@@ -178,6 +182,14 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           decisionResult={decisionResult}
           state={state}
           calculateSuggestedVector={calculateSuggestedVector}
+          parentDecision={parentDecision}
+          onClearParent={() => setParentDecision(null)}
+        />
+
+        {/* Decision History with Chains */}
+        <DecisionHistorySection
+          history={history}
+          onAddFollowUp={handleAddFollowUp}
         />
 
         {/* Decision Path Engine Section */}

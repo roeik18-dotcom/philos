@@ -110,6 +110,10 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Works for all users (anonymous + authenticated)
 - [x] Decision Templates (Personal, Social, Work, Emotional, Ethical)
 - [x] Pre-filled Hebrew guiding questions per template
+- [x] Decision Chains with parent_decision_id
+- [x] Visual chain indicators and follow-up counts
+- [x] "Add follow-up" action on each history item
+- [x] Decision History Section component
 
 ---
 

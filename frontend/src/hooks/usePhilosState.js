@@ -282,6 +282,9 @@ export default function usePhilosState(user = null) {
   // UI state
   const [showShareCard, setShowShareCard] = useState(false);
   
+  // Decision chain state
+  const [parentDecision, setParentDecision] = useState(null);
+  
   // Refs
   const syncTimeoutRef = useRef(null);
   const hasHydratedFromCloud = useRef(false);
@@ -749,9 +752,10 @@ export default function usePhilosState(user = null) {
 
   // Evaluate action
   const evaluateAction = async (quickAction = null) => {
-    const actionToEvaluate = quickAction || actionText;
+    // Handle case where quickAction might be an event object from button click
+    const actionToEvaluate = (typeof quickAction === 'string' && quickAction) ? quickAction : actionText;
     
-    if (!actionToEvaluate) {
+    if (!actionToEvaluate || typeof actionToEvaluate !== 'string') {
       alert('יש להזין פעולה');
       return;
     }
@@ -818,12 +822,14 @@ export default function usePhilosState(user = null) {
     updateGlobalStats(valueTag);
 
     const historyEntry = {
+      id: 'dec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
       action: actionToEvaluate,
       decision: decision,
       chaos_order: newChaosOrder,
       ego_collective: newEgoCollective,
       balance_score: newBalanceScore,
       value_tag: valueTag,
+      parent_decision_id: parentDecision?.id || null,
       time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
       timestamp: timestamp
     };
@@ -838,13 +844,15 @@ export default function usePhilosState(user = null) {
         chaos_order: newChaosOrder,
         ego_collective: newEgoCollective,
         balance_score: newBalanceScore,
-        value_tag: valueTag
+        value_tag: valueTag,
+        parent_decision_id: parentDecision?.id || null
       });
     } catch (error) {
       console.log('Auto-save decision failed (will retry on sync):', error);
     }
     
-    // Clear action text after evaluation
+    // Clear parent decision and action text after evaluation
+    setParentDecision(null);
     if (!quickAction) {
       setActionText('');
     }
@@ -896,6 +904,18 @@ export default function usePhilosState(user = null) {
   // Calculate balance score
   const balanceScore = 100 - (Math.abs(state.chaos_order) + Math.abs(state.ego_collective));
 
+  // Handle adding a follow-up decision
+  const handleAddFollowUp = (parentDecisionItem) => {
+    setParentDecision(parentDecisionItem);
+    setActionText('');
+    // Scroll to action input
+    const actionInput = document.querySelector('[data-testid="action-input"]');
+    if (actionInput) {
+      actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      actionInput.focus();
+    }
+  };
+
   return {
     // Core state
     state,
@@ -929,6 +949,11 @@ export default function usePhilosState(user = null) {
     // UI
     showShareCard,
     setShowShareCard,
+    
+    // Decision chains
+    parentDecision,
+    setParentDecision,
+    handleAddFollowUp,
     
     // Computed
     balanceScore,

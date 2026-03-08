@@ -4,11 +4,39 @@ export default function ActionEvaluationSection({
   evaluateAction, 
   decisionResult,
   state,
-  calculateSuggestedVector 
+  calculateSuggestedVector,
+  parentDecision,
+  onClearParent
 }) {
   return (
     <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
       <h3 className="text-xl font-semibold text-foreground mb-4">Action Evaluation</h3>
+      
+      {/* Parent Decision Indicator */}
+      {parentDecision && (
+        <div 
+          className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between"
+          dir="rtl"
+        >
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            <span className="text-sm text-amber-700">
+              המשך ל: <span className="font-medium">{parentDecision.action.slice(0, 40)}{parentDecision.action.length > 40 ? '...' : ''}</span>
+            </span>
+          </div>
+          <button
+            onClick={onClearParent}
+            className="text-amber-600 hover:text-amber-800 p-1"
+            title="בטל קישור"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
       
       <input
         type="text"
@@ -16,6 +44,7 @@ export default function ActionEvaluationSection({
         value={actionText}
         onChange={(e) => setActionText(e.target.value)}
         className="w-full px-4 py-3 border border-border rounded-xl text-lg mb-4"
+        data-testid="action-input"
       />
       
       <button

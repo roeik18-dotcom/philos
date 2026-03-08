@@ -38,3 +38,8 @@
 - Decision Templates (COMPLETED)
   - 5 template types: Personal, Social, Work, Emotional, Ethical
   - Pre-filled guiding questions in Hebrew
+- Decision Chains (COMPLETED)
+  - parent_decision_id linking
+  - Visual chain indicator in history
+  - "Add follow-up" action per decision
+  - Chain count badges

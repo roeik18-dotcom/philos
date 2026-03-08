@@ -727,6 +727,8 @@ class DecisionRecordRequest(BaseModel):
     balance_score: int
     value_tag: str
     session_id: Optional[str] = None
+    parent_decision_id: Optional[str] = None
+    template_type: Optional[str] = None
 
 class MemoryDataResponse(BaseModel):
     success: bool
@@ -758,6 +760,8 @@ async def save_decision(data: DecisionRecordRequest):
             'balance_score': data.balance_score,
             'value_tag': data.value_tag,
             'session_id': data.session_id,
+            'parent_decision_id': data.parent_decision_id,
+            'template_type': data.template_type,
             'time': now.strftime('%H:%M'),
             'date': today,
             'week': week_start,

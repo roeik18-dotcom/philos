@@ -17,3 +17,4 @@ export { default as AdaptiveLearningSection } from './AdaptiveLearningSection';
 export { default as CollectiveLayerSection } from './CollectiveLayerSection';
 export { default as CollectiveTrendsSection } from './CollectiveTrendsSection';
 export { default as GlobalFieldSection } from './GlobalFieldSection';
+export { default as DecisionHistorySection } from './DecisionHistorySection';
