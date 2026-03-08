@@ -10,3 +10,4 @@ export { default as SessionSummarySection } from './SessionSummarySection';
 export { default as SessionLibrarySection } from './SessionLibrarySection';
 export { default as ValueConstellationSection } from './ValueConstellationSection';
 export { default as SessionComparisonSection } from './SessionComparisonSection';
+export { default as WeeklySummarySection } from './WeeklySummarySection';

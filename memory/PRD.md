@@ -129,7 +129,8 @@ DELETE /philos/sessions/{user_id}/{session_id}     → Delete session
 │           ├── SessionSummarySection.js
 │           ├── SessionLibrarySection.js
 │           ├── ValueConstellationSection.js
-│           └── SessionComparisonSection.js
+│           ├── SessionComparisonSection.js
+│           └── WeeklySummarySection.js
 └── App.js
 ```
 
@@ -257,6 +258,14 @@ DELETE /philos/sessions/{user_id}/{session_id}     → Delete session
     - Dominant value display for each session
     - Auto-generated Hebrew insights (תובנות השוואה)
     - Hebrew RTL layout preserved
+33. ✅ Built Weekly Cognitive Report
+    - Aggregates last 7 days of trend history
+    - Overview stats: total decisions, session count, dominant value
+    - Weekly averages: order drift, collective drift, harm pressure, recovery stability
+    - Trend indicators for each metric (↑ עולה / ↓ יורד / → יציב)
+    - Weekly value distribution bar with counts
+    - Auto-generated Hebrew insights (תובנות שבועיות)
+    - Shows empty state when no data available
 
 ## Backlog / Future Tasks
 

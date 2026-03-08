@@ -12,7 +12,8 @@ import {
   SessionSummarySection,
   SessionLibrarySection,
   ValueConstellationSection,
-  SessionComparisonSection
+  SessionComparisonSection,
+  WeeklySummarySection
 } from '../components/philos/sections';
 import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
 
@@ -1113,6 +1114,9 @@ export default function PhilosDashboard() {
 
         {/* Global Trend Section */}
         <GlobalTrendSection trendHistory={trendHistory} />
+
+        {/* Weekly Summary Section */}
+        <WeeklySummarySection trendHistory={trendHistory} globalStats={globalStats} />
 
         {/* Share Card Modal */}
         {showShareCard && decisionResult && (
