@@ -9,3 +9,4 @@ export { default as GlobalTrendSection } from './GlobalTrendSection';
 export { default as SessionSummarySection } from './SessionSummarySection';
 export { default as SessionLibrarySection } from './SessionLibrarySection';
 export { default as ValueConstellationSection } from './ValueConstellationSection';
+export { default as SessionComparisonSection } from './SessionComparisonSection';

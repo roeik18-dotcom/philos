@@ -128,7 +128,8 @@ DELETE /philos/sessions/{user_id}/{session_id}     → Delete session
 │           ├── GlobalTrendSection.js
 │           ├── SessionSummarySection.js
 │           ├── SessionLibrarySection.js
-│           └── ValueConstellationSection.js
+│           ├── ValueConstellationSection.js
+│           └── SessionComparisonSection.js
 └── App.js
 ```
 
@@ -248,6 +249,14 @@ DELETE /philos/sessions/{user_id}/{session_id}     → Delete session
     - Hover tooltips with value name, count, percentage
     - Value distribution bar chart
     - Stats: transitions count, dominant value with percentage
+32. ✅ Built Session Comparison Engine
+    - Select two saved sessions from dropdowns
+    - Side-by-side comparison metrics display
+    - Visual comparison bars for: decision count, order drift, collective drift, harm pressure, recovery stability
+    - Color-coded bars (green for better, blue/red for relative)
+    - Dominant value display for each session
+    - Auto-generated Hebrew insights (תובנות השוואה)
+    - Hebrew RTL layout preserved
 
 ## Backlog / Future Tasks
 

@@ -11,7 +11,8 @@ import {
   GlobalTrendSection,
   SessionSummarySection,
   SessionLibrarySection,
-  ValueConstellationSection
+  ValueConstellationSection,
+  SessionComparisonSection
 } from '../components/philos/sections';
 import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
 
@@ -1085,6 +1086,9 @@ export default function PhilosDashboard() {
           onLoadSession={loadSessionFromLibrary}
           cloudAvailable={syncStatus.cloudAvailable}
         />
+
+        {/* Session Comparison Section */}
+        <SessionComparisonSection cloudAvailable={syncStatus.cloudAvailable} />
 
         {/* Personal Map Section */}
         <PersonalMapSection
