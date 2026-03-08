@@ -10,7 +10,8 @@ import {
   GlobalValueFieldSection,
   GlobalTrendSection,
   SessionSummarySection,
-  SessionLibrarySection
+  SessionLibrarySection,
+  ValueConstellationSection
 } from '../components/philos/sections';
 import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
 
@@ -1090,6 +1091,9 @@ export default function PhilosDashboard() {
           history={history}
           analyzePersonalMap={analyzePersonalMap}
         />
+
+        {/* Value Constellation Section */}
+        <ValueConstellationSection history={history} />
 
         {/* Orientation Field Section */}
         <OrientationFieldSection history={history} />

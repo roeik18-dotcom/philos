@@ -8,3 +8,4 @@ export { default as GlobalValueFieldSection } from './GlobalValueFieldSection';
 export { default as GlobalTrendSection } from './GlobalTrendSection';
 export { default as SessionSummarySection } from './SessionSummarySection';
 export { default as SessionLibrarySection } from './SessionLibrarySection';
+export { default as ValueConstellationSection } from './ValueConstellationSection';

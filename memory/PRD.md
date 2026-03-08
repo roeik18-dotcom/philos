@@ -127,7 +127,8 @@ DELETE /philos/sessions/{user_id}/{session_id}     → Delete session
 │           ├── GlobalValueFieldSection.js
 │           ├── GlobalTrendSection.js
 │           ├── SessionSummarySection.js
-│           └── SessionLibrarySection.js
+│           ├── SessionLibrarySection.js
+│           └── ValueConstellationSection.js
 └── App.js
 ```
 
@@ -238,6 +239,15 @@ DELETE /philos/sessions/{user_id}/{session_id}     → Delete session
     - "פתח סשן" (Open Session) button to load saved sessions
     - Delete sessions with confirmation
     - Hebrew RTL layout preserved
+31. ✅ Built Value Constellation Map
+    - Spatial SVG visualization of value clusters
+    - Fixed node positions: order (top), contribution (top-right), recovery (right), avoidance (left), harm (bottom)
+    - Node size represents decision count per value
+    - Transition lines between nodes showing decision flow
+    - Dominant value highlighted with animated glow
+    - Hover tooltips with value name, count, percentage
+    - Value distribution bar chart
+    - Stats: transitions count, dominant value with percentage
 
 ## Backlog / Future Tasks
 
