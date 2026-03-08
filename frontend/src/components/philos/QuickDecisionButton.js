@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react';
 import { getUserDecisionStats } from '../../services/cloudSync';
 
+// Decision templates with guiding questions
+const DECISION_TEMPLATES = [
+  { id: 'personal', label: 'אישי', icon: '👤', prompt: 'מהי הפעולה שאני שוקל כרגע?' },
+  { id: 'social', label: 'חברתי', icon: '👥', prompt: 'איך בחרתי להגיב באינטראקציה החברתית?' },
+  { id: 'work', label: 'עבודה', icon: '💼', prompt: 'מה עשיתי כדי להתקדם במשימה?' },
+  { id: 'emotional', label: 'רגשי', icon: '💭', prompt: 'איך הגבתי לרגש שהרגשתי?' },
+  { id: 'ethical', label: 'אתי', icon: '⚖️', prompt: 'מה הייתה ההחלטה המוסרית שקיבלתי?' }
+];
+
 export default function QuickDecisionButton({ onSubmit }) {
   const [isOpen, setIsOpen] = useState(false);
   const [quickAction, setQuickAction] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [stats, setStats] = useState({ today_decisions: 0, total_decisions: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,6 +34,7 @@ export default function QuickDecisionButton({ onSubmit }) {
     setIsSubmitting(true);
     await onSubmit(quickAction.trim());
     setQuickAction('');
+    setSelectedTemplate(null);
     setIsSubmitting(false);
     setIsOpen(false);
     
@@ -31,6 +42,17 @@ export default function QuickDecisionButton({ onSubmit }) {
     const result = await getUserDecisionStats();
     if (result.success !== false) {
       setStats(result);
+    }
+  };
+
+  const handleTemplateSelect = (template) => {
+    if (selectedTemplate?.id === template.id) {
+      // Deselect if clicking same template
+      setSelectedTemplate(null);
+      setQuickAction('');
+    } else {
+      setSelectedTemplate(template);
+      setQuickAction(template.prompt + ' ');
     }
   };
 
@@ -98,11 +120,33 @@ export default function QuickDecisionButton({ onSubmit }) {
 
           {/* Input */}
           <div className="p-4">
+            {/* Template Selector */}
+            <div className="mb-3">
+              <p className="text-xs text-gray-500 mb-2">בחר סוג החלטה:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {DECISION_TEMPLATES.map(template => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleTemplateSelect(template)}
+                    className={`px-2.5 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1 ${
+                      selectedTemplate?.id === template.id
+                        ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    }`}
+                    data-testid={`template-${template.id}`}
+                  >
+                    <span>{template.icon}</span>
+                    <span>{template.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <textarea
               value={quickAction}
               onChange={(e) => setQuickAction(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="הקלד פעולה..."
+              placeholder={selectedTemplate ? selectedTemplate.prompt : "הקלד פעולה..."}
               className="w-full h-20 px-3 py-2 text-sm border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               autoFocus
               data-testid="quick-decision-input"
@@ -113,7 +157,7 @@ export default function QuickDecisionButton({ onSubmit }) {
               {['הליכה', 'מנוחה', 'עזרה', 'עבודה'].map(suggestion => (
                 <button
                   key={suggestion}
-                  onClick={() => setQuickAction(suggestion)}
+                  onClick={() => setQuickAction(prev => prev ? `${prev} ${suggestion}` : suggestion)}
                   className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition-colors"
                   data-testid={`suggestion-${suggestion}`}
                 >

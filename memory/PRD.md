@@ -108,6 +108,8 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Floating "Quick Decision" button (FAB)
 - [x] Expandable quick input panel with suggestions
 - [x] Works for all users (anonymous + authenticated)
+- [x] Decision Templates (Personal, Social, Work, Emotional, Ethical)
+- [x] Pre-filled Hebrew guiding questions per template
 
 ---
 

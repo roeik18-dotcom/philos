@@ -35,3 +35,6 @@
   - Decision frequency tracking
   - Timestamps on all actions
   - Floating quick decision prompt
+- Decision Templates (COMPLETED)
+  - 5 template types: Personal, Social, Work, Emotional, Ethical
+  - Pre-filled guiding questions in Hebrew
