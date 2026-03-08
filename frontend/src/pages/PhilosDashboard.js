@@ -18,7 +18,15 @@ import {
   PathLearningSection,
   AdaptiveLearningSection
 } from '../components/philos/sections';
-import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
+import { 
+  syncWithCloud, 
+  getCloudData, 
+  isCloudAvailable,
+  savePathSelection,
+  savePathLearning,
+  getMemoryData,
+  syncMemoryData
+} from '../services/cloudSync';
 
 // LocalStorage keys
 const STORAGE_KEY = 'philos_session_data';
@@ -440,6 +448,51 @@ export default function PhilosDashboard() {
     initSync();
   }, []);
 
+  // Load memory data from cloud on mount
+  useEffect(() => {
+    const loadMemoryFromCloud = async () => {
+      try {
+        const cloudAvailable = await isCloudAvailable();
+        if (!cloudAvailable) return;
+        
+        const memoryData = await getMemoryData();
+        if (memoryData.success) {
+          // Merge cloud learning history with local
+          if (memoryData.learningHistory && memoryData.learningHistory.length > 0) {
+            setLearningHistory(prev => {
+              const merged = [...prev];
+              memoryData.learningHistory.forEach(entry => {
+                if (!merged.find(h => h.timestamp === entry.timestamp)) {
+                  merged.push(entry);
+                }
+              });
+              return merged.sort((a, b) => 
+                new Date(a.timestamp) - new Date(b.timestamp)
+              ).slice(-50);
+            });
+          }
+          // Use cloud adaptive scores if available
+          if (memoryData.adaptiveScores && Object.keys(memoryData.adaptiveScores).length > 0) {
+            const scores = memoryData.adaptiveScores;
+            if (scores.contribution !== undefined || scores.recovery !== undefined) {
+              setAdaptiveScores({
+                contribution: scores.contribution || 0,
+                recovery: scores.recovery || 0,
+                order: scores.order || 0,
+                harm: scores.harm || 0,
+                avoidance: scores.avoidance || 0
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Failed to load memory from cloud:', error);
+      }
+    };
+    
+    loadMemoryFromCloud();
+  }, []);
+
   // Debounced sync after data changes
   useEffect(() => {
     if (!syncStatus.cloudAvailable) return;
@@ -522,9 +575,8 @@ export default function PhilosDashboard() {
   };
 
   // Handle path selection from Decision Path Engine
-  const handlePathSelection = (pathData) => {
-    // Store the selected path data with predictions
-    setSelectedPathData({
+  const handlePathSelection = async (pathData) => {
+    const pathSelectionData = {
       selected_path_id: pathData.id,
       suggested_action: pathData.action,
       predicted_value_tag: pathData.valueTag,
@@ -533,13 +585,23 @@ export default function PhilosDashboard() {
       predicted_harm_pressure: pathData.harmPressure,
       predicted_recovery_stability: pathData.recoveryStability,
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    // Store the selected path data with predictions
+    setSelectedPathData(pathSelectionData);
     // Also set the action text for evaluation
     setActionText(pathData.action);
+    
+    // Try to save to cloud (async, non-blocking)
+    try {
+      await savePathSelection(pathSelectionData);
+    } catch (error) {
+      console.log('Cloud save failed for path selection:', error);
+    }
   };
 
   // Save learning data after evaluation (compare predicted vs actual)
-  const saveLearningData = (selectedPath, actualResult) => {
+  const saveLearningData = async (selectedPath, actualResult) => {
     if (!selectedPath || !actualResult) return;
 
     // Calculate actual metrics from result
@@ -572,8 +634,16 @@ export default function PhilosDashboard() {
       timestamp: new Date().toISOString()
     };
 
-    // Add to learning history (keep last 50 entries)
+    // Add to local learning history (keep last 50 entries)
     setLearningHistory(prev => [...prev, learningEntry].slice(-50));
+
+    // Try to save to cloud (async, with fallback to localStorage)
+    try {
+      await savePathLearning(learningEntry);
+    } catch (error) {
+      console.log('Cloud save failed, using localStorage fallback:', error);
+      // localStorage fallback is handled by the useEffect
+    }
   };
 
   // Save session snapshot silently (without confirmation)

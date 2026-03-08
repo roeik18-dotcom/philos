@@ -414,6 +414,373 @@ async def delete_session(user_id: str, session_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================
+# Persistent Memory Layer - Path Learning & Adaptive Engine
+# ============================================================
+
+# Models for Path Selection
+class PathSelectionRecord(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    selected_path_id: int
+    suggested_action: str
+    predicted_value_tag: str
+    predicted_order_drift: int
+    predicted_collective_drift: int
+    predicted_harm_pressure: int
+    predicted_recovery_stability: int
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class PathLearningRecord(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    predicted_value_tag: str
+    actual_value_tag: str
+    predicted_order_drift: int
+    actual_order_drift: int
+    predicted_collective_drift: int
+    actual_collective_drift: int
+    predicted_harm_pressure: int
+    actual_harm_pressure: int
+    predicted_recovery_stability: int
+    actual_recovery_stability: int
+    match_quality: str  # 'high', 'medium', 'low'
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class AdaptiveScores(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    user_id: str
+    contribution: int = 0
+    recovery: int = 0
+    order: int = 0
+    harm: int = 0
+    avoidance: int = 0
+    last_updated: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class DecisionRecordRequest(BaseModel):
+    user_id: str
+    action: str
+    decision: str
+    chaos_order: int
+    ego_collective: int
+    balance_score: int
+    value_tag: str
+
+class MemoryDataResponse(BaseModel):
+    success: bool
+    user_id: str
+    learning_history: List[Dict[str, Any]] = []
+    adaptive_scores: Dict[str, Any] = {}
+    last_synced: str = ""
+
+
+# Persistent Memory Endpoints
+
+@api_router.post("/memory/decision")
+async def save_decision(data: DecisionRecordRequest):
+    """
+    Save a decision record to persistent storage.
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        doc = {
+            'id': str(uuid.uuid4()),
+            'user_id': data.user_id,
+            'action': data.action,
+            'decision': data.decision,
+            'chaos_order': data.chaos_order,
+            'ego_collective': data.ego_collective,
+            'balance_score': data.balance_score,
+            'value_tag': data.value_tag,
+            'time': now.strftime('%H:%M'),
+            'timestamp': now.isoformat()
+        }
+        
+        await db.philos_decisions.insert_one(doc)
+        
+        return {"success": True, "id": doc['id']}
+        
+    except Exception as e:
+        logger.error(f"Save decision error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/memory/path-selection")
+async def save_path_selection(data: PathSelectionRecord):
+    """
+    Save a path selection record.
+    """
+    try:
+        doc = data.model_dump()
+        await db.philos_path_selections.insert_one(doc)
+        
+        return {"success": True, "id": doc['id']}
+        
+    except Exception as e:
+        logger.error(f"Save path selection error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/memory/path-learning")
+async def save_path_learning(data: PathLearningRecord):
+    """
+    Save a path learning result and update adaptive scores.
+    """
+    try:
+        # Save the learning record
+        doc = data.model_dump()
+        await db.philos_path_learning.insert_one(doc)
+        
+        # Update adaptive scores based on learning
+        await update_adaptive_scores(data.user_id, data)
+        
+        return {"success": True, "id": doc['id']}
+        
+    except Exception as e:
+        logger.error(f"Save path learning error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def update_adaptive_scores(user_id: str, learning: PathLearningRecord):
+    """
+    Update adaptive scores based on a new learning result.
+    """
+    try:
+        # Get existing scores or create default
+        existing = await db.philos_adaptive_scores.find_one(
+            {"user_id": user_id},
+            {"_id": 0}
+        )
+        
+        scores = {
+            'contribution': 0,
+            'recovery': 0,
+            'order': 0,
+            'harm': 0,
+            'avoidance': 0
+        }
+        
+        if existing:
+            scores = {
+                'contribution': existing.get('contribution', 0),
+                'recovery': existing.get('recovery', 0),
+                'order': existing.get('order', 0),
+                'harm': existing.get('harm', 0),
+                'avoidance': existing.get('avoidance', 0)
+            }
+        
+        path_type = learning.predicted_value_tag
+        if path_type not in scores:
+            return
+        
+        # Boost if actual recovery stability was better than predicted
+        if learning.actual_recovery_stability > learning.predicted_recovery_stability:
+            scores[path_type] += 2
+        
+        # Boost if harm pressure was lower than predicted
+        if learning.actual_harm_pressure < learning.predicted_harm_pressure:
+            scores[path_type] += 2
+        
+        # Boost if order drift improved
+        if learning.actual_order_drift > learning.predicted_order_drift and learning.actual_order_drift > 0:
+            scores[path_type] += 1
+        
+        # Penalty if harm pressure increased
+        if learning.actual_harm_pressure > learning.predicted_harm_pressure:
+            scores[path_type] -= 3
+        
+        # Penalty if match quality was low
+        if learning.match_quality == 'low':
+            scores[path_type] -= 2
+        
+        # Penalty if actual outcome moved toward avoidance or harm
+        if learning.actual_value_tag in ['avoidance', 'harm']:
+            scores[path_type] -= 4
+        
+        # Bonus for high match quality
+        if learning.match_quality == 'high':
+            scores[path_type] += 3
+        
+        # Clamp scores to reasonable range
+        for key in scores:
+            scores[key] = max(-20, min(20, scores[key]))
+        
+        # Save updated scores
+        await db.philos_adaptive_scores.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "user_id": user_id,
+                **scores,
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+    except Exception as e:
+        logger.error(f"Update adaptive scores error: {str(e)}")
+
+
+@api_router.get("/memory/{user_id}", response_model=MemoryDataResponse)
+async def get_memory_data(user_id: str):
+    """
+    Get all persistent memory data for a user (learning history + adaptive scores).
+    """
+    try:
+        # Get learning history (last 50)
+        learning_history = await db.philos_path_learning.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).sort("timestamp", -1).limit(50).to_list(50)
+        
+        # Reverse to get oldest first
+        learning_history = list(reversed(learning_history))
+        
+        # Get adaptive scores
+        adaptive_scores = await db.philos_adaptive_scores.find_one(
+            {"user_id": user_id},
+            {"_id": 0}
+        )
+        
+        if not adaptive_scores:
+            adaptive_scores = {
+                'contribution': 0,
+                'recovery': 0,
+                'order': 0,
+                'harm': 0,
+                'avoidance': 0
+            }
+        
+        return MemoryDataResponse(
+            success=True,
+            user_id=user_id,
+            learning_history=learning_history,
+            adaptive_scores=adaptive_scores,
+            last_synced=datetime.now(timezone.utc).isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Get memory data error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/memory/sync")
+async def sync_memory_data(user_id: str, learning_history: List[Dict[str, Any]] = []):
+    """
+    Sync local learning history with cloud storage.
+    Merges local and cloud data.
+    """
+    try:
+        # Get existing cloud learning history
+        cloud_history = await db.philos_path_learning.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).sort("timestamp", -1).limit(50).to_list(50)
+        
+        # Create timestamp map for deduplication
+        history_map = {}
+        for h in cloud_history:
+            key = h.get('timestamp', '')
+            if key:
+                history_map[key] = h
+        
+        # Add local entries if not already present
+        new_entries = []
+        for h in learning_history:
+            key = h.get('timestamp', '')
+            if key and key not in history_map:
+                # Add user_id if not present
+                h['user_id'] = user_id
+                if 'id' not in h:
+                    h['id'] = str(uuid.uuid4())
+                new_entries.append(h)
+                history_map[key] = h
+        
+        # Save new entries to database
+        if new_entries:
+            await db.philos_path_learning.insert_many(new_entries)
+            
+            # Recalculate adaptive scores from all learning history
+            all_history = list(history_map.values())
+            await recalculate_adaptive_scores(user_id, all_history)
+        
+        # Get updated data
+        return await get_memory_data(user_id)
+        
+    except Exception as e:
+        logger.error(f"Sync memory error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def recalculate_adaptive_scores(user_id: str, learning_history: List[Dict[str, Any]]):
+    """
+    Recalculate adaptive scores from full learning history.
+    """
+    try:
+        scores = {
+            'contribution': 0,
+            'recovery': 0,
+            'order': 0,
+            'harm': 0,
+            'avoidance': 0
+        }
+        
+        for entry in learning_history:
+            path_type = entry.get('predicted_value_tag', '')
+            if path_type not in scores:
+                continue
+            
+            # Boost if actual recovery stability was better than predicted
+            if entry.get('actual_recovery_stability', 0) > entry.get('predicted_recovery_stability', 0):
+                scores[path_type] += 2
+            
+            # Boost if harm pressure was lower than predicted
+            if entry.get('actual_harm_pressure', 0) < entry.get('predicted_harm_pressure', 0):
+                scores[path_type] += 2
+            
+            # Boost if order drift improved
+            if entry.get('actual_order_drift', 0) > entry.get('predicted_order_drift', 0) and entry.get('actual_order_drift', 0) > 0:
+                scores[path_type] += 1
+            
+            # Penalty if harm pressure increased
+            if entry.get('actual_harm_pressure', 0) > entry.get('predicted_harm_pressure', 0):
+                scores[path_type] -= 3
+            
+            # Penalty if match quality was low
+            if entry.get('match_quality', '') == 'low':
+                scores[path_type] -= 2
+            
+            # Penalty if actual outcome moved toward avoidance or harm
+            if entry.get('actual_value_tag', '') in ['avoidance', 'harm']:
+                scores[path_type] -= 4
+            
+            # Bonus for high match quality
+            if entry.get('match_quality', '') == 'high':
+                scores[path_type] += 3
+        
+        # Clamp scores
+        for key in scores:
+            scores[key] = max(-20, min(20, scores[key]))
+        
+        # Save scores
+        await db.philos_adaptive_scores.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "user_id": user_id,
+                **scores,
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+    except Exception as e:
+        logger.error(f"Recalculate adaptive scores error: {str(e)}")
+
+
 # Include the router in the main app
 app.include_router(api_router)
 

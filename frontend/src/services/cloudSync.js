@@ -172,4 +172,154 @@ export const deleteSession = async (sessionId) => {
   }
 };
 
+
+// ============================================================
+// Persistent Memory Layer - Path Learning & Adaptive Engine
+// ============================================================
+
+// Save a decision to persistent storage
+export const saveDecision = async (decisionData) => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/memory/decision`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        ...decisionData
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Save decision failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Save decision error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Save a path selection to persistent storage
+export const savePathSelection = async (pathData) => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/memory/path-selection`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        ...pathData
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Save path selection failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Save path selection error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Save path learning result to persistent storage
+export const savePathLearning = async (learningData) => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/memory/path-learning`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        ...learningData
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Save path learning failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Save path learning error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Get memory data (learning history + adaptive scores) from cloud
+export const getMemoryData = async () => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/memory/${userId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Get memory data failed: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    return {
+      success: true,
+      learningHistory: result.learning_history || [],
+      adaptiveScores: result.adaptive_scores || {},
+      lastSynced: result.last_synced
+    };
+  } catch (error) {
+    console.error('Get memory data error:', error);
+    return {
+      success: false,
+      learningHistory: [],
+      adaptiveScores: {},
+      error: error.message
+    };
+  }
+};
+
+// Sync local memory data with cloud
+export const syncMemoryData = async (localLearningHistory) => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/memory/sync?user_id=${userId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(localLearningHistory)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Sync memory failed: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    return {
+      success: true,
+      learningHistory: result.learning_history || [],
+      adaptiveScores: result.adaptive_scores || {},
+      lastSynced: result.last_synced
+    };
+  } catch (error) {
+    console.error('Sync memory error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
 export { getUserId };
