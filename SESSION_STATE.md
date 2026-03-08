@@ -29,3 +29,9 @@
 
 ## CURRENT TASK
 - Global Field Visualization (COMPLETED)
+- Data Generation Improvements (COMPLETED)
+  - Multiple decisions per session (50 max)
+  - Auto-save to database
+  - Decision frequency tracking
+  - Timestamps on all actions
+  - Floating quick decision prompt

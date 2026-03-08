@@ -189,7 +189,8 @@ export const saveDecision = async (decisionData) => {
       },
       body: JSON.stringify({
         user_id: userId,
-        ...decisionData
+        ...decisionData,
+        timestamp: new Date().toISOString()
       })
     });
     
@@ -201,6 +202,29 @@ export const saveDecision = async (decisionData) => {
   } catch (error) {
     console.error('Save decision error:', error);
     return { success: false, error: error.message };
+  }
+};
+
+// Get user decision frequency stats
+export const getUserDecisionStats = async () => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${API_URL}/api/memory/stats/${userId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Get stats failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    return { 
+      success: false, 
+      total_decisions: 0, 
+      today_decisions: 0, 
+      week_decisions: 0 
+    };
   }
 };
 

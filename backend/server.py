@@ -726,6 +726,7 @@ class DecisionRecordRequest(BaseModel):
     ego_collective: int
     balance_score: int
     value_tag: str
+    session_id: Optional[str] = None
 
 class MemoryDataResponse(BaseModel):
     success: bool
@@ -740,10 +741,13 @@ class MemoryDataResponse(BaseModel):
 @api_router.post("/memory/decision")
 async def save_decision(data: DecisionRecordRequest):
     """
-    Save a decision record to persistent storage.
+    Save a decision record to persistent storage and update frequency tracking.
     """
     try:
         now = datetime.now(timezone.utc)
+        today = now.strftime('%Y-%m-%d')
+        week_start = (now - timedelta(days=now.weekday())).strftime('%Y-%m-%d')
+        
         doc = {
             'id': str(uuid.uuid4()),
             'user_id': data.user_id,
@@ -753,13 +757,35 @@ async def save_decision(data: DecisionRecordRequest):
             'ego_collective': data.ego_collective,
             'balance_score': data.balance_score,
             'value_tag': data.value_tag,
+            'session_id': data.session_id,
             'time': now.strftime('%H:%M'),
+            'date': today,
+            'week': week_start,
             'timestamp': now.isoformat()
         }
         
         await db.philos_decisions.insert_one(doc)
         
-        return {"success": True, "id": doc['id']}
+        # Update decision frequency tracking
+        await db.philos_user_stats.update_one(
+            {"user_id": data.user_id},
+            {
+                "$inc": {
+                    "total_decisions": 1,
+                    f"daily.{today}": 1,
+                    f"weekly.{week_start}": 1
+                },
+                "$set": {
+                    "last_decision_at": now.isoformat()
+                },
+                "$setOnInsert": {
+                    "created_at": now.isoformat()
+                }
+            },
+            upsert=True
+        )
+        
+        return {"success": True, "id": doc['id'], "timestamp": now.isoformat()}
         
     except Exception as e:
         logger.error(f"Save decision error: {str(e)}")
@@ -921,6 +947,48 @@ async def get_memory_data(user_id: str):
         
     except Exception as e:
         logger.error(f"Get memory data error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/memory/stats/{user_id}")
+async def get_user_decision_stats(user_id: str):
+    """
+    Get decision frequency stats for a user (total, daily, weekly).
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        today = now.strftime('%Y-%m-%d')
+        week_start = (now - timedelta(days=now.weekday())).strftime('%Y-%m-%d')
+        
+        stats = await db.philos_user_stats.find_one(
+            {"user_id": user_id},
+            {"_id": 0}
+        )
+        
+        if not stats:
+            return {
+                "success": True,
+                "user_id": user_id,
+                "total_decisions": 0,
+                "today_decisions": 0,
+                "week_decisions": 0,
+                "last_decision_at": None
+            }
+        
+        daily = stats.get("daily", {})
+        weekly = stats.get("weekly", {})
+        
+        return {
+            "success": True,
+            "user_id": user_id,
+            "total_decisions": stats.get("total_decisions", 0),
+            "today_decisions": daily.get(today, 0),
+            "week_decisions": weekly.get(week_start, 0),
+            "last_decision_at": stats.get("last_decision_at")
+        }
+        
+    except Exception as e:
+        logger.error(f"Get user stats error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -3,11 +3,13 @@ import {
   syncWithCloud, 
   getCloudData, 
   isCloudAvailable,
+  saveDecision,
   savePathSelection,
   savePathLearning,
   getMemoryData,
   getFullUserData,
-  fullSyncUserData
+  fullSyncUserData,
+  getUserDecisionStats
 } from '../services/cloudSync';
 
 // LocalStorage keys
@@ -746,8 +748,10 @@ export default function usePhilosState(user = null) {
   };
 
   // Evaluate action
-  const evaluateAction = () => {
-    if (!actionText) {
+  const evaluateAction = async (quickAction = null) => {
+    const actionToEvaluate = quickAction || actionText;
+    
+    if (!actionToEvaluate) {
       alert('יש להזין פעולה');
       return;
     }
@@ -762,7 +766,7 @@ export default function usePhilosState(user = null) {
       reasons.push("Energy gap allows the action");
     }
 
-    const actionLower = actionText.toLowerCase();
+    const actionLower = actionToEvaluate.toLowerCase();
     let newChaosOrder = state.chaos_order;
     let newEgoCollective = state.ego_collective;
 
@@ -793,11 +797,12 @@ export default function usePhilosState(user = null) {
     setState(prev => ({ ...prev, chaos_order: newChaosOrder, ego_collective: newEgoCollective }));
 
     const newBalanceScore = 100 - (Math.abs(newChaosOrder) + Math.abs(newEgoCollective));
-    const valueTag = getValueTag(actionText, state.gap_type);
+    const valueTag = getValueTag(actionToEvaluate, state.gap_type);
+    const timestamp = new Date().toISOString();
 
     const newResult = {
       decision,
-      action: actionText,
+      action: actionToEvaluate,
       reasons,
       projection: { chaos_order: newChaosOrder, ego_collective: newEgoCollective },
       value_tag: valueTag,
@@ -812,19 +817,37 @@ export default function usePhilosState(user = null) {
 
     updateGlobalStats(valueTag);
 
-    setHistory(prev => [
-      {
-        action: actionText,
+    const historyEntry = {
+      action: actionToEvaluate,
+      decision: decision,
+      chaos_order: newChaosOrder,
+      ego_collective: newEgoCollective,
+      balance_score: newBalanceScore,
+      value_tag: valueTag,
+      time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: timestamp
+    };
+
+    setHistory(prev => [historyEntry, ...prev].slice(0, 50));
+
+    // Auto-save decision to cloud for all users (including anonymous)
+    try {
+      await saveDecision({
+        action: actionToEvaluate,
         decision: decision,
         chaos_order: newChaosOrder,
         ego_collective: newEgoCollective,
         balance_score: newBalanceScore,
-        value_tag: valueTag,
-        time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-        timestamp: new Date().toISOString()
-      },
-      ...prev
-    ].slice(0, 20));
+        value_tag: valueTag
+      });
+    } catch (error) {
+      console.log('Auto-save decision failed (will retry on sync):', error);
+    }
+    
+    // Clear action text after evaluation
+    if (!quickAction) {
+      setActionText('');
+    }
   };
 
   // Handle reset
