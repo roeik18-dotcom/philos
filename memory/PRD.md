@@ -23,7 +23,7 @@ Create a mindfulness/decision-making app that evolved into the **Philos Orientat
 ### Backend API Endpoints
 
 ```
-Base URL: https://wisdom-dashboard.preview.emergentagent.com/api
+Base URL: https://orientation-paths.preview.emergentagent.com/api
 
 # Health Check
 GET  /                           → {"message": "Hello World"}
@@ -289,7 +289,7 @@ DELETE /philos/sessions/{user_id}/{session_id}     → Delete session
 - [ ] AI-powered suggestions
 
 ## Preview URL
-https://wisdom-dashboard.preview.emergentagent.com
+https://orientation-paths.preview.emergentagent.com
 
 ---
 

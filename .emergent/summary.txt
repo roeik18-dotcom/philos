@@ -1,58 +1,76 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to create a simple mindfulness app. This pivoted to a community help platform using Supabase and then pivoted again to a complex, client-side decision engine called Philos Orientation. The project's current focus is to build out a full-featured dashboard for this engine.
+The user's goal is to build a complex, client-side decision engine and dashboard called Philos Orientation. The application serves as a sophisticated single-page tool for real-time decision analysis and mental navigation.
 
-The user has iteratively requested and received numerous features for the Philos Dashboard, including an interactive decision map, decision history, trajectory tracking, personal and collective value maps, a suggestion engine, and session persistence. The application is now a sophisticated, single-page tool for real-time decision analysis.
+**PRODUCT REQUIREMENTS:**
+The application must include the following features:
+- An interactive decision map to visualize decision states.
+- A suggestion engine for optimal actions.
+- Decision history and trajectory tracking.
+- Personal, Collective, and Global value maps for analysis.
+- Session persistence via  and a cloud backend (MongoDB).
+- A Session Library to browse, load, and delete past sessions.
+- A Value Constellation Map to visualize the value system.
+- A Session Comparison Engine to compare two saved sessions.
+- A Weekly Cognitive Report for trend analysis.
+- A Decision Path Engine to suggest possible future action paths.
+- User Authentication to sync data across devices.
 
 **User's preferred language**: The user communicates in English. All UI text and layout must be in **Hebrew (עִבְרִית)** with a right-to-left (RTL) orientation. The next agent must respond to the user in English.
 
 **what currently exists?**
-A feature-rich, client-side React application named Philos Orientation. The main page, , is a large component that manages all application state and renders the entire UI. It includes an interactive 2D map () to visualize decision states, along with numerous analytical sections like Personal, Collective, and Orientation Field maps. All decision history and state are persisted in  to survive page reloads. The application is fully functional, with the last task being the implementation of a Global Value Field.
+A full-stack application with a React frontend and a FastAPI/MongoDB backend. The frontend is a feature-rich Philos Orientation dashboard. The main  component has been refactored, moving major UI sections into their own components within . State management remains centralized in . The backend provides API endpoints for cloud sync and session management.
+
+Completed features include:
+- Core Decision Engine
+- Personal & Collective Value Maps
+- Orientation Field
+- Global Value Field (cross-session analysis)
+- Global Trend Over Time (with sparkline charts)
+- Cloud Sync with MongoDB backend
+- Session Library (browse, load, save, delete sessions)
+- Value Constellation Map
+- Session Comparison Engine
+- Weekly Cognitive Report
 
 **Last working item**:
-- **Last item agent was working:** The agent was in the process of building the Global Value Field. This feature aggregates decision data from all sessions stored in  to create a high-level, long-term analytical view. The agent successfully implemented the backend logic for this: creating the  state, adding  hooks to load/save this data from , and creating a function () to be called when a new decision is evaluated. However, the agent was interrupted before it could add the corresponding UI to display these global statistics.
-- **Status:** IN PROGRESS
+- **Last item agent was working:** The agent was beginning to implement the Decision Path Engine. This feature is meant to suggest three possible action paths for a given decision context, along with predicted outcomes for each path. The agent created the component file  but has not yet added any implementation logic or integrated it into the main dashboard.
+- **Status:** NOT STARTED
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent. After completing the UI, the agent should test the end-to-end flow: perform actions, reset the session, perform more actions, and verify that the Global Value Field correctly aggregates data from both the past and current sessions, and that this data persists across a page reload.
+- **Which testing method agent to use?** Frontend testing agent. The test should verify that upon entering a decision context, three distinct paths are generated and displayed as cards with their predicted metrics.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-There are no outstanding bugs. The only pending item is the 
-wtmp begins Fri Mar  6 17:29:27 2026 described above.
+There are no known bugs or issues.
 
 **In progress Task List**:
-*   **Task 1: Complete the Global Value Field implementation (P0)**
-    *   **Where to resume:** The state management and data persistence logic for  are already implemented in . The next step is to add the JSX for the Global Value Field UI section. This section should be placed below the Collective Value Map.
-    *   **What will be achieved with this?** The UI will render the computed global metrics, including Global Direction (order/chaos), Global Social Vector (collective/ego), Dominant Value Cluster, and a visualization of global value counts (e.g., clustered circles). This completes the user's request for a cross-session analytical view.
-    *   **Status:** IN PROGRESS
+*   **Task 1: Implement the Decision Path Engine (P0)**
+    *   **Where to resume:** Start by implementing the logic inside the newly created file: . This will involve creating the UI for the three path cards and the logic to generate/calculate the predicted outcomes.
+    *   **What will be achieved with this?** Users will see three suggested action paths with predicted impacts, helping them make more informed decisions.
+    *   **Status:** NOT STARTED
     *   **Should Test frontend/backend/both after fix?** Frontend.
     *   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
-*   **Refactoring:** The  file is over 1,500 lines long and contains all the application's logic and UI. It should be broken down into smaller, reusable components and custom hooks to improve maintainability. (e.g., , , ).
-*   **Deployment/Sharing:** The user has mentioned Deploy → test with 10 people. This suggests a future need for deploying the application or enhancing its shareability features beyond the current Download Image functionality.
+*   **Upcoming Tasks:**
+    *   **User Authentication (P1):** The user requested this in message #425. This involves adding registration, login, and logout endpoints to the backend, storing user credentials in MongoDB, and creating a login screen on the frontend. Cloud sync should be updated to be user-specific.
+*   **Future Tasks:**
+    *   **Refactor State Management (P2):** The  file, while visually refactored, still manages all application state (over 20  hooks). This logic should be extracted into a custom hook (e.g., ) to simplify the main component and improve maintainability.
+    *   **Enhance Decision Path Engine:** The user may request to use an LLM to generate more creative or nuanced action paths, which would require a new backend integration.
 
 **Completed work in this session**
-The agent successfully fixed a critical blank screen bug and then implemented an extensive list of features for the Philos Orientation dashboard:
-- **Core Functionality:** Fixed the rendering bug, implemented the main evaluation flow, and connected the UI to the decision logic.
-- **Decision Map Enhancements:** Added a moving dot with smooth animation, a trajectory path for recent decisions, a vector arrow for suggested actions, and a glow effect for being in the optimal zone.
-- **UI Sections & Features:**
-    - Decision Explanation & History
-    - Vector Suggestion Engine
-    - Orientation Status Panel & Balance Score
-    - Suggested Stabilizing Actions (when balance is low)
-    - Reset Session functionality
-    - Quick Action buttons & Emotional State selectors
-    - Energy Recovery buttons
-- **Analytical Layers:**
-    - **Session Summary:** With an Export to JSON feature.
-    - **Share Card:** A downloadable PNG card of the decision result using .
-    - **Personal Map:** With value tagging, trend analysis, and a  visualization.
-    - **Collective Value Map:** Aggregating data within the current session.
-    - **Orientation Field:** Displaying computed metrics like Order Drift and Harm Pressure.
-- **Persistence:** Implemented  to save all session state, history, and analytical data across page reloads.
+The agent implemented a significant number of features, transforming the application into a comprehensive dashboard:
+- **Global Value Field:** Completed the UI for the cross-session analytics view.
+- **Major Refactoring:** Broke down the monolithic  into 10 smaller, dedicated section components.
+- **Global Trend Over Time:** Added a section with sparkline charts to visualize long-term trends in key metrics.
+- **Cloud Sync:** Implemented backend endpoints () and a frontend service () to persist session data in MongoDB.
+- **Session Library:** Created a UI to list, load, save, and delete sessions stored in the cloud.
+- **Value Constellation Map:** Built a new SVG visualization showing the spatial relationship between value clusters.
+- **Session Comparison Engine:** Implemented a feature to select and compare two saved sessions side-by-side.
+- **Weekly Cognitive Report:** Added a summary section that aggregates and analyzes data from the last 7 days.
+- **Documentation:** Created and updated , , and .
 
 **Earlier issues found/mentioned but not fixed**
-- None. All known issues were addressed.
+- None.
 
 **Known issue recurrence from previous fork**
 - None.
@@ -61,65 +79,74 @@ The agent successfully fixed a critical blank screen bug and then implemented an
 
 
 **Key Technical Concepts**
-*   **Frontend:** React (functional components with extensive use of , , ), Tailwind CSS.
-*   **State Management:** All state is managed locally within the  component.
-*   **Persistence:** Browser  is used to save and restore all application data.
-*   **Visualization:** Inline SVG is used for the  and .
-*   **Image Generation:** The  library is used to generate downloadable PNGs.
+*   **Frontend:** React (functional components), Tailwind CSS.
+*   **Backend:** FastAPI.
+*   **Database:** MongoDB for session persistence.
+*   **State Management:** Centralized state in the  parent component using  and .
+*   **Persistence:** A hybrid approach using both browser  as a fallback/cache and a MongoDB backend for cloud sync.
+*   **Component Architecture:** The UI has been broken down from a monolithic component into smaller, more manageable section components.
 
 **key DB schema**
-- Not applicable. The application is entirely client-side and uses  for persistence.
+-   **sessions**: 
 
 **changes in tech stack**
-- The  library was added to handle the Share Card download functionality.
+- The existing FastAPI/MongoDB backend was integrated into the application flow to provide cloud persistence, moving beyond the initial client-only  solution. No new third-party libraries were added.
 
 **All files of reference**
-*   : The primary monolithic file containing almost all application code.
-*   : The component for the main map visualization.
+*   : The main application component, still containing all state logic.
+*   : Directory containing all the new, refactored UI section components.
+*   : The service that handles all communication with the backend API.
+*   : The FastAPI server file containing all API endpoints for sync and session management.
 
 **Areas that need refactoring**:
-*   ** is critically oversized.** It urgently needs to be broken down into smaller, dedicated components (e.g., , , , ) and custom hooks (e.g.,  to encapsulate the complex state logic). This will improve readability, maintainability, and performance.
+*   **:** While the JSX has been refactored into components, the state management logic remains highly concentrated in this file. It should be further refactored by extracting state and related functions into a custom hook (e.g., ) to clean up the main component.
 
 **key api endpoints**
-- Not applicable.
+-   : Saves/updates the current session data for a given .
+-   : Retrieves the last session data for a given .
+-   : Saves the current session to the session library.
+-   : Retrieves all saved sessions for a given .
+-   : Deletes a specific session from the library.
 
 **Critical Info for New Agent**
-*   **Your immediate task is to build the UI for the Global Value Field.** The state management and data logic are already in place in . You need to add the JSX to render the  data.
-*   Be aware that  is a very large file. Use search and code navigation carefully.
-*   The user's development pattern is highly iterative. Expect to work on one small feature at a time.
-*   Refactoring  is not the current task but should be proposed as a next step to manage the application's complexity.
+*   Your immediate task is to implement the **Decision Path Engine**. The file  has been created but is empty. You need to build the UI and the prediction logic within it and render it in .
+*   The user has already requested **User Authentication**. This should be treated as the next high-priority feature after the Decision Path Engine is complete.
+*   The application's UI is now highly modular. New features should follow the pattern of creating a new component in the  directory and rendering it from .
+*   All state is still managed in . Be prepared to pass down many props (state values and handler functions) to the section components.
 
 **documents and test reports created in this job**
-*    has been updated throughout the session.
+*   
+*   
+*   
 
 **Last 10 User Messages and any pending HUMAN messages**
-The user's recent messages have been a rapid series of feature requests, building layer upon layer of analytical capability for the dashboard.
-- **Request for Global Value Field:** The current task. (Completed: N)
-- **Request for Orientation Field:** (Completed: Y)
-- **Request for Session Persistence:** (Completed: Y)
-- **Request for Collective Value Map:** (Completed: Y)
-- **Request to improve value_tag detection:** (Completed: Y)
-- **Request to normalize Value Graph layout:** (Completed: Y)
-- **Request for Personal Value Graph:** (Completed: Y)
-- **Request for Personal Map:** (Completed: Y)
-- **Request for Share Card:** (Completed: Y)
-- **Request for Session Summary:** (Completed: Y)
+- **#443:** Request to summarize session. (Completed: Y)
+- **#441:** Request to build Decision Path Engine. (Completed: N, file created)
+- **#438:** Request to summarize session. (Completed: Y)
+- **#432:** Request to summarize session. (Completed: Y)
+- **#428:** Request to summarize session. (Completed: Y)
+- **#426:** Request to implement User Authentication. (Completed: N, superseded by next request)
+- **#403:** Request to build Weekly Cognitive Report. (Completed: Y)
+- **#368:** Request to build Session Comparison Engine. (Completed: Y)
+- **#325:** Request to build Value Constellation Map. (Completed: Y)
+- **#308:** Request to save project state. (Completed: Y)
 
 **Project Health Check:**
-*   **Working:** The application is stable and functions as expected with a rich set of features.
+*   **Working:** The application is stable and fully functional with all implemented features.
 *   **Mocked:** None.
 
 **3rd Party Integrations**
-*   **html-to-image:** Used to export the Share Card as a PNG image.
+*   **html-to-image:** Used to export a Share Card as a PNG image.
 
 **Testing status**
-*   **Testing agent used after significant changes:** NO. The agent performed manual validation using screenshots after each step.
-*   **Troubleshoot agent used after agent stuck in loop:** NO.
-*   **Test files created:** None.
-*   **Known regressions:** None.
+-   **Testing agent used after significant changes:** NO
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** None.
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
-*   None required. The application is entirely client-side.
+*   None required. The application is client-side first and generates a random  for cloud sync if not authenticated.
 
 **What agent forgot to execute**
-*   The agent did not finish the Global Value Field task. It implemented the state management and data persistence logic but did not add the final UI component to render the global statistics.</analysis>
+-   The agent did not implement the logic for the Decision Path Engine after creating the component file.
+-   The user's request for User Authentication (message #426) was acknowledged but then superseded by subsequent feature requests. It remains an important pending task.</analysis>

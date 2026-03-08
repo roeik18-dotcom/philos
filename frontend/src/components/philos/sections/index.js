@@ -11,3 +11,4 @@ export { default as SessionLibrarySection } from './SessionLibrarySection';
 export { default as ValueConstellationSection } from './ValueConstellationSection';
 export { default as SessionComparisonSection } from './SessionComparisonSection';
 export { default as WeeklySummarySection } from './WeeklySummarySection';
+export { default as DecisionPathEngineSection } from './DecisionPathEngineSection';

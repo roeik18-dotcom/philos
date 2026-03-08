@@ -13,7 +13,8 @@ import {
   SessionLibrarySection,
   ValueConstellationSection,
   SessionComparisonSection,
-  WeeklySummarySection
+  WeeklySummarySection,
+  DecisionPathEngineSection
 } from '../components/philos/sections';
 import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
 
@@ -918,6 +919,13 @@ export default function PhilosDashboard() {
           decisionResult={decisionResult}
           state={state}
           calculateSuggestedVector={calculateSuggestedVector}
+        />
+
+        {/* Decision Path Engine Section */}
+        <DecisionPathEngineSection
+          state={state}
+          history={history}
+          onSelectAction={setActionText}
         />
 
         {/* Orientation Status Panel */}
