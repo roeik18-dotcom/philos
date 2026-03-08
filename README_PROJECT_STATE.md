@@ -64,7 +64,7 @@ DELETE /api/philos/sessions/{user_id}/{id}    # Delete session
 
 ## Preview URL
 
-https://orientation-paths.preview.emergentagent.com
+https://global-field.preview.emergentagent.com
 
 ---
 
