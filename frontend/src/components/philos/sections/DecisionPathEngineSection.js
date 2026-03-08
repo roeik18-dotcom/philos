@@ -55,7 +55,7 @@ const actionPathsDatabase = {
 };
 
 // Calculate path score based on preferences
-const calculatePathScore = (path) => {
+const calculatePathScore = (path, adaptiveScores = null) => {
   // Positive factors: order drift, collective drift (contribution), recovery stability
   // Negative factors: harm pressure
   const orderBonus = path.orderDrift > 0 ? path.orderDrift * 2 : path.orderDrift * 3;
@@ -63,11 +63,19 @@ const calculatePathScore = (path) => {
   const recoveryBonus = path.recoveryStability > 0 ? path.recoveryStability * 1.5 : path.recoveryStability * 2;
   const harmPenalty = path.harmPressure * -2; // Negative harm is good
   
-  return orderBonus + collectiveBonus + recoveryBonus + harmPenalty;
+  let baseScore = orderBonus + collectiveBonus + recoveryBonus + harmPenalty;
+  
+  // Apply adaptive adjustment if available
+  if (adaptiveScores && path.valueTag) {
+    const adaptiveAdjustment = adaptiveScores[path.valueTag] || 0;
+    baseScore += adaptiveAdjustment * 3; // Scale adaptive scores
+  }
+  
+  return baseScore;
 };
 
 // Generate three paths based on current state
-const generatePaths = (currentState, history) => {
+const generatePaths = (currentState, history, adaptiveScores = null) => {
   const { chaos_order, ego_collective, physical_capacity } = currentState;
   
   let selectedPaths = [];
@@ -101,7 +109,7 @@ const generatePaths = (currentState, history) => {
   
   // Add additional calculated metrics to each path
   selectedPaths = selectedPaths.map((path, index) => {
-    const score = calculatePathScore(path);
+    const score = calculatePathScore(path, adaptiveScores);
     const projectedOrder = Math.max(-100, Math.min(100, chaos_order + path.orderDrift));
     const projectedCollective = Math.max(-100, Math.min(100, ego_collective + path.collectiveDrift));
     
@@ -126,11 +134,11 @@ const generatePaths = (currentState, history) => {
   return selectedPaths;
 };
 
-export default function DecisionPathEngineSection({ state, history, onSelectAction, onSelectPath }) {
-  // Generate paths based on current state
+export default function DecisionPathEngineSection({ state, history, onSelectAction, onSelectPath, adaptiveScores }) {
+  // Generate paths based on current state and adaptive scores
   const paths = useMemo(() => {
-    return generatePaths(state, history);
-  }, [state, history]);
+    return generatePaths(state, history, adaptiveScores);
+  }, [state, history, adaptiveScores]);
 
   const getScoreLabel = (score) => {
     if (score >= 50) return { label: 'מעולה', color: 'text-green-600' };

@@ -15,7 +15,8 @@ import {
   SessionComparisonSection,
   WeeklySummarySection,
   DecisionPathEngineSection,
-  PathLearningSection
+  PathLearningSection,
+  AdaptiveLearningSection
 } from '../components/philos/sections';
 import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
 
@@ -24,6 +25,7 @@ const STORAGE_KEY = 'philos_session_data';
 const GLOBAL_STORAGE_KEY = 'philos_global_data';
 const TREND_STORAGE_KEY = 'philos_trend_history';
 const LAST_SYNC_KEY = 'philos_last_sync';
+const LEARNING_HISTORY_KEY = 'philos_learning_history';
 
 // Optimal zone definition
 const OPTIMAL_ZONE = {
@@ -245,6 +247,81 @@ export default function PhilosDashboard() {
     return [];
   };
 
+  // Load learning history from localStorage
+  const loadLearningHistory = () => {
+    try {
+      const saved = localStorage.getItem(LEARNING_HISTORY_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Error loading learning history:', e);
+    }
+    return [];
+  };
+
+  // Calculate adaptive scores from learning history
+  const calculateAdaptiveScores = (learningHist) => {
+    const scores = {
+      contribution: 0,
+      recovery: 0,
+      order: 0,
+      harm: 0,
+      avoidance: 0
+    };
+
+    if (!learningHist || learningHist.length === 0) {
+      return scores;
+    }
+
+    learningHist.forEach(entry => {
+      const type = entry.predicted_value_tag;
+      if (!type || !scores.hasOwnProperty(type)) return;
+
+      // Boost if actual recovery stability was better than predicted
+      if (entry.actual_recovery_stability > entry.predicted_recovery_stability) {
+        scores[type] += 2;
+      }
+
+      // Boost if harm pressure was lower than predicted
+      if (entry.actual_harm_pressure < entry.predicted_harm_pressure) {
+        scores[type] += 2;
+      }
+
+      // Boost if order drift improved
+      if (entry.actual_order_drift > entry.predicted_order_drift && entry.actual_order_drift > 0) {
+        scores[type] += 1;
+      }
+
+      // Penalty if harm pressure increased
+      if (entry.actual_harm_pressure > entry.predicted_harm_pressure) {
+        scores[type] -= 3;
+      }
+
+      // Penalty if match quality was low
+      if (entry.match_quality === 'low') {
+        scores[type] -= 2;
+      }
+
+      // Penalty if actual outcome moved toward avoidance or harm
+      if (entry.actual_value_tag === 'avoidance' || entry.actual_value_tag === 'harm') {
+        scores[type] -= 4;
+      }
+
+      // Bonus for high match quality
+      if (entry.match_quality === 'high') {
+        scores[type] += 3;
+      }
+    });
+
+    // Clamp scores to reasonable range
+    Object.keys(scores).forEach(key => {
+      scores[key] = Math.max(-20, Math.min(20, scores[key]));
+    });
+
+    return scores;
+  };
+
   const savedData = loadFromStorage();
 
   const [state, setState] = useState(savedData?.state || {
@@ -261,6 +338,8 @@ export default function PhilosDashboard() {
   const [showShareCard, setShowShareCard] = useState(false);
   const [syncStatus, setSyncStatus] = useState({ syncing: false, lastSynced: null, cloudAvailable: false });
   const [selectedPathData, setSelectedPathData] = useState(null);
+  const [learningHistory, setLearningHistory] = useState(loadLearningHistory);
+  const [adaptiveScores, setAdaptiveScores] = useState(() => calculateAdaptiveScores(loadLearningHistory()));
   const shareCardRef = useRef(null);
   const syncTimeoutRef = useRef(null);
 
@@ -415,6 +494,17 @@ export default function PhilosDashboard() {
     }
   }, [trendHistory]);
 
+  // Save learning history to localStorage and update adaptive scores
+  useEffect(() => {
+    try {
+      localStorage.setItem(LEARNING_HISTORY_KEY, JSON.stringify(learningHistory));
+      // Recalculate adaptive scores when learning history changes
+      setAdaptiveScores(calculateAdaptiveScores(learningHistory));
+    } catch (e) {
+      console.error('Error saving learning history:', e);
+    }
+  }, [learningHistory]);
+
   // Auto-save session snapshot when significant decisions are made (every 5 decisions)
   useEffect(() => {
     if (history.length > 0 && history.length % 5 === 0) {
@@ -446,6 +536,44 @@ export default function PhilosDashboard() {
     });
     // Also set the action text for evaluation
     setActionText(pathData.action);
+  };
+
+  // Save learning data after evaluation (compare predicted vs actual)
+  const saveLearningData = (selectedPath, actualResult) => {
+    if (!selectedPath || !actualResult) return;
+
+    // Calculate actual metrics from result
+    const actualOrderDrift = actualResult.projection?.chaos_order || 0;
+    const actualCollectiveDrift = actualResult.projection?.ego_collective || 0;
+    const actualHarmPressure = actualResult.value_tag === 'harm' ? 20 : actualResult.value_tag === 'avoidance' ? 10 : -10;
+    const actualRecoveryStability = actualResult.value_tag === 'recovery' ? 20 : actualResult.balance_score > 60 ? 10 : -5;
+
+    // Calculate match quality
+    let matchScore = 0;
+    if (selectedPath.predicted_value_tag === actualResult.value_tag) matchScore += 3;
+    if (Math.sign(selectedPath.predicted_order_drift) === Math.sign(actualOrderDrift)) matchScore += 1;
+    if (Math.sign(selectedPath.predicted_collective_drift) === Math.sign(actualCollectiveDrift)) matchScore += 1;
+    if ((selectedPath.predicted_harm_pressure < 0) === (actualHarmPressure < 0)) matchScore += 1;
+
+    const matchQuality = matchScore >= 5 ? 'high' : matchScore >= 3 ? 'medium' : 'low';
+
+    const learningEntry = {
+      predicted_value_tag: selectedPath.predicted_value_tag,
+      actual_value_tag: actualResult.value_tag,
+      predicted_order_drift: selectedPath.predicted_order_drift,
+      actual_order_drift: actualOrderDrift,
+      predicted_collective_drift: selectedPath.predicted_collective_drift,
+      actual_collective_drift: actualCollectiveDrift,
+      predicted_harm_pressure: selectedPath.predicted_harm_pressure,
+      actual_harm_pressure: actualHarmPressure,
+      predicted_recovery_stability: selectedPath.predicted_recovery_stability,
+      actual_recovery_stability: actualRecoveryStability,
+      match_quality: matchQuality,
+      timestamp: new Date().toISOString()
+    };
+
+    // Add to learning history (keep last 50 entries)
+    setLearningHistory(prev => [...prev, learningEntry].slice(-50));
   };
 
   // Save session snapshot silently (without confirmation)
@@ -658,6 +786,11 @@ export default function PhilosDashboard() {
     };
 
     setDecisionResult(newResult);
+
+    // Save learning data if a path was selected
+    if (selectedPathData) {
+      saveLearningData(selectedPathData, newResult);
+    }
 
     // Update global stats
     updateGlobalStats(valueTag);
@@ -945,12 +1078,19 @@ export default function PhilosDashboard() {
           state={state}
           history={history}
           onSelectPath={handlePathSelection}
+          adaptiveScores={adaptiveScores}
         />
 
         {/* Path Learning Section - shows after evaluation when a path was selected */}
         <PathLearningSection
           selectedPath={selectedPathData}
           actualOutcome={decisionResult}
+        />
+
+        {/* Adaptive Learning Summary Section */}
+        <AdaptiveLearningSection
+          learningHistory={learningHistory}
+          adaptiveScores={adaptiveScores}
         />
 
         {/* Orientation Status Panel */}
