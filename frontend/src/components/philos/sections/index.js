@@ -12,3 +12,4 @@ export { default as ValueConstellationSection } from './ValueConstellationSectio
 export { default as SessionComparisonSection } from './SessionComparisonSection';
 export { default as WeeklySummarySection } from './WeeklySummarySection';
 export { default as DecisionPathEngineSection } from './DecisionPathEngineSection';
+export { default as PathLearningSection } from './PathLearningSection';

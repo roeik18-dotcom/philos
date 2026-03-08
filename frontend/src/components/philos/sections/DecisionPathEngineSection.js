@@ -126,7 +126,7 @@ const generatePaths = (currentState, history) => {
   return selectedPaths;
 };
 
-export default function DecisionPathEngineSection({ state, history, onSelectAction }) {
+export default function DecisionPathEngineSection({ state, history, onSelectAction, onSelectPath }) {
   // Generate paths based on current state
   const paths = useMemo(() => {
     return generatePaths(state, history);
@@ -282,9 +282,15 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
               </div>
 
               {/* Select Button */}
-              {onSelectAction && (
+              {(onSelectAction || onSelectPath) && (
                 <button
-                  onClick={() => onSelectAction(path.action)}
+                  onClick={() => {
+                    if (onSelectPath) {
+                      onSelectPath(path);
+                    } else if (onSelectAction) {
+                      onSelectAction(path.action);
+                    }
+                  }}
                   className={`mt-3 w-full py-2 rounded-xl text-sm font-medium transition-all ${
                     path.isBest 
                       ? 'bg-green-500 hover:bg-green-600 text-white' 

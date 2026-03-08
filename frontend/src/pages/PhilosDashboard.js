@@ -14,7 +14,8 @@ import {
   ValueConstellationSection,
   SessionComparisonSection,
   WeeklySummarySection,
-  DecisionPathEngineSection
+  DecisionPathEngineSection,
+  PathLearningSection
 } from '../components/philos/sections';
 import { syncWithCloud, getCloudData, isCloudAvailable } from '../services/cloudSync';
 
@@ -259,6 +260,7 @@ export default function PhilosDashboard() {
   const [trendHistory, setTrendHistory] = useState(loadTrendHistory);
   const [showShareCard, setShowShareCard] = useState(false);
   const [syncStatus, setSyncStatus] = useState({ syncing: false, lastSynced: null, cloudAvailable: false });
+  const [selectedPathData, setSelectedPathData] = useState(null);
   const shareCardRef = useRef(null);
   const syncTimeoutRef = useRef(null);
 
@@ -427,6 +429,23 @@ export default function PhilosDashboard() {
       [valueTag]: (prev[valueTag] || 0) + 1,
       totalDecisions: prev.totalDecisions + 1
     }));
+  };
+
+  // Handle path selection from Decision Path Engine
+  const handlePathSelection = (pathData) => {
+    // Store the selected path data with predictions
+    setSelectedPathData({
+      selected_path_id: pathData.id,
+      suggested_action: pathData.action,
+      predicted_value_tag: pathData.valueTag,
+      predicted_order_drift: pathData.orderDrift,
+      predicted_collective_drift: pathData.collectiveDrift,
+      predicted_harm_pressure: pathData.harmPressure,
+      predicted_recovery_stability: pathData.recoveryStability,
+      timestamp: new Date().toISOString()
+    });
+    // Also set the action text for evaluation
+    setActionText(pathData.action);
   };
 
   // Save session snapshot silently (without confirmation)
@@ -925,7 +944,13 @@ export default function PhilosDashboard() {
         <DecisionPathEngineSection
           state={state}
           history={history}
-          onSelectAction={setActionText}
+          onSelectPath={handlePathSelection}
+        />
+
+        {/* Path Learning Section - shows after evaluation when a path was selected */}
+        <PathLearningSection
+          selectedPath={selectedPathData}
+          actualOutcome={decisionResult}
         />
 
         {/* Orientation Status Panel */}
