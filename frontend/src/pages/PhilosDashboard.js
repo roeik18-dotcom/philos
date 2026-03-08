@@ -18,7 +18,8 @@ import {
   PathLearningSection,
   AdaptiveLearningSection,
   CollectiveLayerSection,
-  CollectiveTrendsSection
+  CollectiveTrendsSection,
+  GlobalFieldSection
 } from '../components/philos/sections';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
 
@@ -232,6 +233,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* Collective Trends - Time-Based Analytics */}
         <CollectiveTrendsSection />
+
+        {/* Global World Field - Living Value System Map */}
+        <GlobalFieldSection />
 
         {/* Global Trend Over Time */}
         <GlobalTrendSection trendHistory={trendHistory} />

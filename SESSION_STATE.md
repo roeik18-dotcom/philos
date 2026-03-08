@@ -28,4 +28,4 @@
 - usePhilosState
 
 ## CURRENT TASK
-- Global Field Visualization (in progress)
+- Global Field Visualization (COMPLETED)
