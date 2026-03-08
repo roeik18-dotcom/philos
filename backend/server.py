@@ -1,14 +1,17 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from passlib.context import CryptContext
+from jose import JWTError, jwt
 
 
 ROOT_DIR = Path(__file__).parent
@@ -18,6 +21,48 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# JWT Configuration
+SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'philos-orientation-secret-key-change-in-production')
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_DAYS = 30
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Security bearer
+security = HTTPBearer(auto_error=False)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if credentials is None:
+        return None
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        # Get user from database
+        user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+        return user
+    except JWTError:
+        return None
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -36,6 +81,28 @@ class StatusCheck(BaseModel):
 
 class StatusCheckCreate(BaseModel):
     client_name: str
+
+
+# Authentication Models
+class UserRegister(BaseModel):
+    email: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    created_at: str
+    last_login_at: Optional[str] = None
+
+class AuthResponse(BaseModel):
+    success: bool
+    user: Optional[UserResponse] = None
+    token: Optional[str] = None
+    message: Optional[str] = None
 
 
 # Philos Session Models
@@ -120,6 +187,195 @@ async def get_status_checks():
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
     
     return status_checks
+
+
+# ============================================================
+# Authentication Endpoints
+# ============================================================
+
+@api_router.post("/auth/register", response_model=AuthResponse)
+async def register_user(data: UserRegister):
+    """
+    Register a new user.
+    """
+    try:
+        # Check if email already exists
+        existing = await db.users.find_one({"email": data.email.lower()})
+        if existing:
+            return AuthResponse(
+                success=False,
+                message="כתובת האימייל כבר קיימת במערכת"  # Email already exists
+            )
+        
+        # Create new user
+        now = datetime.now(timezone.utc).isoformat()
+        user_id = str(uuid.uuid4())
+        
+        user_doc = {
+            "id": user_id,
+            "email": data.email.lower(),
+            "password_hash": get_password_hash(data.password),
+            "created_at": now,
+            "last_login_at": now
+        }
+        
+        await db.users.insert_one(user_doc)
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user_id})
+        
+        return AuthResponse(
+            success=True,
+            user=UserResponse(
+                id=user_id,
+                email=data.email.lower(),
+                created_at=now,
+                last_login_at=now
+            ),
+            token=access_token,
+            message="ההרשמה הצליחה!"  # Registration successful
+        )
+        
+    except Exception as e:
+        logger.error(f"Register error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/auth/login", response_model=AuthResponse)
+async def login_user(data: UserLogin):
+    """
+    Login a user.
+    """
+    try:
+        # Find user by email
+        user = await db.users.find_one({"email": data.email.lower()})
+        
+        if not user:
+            return AuthResponse(
+                success=False,
+                message="אימייל או סיסמה שגויים"  # Invalid email or password
+            )
+        
+        # Verify password
+        if not verify_password(data.password, user["password_hash"]):
+            return AuthResponse(
+                success=False,
+                message="אימייל או סיסמה שגויים"  # Invalid email or password
+            )
+        
+        # Update last login
+        now = datetime.now(timezone.utc).isoformat()
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {"last_login_at": now}}
+        )
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user["id"]})
+        
+        return AuthResponse(
+            success=True,
+            user=UserResponse(
+                id=user["id"],
+                email=user["email"],
+                created_at=user["created_at"],
+                last_login_at=now
+            ),
+            token=access_token,
+            message="התחברת בהצלחה!"  # Login successful
+        )
+        
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/auth/logout")
+async def logout_user():
+    """
+    Logout a user (client-side token removal).
+    """
+    return {"success": True, "message": "התנתקת בהצלחה"}  # Logged out successfully
+
+
+@api_router.get("/auth/me", response_model=AuthResponse)
+async def get_current_user_info(user = Depends(get_current_user)):
+    """
+    Get current authenticated user info.
+    """
+    if not user:
+        return AuthResponse(
+            success=False,
+            message="לא מחובר"  # Not logged in
+        )
+    
+    return AuthResponse(
+        success=True,
+        user=UserResponse(
+            id=user["id"],
+            email=user["email"],
+            created_at=user["created_at"],
+            last_login_at=user.get("last_login_at")
+        )
+    )
+
+
+@api_router.post("/auth/migrate-data")
+async def migrate_anonymous_data(anonymous_user_id: str, user = Depends(get_current_user)):
+    """
+    Migrate anonymous user data to authenticated user account.
+    """
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        authenticated_user_id = user["id"]
+        
+        # Migrate philos_sessions
+        await db.philos_sessions.update_many(
+            {"user_id": anonymous_user_id},
+            {"$set": {"user_id": authenticated_user_id}}
+        )
+        
+        # Migrate philos_saved_sessions
+        await db.philos_saved_sessions.update_many(
+            {"user_id": anonymous_user_id},
+            {"$set": {"user_id": authenticated_user_id}}
+        )
+        
+        # Migrate philos_decisions
+        await db.philos_decisions.update_many(
+            {"user_id": anonymous_user_id},
+            {"$set": {"user_id": authenticated_user_id}}
+        )
+        
+        # Migrate philos_path_selections
+        await db.philos_path_selections.update_many(
+            {"user_id": anonymous_user_id},
+            {"$set": {"user_id": authenticated_user_id}}
+        )
+        
+        # Migrate philos_path_learning
+        await db.philos_path_learning.update_many(
+            {"user_id": anonymous_user_id},
+            {"$set": {"user_id": authenticated_user_id}}
+        )
+        
+        # Migrate philos_adaptive_scores
+        await db.philos_adaptive_scores.update_many(
+            {"user_id": anonymous_user_id},
+            {"$set": {"user_id": authenticated_user_id}}
+        )
+        
+        return {
+            "success": True,
+            "message": "הנתונים הועברו בהצלחה לחשבון שלך",  # Data migrated successfully
+            "new_user_id": authenticated_user_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Migration error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Philos Sync Endpoints
