@@ -1,82 +1,65 @@
-# PRODUCT OVERVIEW
+# Philos Orientation
 
-## Philos Orientation
-**Mental Navigation System**
+## Overview
+Philos Orientation is a decision navigation system that helps individuals evaluate possible actions and understand their impact on a collective value field.
 
----
-
-## What It Is
-
-A real-time decision analysis dashboard that helps users navigate complex choices through a philosophical value-based framework. The system tracks decisions, learns from outcomes, and provides collective insights from all users.
+The system learns from decisions and visualizes how human choices shape a global moral landscape.
 
 ---
 
-## Core Concept
+## Problem
+People make thousands of decisions without any structured feedback about their impact on themselves or the collective environment.
 
-Every decision is evaluated across four dimensions:
-- **Physical Capacity** (energy level)
-- **Chaos ↔ Order** (structure preference)
-- **Ego ↔ Collective** (self vs group focus)
-- **Gap Type** (current challenge area)
+Current digital systems optimize attention, not decisions.
 
-Decisions are tagged with values:
-- תרומה (Contribution)
-- התאוששות (Recovery)
-- סדר (Order)
-- נזק (Harm)
-- הימנעות (Avoidance)
+There is no system that helps individuals navigate choices while learning from outcomes.
 
 ---
 
-## Key Features
+## Solution
+Philos Orientation provides a structured framework for:
 
-### Individual Layer
-- Action evaluation with outcome prediction
-- Decision path suggestions (3 options per state)
-- Path learning (predicted vs actual comparison)
-- Adaptive scoring (learns your patterns)
-- Personal value map
-- Session history and comparison
+- evaluating decision paths
+- learning from outcomes
+- aggregating human decisions into a collective value field
 
-### Collective Layer
-- Anonymized cross-user analytics
-- Global value distribution
-- Trend analysis (7-day comparisons)
-- Living field visualization
-
-### Infrastructure
-- User authentication
-- Multi-device sync
-- Cloud persistence (MongoDB)
-- Offline fallback (localStorage)
+The system acts as a navigation layer for human choices.
 
 ---
 
-## User Interface
+## Core Engines
 
-- **Language:** Hebrew (עברית)
-- **Layout:** Right-to-Left (RTL)
-- **Style:** Clean, minimal, card-based sections
+### Decision Engine
+Analyzes a situation and generates possible paths.
 
----
+### Learning Engine
+Compares predicted outcomes with real outcomes and adapts scoring.
 
-## Target Use
-
-Personal decision journaling and reflection tool with community-level pattern visibility.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | React, Tailwind CSS |
-| Backend | FastAPI, Python |
-| Database | MongoDB |
-| Auth | JWT, bcrypt |
+### Collective Field
+Aggregates anonymized decisions across users to visualize the global value field.
 
 ---
 
-## Preview
+## User Flow
 
-https://global-field.preview.emergentagent.com
+1 User inputs a situation or decision.
+
+2 The system generates possible action paths.
+
+3 Each path is evaluated with value indicators.
+
+4 The user selects a path.
+
+5 After the action, the outcome is recorded.
+
+6 The system learns and updates the collective field.
+
+---
+
+## Unique Property
+Philos Orientation is the first system designed to map human decisions into a dynamic collective value field.
+
+---
+
+## Long-Term Vision
+A global layer that allows humanity to observe and navigate the evolution of collective values through decisions.
