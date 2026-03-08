@@ -5,7 +5,9 @@ import {
   isCloudAvailable,
   savePathSelection,
   savePathLearning,
-  getMemoryData
+  getMemoryData,
+  getFullUserData,
+  fullSyncUserData
 } from '../services/cloudSync';
 
 // LocalStorage keys
@@ -243,7 +245,7 @@ const loadLearningHistory = () => {
   return [];
 };
 
-export default function usePhilosState() {
+export default function usePhilosState(user = null) {
   const savedData = loadFromStorage();
 
   // Core state
@@ -267,13 +269,20 @@ export default function usePhilosState() {
   const [adaptiveScores, setAdaptiveScores] = useState(() => calculateAdaptiveScores(loadLearningHistory()));
   
   // Sync state
-  const [syncStatus, setSyncStatus] = useState({ syncing: false, lastSynced: null, cloudAvailable: false });
+  const [syncStatus, setSyncStatus] = useState({ 
+    syncing: false, 
+    lastSynced: null, 
+    cloudAvailable: false,
+    deviceSynced: false,
+    syncMessage: ''
+  });
   
   // UI state
   const [showShareCard, setShowShareCard] = useState(false);
   
   // Refs
   const syncTimeoutRef = useRef(null);
+  const hasHydratedFromCloud = useRef(false);
 
   // Cloud sync function
   const performCloudSync = useCallback(async (forceSync = false) => {
@@ -394,6 +403,101 @@ export default function usePhilosState() {
     
     loadMemoryFromCloud();
   }, []);
+
+  // Multi-device continuity: Hydrate from cloud when user is authenticated
+  useEffect(() => {
+    const hydrateFromCloud = async () => {
+      // Only hydrate if user is authenticated and we haven't hydrated yet
+      if (!user || hasHydratedFromCloud.current) return;
+      
+      setSyncStatus(prev => ({ ...prev, syncing: true, syncMessage: 'טוען נתונים מהענן...' }));
+      
+      try {
+        const fullData = await getFullUserData(user.id);
+        
+        if (fullData.success) {
+          // Hydrate all state from cloud
+          if (fullData.history && fullData.history.length > 0) {
+            setHistory(fullData.history);
+            // Also update state from latest history entry
+            if (fullData.history[0]) {
+              setState(prev => ({
+                ...prev,
+                chaos_order: fullData.history[0].chaos_order || 0,
+                ego_collective: fullData.history[0].ego_collective || 0
+              }));
+            }
+          }
+          
+          if (fullData.globalStats && Object.keys(fullData.globalStats).length > 0) {
+            setGlobalStats({
+              contribution: fullData.globalStats.contribution || 0,
+              recovery: fullData.globalStats.recovery || 0,
+              harm: fullData.globalStats.harm || 0,
+              order: fullData.globalStats.order || 0,
+              avoidance: fullData.globalStats.avoidance || 0,
+              totalDecisions: fullData.globalStats.totalDecisions || 0,
+              sessions: fullData.globalStats.sessions || 0
+            });
+          }
+          
+          if (fullData.trendHistory && fullData.trendHistory.length > 0) {
+            setTrendHistory(fullData.trendHistory);
+          }
+          
+          if (fullData.learningHistory && fullData.learningHistory.length > 0) {
+            setLearningHistory(fullData.learningHistory);
+          }
+          
+          if (fullData.adaptiveScores && Object.keys(fullData.adaptiveScores).length > 0) {
+            setAdaptiveScores({
+              contribution: fullData.adaptiveScores.contribution || 0,
+              recovery: fullData.adaptiveScores.recovery || 0,
+              order: fullData.adaptiveScores.order || 0,
+              harm: fullData.adaptiveScores.harm || 0,
+              avoidance: fullData.adaptiveScores.avoidance || 0
+            });
+          }
+          
+          hasHydratedFromCloud.current = true;
+          setSyncStatus(prev => ({ 
+            ...prev, 
+            syncing: false, 
+            deviceSynced: true,
+            lastSynced: fullData.lastSynced,
+            syncMessage: 'מסונכרן בין מכשירים'
+          }));
+        } else {
+          setSyncStatus(prev => ({ 
+            ...prev, 
+            syncing: false, 
+            syncMessage: 'שגיאה בטעינת נתונים'
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to hydrate from cloud:', error);
+        setSyncStatus(prev => ({ 
+          ...prev, 
+          syncing: false, 
+          syncMessage: 'שגיאה בסנכרון'
+        }));
+      }
+    };
+    
+    hydrateFromCloud();
+  }, [user]);
+
+  // Reset hydration flag when user changes (logout)
+  useEffect(() => {
+    if (!user) {
+      hasHydratedFromCloud.current = false;
+      setSyncStatus(prev => ({ 
+        ...prev, 
+        deviceSynced: false,
+        syncMessage: ''
+      }));
+    }
+  }, [user]);
 
   // Debounced sync after data changes
   useEffect(() => {

@@ -21,7 +21,7 @@ import {
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
 
 export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
-  // Use the custom hook for all state management
+  // Use the custom hook for all state management (pass user for multi-device sync)
   const {
     state,
     setState,
@@ -46,7 +46,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
     loadSessionFromLibrary,
     getTrajectoryDirection,
     exportSession
-  } = usePhilosState();
+  } = usePhilosState(user);
 
   const shareCardRef = useRef(null);
 
@@ -107,28 +107,42 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             </p>
           )}
           {/* Cloud Sync Status */}
-          <div className="flex items-center justify-center gap-2 mt-2">
-            {syncStatus.cloudAvailable ? (
-              <>
-                <span className={`w-2 h-2 rounded-full ${syncStatus.syncing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></span>
-                <span className="text-xs text-muted-foreground">
-                  {syncStatus.syncing ? 'מסנכרן...' : 'מסונכרן לענן'}
-                </span>
-                {syncStatus.lastSynced && !syncStatus.syncing && (
-                  <button
-                    onClick={() => performCloudSync(true)}
-                    className="text-xs text-blue-500 hover:text-blue-700 underline"
-                    data-testid="manual-sync-btn"
-                  >
-                    סנכרן עכשיו
-                  </button>
-                )}
-              </>
-            ) : (
-              <>
-                <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                <span className="text-xs text-muted-foreground">מצב לא מקוון</span>
-              </>
+          <div className="flex flex-col items-center gap-1 mt-2">
+            <div className="flex items-center justify-center gap-2">
+              {syncStatus.cloudAvailable ? (
+                <>
+                  <span className={`w-2 h-2 rounded-full ${syncStatus.syncing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></span>
+                  <span className="text-xs text-muted-foreground">
+                    {syncStatus.syncing ? 'מסנכרן...' : 'מסונכרן לענן'}
+                  </span>
+                  {syncStatus.lastSynced && !syncStatus.syncing && (
+                    <button
+                      onClick={() => performCloudSync(true)}
+                      className="text-xs text-blue-500 hover:text-blue-700 underline"
+                      data-testid="manual-sync-btn"
+                    >
+                      סנכרן עכשיו
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                  <span className="text-xs text-muted-foreground">מצב לא מקוון</span>
+                </>
+              )}
+            </div>
+            {/* Multi-device sync status for authenticated users */}
+            {user && syncStatus.deviceSynced && (
+              <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
+                <svg className="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs text-blue-600 font-medium">מסונכרן בין מכשירים</span>
+              </div>
+            )}
+            {syncStatus.syncing && syncStatus.syncMessage && (
+              <span className="text-xs text-yellow-600">{syncStatus.syncMessage}</span>
             )}
           </div>
         </div>

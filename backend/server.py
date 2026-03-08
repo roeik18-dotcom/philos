@@ -1037,6 +1037,215 @@ async def recalculate_adaptive_scores(user_id: str, learning_history: List[Dict[
         logger.error(f"Recalculate adaptive scores error: {str(e)}")
 
 
+# ============================================================
+# Multi-Device Continuity - Full User Data Sync
+# ============================================================
+
+class FullUserDataResponse(BaseModel):
+    success: bool
+    user_id: str
+    # Session data
+    history: List[Dict[str, Any]] = []
+    global_stats: Dict[str, Any] = {}
+    trend_history: List[Dict[str, Any]] = []
+    # Memory data  
+    learning_history: List[Dict[str, Any]] = []
+    adaptive_scores: Dict[str, Any] = {}
+    # Session library
+    saved_sessions: List[Dict[str, Any]] = []
+    # Sync metadata
+    last_synced: str = ""
+    device_sync_status: str = "synced"
+
+
+@api_router.get("/user/full-data/{user_id}", response_model=FullUserDataResponse)
+async def get_full_user_data(user_id: str):
+    """
+    Get ALL user data for multi-device continuity.
+    Returns: history, global_stats, trend_history, learning_history, 
+    adaptive_scores, saved_sessions - everything needed to hydrate dashboard.
+    """
+    try:
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # 1. Get session data (history, global_stats, trend_history)
+        session_data = await db.philos_sessions.find_one(
+            {"user_id": user_id},
+            {"_id": 0}
+        )
+        
+        history = []
+        global_stats = {
+            'contribution': 0, 'recovery': 0, 'harm': 0, 
+            'order': 0, 'avoidance': 0, 'totalDecisions': 0, 'sessions': 0
+        }
+        trend_history = []
+        
+        if session_data:
+            history = session_data.get('history', [])[:20]
+            global_stats = session_data.get('global_stats', global_stats)
+            trend_history = session_data.get('trend_history', [])[-30:]
+        
+        # 2. Get learning history (last 50)
+        learning_history = await db.philos_path_learning.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).sort("timestamp", -1).limit(50).to_list(50)
+        learning_history = list(reversed(learning_history))
+        
+        # 3. Get adaptive scores
+        adaptive_scores_doc = await db.philos_adaptive_scores.find_one(
+            {"user_id": user_id},
+            {"_id": 0}
+        )
+        
+        adaptive_scores = {
+            'contribution': 0, 'recovery': 0, 'order': 0, 'harm': 0, 'avoidance': 0
+        }
+        if adaptive_scores_doc:
+            adaptive_scores = {
+                'contribution': adaptive_scores_doc.get('contribution', 0),
+                'recovery': adaptive_scores_doc.get('recovery', 0),
+                'order': adaptive_scores_doc.get('order', 0),
+                'harm': adaptive_scores_doc.get('harm', 0),
+                'avoidance': adaptive_scores_doc.get('avoidance', 0)
+            }
+        
+        # 4. Get saved sessions (session library)
+        saved_sessions = await db.philos_saved_sessions.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).sort("timestamp", -1).limit(50).to_list(50)
+        
+        return FullUserDataResponse(
+            success=True,
+            user_id=user_id,
+            history=history,
+            global_stats=global_stats,
+            trend_history=trend_history,
+            learning_history=learning_history,
+            adaptive_scores=adaptive_scores,
+            saved_sessions=saved_sessions,
+            last_synced=now,
+            device_sync_status="synced"
+        )
+        
+    except Exception as e:
+        logger.error(f"Get full user data error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/user/full-sync/{user_id}")
+async def full_sync_user_data(
+    user_id: str,
+    history: List[Dict[str, Any]] = [],
+    global_stats: Dict[str, Any] = {},
+    trend_history: List[Dict[str, Any]] = [],
+    learning_history: List[Dict[str, Any]] = []
+):
+    """
+    Full sync of all user data from device to cloud.
+    Merges local data with cloud data.
+    """
+    try:
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # 1. Sync session data
+        existing_session = await db.philos_sessions.find_one(
+            {"user_id": user_id},
+            {"_id": 0}
+        )
+        
+        # Merge history
+        merged_history = []
+        history_map = {}
+        
+        if existing_session:
+            for h in existing_session.get('history', []):
+                ts = h.get('timestamp', '')
+                if ts:
+                    history_map[ts] = h
+        
+        for h in history:
+            ts = h.get('timestamp', '')
+            if ts and ts not in history_map:
+                history_map[ts] = h
+        
+        merged_history = sorted(
+            history_map.values(),
+            key=lambda x: x.get('timestamp', ''),
+            reverse=True
+        )[:20]
+        
+        # Merge global stats (take max values)
+        cloud_stats = existing_session.get('global_stats', {}) if existing_session else {}
+        merged_stats = {
+            'contribution': max(cloud_stats.get('contribution', 0), global_stats.get('contribution', 0)),
+            'recovery': max(cloud_stats.get('recovery', 0), global_stats.get('recovery', 0)),
+            'harm': max(cloud_stats.get('harm', 0), global_stats.get('harm', 0)),
+            'order': max(cloud_stats.get('order', 0), global_stats.get('order', 0)),
+            'avoidance': max(cloud_stats.get('avoidance', 0), global_stats.get('avoidance', 0)),
+            'totalDecisions': max(cloud_stats.get('totalDecisions', 0), global_stats.get('totalDecisions', 0)),
+            'sessions': max(cloud_stats.get('sessions', 0), global_stats.get('sessions', 0))
+        }
+        
+        # Merge trend history
+        cloud_trends = existing_session.get('trend_history', []) if existing_session else []
+        trend_map = {}
+        for t in cloud_trends:
+            date = t.get('date', '')
+            if date:
+                trend_map[date] = t
+        for t in trend_history:
+            date = t.get('date', '')
+            if date:
+                if date not in trend_map or t.get('totalDecisions', 0) >= trend_map[date].get('totalDecisions', 0):
+                    trend_map[date] = t
+        
+        merged_trends = sorted(trend_map.values(), key=lambda x: x.get('date', ''))[-30:]
+        
+        # Save session data
+        await db.philos_sessions.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "user_id": user_id,
+                "history": merged_history,
+                "global_stats": merged_stats,
+                "trend_history": merged_trends,
+                "last_updated": now
+            }},
+            upsert=True
+        )
+        
+        # 2. Sync learning history
+        existing_learning = await db.philos_path_learning.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).to_list(100)
+        
+        learning_map = {l.get('timestamp', ''): l for l in existing_learning if l.get('timestamp')}
+        
+        new_learning = []
+        for l in learning_history:
+            ts = l.get('timestamp', '')
+            if ts and ts not in learning_map:
+                l['user_id'] = user_id
+                if 'id' not in l:
+                    l['id'] = str(uuid.uuid4())
+                new_learning.append(l)
+        
+        if new_learning:
+            await db.philos_path_learning.insert_many(new_learning)
+            await recalculate_adaptive_scores(user_id, list(learning_map.values()) + new_learning)
+        
+        # Return updated data
+        return await get_full_user_data(user_id)
+        
+    except Exception as e:
+        logger.error(f"Full sync user data error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 

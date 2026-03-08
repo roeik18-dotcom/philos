@@ -323,3 +323,86 @@ export const syncMemoryData = async (localLearningHistory) => {
 };
 
 export { getUserId };
+
+
+// ============================================================
+// Multi-Device Continuity - Full User Data Sync
+// ============================================================
+
+// Get ALL user data for multi-device continuity
+export const getFullUserData = async (userId = null) => {
+  try {
+    const userIdToUse = userId || getUserId();
+    
+    const response = await fetch(`${API_URL}/api/user/full-data/${userIdToUse}`);
+    
+    if (!response.ok) {
+      throw new Error(`Get full user data failed: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    return {
+      success: true,
+      history: result.history || [],
+      globalStats: result.global_stats || {},
+      trendHistory: result.trend_history || [],
+      learningHistory: result.learning_history || [],
+      adaptiveScores: result.adaptive_scores || {},
+      savedSessions: result.saved_sessions || [],
+      lastSynced: result.last_synced,
+      deviceSyncStatus: result.device_sync_status || 'synced'
+    };
+  } catch (error) {
+    console.error('Get full user data error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+// Full sync of all user data from device to cloud
+export const fullSyncUserData = async (localData, userId = null) => {
+  try {
+    const userIdToUse = userId || getUserId();
+    
+    const response = await fetch(`${API_URL}/api/user/full-sync/${userIdToUse}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        history: localData.history || [],
+        global_stats: localData.globalStats || {},
+        trend_history: localData.trendHistory || [],
+        learning_history: localData.learningHistory || []
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Full sync failed: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    return {
+      success: true,
+      history: result.history || [],
+      globalStats: result.global_stats || {},
+      trendHistory: result.trend_history || [],
+      learningHistory: result.learning_history || [],
+      adaptiveScores: result.adaptive_scores || {},
+      savedSessions: result.saved_sessions || [],
+      lastSynced: result.last_synced,
+      deviceSyncStatus: result.device_sync_status || 'synced'
+    };
+  } catch (error) {
+    console.error('Full sync error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
