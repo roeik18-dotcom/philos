@@ -148,6 +148,16 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Conditional rendering when adjustments exist
 - [x] Auto-update when new replays are added
 
+### Phase 15: Weekly Report Replay Integration ✅
+- [x] WeeklyBehavioralReportSection fetches replay insights
+- [x] Calculate replayComparison data (mostExploredAlt, missedPositive, avoidedRisky, gapAnalysis)
+- [x] SVG visual comparison chart (actual vs replay patterns)
+- [x] Stats grid showing: הכי נבדק (most explored), הוחמץ (missed), נמנע (avoided)
+- [x] Gap analysis section with Hebrew explanations
+- [x] Hebrew replay insights ("השבוע נבדקו שוב ושוב מסלולי...")
+- [x] Conditional rendering when replayCount > 0
+- [x] Maintains Hebrew RTL layout
+
 ---
 
 ## Architecture Summary
@@ -212,6 +222,15 @@ State:     Custom Hook (usePhilosState)
   - Score summary grid with emerald/red highlighting
   - Auto-updates when new replays are added
 
+- ✅ Integrated Replay Insights into Weekly Behavioral Report
+  - WeeklyBehavioralReportSection fetches replay insights via API
+  - Added replayComparison calculation (mostExploredAlt, missedPositive, avoidedRisky, gapAnalysis)
+  - SVG visual comparison chart showing actual vs replay patterns
+  - Stats grid: הכי נבדק (most explored), הוחמץ (missed), נמנע (avoided)
+  - Gap analysis section with Hebrew explanations
+  - Hebrew insights: "השבוע נבדקו שוב ושוב מסלולי...", "נראה פער עקבי..."
+  - Conditional rendering when replayCount > 0
+
 ### March 8, 2026
 - ✅ Implemented Decision Path Engine
 - ✅ Implemented Path Learning Layer
@@ -228,4 +247,4 @@ State:     Custom Hook (usePhilosState)
 
 ---
 
-**Product State:** STABLE MVP - All core features complete + Decision Replay + Replay Insights + Adaptive Effect
+**Product State:** STABLE MVP - All core features + Replay System Complete
