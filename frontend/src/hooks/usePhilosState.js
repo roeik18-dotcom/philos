@@ -903,9 +903,14 @@ export default function usePhilosState(user = null) {
   };
 
   // Evaluate action
-  const evaluateAction = async (quickAction = null) => {
-    // Handle case where quickAction might be an event object from button click
-    const actionToEvaluate = (typeof quickAction === 'string' && quickAction) ? quickAction : actionText;
+  const evaluateAction = async (recommendationMetadata = null) => {
+    // Handle case where recommendationMetadata might be an event object from button click
+    // or actual recommendation metadata object
+    const isRecommendationMetadata = recommendationMetadata && 
+      typeof recommendationMetadata === 'object' && 
+      recommendationMetadata.followed_recommendation === true;
+    
+    const actionToEvaluate = actionText;
     
     if (!actionToEvaluate || typeof actionToEvaluate !== 'string') {
       alert('יש להזין פעולה');
@@ -983,7 +988,14 @@ export default function usePhilosState(user = null) {
       value_tag: valueTag,
       parent_decision_id: parentDecision?.id || null,
       time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-      timestamp: timestamp
+      timestamp: timestamp,
+      // Include recommendation metadata if action originated from recommendation
+      ...(isRecommendationMetadata && {
+        followed_recommendation: true,
+        recommendation_direction: recommendationMetadata.recommendation_direction,
+        recommendation_reason: recommendationMetadata.recommendation_reason,
+        recommendation_strength: recommendationMetadata.recommendation_strength
+      })
     };
 
     setHistory(prev => [historyEntry, ...prev].slice(0, 50));
@@ -997,7 +1009,14 @@ export default function usePhilosState(user = null) {
         ego_collective: newEgoCollective,
         balance_score: newBalanceScore,
         value_tag: valueTag,
-        parent_decision_id: parentDecision?.id || null
+        parent_decision_id: parentDecision?.id || null,
+        // Include recommendation metadata if action originated from recommendation
+        ...(isRecommendationMetadata && {
+          followed_recommendation: true,
+          recommendation_direction: recommendationMetadata.recommendation_direction,
+          recommendation_reason: recommendationMetadata.recommendation_reason,
+          recommendation_strength: recommendationMetadata.recommendation_strength
+        })
       });
     } catch (error) {
       console.log('Auto-save decision failed (will retry on sync):', error);
@@ -1005,9 +1024,7 @@ export default function usePhilosState(user = null) {
     
     // Clear parent decision and action text after evaluation
     setParentDecision(null);
-    if (!quickAction) {
-      setActionText('');
-    }
+    setActionText('');
   };
 
   // Handle reset

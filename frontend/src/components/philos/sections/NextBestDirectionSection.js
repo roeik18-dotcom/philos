@@ -187,7 +187,7 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, collec
   };
 };
 
-export default function NextBestDirectionSection({ history, adaptiveScores, replayInsights }) {
+export default function NextBestDirectionSection({ history, adaptiveScores, replayInsights, onFollowRecommendation }) {
   // State for collective data comparison
   const [collectiveGap, setCollectiveGap] = useState(null);
 
@@ -263,6 +263,21 @@ export default function NextBestDirectionSection({ history, adaptiveScores, repl
 
   const { direction, strength, insight, actionSuggestion, reason } = recommendation;
   const colors = directionColors[direction] || directionColors.recovery;
+
+  // Handler for following recommendation
+  const handleFollowRecommendation = () => {
+    if (onFollowRecommendation) {
+      onFollowRecommendation({
+        recommendation_text: actionSuggestion,
+        recommendation_direction: direction,
+        recommendation_reason: reason,
+        recommendation_strength: strength,
+        recommendation_insight: insight,
+        followed_recommendation: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
 
   // SVG compass indicator
   const compassAngle = {
@@ -375,6 +390,18 @@ export default function NextBestDirectionSection({ history, adaptiveScores, repl
           </div>
         </div>
       </div>
+
+      {/* Follow Recommendation Button */}
+      <button
+        onClick={handleFollowRecommendation}
+        className={`w-full mt-4 px-4 py-3 ${colors.bg} ${colors.text} border-2 ${colors.border} rounded-xl font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2`}
+        data-testid="follow-recommendation-btn"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+        <span>פעל לפי ההמלצה</span>
+      </button>
     </section>
   );
 }

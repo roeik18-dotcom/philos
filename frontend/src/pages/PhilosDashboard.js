@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
 import {
   DailyOrientationSection,
@@ -77,6 +77,40 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
   } = usePhilosState(user);
 
   const shareCardRef = useRef(null);
+  
+  // State for tracking recommendation metadata
+  const [recommendationMetadata, setRecommendationMetadata] = useState(null);
+
+  // Handler for following recommendation
+  const handleFollowRecommendation = (metadata) => {
+    // Set the recommendation metadata
+    setRecommendationMetadata(metadata);
+    
+    // Prefill the action input with the suggested action
+    setActionText(metadata.recommendation_text);
+    
+    // Scroll to the action input and focus it
+    setTimeout(() => {
+      const actionInput = document.querySelector('[data-testid="action-input"]');
+      if (actionInput) {
+        actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => actionInput.focus(), 400);
+      }
+    }, 100);
+  };
+
+  // Handler to clear recommendation metadata
+  const handleClearRecommendation = () => {
+    setRecommendationMetadata(null);
+  };
+
+  // Wrap evaluateAction to include recommendation metadata
+  const evaluateActionWithRecommendation = async () => {
+    // Pass recommendation metadata to be saved with the decision
+    await evaluateAction(recommendationMetadata);
+    // Clear recommendation after evaluation
+    setRecommendationMetadata(null);
+  };
 
   // Download share card as image
   const downloadShareCard = async () => {
@@ -223,6 +257,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           history={history}
           adaptiveScores={adaptiveScores}
           replayInsights={replayInsights}
+          onFollowRecommendation={handleFollowRecommendation}
         />
 
         {/* Daily Orientation Section */}
@@ -235,12 +270,14 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         <ActionEvaluationSection
           actionText={actionText}
           setActionText={setActionText}
-          evaluateAction={evaluateAction}
+          evaluateAction={evaluateActionWithRecommendation}
           decisionResult={decisionResult}
           state={state}
           calculateSuggestedVector={calculateSuggestedVector}
           parentDecision={parentDecision}
           onClearParent={() => setParentDecision(null)}
+          recommendationMetadata={recommendationMetadata}
+          onClearRecommendation={handleClearRecommendation}
         />
 
         {/* Decision History with Chains */}
