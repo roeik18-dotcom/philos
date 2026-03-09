@@ -34,7 +34,8 @@ import {
   CollectiveMirrorSection,
   CollectiveTrajectorySection,
   NextBestDirectionSection,
-  RecommendationFollowThroughSection
+  RecommendationFollowThroughSection,
+  RecommendationCalibrationSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -316,6 +317,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* Recommendation Follow-Through Analytics */}
         <RecommendationFollowThroughSection history={history} />
+
+        {/* Recommendation Calibration - self-correcting weights */}
+        <RecommendationCalibrationSection history={history} />
 
         {/* Weekly Behavioral Report */}
         <WeeklyBehavioralReportSection history={history} user={user} />

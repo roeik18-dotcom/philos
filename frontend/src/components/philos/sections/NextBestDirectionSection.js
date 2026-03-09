@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { fetchCollectiveLayer } from '../../../services/dataService';
+import { calculateCalibrationWeights } from './RecommendationCalibrationSection';
 
 // Hebrew value tag labels
 const valueLabels = {
@@ -49,7 +50,8 @@ const actionSuggestions = {
 };
 
 // Calculate recommended direction based on multiple data sources
-const calculateRecommendation = (history, adaptiveScores, replayInsights, collectiveData) => {
+// calibrationWeights is an optional adjustment layer from follow-through data
+const calculateRecommendation = (history, adaptiveScores, replayInsights, collectiveData, calibrationWeights = null) => {
   if (!history || history.length === 0) {
     return null;
   }
@@ -77,6 +79,14 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, collec
   // Use adaptive scores (including replay-based adjustments)
   const scores = adaptiveScores || {};
   
+  // Apply calibration weights to scores (adjustment layer)
+  const calibratedScores = { ...scores };
+  if (calibrationWeights) {
+    ['contribution', 'recovery', 'order'].forEach(dir => {
+      calibratedScores[dir] = (calibratedScores[dir] || 0) + (calibrationWeights[dir] || 0);
+    });
+  }
+  
   // Use replay insights for blind spots and preferences
   const replayAltCounts = replayInsights?.alternative_path_counts || {};
   const blindSpots = replayInsights?.blind_spots || [];
@@ -92,6 +102,7 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, collec
   let reason = '';
   let strength = 0;
   let insight = '';
+  let calibrationApplied = false;
 
   // Priority 1: Address strong negative drift (harm/avoidance patterns)
   if (negativeRatio > 0.4) {
@@ -126,12 +137,13 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, collec
       insight = `בהפעלות חוזרות מעולם לא בדקת מסלולי ${valueLabels[relevantBlindSpot.to]}. כדאי לנסות.`;
     }
   }
-  // Priority 4: Reinforce positive momentum
-  else if (contributionCount >= 2 || (scores.contribution || 0) > 5) {
+  // Priority 4: Reinforce positive momentum (with calibration adjustment)
+  else if (contributionCount >= 2 || (calibratedScores.contribution || 0) > 5) {
     recommendedDirection = 'contribution';
     reason = 'positive_contribution_momentum';
-    strength = Math.min(100, 50 + (scores.contribution || 0) * 3);
+    strength = Math.min(100, 50 + (calibratedScores.contribution || 0) * 3);
     insight = 'יש לך מומנטום חיובי של תרומה. המשך בכיוון זה.';
+    if (calibrationWeights?.contribution > 0) calibrationApplied = true;
   }
   // Priority 5: Follow replay exploration preferences
   else if (mostExploredAlt && mostExploredAlt[1] >= 2) {
@@ -140,16 +152,30 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, collec
     strength = Math.min(100, 40 + mostExploredAlt[1] * 10);
     insight = `בהפעלות חוזרות בדקת הרבה מסלולי ${valueLabels[mostExploredAlt[0]]}. אולי זה הכיוון שחסר.`;
   }
-  // Priority 6: Balance based on adaptive scores
+  // Priority 6: Balance based on calibrated adaptive scores
   else {
     const positiveScores = [
-      { type: 'contribution', score: scores.contribution || 0, count: contributionCount },
-      { type: 'recovery', score: scores.recovery || 0, count: recoveryCount },
-      { type: 'order', score: scores.order || 0, count: orderCount }
-    ].sort((a, b) => a.score - b.score); // Sort ascending to find lowest
-
-    const lowestPositive = positiveScores[0];
-    if (lowestPositive.score < 0 || lowestPositive.count === 0) {
+      { type: 'contribution', score: calibratedScores.contribution || 0, count: contributionCount },
+      { type: 'recovery', score: calibratedScores.recovery || 0, count: recoveryCount },
+      { type: 'order', score: calibratedScores.order || 0, count: orderCount }
+    ];
+    
+    // Sort by score descending to find the highest calibrated direction
+    const sortedByScore = [...positiveScores].sort((a, b) => b.score - a.score);
+    const highestCalibrated = sortedByScore[0];
+    
+    // Sort ascending to find lowest (for deficit detection)
+    const sortedAsc = [...positiveScores].sort((a, b) => a.score - b.score);
+    const lowestPositive = sortedAsc[0];
+    
+    // If calibration strongly favors a direction, use it
+    if (calibrationWeights && highestCalibrated.score >= 3) {
+      recommendedDirection = highestCalibrated.type;
+      reason = 'calibration_boost';
+      strength = Math.min(100, 45 + highestCalibrated.score * 5);
+      insight = `הכיול מצביע על ${valueLabels[highestCalibrated.type]} כבעל הביצועים הטובים ביותר.`;
+      calibrationApplied = true;
+    } else if (lowestPositive.score < 0 || lowestPositive.count === 0) {
       recommendedDirection = lowestPositive.type;
       reason = 'balance_deficit';
       strength = Math.min(100, 35 + Math.abs(lowestPositive.score) * 2);
@@ -183,7 +209,8 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, collec
     insight,
     actionSuggestion,
     negativeRatio,
-    valueCounts
+    valueCounts,
+    calibrationApplied
   };
 };
 
@@ -251,17 +278,23 @@ export default function NextBestDirectionSection({ history, adaptiveScores, repl
     return collectiveGap ? { gap: collectiveGap } : null;
   }, [collectiveGap]);
 
-  // Calculate recommendation using all available data sources
+  // Calculate calibration weights from follow-through data
+  const calibration = useMemo(() => {
+    return calculateCalibrationWeights(history);
+  }, [history]);
+
+  // Calculate recommendation using all available data sources + calibration
   const recommendation = useMemo(() => {
-    return calculateRecommendation(history, adaptiveScores, replayInsights, collectiveDataForCalc);
-  }, [history, adaptiveScores, replayInsights, collectiveDataForCalc]);
+    const calibrationWeights = calibration.hasData ? calibration.weights : null;
+    return calculateRecommendation(history, adaptiveScores, replayInsights, collectiveDataForCalc, calibrationWeights);
+  }, [history, adaptiveScores, replayInsights, collectiveDataForCalc, calibration]);
 
   // Don't render if no recommendation
   if (!recommendation) {
     return null;
   }
 
-  const { direction, strength, insight, actionSuggestion, reason } = recommendation;
+  const { direction, strength, insight, actionSuggestion, reason, calibrationApplied } = recommendation;
   const colors = directionColors[direction] || directionColors.recovery;
 
   // Handler for following recommendation
@@ -383,9 +416,11 @@ export default function NextBestDirectionSection({ history, adaptiveScores, repl
               {reason === 'replay_blind_spot' && 'מבוסס על נקודות עיוורות בהפעלות חוזרות'}
               {reason === 'positive_contribution_momentum' && 'מבוסס על מומנטום חיובי קיים'}
               {reason === 'replay_preference' && 'מבוסס על דפוסי הפעלה חוזרת'}
+              {reason === 'calibration_boost' && 'מבוסס על כיול אוטומטי מתוצאות בפועל'}
               {reason === 'balance_deficit' && 'מבוסס על ניתוח איזון כיוונים'}
               {reason === 'general_balance' && 'המלצה כללית לאיזון'}
               {reason === 'default' && 'המלצה ראשונית'}
+              {calibrationApplied && <span className="mr-1 text-amber-600">• משקל מכויל</span>}
             </p>
           </div>
         </div>

@@ -32,3 +32,4 @@ export { default as CollectiveMirrorSection } from './CollectiveMirrorSection';
 export { default as CollectiveTrajectorySection } from './CollectiveTrajectorySection';
 export { default as NextBestDirectionSection } from './NextBestDirectionSection';
 export { default as RecommendationFollowThroughSection } from './RecommendationFollowThroughSection';
+export { default as RecommendationCalibrationSection } from './RecommendationCalibrationSection';
