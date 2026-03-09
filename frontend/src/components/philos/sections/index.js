@@ -23,3 +23,4 @@ export { default as ChainInsightsSection } from './ChainInsightsSection';
 export { default as WeeklyBehavioralReportSection } from './WeeklyBehavioralReportSection';
 export { default as MonthlyProgressReportSection } from './MonthlyProgressReportSection';
 export { default as QuarterlyReviewSection } from './QuarterlyReviewSection';
+export { default as DailyDecisionPromptSection } from './DailyDecisionPromptSection';

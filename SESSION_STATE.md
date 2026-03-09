@@ -37,10 +37,9 @@
 - Weekly Behavioral Report (COMPLETED)
 - Monthly Progress Report (COMPLETED)
 - Quarterly Review (COMPLETED)
-  - 3-month (90-day) aggregation
-  - Line chart SVG with area fills
-  - Quarterly totals per category
-  - Dominant pattern and recovery stability
-  - Consistent improvement/risk detection
-  - Correction consistency indicator
-  - Hebrew quarterly insights
+- Daily Decision Prompt (COMPLETED)
+  - Rotating daily questions (7 prompts)
+  - "הוסף החלטה" button
+  - Auto-scrolls and fills action input
+  - Shows today's decision count
+  - Minimal UI at top of dashboard

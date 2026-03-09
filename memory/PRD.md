@@ -112,6 +112,7 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Weekly Behavioral Report
 - [x] Monthly Progress Report
 - [x] Quarterly Review Section
+- [x] Daily Decision Prompt (rotating questions)
 
 ---
 

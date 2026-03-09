@@ -25,7 +25,8 @@ import {
   ChainInsightsSection,
   WeeklyBehavioralReportSection,
   MonthlyProgressReportSection,
-  QuarterlyReviewSection
+  QuarterlyReviewSection,
+  DailyDecisionPromptSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -172,6 +173,23 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             </button>
           </div>
         )}
+
+        {/* Daily Decision Prompt - at the top */}
+        <DailyDecisionPromptSection 
+          onAddDecision={(placeholder) => {
+            setActionText(placeholder);
+            const actionInput = document.querySelector('[data-testid="action-input"]');
+            if (actionInput) {
+              actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              setTimeout(() => actionInput.focus(), 300);
+            }
+          }}
+          todayDecisions={history.filter(h => {
+            const today = new Date().toDateString();
+            const itemDate = h.timestamp ? new Date(h.timestamp).toDateString() : today;
+            return itemDate === today;
+          }).length}
+        />
 
         {/* Daily Orientation Section */}
         <DailyOrientationSection 
