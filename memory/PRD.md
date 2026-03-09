@@ -3,7 +3,7 @@
 
 **Last Updated:** December 2025  
 **Status:** Stable MVP Complete  
-**Preview URL:** https://global-field.preview.emergentagent.com
+**Preview URL:** https://decision-engine-47.preview.emergentagent.com
 
 ---
 

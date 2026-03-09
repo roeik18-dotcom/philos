@@ -26,7 +26,8 @@ import {
   WeeklyBehavioralReportSection,
   MonthlyProgressReportSection,
   QuarterlyReviewSection,
-  DailyDecisionPromptSection
+  DailyDecisionPromptSection,
+  DecisionReplaySection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -52,6 +53,10 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
     parentDecision,
     setParentDecision,
     handleAddFollowUp,
+    replayDecision,
+    handleReplayDecision,
+    closeReplay,
+    saveReplayMetadata,
     balanceScore,
     evaluateAction,
     resetSession,
@@ -213,7 +218,18 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         <DecisionHistorySection
           history={history}
           onAddFollowUp={handleAddFollowUp}
+          onReplayDecision={handleReplayDecision}
         />
+
+        {/* Decision Replay Section - appears when a decision is selected for replay */}
+        {replayDecision && (
+          <DecisionReplaySection
+            replayDecision={replayDecision}
+            onClose={closeReplay}
+            onSaveReplay={saveReplayMetadata}
+            adaptiveScores={adaptiveScores}
+          />
+        )}
 
         {/* Decision Tree Visualization */}
         <DecisionTreeSection history={history} />

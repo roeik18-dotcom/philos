@@ -996,6 +996,82 @@ async def get_user_decision_stats(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================
+# Decision Replay - Counterfactual Path Analysis
+# ============================================================
+
+class ReplayMetadataRequest(BaseModel):
+    user_id: str
+    replay_of_decision_id: str
+    original_value_tag: str
+    alternative_path_id: int
+    alternative_path_type: str
+    predicted_metrics: Dict[str, Any]
+    timestamp: Optional[str] = None
+
+
+@api_router.post("/memory/replay")
+async def save_replay_metadata(data: ReplayMetadataRequest):
+    """
+    Save decision replay metadata for counterfactual analysis.
+    Tracks which alternative paths users explored and predicted outcomes.
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        
+        doc = {
+            'id': str(uuid.uuid4()),
+            'user_id': data.user_id,
+            'replay_of_decision_id': data.replay_of_decision_id,
+            'original_value_tag': data.original_value_tag,
+            'alternative_path_id': data.alternative_path_id,
+            'alternative_path_type': data.alternative_path_type,
+            'predicted_metrics': data.predicted_metrics,
+            'timestamp': data.timestamp or now.isoformat(),
+            'created_at': now.isoformat()
+        }
+        
+        await db.philos_replays.insert_one(doc)
+        
+        return {"success": True, "id": doc['id'], "timestamp": doc['timestamp']}
+        
+    except Exception as e:
+        logger.error(f"Save replay metadata error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/memory/replays/{user_id}")
+async def get_replay_history(user_id: str, limit: int = 50):
+    """
+    Get replay history for a user to analyze counterfactual exploration patterns.
+    """
+    try:
+        replays = await db.philos_replays.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).sort("timestamp", -1).limit(limit).to_list(limit)
+        
+        # Aggregate replay patterns
+        pattern_counts = {}
+        for replay in replays:
+            orig = replay.get('original_value_tag', '')
+            alt = replay.get('alternative_path_type', '')
+            pattern = f"{orig}_to_{alt}"
+            pattern_counts[pattern] = pattern_counts.get(pattern, 0) + 1
+        
+        return {
+            "success": True,
+            "user_id": user_id,
+            "replays": replays,
+            "total_replays": len(replays),
+            "pattern_counts": pattern_counts
+        }
+        
+    except Exception as e:
+        logger.error(f"Get replay history error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/memory/sync")
 async def sync_memory_data(user_id: str, learning_history: List[Dict[str, Any]] = []):
     """

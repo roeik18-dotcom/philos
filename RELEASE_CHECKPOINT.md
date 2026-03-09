@@ -71,7 +71,7 @@ Language:   Hebrew RTL UI
 
 ## Deployment
 
-**Preview URL:** https://global-field.preview.emergentagent.com
+**Preview URL:** https://decision-engine-47.preview.emergentagent.com
 
 ---
 

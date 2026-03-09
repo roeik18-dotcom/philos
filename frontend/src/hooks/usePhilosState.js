@@ -285,6 +285,10 @@ export default function usePhilosState(user = null) {
   // Decision chain state
   const [parentDecision, setParentDecision] = useState(null);
   
+  // Decision replay state
+  const [replayDecision, setReplayDecision] = useState(null);
+  const [replayHistory, setReplayHistory] = useState([]);
+  
   // Refs
   const syncTimeoutRef = useRef(null);
   const hasHydratedFromCloud = useRef(false);
@@ -916,6 +920,49 @@ export default function usePhilosState(user = null) {
     }
   };
 
+  // Handle decision replay - set the decision to replay
+  const handleReplayDecision = (decision) => {
+    setReplayDecision(decision);
+    // Scroll to replay section when it appears
+    setTimeout(() => {
+      const replaySection = document.querySelector('[data-testid="decision-replay-section"]');
+      if (replaySection) {
+        replaySection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
+
+  // Close replay section
+  const closeReplay = () => {
+    setReplayDecision(null);
+  };
+
+  // Save replay metadata
+  const saveReplayMetadata = async (replayData) => {
+    try {
+      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const userId = user?.id || localStorage.getItem('philos_user_id') || 'anonymous';
+      
+      const response = await fetch(`${API_URL}/api/memory/replay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          ...replayData
+        })
+      });
+      
+      if (response.ok) {
+        // Add to local replay history
+        setReplayHistory(prev => [replayData, ...prev].slice(0, 50));
+      }
+    } catch (error) {
+      console.log('Failed to save replay metadata:', error);
+      // Still save locally even if cloud fails
+      setReplayHistory(prev => [replayData, ...prev].slice(0, 50));
+    }
+  };
+
   return {
     // Core state
     state,
@@ -954,6 +1001,14 @@ export default function usePhilosState(user = null) {
     parentDecision,
     setParentDecision,
     handleAddFollowUp,
+    
+    // Decision replay
+    replayDecision,
+    setReplayDecision,
+    replayHistory,
+    handleReplayDecision,
+    closeReplay,
+    saveReplayMetadata,
     
     // Computed
     balanceScore,

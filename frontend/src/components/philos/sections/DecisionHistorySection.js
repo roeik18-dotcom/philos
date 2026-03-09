@@ -18,7 +18,7 @@ const valueColors = {
   avoidance: 'bg-gray-100 text-gray-600'
 };
 
-export default function DecisionHistorySection({ history, onAddFollowUp }) {
+export default function DecisionHistorySection({ history, onAddFollowUp, onReplayDecision }) {
   const [expandedId, setExpandedId] = useState(null);
 
   if (!history || history.length === 0) {
@@ -141,6 +141,17 @@ export default function DecisionHistorySection({ history, onAddFollowUp }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   <span>הוסף המשך</span>
+                </button>
+                
+                <button
+                  onClick={() => onReplayDecision && onReplayDecision(item)}
+                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-2 py-1 rounded-lg transition-colors"
+                  data-testid={`replay-btn-${idx}`}
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>בדוק מסלול חלופי</span>
                 </button>
               </div>
             </div>

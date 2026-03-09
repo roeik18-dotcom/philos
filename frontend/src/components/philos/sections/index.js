@@ -24,3 +24,4 @@ export { default as WeeklyBehavioralReportSection } from './WeeklyBehavioralRepo
 export { default as MonthlyProgressReportSection } from './MonthlyProgressReportSection';
 export { default as QuarterlyReviewSection } from './QuarterlyReviewSection';
 export { default as DailyDecisionPromptSection } from './DailyDecisionPromptSection';
+export { default as DecisionReplaySection } from './DecisionReplaySection';
