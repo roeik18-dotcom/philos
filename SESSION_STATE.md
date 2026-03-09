@@ -55,3 +55,10 @@
   - Correction/repair pattern detection
   - Repeated behavioral pattern detection
   - Hebrew insight text
+- Weekly Behavioral Report (COMPLETED)
+  - 7-day aggregation
+  - Chain type distribution (SVG bars)
+  - Dominant pattern highlight
+  - Strongest movements tracking
+  - Stacked distribution visualization
+  - Hebrew weekly insights

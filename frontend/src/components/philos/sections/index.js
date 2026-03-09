@@ -20,3 +20,4 @@ export { default as GlobalFieldSection } from './GlobalFieldSection';
 export { default as DecisionHistorySection } from './DecisionHistorySection';
 export { default as DecisionTreeSection } from './DecisionTreeSection';
 export { default as ChainInsightsSection } from './ChainInsightsSection';
+export { default as WeeklyBehavioralReportSection } from './WeeklyBehavioralReportSection';

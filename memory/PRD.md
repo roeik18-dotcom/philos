@@ -121,6 +121,10 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Recovery/harm chain detection
 - [x] Correction pattern detection
 - [x] Repeated pattern detection across chains
+- [x] Weekly Behavioral Report Section
+- [x] 7-day chain aggregation
+- [x] SVG bar and stacked distribution visualization
+- [x] Dominant pattern and movement tracking
 
 ---
 
