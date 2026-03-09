@@ -234,10 +234,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard (~400 lines)
+- `PhilosDashboard.js` - Main dashboard (~430 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 27 UI components (including NextBestDirectionSection)
+- `sections/` - 28 UI components (including RecommendationFollowThroughSection)
 
 ---
 
@@ -278,6 +278,15 @@ State:     Custom Hook (usePhilosState)
   - X button to clear recommendation link
   - Metadata saved with decision: recommendation_direction, recommendation_reason, recommendation_strength, followed_recommendation
   - Indicator clears after evaluation
+
+- ✅ **Recommendation Follow-Through Analytics Completed**
+  - RecommendationFollowThroughSection.js - tracks recommendation effectiveness
+  - Key metrics: follow rate (שיעור מעקב), alignment rate (התאמת תוצאות), most followed direction (הכי נעקב)
+  - SVG chart: "התפלגות מעקב לפי כיוון" (distribution by direction)
+  - Pattern analysis: strongest (הכי אפקטיבי) and weakest (דורש שיפור) patterns
+  - Hebrew insights: "מסלולי התאוששות זוכים לשיעור המעקב הגבוה ביותר", etc.
+  - Only shows when user has 2+ followed recommendations
+  - Placed after Chain Insights section in dashboard
 
 - ✅ **System Stabilization Pass Completed**
   - Integrated dataService.js centralized caching layer for all collective API calls
