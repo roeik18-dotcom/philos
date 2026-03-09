@@ -503,13 +503,15 @@ Example patterns:
 
 ---
 
-## 8. Future Expansion: Replay Insights Summary
+## 8. Replay Insights Summary (IMPLEMENTED)
 
-### 8.1 Feature Vision
+### 8.1 Feature Overview
 
 A dedicated dashboard section that aggregates and visualizes replay exploration patterns, providing meta-level insights about decision-making tendencies.
 
-### 8.2 Proposed UI Components
+**Status:** ✅ Fully Implemented
+
+### 8.2 Implemented UI Components
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -560,7 +562,9 @@ A dedicated dashboard section that aggregates and visualizes replay exploration 
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 8.3 Proposed Data Model Extensions
+### 8.3 Implemented Data Model
+
+The backend API `/api/memory/replay-insights/{user_id}` returns:
 
 ```javascript
 // New aggregation for insights
@@ -604,32 +608,40 @@ A dedicated dashboard section that aggregates and visualizes replay exploration 
 }
 ```
 
-### 8.4 Proposed API Endpoints
+### 8.4 Implemented API Endpoint
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/memory/replay-insights/{user_id}` | GET | Get aggregated replay insights |
-| `/api/memory/replay-patterns/{user_id}` | GET | Get transition pattern analysis |
-| `/api/memory/replay-blindspots/{user_id}` | GET | Get identified blind spots |
 
-### 8.5 Implementation Roadmap
+**Response includes:**
+- `total_replays` - Total number of replay explorations
+- `alternative_path_counts` - Count per path type (contribution, recovery, order, harm, avoidance)
+- `transition_patterns` - List of {from, to, count} patterns sorted by frequency
+- `blind_spots` - List of unexplored positive transitions
+- `most_replayed_original_tags` - Which decision types get replayed most
+- `insights` - Array of Hebrew behavioral insight strings
+- `recent_replay_count` - Replays in last 7 days
 
-1. **Phase 1: Data Aggregation**
-   - Add MongoDB aggregation pipeline for pattern counts
-   - Create scheduled job for insight generation
-   - Store pre-computed insights for performance
+### 8.5 Future Enhancements
 
-2. **Phase 2: UI Component**
-   - Create `ReplayInsightsSummarySection.js`
-   - Add bar charts for path exploration frequency
-   - Add transition pattern visualization
+1. **Phase 1: Data Aggregation** ✅ COMPLETE
+   - MongoDB aggregation pipeline for pattern counts
+   - Pre-computed insights for performance
+   - Hebrew insight text generation
 
-3. **Phase 3: Smart Insights**
-   - Implement Hebrew insight text generation
-   - Add blind spot detection algorithm
-   - Integrate with Weekly Behavioral Report
+2. **Phase 2: UI Component** ✅ COMPLETE
+   - Created `ReplayInsightsSummarySection.js`
+   - Bar charts for path exploration frequency
+   - Transition pattern visualization
+   - Blind spots amber-styled section
 
-4. **Phase 4: Adaptive Integration**
+3. **Phase 3: Smart Insights** ✅ COMPLETE
+   - Hebrew insight text generation
+   - Blind spot detection algorithm
+   - Auto-refresh on new replays
+
+4. **Phase 4: Future - Adaptive Integration** (TODO)
    - Feed replay insights to Adaptive Path Engine
    - Boost paths that user frequently wishes they had chosen
    - Reduce suggestion of paths user rarely explores

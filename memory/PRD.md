@@ -126,6 +126,16 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Replay history retrieval (GET /api/memory/replays/{user_id})
 - [x] Replay pattern analysis (pattern_counts aggregation)
 
+### Phase 13: Replay Insights Summary ✅
+- [x] ReplayInsightsSummarySection component with Hebrew RTL
+- [x] Backend API for aggregated insights (GET /api/memory/replay-insights/{user_id})
+- [x] Bar chart visualization of most explored alternative paths
+- [x] Transition pattern analysis (from → to with counts)
+- [x] Blind spots detection (unexplored positive transitions)
+- [x] Hebrew behavioral insights generation (up to 4 insights)
+- [x] Summary stats display (total replays, patterns, blind spots)
+- [x] Auto-refresh when new replays are added
+
 ---
 
 ## Architecture Summary
@@ -139,11 +149,11 @@ State:     Custom Hook (usePhilosState)
 ```
 
 ### Key Files
-- `usePhilosState.js` - Central state management (~970 lines)
-- `PhilosDashboard.js` - Main dashboard (~280 lines)
+- `usePhilosState.js` - Central state management (~1000 lines)
+- `PhilosDashboard.js` - Main dashboard (~290 lines)
 - `cloudSync.js` - Cloud sync service (~400 lines)
-- `server.py` - FastAPI backend (~1800 lines)
-- `sections/` - 21 UI components (including DecisionReplaySection)
+- `server.py` - FastAPI backend (~2000 lines)
+- `sections/` - 22 UI components (including ReplayInsightsSummarySection)
 
 ---
 
@@ -169,6 +179,16 @@ State:     Custom Hook (usePhilosState)
   - Backend API: POST /api/memory/replay, GET /api/memory/replays/{user_id}
   - MongoDB collection: philos_replays
 
+- ✅ Implemented Replay Insights Summary feature
+  - Created ReplayInsightsSummarySection.js component
+  - Bar chart visualization of most explored alternative paths
+  - Transition pattern analysis (from → to with counts)
+  - Blind spots detection (unexplored positive transitions)
+  - Hebrew behavioral insights generation (4 numbered insights)
+  - Summary stats display (total replays, patterns, blind spots)
+  - Backend API: GET /api/memory/replay-insights/{user_id}
+  - Auto-refresh when new replays are added
+
 ### March 8, 2026
 - ✅ Implemented Decision Path Engine
 - ✅ Implemented Path Learning Layer
@@ -185,4 +205,4 @@ State:     Custom Hook (usePhilosState)
 
 ---
 
-**Product State:** STABLE MVP - All core features complete + Decision Replay
+**Product State:** STABLE MVP - All core features complete + Decision Replay + Replay Insights Summary
