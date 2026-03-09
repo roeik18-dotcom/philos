@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+import { fetchCollectiveTrends } from '../../../services/dataService';
 
 // Hebrew labels
 const metricLabels = {
@@ -108,25 +107,26 @@ export default function CollectiveTrendsSection() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchTrendsData = async () => {
+    const loadTrendsData = async (forceRefresh = false) => {
       try {
-        const response = await fetch(`${API_URL}/api/collective/trends`);
-        if (!response.ok) throw new Error('Failed to fetch trends data');
-        const data = await response.json();
+        const data = await fetchCollectiveTrends(forceRefresh);
         if (data.success) {
           setTrendsData(data);
+          setError(null);
+        } else {
+          setError(data.error || 'שגיאה בטעינת נתונים');
         }
       } catch (err) {
         console.error('Collective trends error:', err);
-        setError(err.message);
+        setError('שגיאה בחיבור לשרת');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTrendsData();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchTrendsData, 60000);
+    loadTrendsData();
+    // Refresh every 60 seconds with force refresh
+    const interval = setInterval(() => loadTrendsData(true), 60000);
     return () => clearInterval(interval);
   }, []);
 

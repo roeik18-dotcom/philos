@@ -12,6 +12,10 @@ import {
   getUserDecisionStats,
   getUserId
 } from '../services/cloudSync';
+import { 
+  fetchReplayInsights, 
+  invalidateReplayInsightsCache 
+} from '../services/dataService';
 
 // LocalStorage keys
 const STORAGE_KEY = 'philos_session_data';
@@ -675,27 +679,25 @@ export default function usePhilosState(user = null) {
 
   // Fetch replay insights and apply to adaptive scores
   useEffect(() => {
-    const fetchAndApplyReplayInsights = async () => {
+    const loadAndApplyReplayInsights = async () => {
       // Use authenticated user ID or persistent anonymous ID
       const userId = user?.id || getUserId();
 
       try {
-        const API_URL = process.env.REACT_APP_BACKEND_URL;
-        const response = await fetch(`${API_URL}/api/memory/replay-insights/${userId}`);
+        // Use cached service with force refresh when replay history changes
+        const forceRefresh = replayHistory.length > 0;
+        const data = await fetchReplayInsights(userId, forceRefresh);
         
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.total_replays > 0) {
-            setReplayInsights(data);
-            
-            // Apply replay insights to adaptive scores
-            const baseScores = calculateAdaptiveScores(learningHistory);
-            const { adjustedScores, adjustments } = applyReplayInsightsToScores(baseScores, data);
-            
-            if (adjustments && (adjustments.boosted.length > 0 || adjustments.penalized.length > 0)) {
-              setAdaptiveScores(adjustedScores);
-              setReplayAdaptiveAdjustments(adjustments);
-            }
+        if (data.success && data.total_replays > 0) {
+          setReplayInsights(data);
+          
+          // Apply replay insights to adaptive scores
+          const baseScores = calculateAdaptiveScores(learningHistory);
+          const { adjustedScores, adjustments } = applyReplayInsightsToScores(baseScores, data);
+          
+          if (adjustments && (adjustments.boosted.length > 0 || adjustments.penalized.length > 0)) {
+            setAdaptiveScores(adjustedScores);
+            setReplayAdaptiveAdjustments(adjustments);
           }
         }
       } catch (error) {
@@ -704,7 +706,7 @@ export default function usePhilosState(user = null) {
     };
 
     // Fetch on mount and when replay history changes
-    fetchAndApplyReplayInsights();
+    loadAndApplyReplayInsights();
   }, [user, replayHistory.length, learningHistory]);
 
   // Auto-save session snapshot when significant decisions are made

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUserId } from '../../../services/cloudSync';
+import { fetchReplayInsights } from '../../../services/dataService';
 
 // Hebrew value tag labels
 const valueLabels = {
@@ -34,7 +35,7 @@ export default function ReplayInsightsSummarySection({ user, replayCount = 0 }) 
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchInsights = async () => {
+    const loadInsights = async () => {
       // Use authenticated user ID or persistent anonymous ID
       const userId = user?.id || getUserId();
 
@@ -42,24 +43,21 @@ export default function ReplayInsightsSummarySection({ user, replayCount = 0 }) 
       setError(null);
 
       try {
-        const API_URL = process.env.REACT_APP_BACKEND_URL;
-        const response = await fetch(`${API_URL}/api/memory/replay-insights/${userId}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setInsights(data);
-          }
+        const data = await fetchReplayInsights(userId, replayCount > 0);
+        if (data.success) {
+          setInsights(data);
+        } else if (data.error) {
+          setError('שגיאה בטעינת תובנות');
         }
       } catch (err) {
         console.error('Failed to fetch replay insights:', err);
-        setError('שגיאה בטעינת תובנות');
+        setError('שגיאה בחיבור לשרת');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchInsights();
+    loadInsights();
     
     // Refresh when user changes or new replays are added
   }, [user, replayCount]);

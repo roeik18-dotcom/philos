@@ -38,7 +38,7 @@
   "seed_data_creation": "Created 6 replay records for test user with patterns: harm→contribution (x2), harm→recovery, avoidance→order, avoidance→contribution, recovery→order",
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "Replay Insights Summary feature fully tested. Backend API returns correct aggregated data including alternative_path_counts, transition_patterns, blind_spots, insights, and recent_replay_count. Frontend component correctly displays all sections with Hebrew RTL layout. Test data exists for user_id=05d47b99-88f1-44b3-a879-6c995634eaa0.",
+  "context_for_next_testing_agent": "Replay Insights Summary feature fully tested. Backend API returns correct aggregated data including alternative_path_counts, transition_patterns, blind_spots, insights, and recent_replay_count. Frontend component correctly displays all sections with Hebrew RTL layout. Test data exists for user_id=philos-orient.",
   "tests_executed": {
     "backend_tests": [
       "test_health_check - PASS",

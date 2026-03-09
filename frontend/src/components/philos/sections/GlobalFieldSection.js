@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+import { fetchCollectiveLayer } from '../../../services/dataService';
 
 // Hebrew labels
 const valueLabels = {
@@ -222,25 +221,26 @@ export default function GlobalFieldSection() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchFieldData = async () => {
+    const loadFieldData = async (forceRefresh = false) => {
       try {
-        const response = await fetch(`${API_URL}/api/collective/layer`);
-        if (!response.ok) throw new Error('Failed to fetch field data');
-        const data = await response.json();
+        const data = await fetchCollectiveLayer(forceRefresh);
         if (data.success) {
           setFieldData(data);
+          setError(null);
+        } else {
+          setError(data.error || 'שגיאה בטעינת נתונים');
         }
       } catch (err) {
         console.error('Global field error:', err);
-        setError(err.message);
+        setError('שגיאה בחיבור לשרת');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFieldData();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchFieldData, 30000);
+    loadFieldData();
+    // Refresh every 30 seconds with force refresh
+    const interval = setInterval(() => loadFieldData(true), 30000);
     return () => clearInterval(interval);
   }, []);
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getUserId } from '../../../services/cloudSync';
+import { fetchCollectiveLayer } from '../../../services/dataService';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -179,26 +180,29 @@ const generateInsights = (userMetrics, collectiveMetrics) => {
 export default function CollectiveMirrorSection({ history, learningHistory, replayInsights }) {
   const [collectiveData, setCollectiveData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch collective data
+  // Fetch collective data using cached service
   useEffect(() => {
-    const fetchCollectiveData = async () => {
+    const loadCollectiveData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetch(`${API_URL}/api/collective/layer`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setCollectiveData(data);
-          }
+        const data = await fetchCollectiveLayer();
+        if (data.success) {
+          setCollectiveData(data);
+        } else {
+          setError('שגיאה בטעינת נתונים קולקטיביים');
         }
-      } catch (error) {
-        console.log('Failed to fetch collective data:', error);
+      } catch (err) {
+        console.error('Failed to fetch collective data:', err);
+        setError('שגיאה בחיבור לשרת');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCollectiveData();
+    loadCollectiveData();
   }, []);
 
   // Calculate user metrics
@@ -229,6 +233,37 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
   const insights = useMemo(() => {
     return generateInsights(userMetrics, collectiveMetrics);
   }, [userMetrics, collectiveMetrics]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <section 
+        className="bg-gradient-to-br from-cyan-50 to-sky-50 rounded-3xl p-5 shadow-sm border border-cyan-200"
+        dir="rtl"
+        data-testid="collective-mirror-section"
+      >
+        <div className="animate-pulse">
+          <div className="h-6 bg-cyan-200 rounded w-1/3 mb-4"></div>
+          <div className="h-4 bg-cyan-100 rounded w-2/3 mb-2"></div>
+          <div className="h-40 bg-cyan-100 rounded"></div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <section 
+        className="bg-gradient-to-br from-cyan-50 to-sky-50 rounded-3xl p-5 shadow-sm border border-cyan-200"
+        dir="rtl"
+        data-testid="collective-mirror-section"
+      >
+        <h3 className="text-lg font-semibold text-foreground mb-2">מראה קולקטיבית</h3>
+        <p className="text-sm text-red-500">{error}</p>
+      </section>
+    );
+  }
 
   // Don't render if no user data
   if (!userMetrics || !collectiveMetrics) {

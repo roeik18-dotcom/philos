@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+import { fetchCollectiveLayer } from '../../../services/dataService';
 
 // Hebrew labels for value tags
 const valueLabels = {
@@ -26,25 +25,26 @@ export default function CollectiveLayerSection() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchCollectiveData = async () => {
+    const loadCollectiveData = async (forceRefresh = false) => {
       try {
-        const response = await fetch(`${API_URL}/api/collective/layer`);
-        if (!response.ok) throw new Error('Failed to fetch collective data');
-        const data = await response.json();
+        const data = await fetchCollectiveLayer(forceRefresh);
         if (data.success) {
           setCollectiveData(data);
+          setError(null);
+        } else {
+          setError(data.error || 'שגיאה בטעינת נתונים');
         }
       } catch (err) {
         console.error('Collective layer error:', err);
-        setError(err.message);
+        setError('שגיאה בחיבור לשרת');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCollectiveData();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchCollectiveData, 30000);
+    loadCollectiveData();
+    // Refresh every 30 seconds with force refresh
+    const interval = setInterval(() => loadCollectiveData(true), 30000);
     return () => clearInterval(interval);
   }, []);
 

@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { getUserId } from '../../../services/cloudSync';
+import { fetchReplayInsights } from '../../../services/dataService';
 
 // Hebrew value labels
 const valueLabels = {
@@ -36,28 +37,28 @@ const valueColors = {
 export default function WeeklyBehavioralReportSection({ history, user }) {
   // State for replay insights
   const [replayInsights, setReplayInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
-  // Fetch replay insights
+  // Fetch replay insights using cached service
   useEffect(() => {
-    const fetchReplayInsights = async () => {
+    const loadReplayInsights = async () => {
       // Use authenticated user ID or persistent anonymous ID
       const userId = user?.id || getUserId();
 
+      setInsightsLoading(true);
       try {
-        const API_URL = process.env.REACT_APP_BACKEND_URL;
-        const response = await fetch(`${API_URL}/api/memory/replay-insights/${userId}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setReplayInsights(data);
-          }
+        const data = await fetchReplayInsights(userId);
+        if (data.success) {
+          setReplayInsights(data);
         }
       } catch (error) {
         console.log('Failed to fetch replay insights:', error);
+      } finally {
+        setInsightsLoading(false);
       }
     };
 
-    fetchReplayInsights();
+    loadReplayInsights();
   }, [user]);
   // Calculate weekly report data
   const reportData = useMemo(() => {

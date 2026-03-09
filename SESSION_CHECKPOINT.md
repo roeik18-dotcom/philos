@@ -64,5 +64,5 @@ Tasks:
 
 ---
 
-**Preview URL:** https://decision-engine-47.preview.emergentagent.com  
+**Preview URL:** https://philos-orient.preview.emergentagent.com  
 **Test Credentials:** newuser@test.com / password123
