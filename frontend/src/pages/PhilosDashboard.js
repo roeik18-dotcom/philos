@@ -253,7 +253,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         <ChainInsightsSection history={history} />
 
         {/* Weekly Behavioral Report */}
-        <WeeklyBehavioralReportSection history={history} />
+        <WeeklyBehavioralReportSection history={history} user={user} />
 
         {/* Monthly Progress Report */}
         <MonthlyProgressReportSection history={history} />

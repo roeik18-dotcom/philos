@@ -50,6 +50,7 @@ export default function ActionEvaluationSection({
       <button
         onClick={evaluateAction}
         className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all"
+        data-testid="evaluate-btn"
       >
         Evaluate Decision
       </button>
