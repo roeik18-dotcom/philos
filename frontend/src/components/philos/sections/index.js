@@ -21,3 +21,4 @@ export { default as DecisionHistorySection } from './DecisionHistorySection';
 export { default as DecisionTreeSection } from './DecisionTreeSection';
 export { default as ChainInsightsSection } from './ChainInsightsSection';
 export { default as WeeklyBehavioralReportSection } from './WeeklyBehavioralReportSection';
+export { default as MonthlyProgressReportSection } from './MonthlyProgressReportSection';

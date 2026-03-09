@@ -23,7 +23,8 @@ import {
   DecisionHistorySection,
   DecisionTreeSection,
   ChainInsightsSection,
-  WeeklyBehavioralReportSection
+  WeeklyBehavioralReportSection,
+  MonthlyProgressReportSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -203,6 +204,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* Weekly Behavioral Report */}
         <WeeklyBehavioralReportSection history={history} />
+
+        {/* Monthly Progress Report */}
+        <MonthlyProgressReportSection history={history} />
 
         {/* Decision Path Engine Section */}
         <DecisionPathEngineSection
