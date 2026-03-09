@@ -22,7 +22,11 @@ Decision → Chain analysis → Weekly aggregation → Replay simulation
 ```
 
 ### Next Phase
-System Stabilization (performance, loading states, API optimization, error handling)
+Completed: System Stabilization (API caching, loading states, error handling)
+
+### Future Priorities
+- Refactor `usePhilosState.js` into smaller domain-specific hooks
+- Add "Next Best Direction" feature (in progress)
 
 ---
 
@@ -250,6 +254,17 @@ State:     Custom Hook (usePhilosState)
 ## Changelog
 
 ### March 9, 2026
+
+- ✅ **System Stabilization Pass Completed**
+  - Integrated dataService.js centralized caching layer for all collective API calls
+  - Cache TTL: 30 seconds for collective layer, 60 seconds for trends
+  - Promise deduplication prevents duplicate simultaneous API calls
+  - Components updated to use caching: CollectiveLayerSection, CollectiveTrendsSection, GlobalFieldSection, CollectiveMirrorSection, CollectiveTrajectorySection, WeeklyBehavioralReportSection
+  - Added proper loading skeleton states to all collective sections
+  - Added Hebrew error messages for API failures
+  - Fixed bug in CollectiveMirrorSection (missing API_URL definition)
+  - usePhilosState.js now uses fetchReplayInsights from dataService
+
 - ✅ Implemented Decision Replay feature
   - Added "בדוק מסלול חלופי" button to Decision History
   - Created DecisionReplaySection.js component
@@ -337,4 +352,4 @@ State:     Custom Hook (usePhilosState)
 
 ---
 
-**Product State:** Advanced MVP Complete - Ready for Stabilization
+**Product State:** Advanced MVP Complete - System Stabilized
