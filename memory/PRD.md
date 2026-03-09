@@ -270,6 +270,15 @@ State:     Custom Hook (usePhilosState)
   - Integrates with fetchCollectiveLayer for gap comparison
   - Placed after Continue Previous Session in dashboard layout
 
+- ✅ **Follow Recommendation Action Completed**
+  - Button "פעל לפי ההמלצה" in NextBestDirectionSection
+  - Clicking prefills action input with recommended action
+  - Auto-scrolls to Action Evaluation and focuses input
+  - Recommendation indicator: "הפעולה הזו נובעת מהכיוון המומלץ" with direction badge
+  - X button to clear recommendation link
+  - Metadata saved with decision: recommendation_direction, recommendation_reason, recommendation_strength, followed_recommendation
+  - Indicator clears after evaluation
+
 - ✅ **System Stabilization Pass Completed**
   - Integrated dataService.js centralized caching layer for all collective API calls
   - Cache TTL: 30 seconds for collective layer, 60 seconds for trends
