@@ -26,3 +26,4 @@ export { default as QuarterlyReviewSection } from './QuarterlyReviewSection';
 export { default as DailyDecisionPromptSection } from './DailyDecisionPromptSection';
 export { default as DecisionReplaySection } from './DecisionReplaySection';
 export { default as ReplayInsightsSummarySection } from './ReplayInsightsSummarySection';
+export { default as ReplayAdaptiveEffectSection } from './ReplayAdaptiveEffectSection';

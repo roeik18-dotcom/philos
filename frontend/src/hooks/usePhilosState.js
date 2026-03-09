@@ -203,6 +203,113 @@ const calculateAdaptiveScores = (learningHist) => {
   return scores;
 };
 
+// Apply replay insights adjustments to adaptive scores
+const applyReplayInsightsToScores = (baseScores, replayInsights) => {
+  if (!replayInsights || !replayInsights.total_replays || replayInsights.total_replays === 0) {
+    return { adjustedScores: baseScores, adjustments: null };
+  }
+
+  const adjustments = {
+    boosted: [],
+    penalized: [],
+    insights: []
+  };
+
+  const adjusted = { ...baseScores };
+  const altCounts = replayInsights.alternative_path_counts || {};
+  const transitions = replayInsights.transition_patterns || [];
+  const blindSpots = replayInsights.blind_spots || [];
+  const totalReplays = replayInsights.total_replays;
+
+  // 1. Boost frequently explored positive alternatives
+  const positiveTypes = ['contribution', 'recovery', 'order'];
+  positiveTypes.forEach(type => {
+    const count = altCounts[type] || 0;
+    if (count > 0) {
+      // Calculate boost based on exploration frequency (max +8)
+      const boost = Math.min(8, Math.round((count / totalReplays) * 10));
+      if (boost > 0) {
+        adjusted[type] += boost;
+        adjustments.boosted.push({ type, boost, reason: 'explored' });
+      }
+    }
+  });
+
+  // 2. Identify repeated transition patterns - boost the "to" path
+  transitions.forEach(pattern => {
+    const { from, to, count } = pattern;
+    // If user repeatedly explores positive alternatives from negative decisions
+    if (['harm', 'avoidance'].includes(from) && ['contribution', 'recovery', 'order'].includes(to)) {
+      if (count >= 2) {
+        const boost = Math.min(5, count);
+        adjusted[to] += boost;
+        // Check if not already in boosted
+        const existing = adjustments.boosted.find(b => b.type === to && b.reason === 'transition');
+        if (!existing) {
+          adjustments.boosted.push({ type: to, boost, reason: 'transition', from });
+        }
+      }
+    }
+  });
+
+  // 3. Penalize harmful paths more strongly if user never explores them as alternatives
+  const harmCount = altCounts['harm'] || 0;
+  const avoidanceCount = altCounts['avoidance'] || 0;
+  
+  if (harmCount === 0 && totalReplays >= 3) {
+    // User consciously avoids exploring harm paths - strengthen penalty
+    const penalty = -4;
+    adjusted['harm'] += penalty;
+    adjustments.penalized.push({ type: 'harm', penalty: Math.abs(penalty), reason: 'never_explored' });
+  }
+
+  if (avoidanceCount === 0 && totalReplays >= 3) {
+    // User consciously avoids exploring avoidance paths
+    const penalty = -3;
+    adjusted['avoidance'] += penalty;
+    adjustments.penalized.push({ type: 'avoidance', penalty: Math.abs(penalty), reason: 'never_explored' });
+  }
+
+  // 4. Blind spots - slightly boost unexplored positive transitions
+  blindSpots.forEach(spot => {
+    if (['contribution', 'recovery', 'order'].includes(spot.to)) {
+      // Small boost to encourage exploring these paths
+      adjusted[spot.to] += 1;
+    }
+  });
+
+  // 5. Generate Hebrew insight texts
+  if (adjustments.boosted.length > 0) {
+    const topBoosted = adjustments.boosted.sort((a, b) => b.boost - a.boost)[0];
+    const typeLabels = {
+      contribution: 'תרומה',
+      recovery: 'התאוששות',
+      order: 'סדר'
+    };
+    adjustments.insights.push(
+      `מסלולי ${typeLabels[topBoosted.type]} קיבלו חיזוק בעקבות דפוסי הפעלה חוזרת.`
+    );
+  }
+
+  if (adjustments.penalized.length > 0) {
+    const topPenalized = adjustments.penalized[0];
+    const typeLabels = {
+      harm: 'נזק',
+      avoidance: 'הימנעות'
+    };
+    adjustments.insights.push(
+      `מסלולי ${typeLabels[topPenalized.type]} מקבלים כעת הפחתת משקל חזקה יותר.`
+    );
+  }
+
+  // Clamp final scores
+  Object.keys(adjusted).forEach(key => {
+    adjusted[key] = Math.max(-25, Math.min(25, adjusted[key]));
+  });
+
+  return { adjustedScores: adjusted, adjustments };
+};
+
 // Load functions
 const loadFromStorage = () => {
   try {
@@ -288,6 +395,10 @@ export default function usePhilosState(user = null) {
   // Decision replay state
   const [replayDecision, setReplayDecision] = useState(null);
   const [replayHistory, setReplayHistory] = useState([]);
+  
+  // Replay insights state for adaptive adjustments
+  const [replayInsights, setReplayInsights] = useState(null);
+  const [replayAdaptiveAdjustments, setReplayAdaptiveAdjustments] = useState(null);
   
   // Refs
   const syncTimeoutRef = useRef(null);
@@ -560,6 +671,43 @@ export default function usePhilosState(user = null) {
       console.error('Error saving learning history:', e);
     }
   }, [learningHistory]);
+
+  // Fetch replay insights and apply to adaptive scores
+  useEffect(() => {
+    const fetchAndApplyReplayInsights = async () => {
+      let userId = user?.id;
+      if (!userId) {
+        userId = localStorage.getItem('philos_user_id');
+      }
+      if (!userId) return;
+
+      try {
+        const API_URL = process.env.REACT_APP_BACKEND_URL;
+        const response = await fetch(`${API_URL}/api/memory/replay-insights/${userId}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.total_replays > 0) {
+            setReplayInsights(data);
+            
+            // Apply replay insights to adaptive scores
+            const baseScores = calculateAdaptiveScores(learningHistory);
+            const { adjustedScores, adjustments } = applyReplayInsightsToScores(baseScores, data);
+            
+            if (adjustments && (adjustments.boosted.length > 0 || adjustments.penalized.length > 0)) {
+              setAdaptiveScores(adjustedScores);
+              setReplayAdaptiveAdjustments(adjustments);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Failed to fetch replay insights:', error);
+      }
+    };
+
+    // Fetch on mount and when replay history changes
+    fetchAndApplyReplayInsights();
+  }, [user, replayHistory.length, learningHistory]);
 
   // Auto-save session snapshot when significant decisions are made
   useEffect(() => {
@@ -1009,6 +1157,10 @@ export default function usePhilosState(user = null) {
     handleReplayDecision,
     closeReplay,
     saveReplayMetadata,
+    
+    // Replay adaptive effect
+    replayInsights,
+    replayAdaptiveAdjustments,
     
     // Computed
     balanceScore,

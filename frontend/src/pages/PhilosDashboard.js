@@ -28,7 +28,8 @@ import {
   QuarterlyReviewSection,
   DailyDecisionPromptSection,
   DecisionReplaySection,
-  ReplayInsightsSummarySection
+  ReplayInsightsSummarySection,
+  ReplayAdaptiveEffectSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -59,6 +60,8 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
     handleReplayDecision,
     closeReplay,
     saveReplayMetadata,
+    replayInsights,
+    replayAdaptiveAdjustments,
     balanceScore,
     evaluateAction,
     resetSession,
@@ -235,6 +238,13 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* Replay Insights Summary - aggregated replay pattern analysis */}
         <ReplayInsightsSummarySection user={user} replayCount={replayHistory?.length || 0} />
+
+        {/* Replay Adaptive Effect - shows how replay patterns affect path ranking */}
+        <ReplayAdaptiveEffectSection 
+          adjustments={replayAdaptiveAdjustments}
+          adaptiveScores={adaptiveScores}
+          replayInsights={replayInsights}
+        />
 
         {/* Decision Tree Visualization */}
         <DecisionTreeSection history={history} />
