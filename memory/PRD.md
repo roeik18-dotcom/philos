@@ -2,8 +2,27 @@
 ## Mental Navigation System
 
 **Last Updated:** March 2026  
-**Status:** Stable MVP Complete + Decision Replay Feature  
+**Status:** Advanced MVP Complete  
 **Preview URL:** https://decision-engine-47.preview.emergentagent.com
+
+## Current System Status
+
+### Implemented Systems
+- **Decision Layer**: Quick Decision, Templates, Daily Prompt
+- **Behavioral Analysis**: Chain Insights, Weekly Report, Monthly Report
+- **Replay Engine**: Decision Replay, Replay Insights, Replay Adaptive Effect
+- **Learning System**: Adaptive scoring from replay patterns
+- **User Continuity**: Persistent anonymous user ID, Continue Previous Session
+- **Collective Layer**: Collective Mirror, Collective Trajectory
+
+### Architecture Flow
+```
+Decision → Chain analysis → Weekly aggregation → Replay simulation 
+→ Adaptive learning → Collective comparison → Collective trajectory
+```
+
+### Next Phase
+System Stabilization (performance, loading states, API optimization, error handling)
 
 ---
 
@@ -318,4 +337,4 @@ State:     Custom Hook (usePhilosState)
 
 ---
 
-**Product State:** STABLE MVP - All core features + Replay System Complete
+**Product State:** Advanced MVP Complete - Ready for Stabilization
