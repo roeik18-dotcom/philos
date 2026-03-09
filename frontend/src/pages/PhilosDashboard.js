@@ -30,7 +30,8 @@ import {
   DecisionReplaySection,
   ReplayInsightsSummarySection,
   ReplayAdaptiveEffectSection,
-  ContinuePreviousSessionSection
+  ContinuePreviousSessionSection,
+  CollectiveMirrorSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -326,6 +327,13 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* Collective Layer - Cross-User Analytics */}
         <CollectiveLayerSection />
+
+        {/* Collective Mirror - User vs Collective Comparison */}
+        <CollectiveMirrorSection
+          history={history}
+          learningHistory={learningHistory}
+          replayInsights={replayInsights}
+        />
 
         {/* Collective Trends - Time-Based Analytics */}
         <CollectiveTrendsSection />

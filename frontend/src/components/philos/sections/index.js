@@ -28,3 +28,4 @@ export { default as DecisionReplaySection } from './DecisionReplaySection';
 export { default as ReplayInsightsSummarySection } from './ReplayInsightsSummarySection';
 export { default as ReplayAdaptiveEffectSection } from './ReplayAdaptiveEffectSection';
 export { default as ContinuePreviousSessionSection } from './ContinuePreviousSessionSection';
+export { default as CollectiveMirrorSection } from './CollectiveMirrorSection';

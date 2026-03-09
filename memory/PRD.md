@@ -177,6 +177,16 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Chain indicator if user has decision chains
 - [x] Conditional rendering only for users with history
 
+### Phase 18: Collective Mirror ✅
+- [x] CollectiveMirrorSection component with Hebrew RTL
+- [x] Fetches collective layer API data
+- [x] Compares user metrics vs collective: recovery, harm_pressure, order_drift, contribution, replay_exploration
+- [x] SVG comparison bars showing "אתה vs ממוצע קולקטיבי"
+- [x] Hebrew insights: "התאוששות אצלך גבוהה מהממוצע הקולקטיבי", "לחץ הנזק אצלך השבוע נמוך מהממוצע"
+- [x] Stats display: user decisions count, total users
+- [x] Color-coded insights (positive=emerald, warning=amber, neutral=gray)
+- [x] Footer showing total collective decisions and users
+
 ---
 
 ## Architecture Summary
@@ -191,10 +201,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard (~370 lines)
+- `PhilosDashboard.js` - Main dashboard (~380 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 24 UI components (including ContinuePreviousSessionSection)
+- `sections/` - 25 UI components (including CollectiveMirrorSection)
 
 ---
 
@@ -266,6 +276,13 @@ State:     Custom Hook (usePhilosState)
   - Stats badges (total decisions, today decisions)
   - "המשך מכאן" button scrolls to action input and focuses it
   - Hebrew messages for continuity awareness
+
+- ✅ Implemented Collective Mirror
+  - CollectiveMirrorSection.js comparing user vs collective metrics
+  - SVG comparison chart with bars for: התאוששות, לחץ נזק, מגמת סדר, תרומה קולקטיבית, חקירת מסלולים
+  - Hebrew insights generation based on comparison
+  - Color-coded insight cards (positive=emerald, warning=amber, neutral=gray)
+  - Stats showing user decisions and total collective users
 
 ### March 8, 2026
 - ✅ Implemented Decision Path Engine
