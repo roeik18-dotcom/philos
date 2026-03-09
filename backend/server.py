@@ -1072,6 +1072,233 @@ async def get_replay_history(user_id: str, limit: int = 50):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================
+# Replay Insights Summary - Aggregated Pattern Analysis
+# ============================================================
+
+class ReplayInsightsResponse(BaseModel):
+    success: bool
+    user_id: str
+    total_replays: int = 0
+    # Alternative path exploration counts
+    alternative_path_counts: Dict[str, int] = {}
+    # Transition patterns (from -> to)
+    transition_patterns: List[Dict[str, Any]] = []
+    # Blind spots (patterns never explored)
+    blind_spots: List[Dict[str, str]] = []
+    # Most replayed decision types
+    most_replayed_original_tags: Dict[str, int] = {}
+    # Generated Hebrew insights
+    insights: List[str] = []
+    # Time-based metrics
+    recent_replay_count: int = 0  # Last 7 days
+    generated_at: str = ""
+
+
+@api_router.get("/memory/replay-insights/{user_id}", response_model=ReplayInsightsResponse)
+async def get_replay_insights(user_id: str):
+    """
+    Get aggregated replay insights for behavioral analysis.
+    Analyzes patterns, blind spots, and generates Hebrew insights.
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        seven_days_ago = (now - timedelta(days=7)).isoformat()
+        
+        # Get all replays for user
+        replays = await db.philos_replays.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).sort("timestamp", -1).to_list(500)
+        
+        if not replays:
+            return ReplayInsightsResponse(
+                success=True,
+                user_id=user_id,
+                total_replays=0,
+                insights=["אין עדיין נתוני הפעלה חוזרת. התחל לבדוק מסלולים חלופיים כדי לקבל תובנות."],
+                generated_at=now.isoformat()
+            )
+        
+        # 1. Count alternative path explorations
+        alternative_path_counts = {
+            'contribution': 0,
+            'recovery': 0,
+            'order': 0,
+            'harm': 0,
+            'avoidance': 0
+        }
+        
+        # 2. Count transition patterns
+        transition_map = {}
+        
+        # 3. Count original tags that were replayed
+        original_tag_counts = {
+            'contribution': 0,
+            'recovery': 0,
+            'order': 0,
+            'harm': 0,
+            'avoidance': 0
+        }
+        
+        # 4. Recent replays count
+        recent_count = 0
+        
+        for replay in replays:
+            alt_type = replay.get('alternative_path_type', '')
+            orig_type = replay.get('original_value_tag', '')
+            timestamp = replay.get('timestamp', '')
+            
+            # Count alternative paths
+            if alt_type in alternative_path_counts:
+                alternative_path_counts[alt_type] += 1
+            
+            # Count original tags
+            if orig_type in original_tag_counts:
+                original_tag_counts[orig_type] += 1
+            
+            # Count transitions
+            if orig_type and alt_type:
+                pattern_key = f"{orig_type}_to_{alt_type}"
+                transition_map[pattern_key] = transition_map.get(pattern_key, 0) + 1
+            
+            # Count recent replays
+            if timestamp >= seven_days_ago:
+                recent_count += 1
+        
+        # 5. Build sorted transition patterns list
+        transition_patterns = [
+            {"from": k.split('_to_')[0], "to": k.split('_to_')[1], "count": v}
+            for k, v in sorted(transition_map.items(), key=lambda x: x[1], reverse=True)
+        ]
+        
+        # 6. Identify blind spots (possible transitions never explored)
+        all_tags = ['contribution', 'recovery', 'order', 'harm', 'avoidance']
+        explored_transitions = set(transition_map.keys())
+        
+        blind_spots = []
+        # Focus on positive blind spots (not exploring positive alternatives)
+        positive_tags = ['contribution', 'recovery', 'order']
+        for orig in all_tags:
+            if original_tag_counts.get(orig, 0) > 0:  # User has replayed this type
+                for alt in positive_tags:
+                    if orig != alt:
+                        pattern = f"{orig}_to_{alt}"
+                        if pattern not in explored_transitions:
+                            blind_spots.append({"from": orig, "to": alt})
+        
+        # Limit blind spots to most relevant (max 3)
+        blind_spots = blind_spots[:3]
+        
+        # 7. Generate Hebrew insights
+        insights = generate_replay_insights_hebrew(
+            alternative_path_counts,
+            transition_patterns,
+            blind_spots,
+            original_tag_counts,
+            len(replays)
+        )
+        
+        return ReplayInsightsResponse(
+            success=True,
+            user_id=user_id,
+            total_replays=len(replays),
+            alternative_path_counts=alternative_path_counts,
+            transition_patterns=transition_patterns[:10],  # Top 10
+            blind_spots=blind_spots,
+            most_replayed_original_tags=original_tag_counts,
+            insights=insights,
+            recent_replay_count=recent_count,
+            generated_at=now.isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Get replay insights error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def generate_replay_insights_hebrew(
+    alt_counts: Dict[str, int],
+    transitions: List[Dict],
+    blind_spots: List[Dict],
+    orig_counts: Dict[str, int],
+    total: int
+) -> List[str]:
+    """
+    Generate Hebrew insight text based on replay patterns.
+    """
+    insights = []
+    
+    # Hebrew labels
+    tag_labels = {
+        'contribution': 'תרומה',
+        'recovery': 'התאוששות',
+        'order': 'סדר',
+        'harm': 'נזק',
+        'avoidance': 'הימנעות'
+    }
+    
+    # 1. Most explored alternative path insight
+    if alt_counts:
+        top_alt = max(alt_counts.items(), key=lambda x: x[1])
+        if top_alt[1] > 0:
+            percentage = round((top_alt[1] / total) * 100)
+            insights.append(
+                f"המסלול החלופי הנבדק ביותר הוא {tag_labels.get(top_alt[0], top_alt[0])} ({percentage}% מההפעלות החוזרות)."
+            )
+    
+    # 2. Top transition pattern insight
+    if transitions and len(transitions) > 0:
+        top_trans = transitions[0]
+        from_label = tag_labels.get(top_trans['from'], top_trans['from'])
+        to_label = tag_labels.get(top_trans['to'], top_trans['to'])
+        count = top_trans['count']
+        
+        if top_trans['from'] in ['harm', 'avoidance'] and top_trans['to'] in ['contribution', 'recovery', 'order']:
+            insights.append(
+                f"אתה נוטה לבדוק מסלולי {to_label} כשאתה בוחר ב{from_label}. "
+                f"זה מצביע על מודעות לחלופות חיוביות ({count} פעמים)."
+            )
+        elif top_trans['from'] == top_trans['to']:
+            pass  # Skip same-to-same
+        else:
+            insights.append(
+                f"הדפוס הנפוץ ביותר: מ{from_label} ל{to_label} ({count} פעמים)."
+            )
+    
+    # 3. Most replayed original decision type
+    if orig_counts:
+        top_orig = max(orig_counts.items(), key=lambda x: x[1])
+        if top_orig[1] > 2:  # Only if significant
+            insights.append(
+                f"אתה מרבה לבדוק חלופות להחלטות מסוג {tag_labels.get(top_orig[0], top_orig[0])}."
+            )
+    
+    # 4. Blind spot insight
+    if blind_spots and len(blind_spots) > 0:
+        spot = blind_spots[0]
+        from_label = tag_labels.get(spot['from'], spot['from'])
+        to_label = tag_labels.get(spot['to'], spot['to'])
+        insights.append(
+            f"נקודה עיוורת: מעולם לא בדקת מסלול {to_label} אחרי החלטת {from_label}."
+        )
+    
+    # 5. Recovery-specific insight
+    if alt_counts.get('recovery', 0) > alt_counts.get('order', 0) * 1.5:
+        insights.append(
+            "יש לך נטייה לבדוק מסלולי התאוששות - ייתכן שאתה מרגיש צורך במנוחה שלא מתממש."
+        )
+    
+    # 6. Harm avoidance insight
+    if alt_counts.get('harm', 0) == 0 and total > 5:
+        insights.append(
+            "אתה נמנע מלבדוק מסלולי נזק בהפעלות חוזרות - סימן חיובי למודעות ערכית."
+        )
+    
+    # Limit to 4 most relevant insights
+    return insights[:4]
+
+
 @api_router.post("/memory/sync")
 async def sync_memory_data(user_id: str, learning_history: List[Dict[str, Any]] = []):
     """
