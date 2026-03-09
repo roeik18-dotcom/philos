@@ -234,10 +234,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard (~430 lines)
+- `PhilosDashboard.js` - Main dashboard (~435 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 28 UI components (including RecommendationFollowThroughSection)
+- `sections/` - 29 UI components (including RecommendationCalibrationSection)
 
 ---
 
@@ -287,6 +287,19 @@ State:     Custom Hook (usePhilosState)
   - Hebrew insights: "מסלולי התאוששות זוכים לשיעור המעקב הגבוה ביותר", etc.
   - Only shows when user has 2+ followed recommendations
   - Placed after Chain Insights section in dashboard
+
+- ✅ **Recommendation Calibration Completed**
+  - RecommendationCalibrationSection.js - self-correcting recommendation weights
+  - calculateCalibrationWeights exported and used in NextBestDirectionSection
+  - Calibration applied as adjustment layer to base recommendation algorithm
+  - Weights bounded between -5 and +5
+  - High alignment (>60%) boosts weight, low alignment (<30%) reduces weight
+  - SVG visualization of calibrated direction weights (משקלים מכוילים)
+  - Shows strongest (הכי מחוזק) and weakest (מופחת) calibrated directions
+  - Hebrew insights: "מסלולי התאוששות קיבלו חיזוק בעקבות התאמה גבוהה לתוצאות בפועל"
+  - New recommendation reason: "calibration_boost" with "מבוסס על כיול אוטומטי מתוצאות בפועל"
+  - "משקל מכויל" indicator shows when calibration affects recommendation
+  - Requires 3+ followed recommendations to display
 
 - ✅ **System Stabilization Pass Completed**
   - Integrated dataService.js centralized caching layer for all collective API calls
