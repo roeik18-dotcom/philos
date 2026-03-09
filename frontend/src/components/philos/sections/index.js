@@ -29,3 +29,4 @@ export { default as ReplayInsightsSummarySection } from './ReplayInsightsSummary
 export { default as ReplayAdaptiveEffectSection } from './ReplayAdaptiveEffectSection';
 export { default as ContinuePreviousSessionSection } from './ContinuePreviousSessionSection';
 export { default as CollectiveMirrorSection } from './CollectiveMirrorSection';
+export { default as CollectiveTrajectorySection } from './CollectiveTrajectorySection';

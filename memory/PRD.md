@@ -187,6 +187,16 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Color-coded insights (positive=emerald, warning=amber, neutral=gray)
 - [x] Footer showing total collective decisions and users
 
+### Phase 19: Collective Trajectory ✅
+- [x] CollectiveTrajectorySection component with Hebrew RTL
+- [x] Calculates weekly user metrics from history
+- [x] Compares user trend vs collective over time
+- [x] SVG line chart showing metric trajectories (multi-week view)
+- [x] Single-week fallback view with current vs collective comparison
+- [x] Trajectory indicators: מתקרב לממוצע (converging), מעל ומתרחק (diverging above), מתחת ומתרחק (diverging below)
+- [x] Hebrew insights: "אתה מתקרב בהדרגה למגמת ההתאוששות הקולקטיבית", "תרומתך נעה מעל הממוצע הקולקטיבי לאורך זמן"
+- [x] Color-coded trajectory cards and insights
+
 ---
 
 ## Architecture Summary
@@ -201,10 +211,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard (~380 lines)
+- `PhilosDashboard.js` - Main dashboard (~390 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 25 UI components (including CollectiveMirrorSection)
+- `sections/` - 26 UI components (including CollectiveTrajectorySection)
 
 ---
 
@@ -283,6 +293,14 @@ State:     Custom Hook (usePhilosState)
   - Hebrew insights generation based on comparison
   - Color-coded insight cards (positive=emerald, warning=amber, neutral=gray)
   - Stats showing user decisions and total collective users
+
+- ✅ Implemented Collective Trajectory
+  - CollectiveTrajectorySection.js showing movement over time
+  - Weekly metrics calculation from history
+  - SVG line chart for multi-week trajectories
+  - Single-week fallback view comparing current vs collective
+  - Trajectory indicators: converging, diverging above/below
+  - Hebrew insights: "אתה מתקרב בהדרגה למגמת ההתאוששות הקולקטיבית"
 
 ### March 8, 2026
 - ✅ Implemented Decision Path Engine
