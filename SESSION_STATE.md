@@ -30,43 +30,17 @@
 ## CURRENT TASK
 - Global Field Visualization (COMPLETED)
 - Data Generation Improvements (COMPLETED)
-  - Multiple decisions per session (50 max)
-  - Auto-save to database
-  - Decision frequency tracking
-  - Timestamps on all actions
-  - Floating quick decision prompt
 - Decision Templates (COMPLETED)
-  - 5 template types: Personal, Social, Work, Emotional, Ethical
-  - Pre-filled guiding questions in Hebrew
 - Decision Chains (COMPLETED)
-  - parent_decision_id linking
-  - Visual chain indicator in history
-  - "Add follow-up" action per decision
-  - Chain count badges
 - Decision Tree Visualization (COMPLETED)
-  - HTML/CSS tree rendering
-  - Color-coded nodes by value_tag
-  - Parent-child connectors
-  - Status indicators (allowed/blocked)
-  - Positive/negative rings
 - Chain Insights (COMPLETED)
-  - Recovery chain detection
-  - Harm chain detection
-  - Correction/repair pattern detection
-  - Repeated behavioral pattern detection
-  - Hebrew insight text
 - Weekly Behavioral Report (COMPLETED)
-  - 7-day aggregation
-  - Chain type distribution (SVG bars)
-  - Dominant pattern highlight
-  - Strongest movements tracking
-  - Stacked distribution visualization
-  - Hebrew weekly insights
 - Monthly Progress Report (COMPLETED)
-  - 4-week aggregation with weekly breakdown
-  - Stacked bar chart SVG visualization
-  - Trend indicators per category
-  - Dominant monthly pattern
-  - Strongest positive/negative shifts
-  - Overall progress bar
-  - Hebrew monthly insights
+- Quarterly Review (COMPLETED)
+  - 3-month (90-day) aggregation
+  - Line chart SVG with area fills
+  - Quarterly totals per category
+  - Dominant pattern and recovery stability
+  - Consistent improvement/risk detection
+  - Correction consistency indicator
+  - Hebrew quarterly insights

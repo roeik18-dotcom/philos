@@ -101,33 +101,17 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Real-time data from /api/collective/layer
 
 ### Phase 11: Data Generation Layer ✅
-- [x] Multiple decisions per session (50 max, up from 20)
+- [x] Multiple decisions per session (50 max)
 - [x] Auto-save every decision to MongoDB
-- [x] Decision frequency tracking (total, daily, weekly)
-- [x] Timestamps on all decisions and evaluations
-- [x] Floating "Quick Decision" button (FAB)
-- [x] Expandable quick input panel with suggestions
-- [x] Works for all users (anonymous + authenticated)
-- [x] Decision Templates (Personal, Social, Work, Emotional, Ethical)
-- [x] Pre-filled Hebrew guiding questions per template
+- [x] Decision frequency tracking
+- [x] Floating Quick Decision button with templates
 - [x] Decision Chains with parent_decision_id
-- [x] Visual chain indicators and follow-up counts
-- [x] "Add follow-up" action on each history item
-- [x] Decision History Section component
-- [x] Decision Tree Visualization (branching tree view)
-- [x] Color-coded nodes by value_tag
-- [x] Parent-child connectors with status indicators
-- [x] Chain Insights Section with behavioral pattern analysis
-- [x] Recovery/harm chain detection
-- [x] Correction pattern detection
-- [x] Repeated pattern detection across chains
-- [x] Weekly Behavioral Report Section
-- [x] 7-day chain aggregation
-- [x] SVG bar and stacked distribution visualization
-- [x] Dominant pattern and movement tracking
-- [x] Monthly Progress Report Section
-- [x] 4-week aggregation with weekly breakdown
-- [x] Trend indicators and overall progress visualization
+- [x] Decision History Section
+- [x] Decision Tree Visualization
+- [x] Chain Insights Section
+- [x] Weekly Behavioral Report
+- [x] Monthly Progress Report
+- [x] Quarterly Review Section
 
 ---
 
