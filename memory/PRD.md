@@ -117,6 +117,10 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Decision Tree Visualization (branching tree view)
 - [x] Color-coded nodes by value_tag
 - [x] Parent-child connectors with status indicators
+- [x] Chain Insights Section with behavioral pattern analysis
+- [x] Recovery/harm chain detection
+- [x] Correction pattern detection
+- [x] Repeated pattern detection across chains
 
 ---
 

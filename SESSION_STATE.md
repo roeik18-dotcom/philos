@@ -49,3 +49,9 @@
   - Parent-child connectors
   - Status indicators (allowed/blocked)
   - Positive/negative rings
+- Chain Insights (COMPLETED)
+  - Recovery chain detection
+  - Harm chain detection
+  - Correction/repair pattern detection
+  - Repeated behavioral pattern detection
+  - Hebrew insight text
