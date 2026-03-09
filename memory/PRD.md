@@ -234,10 +234,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard (~435 lines)
+- `PhilosDashboard.js` - Main dashboard with tabs (~380 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 29 UI components (including RecommendationCalibrationSection)
+- `sections/` - 30 UI components (including HomeNavigationSection)
 
 ---
 
@@ -300,6 +300,20 @@ State:     Custom Hook (usePhilosState)
   - New recommendation reason: "calibration_boost" with "מבוסס על כיול אוטומטי מתוצאות בפועל"
   - "משקל מכויל" indicator shows when calibration affects recommendation
   - Requires 3+ followed recommendations to display
+
+- ✅ **Simplified Home Mode Completed**
+  - Reorganized dashboard into 4 tabs: בית (Home), תובנות (Insights), מערכת (System), היסטוריה (History)
+  - **Home Tab**: Clean entry screen readable in under 5 seconds
+    - מצב היום (Current State): Pattern analysis from recent decisions
+    - כיוון מומלץ (Recommended Direction): Direction badge + action suggestion + insight
+    - Action input with "פעל לפי ההמלצה" button
+    - Decision result display after evaluation
+    - Recent history (3 items) with "הצג הכל" link to History tab
+  - **Insights Tab**: Chain Insights, Follow-Through Analytics, Weekly/Monthly/Quarterly Reports, Path Engine
+  - **System Tab**: Calibration, Collective Mirror/Trajectory/Layer/Trends, Global Field, Value Maps
+  - **History Tab**: Decision History, Replay, Tree, Map, Session Library, Comparison
+  - HomeNavigationSection.js - simplified home view component
+  - All existing sections preserved, only reorganized
 
 - ✅ **System Stabilization Pass Completed**
   - Integrated dataService.js centralized caching layer for all collective API calls
