@@ -1,8 +1,8 @@
 # Philos Orientation - Product Requirements Document
 ## Mental Navigation System
 
-**Last Updated:** December 2025  
-**Status:** Stable MVP Complete  
+**Last Updated:** March 2026  
+**Status:** Stable MVP Complete + Decision Replay Feature  
 **Preview URL:** https://decision-engine-47.preview.emergentagent.com
 
 ---
@@ -114,6 +114,18 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Quarterly Review Section
 - [x] Daily Decision Prompt (rotating questions)
 
+### Phase 12: Decision Replay ✅
+- [x] "בדוק מסלול חלופי" button on history items
+- [x] DecisionReplaySection component with Hebrew RTL
+- [x] Original decision display with value tag and metrics
+- [x] 2-3 alternative paths generation using existing path engine
+- [x] Predicted metrics (סדר צפוי, קולקטיב צפוי, לחץ נזק, יציבות)
+- [x] Balance difference indicators (+/- איזון)
+- [x] Hebrew insight text on path selection
+- [x] Backend API for replay metadata (POST /api/memory/replay)
+- [x] Replay history retrieval (GET /api/memory/replays/{user_id})
+- [x] Replay pattern analysis (pattern_counts aggregation)
+
 ---
 
 ## Architecture Summary
@@ -127,11 +139,11 @@ State:     Custom Hook (usePhilosState)
 ```
 
 ### Key Files
-- `usePhilosState.js` - Central state management (~830 lines)
-- `PhilosDashboard.js` - Main dashboard (~270 lines)
+- `usePhilosState.js` - Central state management (~970 lines)
+- `PhilosDashboard.js` - Main dashboard (~280 lines)
 - `cloudSync.js` - Cloud sync service (~400 lines)
-- `server.py` - FastAPI backend (~1650 lines)
-- `sections/` - 20 UI components (including GlobalFieldSection)
+- `server.py` - FastAPI backend (~1800 lines)
+- `sections/` - 21 UI components (including DecisionReplaySection)
 
 ---
 
@@ -146,6 +158,16 @@ State:     Custom Hook (usePhilosState)
 ---
 
 ## Changelog
+
+### March 9, 2026
+- ✅ Implemented Decision Replay feature
+  - Added "בדוק מסלול חלופי" button to Decision History
+  - Created DecisionReplaySection.js component
+  - Generates 2-3 alternative paths using existing path engine
+  - Displays predicted metrics and balance differences
+  - Hebrew insight text generation on path selection
+  - Backend API: POST /api/memory/replay, GET /api/memory/replays/{user_id}
+  - MongoDB collection: philos_replays
 
 ### March 8, 2026
 - ✅ Implemented Decision Path Engine
@@ -163,4 +185,4 @@ State:     Custom Hook (usePhilosState)
 
 ---
 
-**Product State:** STABLE MVP - All core features complete
+**Product State:** STABLE MVP - All core features complete + Decision Replay
