@@ -136,6 +136,18 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Summary stats display (total replays, patterns, blind spots)
 - [x] Auto-refresh when new replays are added
 
+### Phase 14: Replay Adaptive Effect ✅
+- [x] applyReplayInsightsToScores() function in usePhilosState
+- [x] Boost frequently explored positive alternatives (contribution, recovery, order)
+- [x] Penalize harmful paths users never explore (harm, avoidance)
+- [x] ReplayAdaptiveEffectSection component with Hebrew RTL
+- [x] Boosted directions display with green bars and boost values
+- [x] Penalized directions display with red bars and penalty values
+- [x] Hebrew insight texts ("מסלולי תרומה קיבלו חיזוק...", "מסלולי נזק מקבלים כעת הפחתת משקל...")
+- [x] Score summary grid with highlighting for boosted/penalized values
+- [x] Conditional rendering when adjustments exist
+- [x] Auto-update when new replays are added
+
 ---
 
 ## Architecture Summary
@@ -149,11 +161,11 @@ State:     Custom Hook (usePhilosState)
 ```
 
 ### Key Files
-- `usePhilosState.js` - Central state management (~1000 lines)
-- `PhilosDashboard.js` - Main dashboard (~290 lines)
+- `usePhilosState.js` - Central state management (~1180 lines)
+- `PhilosDashboard.js` - Main dashboard (~350 lines)
 - `cloudSync.js` - Cloud sync service (~400 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 22 UI components (including ReplayInsightsSummarySection)
+- `sections/` - 23 UI components (including ReplayAdaptiveEffectSection)
 
 ---
 
@@ -189,6 +201,17 @@ State:     Custom Hook (usePhilosState)
   - Backend API: GET /api/memory/replay-insights/{user_id}
   - Auto-refresh when new replays are added
 
+- ✅ Implemented Replay Adaptive Effect feature
+  - Created applyReplayInsightsToScores() function in usePhilosState
+  - Boosts frequently explored positive alternatives (contribution +8 max, recovery, order)
+  - Penalizes harmful paths never explored (harm -4, avoidance -3)
+  - Created ReplayAdaptiveEffectSection.js component
+  - Displays boosted directions with green bars and boost values
+  - Displays penalized directions with red bars and penalty values
+  - Hebrew insights: "מסלולי תרומה קיבלו חיזוק...", "מסלולי נזק מקבלים כעת הפחתת משקל..."
+  - Score summary grid with emerald/red highlighting
+  - Auto-updates when new replays are added
+
 ### March 8, 2026
 - ✅ Implemented Decision Path Engine
 - ✅ Implemented Path Learning Layer
@@ -205,4 +228,4 @@ State:     Custom Hook (usePhilosState)
 
 ---
 
-**Product State:** STABLE MVP - All core features complete + Decision Replay + Replay Insights Summary
+**Product State:** STABLE MVP - All core features complete + Decision Replay + Replay Insights + Adaptive Effect
