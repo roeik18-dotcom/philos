@@ -30,3 +30,4 @@ export { default as ReplayAdaptiveEffectSection } from './ReplayAdaptiveEffectSe
 export { default as ContinuePreviousSessionSection } from './ContinuePreviousSessionSection';
 export { default as CollectiveMirrorSection } from './CollectiveMirrorSection';
 export { default as CollectiveTrajectorySection } from './CollectiveTrajectorySection';
+export { default as NextBestDirectionSection } from './NextBestDirectionSection';

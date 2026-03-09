@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { fetchCollectiveLayer } from '../../../services/dataService';
 
 // Hebrew value tag labels
 const valueLabels = {
@@ -47,8 +48,8 @@ const actionSuggestions = {
   ]
 };
 
-// Calculate recommended direction
-const calculateRecommendation = (history, adaptiveScores, replayInsights, chainData) => {
+// Calculate recommended direction based on multiple data sources
+const calculateRecommendation = (history, adaptiveScores, replayInsights, collectiveData) => {
   if (!history || history.length === 0) {
     return null;
   }
@@ -73,22 +74,26 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, chainD
   const recoveryCount = valueCounts.recovery || 0;
   const orderCount = valueCounts.order || 0;
 
-  // Use adaptive scores
+  // Use adaptive scores (including replay-based adjustments)
   const scores = adaptiveScores || {};
   
-  // Use replay insights
+  // Use replay insights for blind spots and preferences
   const replayAltCounts = replayInsights?.alternative_path_counts || {};
+  const blindSpots = replayInsights?.blind_spots || [];
   const mostExploredAlt = Object.entries(replayAltCounts)
     .filter(([key]) => ['contribution', 'recovery', 'order'].includes(key))
     .sort((a, b) => b[1] - a[1])[0];
 
-  // Decision logic
+  // Use collective comparison if available
+  const collectiveGap = collectiveData?.gap || null;
+
+  // Decision logic with priority order
   let recommendedDirection = null;
   let reason = '';
   let strength = 0;
   let insight = '';
 
-  // Priority 1: Address strong negative drift
+  // Priority 1: Address strong negative drift (harm/avoidance patterns)
   if (negativeRatio > 0.4) {
     if (harmCount > avoidanceCount) {
       recommendedDirection = 'recovery';
@@ -102,33 +107,52 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, chainD
       insight = 'המערכת מזהה דפוס של הימנעות. מומלץ לבצע החלטה קטנה במקום דחייה.';
     }
   }
-  // Priority 2: Reinforce positive momentum
+  // Priority 2: Address collective gap (user behind collective trend)
+  else if (collectiveGap && collectiveGap.metric && collectiveGap.difference > 15) {
+    recommendedDirection = collectiveGap.metric;
+    reason = 'collective_gap';
+    strength = Math.min(100, 45 + collectiveGap.difference);
+    insight = `נראה פער מול מגמת ה${valueLabels[collectiveGap.metric]}. מומלץ לבצע פעולה קטנה בכיוון זה.`;
+  }
+  // Priority 3: Address replay blind spots
+  else if (blindSpots.length > 0) {
+    const relevantBlindSpot = blindSpots.find(spot => 
+      ['contribution', 'recovery', 'order'].includes(spot.to)
+    );
+    if (relevantBlindSpot) {
+      recommendedDirection = relevantBlindSpot.to;
+      reason = 'replay_blind_spot';
+      strength = 55;
+      insight = `בהפעלות חוזרות מעולם לא בדקת מסלולי ${valueLabels[relevantBlindSpot.to]}. כדאי לנסות.`;
+    }
+  }
+  // Priority 4: Reinforce positive momentum
   else if (contributionCount >= 2 || (scores.contribution || 0) > 5) {
     recommendedDirection = 'contribution';
     reason = 'positive_contribution_momentum';
     strength = Math.min(100, 50 + (scores.contribution || 0) * 3);
     insight = 'יש לך מומנטום חיובי של תרומה. המשך בכיוון זה.';
   }
-  // Priority 3: Follow replay exploration preferences
+  // Priority 5: Follow replay exploration preferences
   else if (mostExploredAlt && mostExploredAlt[1] >= 2) {
     recommendedDirection = mostExploredAlt[0];
     reason = 'replay_preference';
     strength = Math.min(100, 40 + mostExploredAlt[1] * 10);
     insight = `בהפעלות חוזרות בדקת הרבה מסלולי ${valueLabels[mostExploredAlt[0]]}. אולי זה הכיוון שחסר.`;
   }
-  // Priority 4: Balance based on adaptive scores
+  // Priority 6: Balance based on adaptive scores
   else {
     const positiveScores = [
-      { type: 'contribution', score: scores.contribution || 0 },
-      { type: 'recovery', score: scores.recovery || 0 },
-      { type: 'order', score: scores.order || 0 }
-    ].sort((a, b) => b.score - a.score);
+      { type: 'contribution', score: scores.contribution || 0, count: contributionCount },
+      { type: 'recovery', score: scores.recovery || 0, count: recoveryCount },
+      { type: 'order', score: scores.order || 0, count: orderCount }
+    ].sort((a, b) => a.score - b.score); // Sort ascending to find lowest
 
-    const lowestPositive = positiveScores[positiveScores.length - 1];
-    if (lowestPositive.score < 0) {
+    const lowestPositive = positiveScores[0];
+    if (lowestPositive.score < 0 || lowestPositive.count === 0) {
       recommendedDirection = lowestPositive.type;
       reason = 'balance_deficit';
-      strength = Math.min(100, 30 + Math.abs(lowestPositive.score) * 2);
+      strength = Math.min(100, 35 + Math.abs(lowestPositive.score) * 2);
       insight = `מסלולי ${valueLabels[lowestPositive.type]} פחות נוכחים. כדאי לשקול פעולה בכיוון זה.`;
     } else {
       // Default to recovery as a safe recommendation
@@ -139,9 +163,18 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, chainD
     }
   }
 
-  // Select action suggestion
-  const suggestions = actionSuggestions[recommendedDirection] || [];
-  const actionSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)] || '';
+  // Ensure we have a direction
+  if (!recommendedDirection) {
+    recommendedDirection = 'recovery';
+    reason = 'default';
+    strength = 35;
+    insight = 'אין מספיק נתונים. מומלץ להתחיל עם התאוששות.';
+  }
+
+  // Select action suggestion (deterministic based on recent count)
+  const suggestions = actionSuggestions[recommendedDirection] || actionSuggestions.recovery;
+  const suggestionIndex = recent.length % suggestions.length;
+  const actionSuggestion = suggestions[suggestionIndex];
 
   return {
     direction: recommendedDirection,
@@ -154,11 +187,74 @@ const calculateRecommendation = (history, adaptiveScores, replayInsights, chainD
   };
 };
 
-export default function NextBestDirectionSection({ history, adaptiveScores, replayInsights, chainData }) {
-  // Calculate recommendation
+export default function NextBestDirectionSection({ history, adaptiveScores, replayInsights }) {
+  // State for collective data comparison
+  const [collectiveGap, setCollectiveGap] = useState(null);
+
+  // Fetch collective data and calculate gap
+  useEffect(() => {
+    const calculateCollectiveGap = async () => {
+      if (!history || history.length < 3) return;
+
+      try {
+        const collectiveData = await fetchCollectiveLayer();
+        if (!collectiveData.success) return;
+
+        // Calculate user's value distribution
+        const recent = history.slice(0, 20);
+        const userCounts = { contribution: 0, recovery: 0, order: 0 };
+        recent.forEach(item => {
+          if (userCounts.hasOwnProperty(item.value_tag)) {
+            userCounts[item.value_tag]++;
+          }
+        });
+
+        // Normalize to percentages
+        const userTotal = recent.length || 1;
+        const userPcts = {
+          contribution: (userCounts.contribution / userTotal) * 100,
+          recovery: (userCounts.recovery / userTotal) * 100,
+          order: (userCounts.order / userTotal) * 100
+        };
+
+        // Get collective distribution
+        const collectiveDist = collectiveData.value_distribution || {};
+        const collectiveTotal = Object.values(collectiveDist).reduce((a, b) => a + b, 1);
+        const collectivePcts = {
+          contribution: ((collectiveDist.contribution || 0) / collectiveTotal) * 100,
+          recovery: ((collectiveDist.recovery || 0) / collectiveTotal) * 100,
+          order: ((collectiveDist.order || 0) / collectiveTotal) * 100
+        };
+
+        // Find the largest gap where user is below collective
+        let maxGap = { metric: null, difference: 0 };
+        ['contribution', 'recovery', 'order'].forEach(metric => {
+          const diff = collectivePcts[metric] - userPcts[metric];
+          if (diff > maxGap.difference) {
+            maxGap = { metric, difference: Math.round(diff) };
+          }
+        });
+
+        if (maxGap.metric && maxGap.difference > 10) {
+          setCollectiveGap(maxGap);
+        }
+      } catch (error) {
+        console.log('Failed to calculate collective gap:', error);
+      }
+    };
+
+    calculateCollectiveGap();
+  }, [history]);
+
+  // Build collective data object for calculation
+  const collectiveDataForCalc = useMemo(() => {
+    return collectiveGap ? { gap: collectiveGap } : null;
+  }, [collectiveGap]);
+
+  // Calculate recommendation using all available data sources
   const recommendation = useMemo(() => {
-    return calculateRecommendation(history, adaptiveScores, replayInsights, chainData);
-  }, [history, adaptiveScores, replayInsights, chainData]);
+    return calculateRecommendation(history, adaptiveScores, replayInsights, collectiveDataForCalc);
+  }, [history, adaptiveScores, replayInsights, collectiveDataForCalc]);
 
   // Don't render if no recommendation
   if (!recommendation) {
@@ -268,10 +364,13 @@ export default function NextBestDirectionSection({ history, adaptiveScores, repl
             <p className="text-xs text-muted-foreground mt-2">
               {reason === 'negative_harm_drift' && 'מבוסס על ניתוח דפוסי נזק אחרונים'}
               {reason === 'negative_avoidance_drift' && 'מבוסס על זיהוי דפוסי הימנעות'}
+              {reason === 'collective_gap' && 'מבוסס על פער מול השדה הקולקטיבי'}
+              {reason === 'replay_blind_spot' && 'מבוסס על נקודות עיוורות בהפעלות חוזרות'}
               {reason === 'positive_contribution_momentum' && 'מבוסס על מומנטום חיובי קיים'}
               {reason === 'replay_preference' && 'מבוסס על דפוסי הפעלה חוזרת'}
               {reason === 'balance_deficit' && 'מבוסס על ניתוח איזון כיוונים'}
               {reason === 'general_balance' && 'המלצה כללית לאיזון'}
+              {reason === 'default' && 'המלצה ראשונית'}
             </p>
           </div>
         </div>

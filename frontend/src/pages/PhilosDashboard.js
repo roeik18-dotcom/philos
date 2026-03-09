@@ -32,7 +32,8 @@ import {
   ReplayAdaptiveEffectSection,
   ContinuePreviousSessionSection,
   CollectiveMirrorSection,
-  CollectiveTrajectorySection
+  CollectiveTrajectorySection,
+  NextBestDirectionSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -215,6 +216,13 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
               setTimeout(() => actionInput.focus(), 500);
             }
           }}
+        />
+
+        {/* Next Best Direction - actionable behavioral navigation */}
+        <NextBestDirectionSection
+          history={history}
+          adaptiveScores={adaptiveScores}
+          replayInsights={replayInsights}
         />
 
         {/* Daily Orientation Section */}
