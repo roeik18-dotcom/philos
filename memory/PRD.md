@@ -158,6 +158,14 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] Conditional rendering when replayCount > 0
 - [x] Maintains Hebrew RTL layout
 
+### Phase 16: Persistent Anonymous User ID ✅
+- [x] getUserId() function in cloudSync.js uses crypto.randomUUID()
+- [x] User ID stored in localStorage on first visit
+- [x] User ID reused across page reloads
+- [x] All APIs use persistent user ID: decisions, chains, replay, insights, weekly reports
+- [x] App.js initializes user ID early on mount
+- [x] Components (usePhilosState, ReplayInsightsSummary, WeeklyBehavioralReport) use getUserId()
+
 ---
 
 ## Architecture Summary
@@ -230,6 +238,14 @@ State:     Custom Hook (usePhilosState)
   - Gap analysis section with Hebrew explanations
   - Hebrew insights: "השבוע נבדקו שוב ושוב מסלולי...", "נראה פער עקבי..."
   - Conditional rendering when replayCount > 0
+
+- ✅ Implemented Persistent Anonymous User ID
+  - getUserId() in cloudSync.js generates UUID once using crypto.randomUUID()
+  - User ID stored in localStorage (philos_user_id)
+  - User ID persists across page reloads and browser sessions
+  - All APIs now use persistent user ID: decisions, chains, replay, insights
+  - Updated usePhilosState.js, ReplayInsightsSummarySection, WeeklyBehavioralReportSection
+  - App.js initializes user ID early on mount
 
 ### March 8, 2026
 - ✅ Implemented Decision Path Engine

@@ -1,15 +1,23 @@
 // Cloud Sync Service for Philos Orientation
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Generate or get user ID from localStorage
-const getUserId = () => {
+// Generate or get user ID from localStorage - PERSISTENT across sessions
+export const getUserId = () => {
   let userId = localStorage.getItem('philos_user_id');
   if (!userId) {
-    userId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    // Use crypto.randomUUID() if available, fallback to Math.random()
+    const uuid = typeof crypto !== 'undefined' && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    userId = 'user_' + uuid;
     localStorage.setItem('philos_user_id', userId);
+    console.log('Generated new persistent user ID:', userId);
   }
   return userId;
 };
+
+// Initialize user ID on module load to ensure it exists
+const PERSISTENT_USER_ID = getUserId();
 
 // Sync local data with cloud
 export const syncWithCloud = async (localData) => {
@@ -345,8 +353,6 @@ export const syncMemoryData = async (localLearningHistory) => {
     };
   }
 };
-
-export { getUserId };
 
 
 // ============================================================

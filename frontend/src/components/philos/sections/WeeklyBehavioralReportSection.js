@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { getUserId } from '../../../services/cloudSync';
 
 // Hebrew value labels
 const valueLabels = {
@@ -39,11 +40,8 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
   // Fetch replay insights
   useEffect(() => {
     const fetchReplayInsights = async () => {
-      let userId = user?.id;
-      if (!userId) {
-        userId = localStorage.getItem('philos_user_id');
-      }
-      if (!userId) return;
+      // Use authenticated user ID or persistent anonymous ID
+      const userId = user?.id || getUserId();
 
       try {
         const API_URL = process.env.REACT_APP_BACKEND_URL;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getUserId } from '../../../services/cloudSync';
 
 // Hebrew value tag labels
 const valueLabels = {
@@ -34,16 +35,8 @@ export default function ReplayInsightsSummarySection({ user, replayCount = 0 }) 
 
   useEffect(() => {
     const fetchInsights = async () => {
-      // Get user ID from props or localStorage
-      let userId = user?.id;
-      if (!userId) {
-        userId = localStorage.getItem('philos_user_id');
-      }
-      
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+      // Use authenticated user ID or persistent anonymous ID
+      const userId = user?.id || getUserId();
 
       setLoading(true);
       setError(null);

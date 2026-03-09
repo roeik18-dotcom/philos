@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PhilosDashboard from './pages/PhilosDashboard';
 import AuthScreen from './components/auth/AuthScreen';
+import { getUserId } from './services/cloudSync';
 import './App.css';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -9,6 +10,13 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
+
+  // Initialize persistent user ID on app load
+  useEffect(() => {
+    // This ensures a persistent anonymous user ID is created immediately
+    const persistentUserId = getUserId();
+    console.log('Persistent User ID:', persistentUserId);
+  }, []);
 
   // Check for existing auth on mount
   useEffect(() => {

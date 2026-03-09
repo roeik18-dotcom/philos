@@ -9,7 +9,8 @@ import {
   getMemoryData,
   getFullUserData,
   fullSyncUserData,
-  getUserDecisionStats
+  getUserDecisionStats,
+  getUserId
 } from '../services/cloudSync';
 
 // LocalStorage keys
@@ -675,11 +676,8 @@ export default function usePhilosState(user = null) {
   // Fetch replay insights and apply to adaptive scores
   useEffect(() => {
     const fetchAndApplyReplayInsights = async () => {
-      let userId = user?.id;
-      if (!userId) {
-        userId = localStorage.getItem('philos_user_id');
-      }
-      if (!userId) return;
+      // Use authenticated user ID or persistent anonymous ID
+      const userId = user?.id || getUserId();
 
       try {
         const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -1089,7 +1087,8 @@ export default function usePhilosState(user = null) {
   const saveReplayMetadata = async (replayData) => {
     try {
       const API_URL = process.env.REACT_APP_BACKEND_URL;
-      const userId = user?.id || localStorage.getItem('philos_user_id') || 'anonymous';
+      // Use authenticated user ID or persistent anonymous ID
+      const userId = user?.id || getUserId();
       
       const response = await fetch(`${API_URL}/api/memory/replay`, {
         method: 'POST',
