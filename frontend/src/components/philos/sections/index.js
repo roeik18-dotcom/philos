@@ -33,3 +33,4 @@ export { default as CollectiveTrajectorySection } from './CollectiveTrajectorySe
 export { default as NextBestDirectionSection } from './NextBestDirectionSection';
 export { default as RecommendationFollowThroughSection } from './RecommendationFollowThroughSection';
 export { default as RecommendationCalibrationSection } from './RecommendationCalibrationSection';
+export { default as HomeNavigationSection } from './HomeNavigationSection';

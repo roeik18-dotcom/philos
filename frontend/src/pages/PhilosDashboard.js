@@ -35,13 +35,33 @@ import {
   CollectiveTrajectorySection,
   NextBestDirectionSection,
   RecommendationFollowThroughSection,
-  RecommendationCalibrationSection
+  RecommendationCalibrationSection,
+  HomeNavigationSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
 
+// Tab definitions
+const TABS = {
+  HOME: 'home',
+  INSIGHTS: 'insights',
+  SYSTEM: 'system',
+  HISTORY: 'history'
+};
+
+// Tab labels in Hebrew
+const TAB_LABELS = {
+  [TABS.HOME]: 'בית',
+  [TABS.INSIGHTS]: 'תובנות',
+  [TABS.SYSTEM]: 'מערכת',
+  [TABS.HISTORY]: 'היסטוריה'
+};
+
 export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
-  // Use the custom hook for all state management (pass user for multi-device sync)
+  // Active tab state
+  const [activeTab, setActiveTab] = useState(TABS.HOME);
+
+  // Use the custom hook for all state management
   const {
     state,
     setState,
@@ -58,24 +78,23 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
     performCloudSync,
     showShareCard,
     setShowShareCard,
+    resetSession,
+    resetGlobalStats,
+    getTrajectoryDirection,
+    exportSession,
+    handlePathSelection,
+    evaluateAction,
     parentDecision,
     setParentDecision,
     handleAddFollowUp,
-    replayDecision,
-    replayHistory,
     handleReplayDecision,
+    replayDecision,
     closeReplay,
     saveReplayMetadata,
+    replayHistory,
     replayInsights,
     replayAdaptiveAdjustments,
-    balanceScore,
-    evaluateAction,
-    resetSession,
-    resetGlobalStats,
-    handlePathSelection,
-    loadSessionFromLibrary,
-    getTrajectoryDirection,
-    exportSession
+    loadSessionFromLibrary
   } = usePhilosState(user);
 
   const shareCardRef = useRef(null);
@@ -85,15 +104,11 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
   // Handler for following recommendation
   const handleFollowRecommendation = (metadata) => {
-    // Set the recommendation metadata
     setRecommendationMetadata(metadata);
-    
-    // Prefill the action input with the suggested action
     setActionText(metadata.recommendation_text);
     
-    // Scroll to the action input and focus it
     setTimeout(() => {
-      const actionInput = document.querySelector('[data-testid="action-input"]');
+      const actionInput = document.querySelector('[data-testid="home-action-input"]');
       if (actionInput) {
         actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(() => actionInput.focus(), 400);
@@ -108,15 +123,13 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
   // Wrap evaluateAction to include recommendation metadata
   const evaluateActionWithRecommendation = async () => {
-    // Pass recommendation metadata to be saved with the decision
     await evaluateAction(recommendationMetadata);
-    // Clear recommendation after evaluation
     setRecommendationMetadata(null);
   };
 
   // Download share card as image
   const downloadShareCard = async () => {
-    if (shareCardRef.current === null) return;
+    if (!shareCardRef.current) return;
     try {
       const dataUrl = await toPng(shareCardRef.current, { quality: 0.95 });
       const link = document.createElement('a');
@@ -129,299 +142,309 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6 pb-24">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-4 pb-24">
+      <div className="max-w-2xl mx-auto space-y-4">
         
-        {/* Header */}
-        <div className="text-center mb-8">
-          {/* Auth Status Bar */}
-          <div className="flex items-center justify-center gap-4 mb-4" dir="rtl">
-            {user ? (
-              <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-full px-4 py-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span className="text-sm text-green-700">{user.email}</span>
-                <button
-                  onClick={onLogout}
-                  className="text-xs text-red-500 hover:text-red-700 underline"
-                  data-testid="logout-btn"
-                >
-                  התנתק
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={onShowAuth}
-                className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-2 hover:bg-amber-100 transition-colors"
-                data-testid="show-auth-btn"
-              >
-                <span className="text-sm text-amber-700">התחבר לסנכרון בין מכשירים</span>
-                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            )}
-          </div>
-          
-          <h1 className="text-4xl font-bold text-foreground">Philos Orientation</h1>
-          <p className="text-lg text-primary font-medium mt-1">Mental Navigation System</p>
-          <p className="text-sm text-muted-foreground mt-1">Navigate your decisions in real time</p>
-          {history.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Session: {history.length} decisions saved
-            </p>
-          )}
-          {/* Cloud Sync Status */}
-          <div className="flex flex-col items-center gap-1 mt-2">
-            <div className="flex items-center justify-center gap-2">
-              {syncStatus.cloudAvailable ? (
-                <>
-                  <span className={`w-2 h-2 rounded-full ${syncStatus.syncing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></span>
-                  <span className="text-xs text-muted-foreground">
-                    {syncStatus.syncing ? 'מסנכרן...' : 'מסונכרן לענן'}
-                  </span>
-                  {syncStatus.lastSynced && !syncStatus.syncing && (
-                    <button
-                      onClick={() => performCloudSync(true)}
-                      className="text-xs text-blue-500 hover:text-blue-700 underline"
-                      data-testid="manual-sync-btn"
-                    >
-                      סנכרן עכשיו
-                    </button>
-                  )}
-                </>
+        {/* Compact Header */}
+        <div className="text-center mb-2">
+          <div className="flex items-center justify-between mb-2" dir="rtl">
+            {/* Auth Status */}
+            <div className="flex items-center gap-2">
+              {user ? (
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-3 py-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span className="text-xs text-green-700">{user.email}</span>
+                  <button
+                    onClick={onLogout}
+                    className="text-xs text-red-500 hover:text-red-700"
+                    data-testid="logout-btn"
+                  >
+                    ×
+                  </button>
+                </div>
               ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                  <span className="text-xs text-muted-foreground">מצב לא מקוון</span>
-                </>
+                <button
+                  onClick={onShowAuth}
+                  className="text-xs text-amber-600 hover:text-amber-700"
+                  data-testid="show-auth-btn"
+                >
+                  התחבר
+                </button>
               )}
             </div>
-            {/* Multi-device sync status for authenticated users */}
-            {user && syncStatus.deviceSynced && (
-              <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
-                <svg className="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-xs text-blue-600 font-medium">מסונכרן בין מכשירים</span>
-              </div>
-            )}
-            {syncStatus.syncing && syncStatus.syncMessage && (
-              <span className="text-xs text-yellow-600">{syncStatus.syncMessage}</span>
-            )}
+            
+            {/* Sync Status */}
+            <div className="flex items-center gap-1">
+              <span className={`w-2 h-2 rounded-full ${syncStatus.cloudAvailable ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+              <span className="text-xs text-muted-foreground">
+                {syncStatus.cloudAvailable ? 'מסונכרן' : 'לא מקוון'}
+              </span>
+            </div>
           </div>
+          
+          <h1 className="text-2xl font-bold text-foreground">Philos Orientation</h1>
+          <p className="text-xs text-muted-foreground">Mental Navigation System</p>
         </div>
 
-        {/* Reset Session Button */}
-        {history.length > 0 && (
-          <div className="flex justify-center">
+        {/* Tab Navigation */}
+        <div className="flex justify-center gap-1 p-1 bg-gray-100 rounded-xl" dir="rtl" data-testid="tab-navigation">
+          {Object.values(TABS).map(tab => (
             <button
-              onClick={resetSession}
-              className="text-xs text-red-500 hover:text-red-700 underline"
-              data-testid="reset-session-btn"
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                activeTab === tab 
+                  ? 'bg-white text-primary shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              data-testid={`tab-${tab}`}
             >
-              איפוס סשן
+              {TAB_LABELS[tab]}
             </button>
+          ))}
+        </div>
+
+        {/* ==================== HOME TAB ==================== */}
+        {activeTab === TABS.HOME && (
+          <div className="space-y-4">
+            {/* Home Navigation - Clean Entry Screen */}
+            <HomeNavigationSection
+              history={history}
+              adaptiveScores={adaptiveScores}
+              replayInsights={replayInsights}
+              actionText={actionText}
+              setActionText={setActionText}
+              evaluateAction={evaluateActionWithRecommendation}
+              recommendationMetadata={recommendationMetadata}
+              onClearRecommendation={handleClearRecommendation}
+              onFollowRecommendation={handleFollowRecommendation}
+              state={state}
+            />
+
+            {/* Decision Result (shows after evaluation) */}
+            {decisionResult && (
+              <div className="bg-white rounded-3xl p-4 shadow-sm border border-border" dir="rtl" data-testid="decision-result">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">תוצאת הערכה</h3>
+                <div className="flex items-center gap-3">
+                  <span className={`text-2xl font-bold ${
+                    decisionResult.value_tag === 'contribution' ? 'text-green-600' :
+                    decisionResult.value_tag === 'recovery' ? 'text-blue-600' :
+                    decisionResult.value_tag === 'order' ? 'text-indigo-600' :
+                    decisionResult.value_tag === 'harm' ? 'text-red-600' :
+                    'text-gray-600'
+                  }`}>
+                    {decisionResult.value_tag === 'contribution' && 'תרומה'}
+                    {decisionResult.value_tag === 'recovery' && 'התאוששות'}
+                    {decisionResult.value_tag === 'order' && 'סדר'}
+                    {decisionResult.value_tag === 'harm' && 'נזק'}
+                    {decisionResult.value_tag === 'avoidance' && 'הימנעות'}
+                  </span>
+                  <span className="text-sm text-muted-foreground">{decisionResult.decision}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Recent History (compact) */}
+            {history.length > 0 && (
+              <div className="bg-white rounded-3xl p-4 shadow-sm border border-border" dir="rtl" data-testid="recent-history">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-muted-foreground">החלטות אחרונות</h3>
+                  <button
+                    onClick={() => setActiveTab(TABS.HISTORY)}
+                    className="text-xs text-primary hover:underline"
+                    data-testid="show-all-history"
+                  >
+                    הצג הכל
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {history.slice(0, 3).map((item, index) => (
+                    <div key={item.id || index} className="flex items-center gap-2 text-sm">
+                      <span className={`w-2 h-2 rounded-full ${
+                        item.value_tag === 'contribution' ? 'bg-green-500' :
+                        item.value_tag === 'recovery' ? 'bg-blue-500' :
+                        item.value_tag === 'order' ? 'bg-indigo-500' :
+                        item.value_tag === 'harm' ? 'bg-red-500' :
+                        'bg-gray-400'
+                      }`}></span>
+                      <span className="truncate flex-1">{item.action}</span>
+                      <span className="text-xs text-muted-foreground">{item.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Daily Decision Prompt - at the top */}
-        <DailyDecisionPromptSection 
-          onAddDecision={(placeholder) => {
-            setActionText(placeholder);
-            const actionInput = document.querySelector('[data-testid="action-input"]');
-            if (actionInput) {
-              actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              setTimeout(() => actionInput.focus(), 300);
-            }
-          }}
-          todayDecisions={history.filter(h => {
-            const today = new Date().toDateString();
-            const itemDate = h.timestamp ? new Date(h.timestamp).toDateString() : today;
-            return itemDate === today;
-          }).length}
-        />
+        {/* ==================== INSIGHTS TAB ==================== */}
+        {activeTab === TABS.INSIGHTS && (
+          <div className="space-y-6">
+            {/* Chain Insights */}
+            <ChainInsightsSection history={history} />
 
-        {/* Continue Previous Session - for returning users */}
-        <ContinuePreviousSessionSection 
-          history={history}
-          onContinue={() => {
-            // Scroll to action input when user clicks continue
-            const actionInput = document.querySelector('[data-testid="action-input"]');
-            if (actionInput) {
-              actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              setTimeout(() => actionInput.focus(), 500);
-            }
-          }}
-        />
+            {/* Recommendation Follow-Through Analytics */}
+            <RecommendationFollowThroughSection history={history} />
 
-        {/* Next Best Direction - actionable behavioral navigation */}
-        <NextBestDirectionSection
-          history={history}
-          adaptiveScores={adaptiveScores}
-          replayInsights={replayInsights}
-          onFollowRecommendation={handleFollowRecommendation}
-        />
+            {/* Weekly Behavioral Report */}
+            <WeeklyBehavioralReportSection history={history} user={user} />
 
-        {/* Daily Orientation Section */}
-        <DailyOrientationSection 
-          state={state} 
-          setState={setState} 
-        />
+            {/* Monthly Progress Report */}
+            <MonthlyProgressReportSection history={history} />
 
-        {/* Action Evaluation Section */}
-        <ActionEvaluationSection
-          actionText={actionText}
-          setActionText={setActionText}
-          evaluateAction={evaluateActionWithRecommendation}
-          decisionResult={decisionResult}
-          state={state}
-          calculateSuggestedVector={calculateSuggestedVector}
-          parentDecision={parentDecision}
-          onClearParent={() => setParentDecision(null)}
-          recommendationMetadata={recommendationMetadata}
-          onClearRecommendation={handleClearRecommendation}
-        />
+            {/* Quarterly Review */}
+            <QuarterlyReviewSection history={history} />
 
-        {/* Decision History with Chains */}
-        <DecisionHistorySection
-          history={history}
-          onAddFollowUp={handleAddFollowUp}
-          onReplayDecision={handleReplayDecision}
-        />
+            {/* Replay Insights Summary */}
+            <ReplayInsightsSummarySection user={user} replayCount={replayHistory?.length || 0} />
 
-        {/* Decision Replay Section - appears when a decision is selected for replay */}
-        {replayDecision && (
-          <DecisionReplaySection
-            replayDecision={replayDecision}
-            onClose={closeReplay}
-            onSaveReplay={saveReplayMetadata}
-            adaptiveScores={adaptiveScores}
-          />
+            {/* Decision Path Engine */}
+            <DecisionPathEngineSection
+              state={state}
+              history={history}
+              onSelectPath={handlePathSelection}
+              adaptiveScores={adaptiveScores}
+            />
+
+            {/* Path Learning */}
+            <PathLearningSection
+              selectedPath={selectedPathData}
+              actualOutcome={decisionResult}
+            />
+
+            {/* Adaptive Learning */}
+            <AdaptiveLearningSection
+              learningHistory={learningHistory}
+              adaptiveScores={adaptiveScores}
+            />
+          </div>
         )}
 
-        {/* Replay Insights Summary - aggregated replay pattern analysis */}
-        <ReplayInsightsSummarySection user={user} replayCount={replayHistory?.length || 0} />
+        {/* ==================== SYSTEM TAB ==================== */}
+        {activeTab === TABS.SYSTEM && (
+          <div className="space-y-6">
+            {/* Recommendation Calibration */}
+            <RecommendationCalibrationSection history={history} />
 
-        {/* Replay Adaptive Effect - shows how replay patterns affect path ranking */}
-        <ReplayAdaptiveEffectSection 
-          adjustments={replayAdaptiveAdjustments}
-          adaptiveScores={adaptiveScores}
-          replayInsights={replayInsights}
-        />
+            {/* Replay Adaptive Effect */}
+            <ReplayAdaptiveEffectSection 
+              adjustments={replayAdaptiveAdjustments}
+              adaptiveScores={adaptiveScores}
+              replayInsights={replayInsights}
+            />
 
-        {/* Decision Tree Visualization */}
-        <DecisionTreeSection history={history} />
+            {/* Collective Mirror */}
+            <CollectiveMirrorSection
+              history={history}
+              learningHistory={learningHistory}
+              replayInsights={replayInsights}
+            />
 
-        {/* Chain Insights - Behavioral Pattern Analysis */}
-        <ChainInsightsSection history={history} />
+            {/* Collective Trajectory */}
+            <CollectiveTrajectorySection history={history} />
 
-        {/* Recommendation Follow-Through Analytics */}
-        <RecommendationFollowThroughSection history={history} />
+            {/* Collective Layer */}
+            <CollectiveLayerSection />
 
-        {/* Recommendation Calibration - self-correcting weights */}
-        <RecommendationCalibrationSection history={history} />
+            {/* Collective Trends */}
+            <CollectiveTrendsSection />
 
-        {/* Weekly Behavioral Report */}
-        <WeeklyBehavioralReportSection history={history} user={user} />
+            {/* Global Field */}
+            <GlobalFieldSection />
 
-        {/* Monthly Progress Report */}
-        <MonthlyProgressReportSection history={history} />
+            {/* Value Constellation */}
+            <ValueConstellationSection history={history} />
 
-        {/* Quarterly Review */}
-        <QuarterlyReviewSection history={history} />
+            {/* Personal Map */}
+            <PersonalMapSection
+              history={history}
+              analyzePersonalMap={analyzePersonalMap}
+            />
 
-        {/* Decision Path Engine Section */}
-        <DecisionPathEngineSection
-          state={state}
-          history={history}
-          onSelectPath={handlePathSelection}
-          adaptiveScores={adaptiveScores}
-        />
+            {/* Collective Value Map */}
+            <CollectiveValueMapSection history={history} />
+          </div>
+        )}
 
-        {/* Path Learning Section - shows after evaluation when a path was selected */}
-        <PathLearningSection
-          selectedPath={selectedPathData}
-          actualOutcome={decisionResult}
-        />
+        {/* ==================== HISTORY TAB ==================== */}
+        {activeTab === TABS.HISTORY && (
+          <div className="space-y-6">
+            {/* Decision History with Chains */}
+            <DecisionHistorySection
+              history={history}
+              onAddFollowUp={handleAddFollowUp}
+              onReplayDecision={handleReplayDecision}
+            />
 
-        {/* Adaptive Learning Summary Section */}
-        <AdaptiveLearningSection
-          learningHistory={learningHistory}
-          adaptiveScores={adaptiveScores}
-        />
+            {/* Decision Replay Section */}
+            {replayDecision && (
+              <DecisionReplaySection
+                replayDecision={replayDecision}
+                onClose={closeReplay}
+                onSaveReplay={saveReplayMetadata}
+                adaptiveScores={adaptiveScores}
+              />
+            )}
 
-        {/* Decision Map Section */}
-        <DecisionMapSection
-          state={state}
-          decisionResult={decisionResult}
-          history={history}
-          calculateSuggestedVector={calculateSuggestedVector}
-        />
+            {/* Decision Tree Visualization */}
+            <DecisionTreeSection history={history} />
 
-        {/* Orientation Status Section */}
-        <OrientationFieldSection history={history} />
+            {/* Decision Map */}
+            <DecisionMapSection
+              state={state}
+              decisionResult={decisionResult}
+              history={history}
+              calculateSuggestedVector={calculateSuggestedVector}
+            />
 
-        {/* Personal Map Section */}
-        <PersonalMapSection
-          history={history}
-          analyzePersonalMap={analyzePersonalMap}
-        />
+            {/* Orientation Status */}
+            <OrientationFieldSection history={history} />
 
-        {/* Collective Value Map */}
-        <CollectiveValueMapSection history={history} />
+            {/* Session Library */}
+            <SessionLibrarySection
+              history={history}
+              onLoadSession={loadSessionFromLibrary}
+            />
 
-        {/* Value Constellation Map */}
-        <ValueConstellationSection history={history} />
+            {/* Session Comparison */}
+            <SessionComparisonSection />
 
-        {/* Global Value Field */}
-        <GlobalValueFieldSection
-          globalStats={globalStats}
-          resetGlobalStats={resetGlobalStats}
-        />
+            {/* Weekly Cognitive Report */}
+            <WeeklySummarySection trendHistory={trendHistory} />
 
-        {/* Collective Layer - Cross-User Analytics */}
-        <CollectiveLayerSection />
+            {/* Global Value Field */}
+            <GlobalValueFieldSection
+              globalStats={globalStats}
+              resetGlobalStats={resetGlobalStats}
+            />
 
-        {/* Collective Mirror - User vs Collective Comparison */}
-        <CollectiveMirrorSection
-          history={history}
-          learningHistory={learningHistory}
-          replayInsights={replayInsights}
-        />
+            {/* Global Trend */}
+            <GlobalTrendSection trendHistory={trendHistory} />
 
-        {/* Collective Trajectory - Movement relative to collective over time */}
-        <CollectiveTrajectorySection history={history} />
+            {/* Session Summary */}
+            <SessionSummarySection 
+              history={history}
+              state={state}
+              getTrajectoryDirection={getTrajectoryDirection}
+              exportSession={exportSession}
+              setShowShareCard={setShowShareCard}
+              decisionResult={decisionResult}
+            />
 
-        {/* Collective Trends - Time-Based Analytics */}
-        <CollectiveTrendsSection />
-
-        {/* Global World Field - Living Value System Map */}
-        <GlobalFieldSection />
-
-        {/* Global Trend Over Time */}
-        <GlobalTrendSection trendHistory={trendHistory} />
-
-        {/* Session Library */}
-        <SessionLibrarySection
-          history={history}
-          onLoadSession={loadSessionFromLibrary}
-        />
-
-        {/* Session Comparison Engine */}
-        <SessionComparisonSection />
-
-        {/* Weekly Cognitive Report */}
-        <WeeklySummarySection trendHistory={trendHistory} />
-
-        {/* Session Summary */}
-        <SessionSummarySection 
-          history={history}
-          state={state}
-          getTrajectoryDirection={getTrajectoryDirection}
-          exportSession={exportSession}
-          setShowShareCard={setShowShareCard}
-          decisionResult={decisionResult}
-        />
+            {/* Reset Session */}
+            {history.length > 0 && (
+              <div className="flex justify-center">
+                <button
+                  onClick={resetSession}
+                  className="text-xs text-red-500 hover:text-red-700 underline"
+                  data-testid="reset-session-btn"
+                >
+                  איפוס סשן
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
 
