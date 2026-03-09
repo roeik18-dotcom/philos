@@ -29,7 +29,8 @@ import {
   DailyDecisionPromptSection,
   DecisionReplaySection,
   ReplayInsightsSummarySection,
-  ReplayAdaptiveEffectSection
+  ReplayAdaptiveEffectSection,
+  ContinuePreviousSessionSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -199,6 +200,19 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             const itemDate = h.timestamp ? new Date(h.timestamp).toDateString() : today;
             return itemDate === today;
           }).length}
+        />
+
+        {/* Continue Previous Session - for returning users */}
+        <ContinuePreviousSessionSection 
+          history={history}
+          onContinue={() => {
+            // Scroll to action input when user clicks continue
+            const actionInput = document.querySelector('[data-testid="action-input"]');
+            if (actionInput) {
+              actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              setTimeout(() => actionInput.focus(), 500);
+            }
+          }}
         />
 
         {/* Daily Orientation Section */}

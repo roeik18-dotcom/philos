@@ -166,6 +166,17 @@ Build a complex, client-side decision engine and dashboard called "Philos Orient
 - [x] App.js initializes user ID early on mount
 - [x] Components (usePhilosState, ReplayInsightsSummary, WeeklyBehavioralReport) use getUserId()
 
+### Phase 17: Continue Previous Session Prompt ✅
+- [x] ContinuePreviousSessionSection component with Hebrew RTL
+- [x] Detects returning users with existing history
+- [x] Shows last decision text, value tag, relative timestamp
+- [x] Shows dominant pattern if available
+- [x] Stats badges (total decisions, today decisions)
+- [x] "המשך מכאן" button scrolls to action input and focuses it
+- [x] Hebrew messages: "המערכת זיהתה שכבר התחלת תהליך קודם", "ניתן להמשיך מאותה נקודה בדיוק"
+- [x] Chain indicator if user has decision chains
+- [x] Conditional rendering only for users with history
+
 ---
 
 ## Architecture Summary
@@ -180,10 +191,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard (~350 lines)
-- `cloudSync.js` - Cloud sync service (~400 lines)
+- `PhilosDashboard.js` - Main dashboard (~370 lines)
+- `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 23 UI components (including ReplayAdaptiveEffectSection)
+- `sections/` - 24 UI components (including ContinuePreviousSessionSection)
 
 ---
 
@@ -246,6 +257,15 @@ State:     Custom Hook (usePhilosState)
   - All APIs now use persistent user ID: decisions, chains, replay, insights
   - Updated usePhilosState.js, ReplayInsightsSummarySection, WeeklyBehavioralReportSection
   - App.js initializes user ID early on mount
+
+- ✅ Implemented Continue Previous Session Prompt
+  - ContinuePreviousSessionSection.js component with Hebrew RTL
+  - Detects returning users with existing history
+  - Shows last decision text, value tag ("התאוששות"), relative timestamp ("לפני רגע")
+  - Dominant pattern indicator, chain indicator
+  - Stats badges (total decisions, today decisions)
+  - "המשך מכאן" button scrolls to action input and focuses it
+  - Hebrew messages for continuity awareness
 
 ### March 8, 2026
 - ✅ Implemented Decision Path Engine

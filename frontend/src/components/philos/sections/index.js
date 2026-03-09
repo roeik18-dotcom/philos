@@ -27,3 +27,4 @@ export { default as DailyDecisionPromptSection } from './DailyDecisionPromptSect
 export { default as DecisionReplaySection } from './DecisionReplaySection';
 export { default as ReplayInsightsSummarySection } from './ReplayInsightsSummarySection';
 export { default as ReplayAdaptiveEffectSection } from './ReplayAdaptiveEffectSection';
+export { default as ContinuePreviousSessionSection } from './ContinuePreviousSessionSection';
