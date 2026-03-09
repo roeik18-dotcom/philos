@@ -26,7 +26,7 @@ Completed: System Stabilization (API caching, loading states, error handling)
 
 ### Future Priorities
 - Refactor `usePhilosState.js` into smaller domain-specific hooks
-- Add "Next Best Direction" feature (in progress)
+- Refactor `PhilosDashboard.js` with tabs/accordions for better organization
 
 ---
 
@@ -234,10 +234,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard (~390 lines)
+- `PhilosDashboard.js` - Main dashboard (~400 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 26 UI components (including CollectiveTrajectorySection)
+- `sections/` - 27 UI components (including NextBestDirectionSection)
 
 ---
 
@@ -254,6 +254,21 @@ State:     Custom Hook (usePhilosState)
 ## Changelog
 
 ### March 9, 2026
+
+- ✅ **Next Best Direction Feature Completed**
+  - NextBestDirectionSection.js - actionable behavioral navigation
+  - Uses 6 priority recommendation algorithm:
+    1. Negative drift (harm/avoidance >40%) → recommends recovery or order
+    2. Collective gap (user below collective >15%) → recommends gap direction  
+    3. Replay blind spots → recommends unexplored direction
+    4. Positive contribution momentum → recommends contribution
+    5. Replay preferences → recommends frequently replayed direction
+    6. Balance deficit → recommends lowest positive score direction
+  - SVG compass indicator with direction arrow and strength arc
+  - Hebrew insight texts with reason footer
+  - Action suggestions: "כיוון מומלץ להיום: לסיים משימה פתוחה אחת"
+  - Integrates with fetchCollectiveLayer for gap comparison
+  - Placed after Continue Previous Session in dashboard layout
 
 - ✅ **System Stabilization Pass Completed**
   - Integrated dataService.js centralized caching layer for all collective API calls
