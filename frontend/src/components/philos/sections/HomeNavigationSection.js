@@ -130,6 +130,12 @@ export default function HomeNavigationSection({
             }
           }}
         />
+        {/* Helper text for new users */}
+        {!currentState.hasData && (
+          <p className="text-xs text-muted-foreground mt-2 text-right">
+            💡 תאר את הפעולה שעשית או שאתה מתכנן לעשות. לדוגמה: "יצאתי להליכה קצרה"
+          </p>
+        )}
       </div>
 
       {/* Action Buttons */}

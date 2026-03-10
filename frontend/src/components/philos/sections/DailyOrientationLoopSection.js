@@ -1,13 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
-
-// Hebrew labels for value tags
-const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
-};
+import { 
+  filterYesterdayHistory,
+  countValueTags,
+  identifyDominantPattern,
+  valueLabels 
+} from '../../../services/analyticsService';
 
 // Pattern descriptions in Hebrew
 const patternDescriptions = {
@@ -41,38 +38,17 @@ const directionColors = {
 // LocalStorage key for daily orientation
 const DAILY_ORIENTATION_KEY = 'philos_daily_orientation';
 
-// Analyze yesterday's pattern
+// Analyze yesterday's pattern using centralized analytics
 const analyzeYesterdayPattern = (history) => {
-  if (!history || history.length === 0) {
-    return { pattern: 'none', count: 0 };
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  // Filter yesterday's decisions
-  const yesterdayDecisions = history.filter(item => {
-    if (!item.timestamp) return false;
-    const itemDate = new Date(item.timestamp);
-    itemDate.setHours(0, 0, 0, 0);
-    return itemDate.getTime() === yesterday.getTime();
-  });
+  // Use centralized filtering
+  const yesterdayDecisions = filterYesterdayHistory(history);
 
   if (yesterdayDecisions.length === 0) {
     return { pattern: 'none', count: 0 };
   }
 
-  // Count value tags
-  const valueCounts = {};
-  yesterdayDecisions.forEach(item => {
-    const tag = item.value_tag;
-    if (tag) {
-      valueCounts[tag] = (valueCounts[tag] || 0) + 1;
-    }
-  });
+  // Use centralized counting
+  const valueCounts = countValueTags(yesterdayDecisions);
 
   // Find dominant pattern
   const harmCount = valueCounts.harm || 0;

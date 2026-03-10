@@ -42,6 +42,7 @@ import {
   MonthlyOrientationSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
+import OnboardingHint from '../components/philos/OnboardingHint';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
 
 // Tab definitions
@@ -146,6 +147,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
   return (
     <div className="min-h-screen bg-background p-4 pb-24">
+      {/* Onboarding Hint for first-time users */}
+      <OnboardingHint />
+      
       <div className="max-w-2xl mx-auto space-y-4">
         
         {/* Compact Header */}

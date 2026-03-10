@@ -1,13 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-
-// Hebrew labels for value tags
-const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
-};
+import { 
+  filterHistoryByDateRange,
+  countValueTags,
+  identifyDominantPattern,
+  valueLabels,
+  valueColors 
+} from '../../../services/analyticsService';
 
 // Pattern descriptions in Hebrew
 const patternDescriptions = {
@@ -20,7 +18,7 @@ const patternDescriptions = {
   none: 'אין נתונים'
 };
 
-// Direction colors
+// Direction colors (from analyticsService but extended)
 const directionColors = {
   contribution: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
   recovery: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
@@ -52,7 +50,7 @@ const getLastMonthName = () => {
   return hebrewMonths[lastMonth.getMonth()];
 };
 
-// Analyze last month's patterns
+// Analyze last month's patterns using centralized analytics
 const analyzeLastMonthPatterns = (history) => {
   if (!history || history.length === 0) {
     return {
@@ -74,12 +72,8 @@ const analyzeLastMonthPatterns = (history) => {
   const lastMonthEnd = new Date(currentMonthStart);
   lastMonthEnd.setMilliseconds(-1); // End of last month
 
-  // Filter last month's decisions
-  const lastMonthDecisions = history.filter(item => {
-    if (!item.timestamp) return false;
-    const itemDate = new Date(item.timestamp);
-    return itemDate >= lastMonthStart && itemDate <= lastMonthEnd;
-  });
+  // Use centralized filtering
+  const lastMonthDecisions = filterHistoryByDateRange(history, lastMonthStart, lastMonthEnd);
 
   if (lastMonthDecisions.length === 0) {
     return {
@@ -91,55 +85,14 @@ const analyzeLastMonthPatterns = (history) => {
     };
   }
 
-  // Count value tags
-  const valueCounts = {};
-  lastMonthDecisions.forEach(item => {
-    const tag = item.value_tag;
-    if (tag) {
-      valueCounts[tag] = (valueCounts[tag] || 0) + 1;
-    }
-  });
-
-  // Find dominant pattern
-  const total = lastMonthDecisions.length;
-  const harmCount = valueCounts.harm || 0;
-  const avoidanceCount = valueCounts.avoidance || 0;
-  const contributionCount = valueCounts.contribution || 0;
-  const recoveryCount = valueCounts.recovery || 0;
-  const orderCount = valueCounts.order || 0;
-
-  const negativeRatio = (harmCount + avoidanceCount) / total;
-
-  let dominantPattern = 'balanced';
-
-  // Find strongest positive
-  const positives = [
-    { tag: 'contribution', count: contributionCount },
-    { tag: 'recovery', count: recoveryCount },
-    { tag: 'order', count: orderCount }
-  ].filter(p => p.count > 0).sort((a, b) => b.count - a.count);
-
-  const strongestPositive = positives.length > 0 ? positives[0] : null;
-
-  // Find strongest negative
-  const negatives = [
-    { tag: 'harm', count: harmCount },
-    { tag: 'avoidance', count: avoidanceCount }
-  ].filter(n => n.count > 0).sort((a, b) => b.count - a.count);
-
-  const strongestNegative = negatives.length > 0 ? negatives[0] : null;
-
-  // Determine dominant pattern
-  if (negativeRatio > 0.5) {
-    dominantPattern = harmCount > avoidanceCount ? 'harm' : 'avoidance';
-  } else if (strongestPositive) {
-    dominantPattern = strongestPositive.tag;
-  }
+  // Use centralized counting and pattern identification
+  const valueCounts = countValueTags(lastMonthDecisions);
+  const pattern = identifyDominantPattern(valueCounts);
 
   return {
-    dominantPattern,
-    strongestPositive,
-    strongestNegative,
+    dominantPattern: pattern.dominantPattern || 'balanced',
+    strongestPositive: pattern.strongestPositive,
+    strongestNegative: pattern.strongestNegative,
     totalDecisions: lastMonthDecisions.length,
     valueCounts
   };
