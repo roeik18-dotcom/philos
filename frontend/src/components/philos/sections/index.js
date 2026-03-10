@@ -51,3 +51,4 @@ export { default as ActiveUsersIndicator } from './ActiveUsersIndicator';
 export { default as RelativeScoreSection } from './RelativeScoreSection';
 export { default as OrientationCirclesSection } from './OrientationCirclesSection';
 export { default as CommunityStreakSection } from './CommunityStreakSection';
+export { default as FieldMissionSection } from './FieldMissionSection';

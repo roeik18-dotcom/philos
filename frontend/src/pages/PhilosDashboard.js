@@ -53,7 +53,8 @@ import {
   ActiveUsersIndicator,
   RelativeScoreSection,
   OrientationCirclesSection,
-  CommunityStreakSection
+  CommunityStreakSection,
+  FieldMissionSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -81,6 +82,7 @@ const TAB_LABELS = {
 export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
   // Active tab state
   const [activeTab, setActiveTab] = useState(TABS.HOME);
+  const [missionContributed, setMissionContributed] = useState(false);
 
   // Use the custom hook for all state management
   const {
@@ -237,12 +239,15 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             <DailyOrientationQuestion 
               userId={user?.id}
               onActionRecorded={(actionData) => {
-                // Refresh data after action is recorded
                 console.log('Daily action recorded:', actionData);
-                // Trigger a refresh of the dashboard data
-                window.location.reload();
+                if (actionData.mission_contributed) {
+                  setMissionContributed(true);
+                }
               }}
             />
+
+            {/* Field Mission - Daily Community Challenge */}
+            <FieldMissionSection missionContributed={missionContributed} />
 
             {/* Relative Orientation Score */}
             <RelativeScoreSection userId={user?.id} />

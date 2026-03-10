@@ -3634,13 +3634,26 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
         if request.action_taken and suggested_direction in direction_labels:
             impact_message = f"הפעולה שלך חיזקה היום את שדה ה{direction_labels[suggested_direction]}"
         
+        # Increment mission participants if direction matches today's mission
+        mission_contributed = False
+        if request.action_taken:
+            mission = await _get_or_create_mission_today()
+            if mission.get("direction") == suggested_direction:
+                today_str = now.strftime("%Y-%m-%d")
+                await db.daily_missions.update_one(
+                    {"date": today_str},
+                    {"$inc": {"participants": 1}}
+                )
+                mission_contributed = True
+
         return {
             'success': True,
             'message': 'Answer recorded',
             'action_recorded': request.action_taken,
             'direction': suggested_direction,
             'impact_percent': impact_percent,
-            'impact_message': impact_message
+            'impact_message': impact_message,
+            'mission_contributed': mission_contributed
         }
         
     except HTTPException:
@@ -4139,6 +4152,79 @@ async def get_orientation_index():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+
+# ==================== FIELD MISSION SYSTEM ====================
+
+MISSION_DESCRIPTIONS = {
+    'contribution': {
+        'mission_he': 'משימת היום: תרומה',
+        'description_he': 'עשה פעולה קטנה שתעזור למישהו אחר היום'
+    },
+    'recovery': {
+        'mission_he': 'משימת היום: התאוששות',
+        'description_he': 'קח רגע של מנוחה והטענה עצמית היום'
+    },
+    'order': {
+        'mission_he': 'משימת היום: סדר',
+        'description_he': 'ארגן דבר אחד קטן בסביבה שלך היום'
+    },
+    'exploration': {
+        'mission_he': 'משימת היום: חקירה',
+        'description_he': 'נסה משהו חדש או למד דבר אחד חדש היום'
+    }
+}
+
+MISSION_TARGET = 5000
+
+
+async def _get_or_create_mission_today():
+    """Get today's mission or create one based on the day of week."""
+    now = datetime.now(timezone.utc)
+    today_str = now.strftime("%Y-%m-%d")
+
+    mission = await db.daily_missions.find_one({"date": today_str}, {"_id": 0})
+    if mission:
+        return mission
+
+    # Rotate direction daily based on day-of-year
+    directions = ['contribution', 'recovery', 'order', 'exploration']
+    day_index = now.timetuple().tm_yday % len(directions)
+    direction = directions[day_index]
+
+    mission = {
+        "date": today_str,
+        "direction": direction,
+        "participants": 0,
+        "target": MISSION_TARGET
+    }
+    await db.daily_missions.insert_one({**mission})
+    return mission
+
+
+@api_router.get("/orientation/mission-today")
+async def get_mission_today():
+    """Field Mission: today's community challenge."""
+    try:
+        mission = await _get_or_create_mission_today()
+        direction = mission["direction"]
+        meta = MISSION_DESCRIPTIONS.get(direction, MISSION_DESCRIPTIONS['contribution'])
+        participants = mission.get("participants", 0)
+        target = mission.get("target", MISSION_TARGET)
+        progress = min(round((participants / target) * 100) if target > 0 else 0, 100)
+
+        return {
+            "success": True,
+            "direction": direction,
+            "mission_he": meta["mission_he"],
+            "description_he": meta["description_he"],
+            "participants": participants,
+            "target": target,
+            "progress_percent": progress
+        }
+    except Exception as e:
+        logger.error(f"Get mission today error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ==================== COMMUNITY LAYER ENDPOINTS ====================

@@ -69,7 +69,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           // Update streak locally
           setQuestionData(prev => prev ? { ...prev, streak: (prev.streak || 0) + 1, already_answered_today: true } : prev);
           if (onActionRecorded) {
-            onActionRecorded({ direction: questionData.suggested_direction, question_id: questionData.question_id, timestamp: new Date().toISOString() });
+            onActionRecorded({ direction: questionData.suggested_direction, question_id: questionData.question_id, timestamp: new Date().toISOString(), mission_contributed: result.mission_contributed || false });
           }
           setTimeout(() => setShowSuccess(false), 4000);
         }
