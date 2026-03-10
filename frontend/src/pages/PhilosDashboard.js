@@ -46,11 +46,15 @@ import {
   DecisionPathSection,
   OrientationIdentitySection,
   DailyOrientationQuestion,
-  OrientationFieldToday
+  OrientationFieldToday,
+  OrientationShareCard,
+  WeeklyInsightSection,
+  OrientationIndexPage
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
+import { Share2 } from 'lucide-react';
 
 // Tab definitions
 const TABS = {
@@ -353,6 +357,17 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             {/* Orientation Field Today - Collective Distribution */}
             <OrientationFieldToday />
 
+            {/* Share Orientation Button */}
+            <button
+              onClick={() => setShowShareCard(true)}
+              className="w-full py-3 px-4 bg-white rounded-2xl shadow-sm border border-border flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              dir="rtl"
+              data-testid="open-share-card-btn"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>שתף את ההתמצאות שלך</span>
+            </button>
+
             {/* Decision Path Engine - Concrete Action Recommendation */}
             <DecisionPathSection 
               userId={user?.id}
@@ -367,6 +382,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         {/* ==================== INSIGHTS TAB ==================== */}
         {activeTab === TABS.INSIGHTS && (
           <div className="space-y-6">
+            {/* Weekly Orientation Insight */}
+            <WeeklyInsightSection userId={user?.id} />
+
             {/* Chain Insights */}
             <ChainInsightsSection history={history} />
 
@@ -410,6 +428,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         {/* ==================== SYSTEM TAB ==================== */}
         {activeTab === TABS.SYSTEM && (
           <div className="space-y-6">
+            {/* Orientation Index - Global Public View */}
+            <OrientationIndexPage />
+
             {/* Recommendation Calibration */}
             <RecommendationCalibrationSection history={history} />
 
@@ -545,6 +566,11 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         )}
 
       </div>
+
+      {/* Share Card Modal */}
+      {showShareCard && (
+        <OrientationShareCard userId={user?.id} onClose={() => setShowShareCard(false)} />
+      )}
 
       {/* Floating Quick Decision Button */}
       <QuickDecisionButton onSubmit={evaluateAction} />

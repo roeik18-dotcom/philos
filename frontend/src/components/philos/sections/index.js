@@ -44,3 +44,6 @@ export { default as DecisionPathSection } from './DecisionPathSection';
 export { default as OrientationIdentitySection } from './OrientationIdentitySection';
 export { default as DailyOrientationQuestion } from './DailyOrientationQuestion';
 export { default as OrientationFieldToday } from './OrientationFieldToday';
+export { default as OrientationShareCard } from './OrientationShareCard';
+export { default as WeeklyInsightSection } from './WeeklyInsightSection';
+export { default as OrientationIndexPage } from './OrientationIndexPage';
