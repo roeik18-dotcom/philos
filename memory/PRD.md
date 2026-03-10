@@ -234,10 +234,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard with tabs (~380 lines)
+- `PhilosDashboard.js` - Main dashboard with tabs (~470 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 30 UI components (including HomeNavigationSection)
+- `sections/` - 31 UI components (including DailyOrientationLoopSection)
 
 ---
 
@@ -314,6 +314,18 @@ State:     Custom Hook (usePhilosState)
   - **History Tab**: Decision History, Replay, Tree, Map, Session Library, Comparison
   - HomeNavigationSection.js - simplified home view component
   - All existing sections preserved, only reorganized
+
+- ✅ **Daily Orientation Loop Completed**
+  - DailyOrientationLoopSection.js - creates daily return cycle
+  - Detects new day by comparing last activity timestamp with current date
+  - Shows on new day:
+    - "התמצאות יומית" header with "היום מתחיל מחזור חדש של החלטות."
+    - **אתמול** (Yesterday): Yesterday's dominant pattern or "לא הייתה פעילות."
+    - **היום** (Today): Direction badge + recommended action based on yesterday's pattern
+  - "התחל את היום" (Start Day) button saves metadata:
+    - day_started, orientation_direction, orientation_pattern_reference, yesterday_count
+  - Saves to localStorage (`philos_daily_orientation`) - won't show again same day
+  - Pattern → Recommendation mapping: harm→recovery, avoidance→order, contribution→continue
 
 - ✅ **System Stabilization Pass Completed**
   - Integrated dataService.js centralized caching layer for all collective API calls
