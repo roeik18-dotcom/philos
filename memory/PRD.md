@@ -38,19 +38,31 @@ The system is based on **four directions** and **two axes**:
 3. **Drift Visualization** - Dashed line connecting user position to collective center
 4. **Alignment Score** - 0-100% score with color coding (green >70%, amber >40%, red <40%)
 5. **Insights Generation** - Hebrew insights about user-collective alignment
+6. **Collective Momentum Indicator** - Shows field movement trend with directional arrow
+
+**Momentum Calculation:**
+- Compares last 7 days vs previous 7 days activity
+- Classifies field state as: `stabilizing`, `drifting`, `shifting`, or `stable`
+- When shifting, identifies target direction (recovery/order/contribution/exploration)
+- Generates Hebrew insights: "השדה הקולקטיבי נע בהדרגה לכיוון סדר"
 
 **Backend Endpoints:**
-- `GET /api/orientation/field` - Returns collective distribution, center, momentum
+- `GET /api/orientation/field` - Returns collective distribution, center, momentum, arrow coordinates
 - `GET /api/orientation/user/{user_id}` - Returns user position, alignment, drift pattern
 
-**Frontend Changes:**
-- Updated `OrientationCompassSection.js` with collectiveData fetch and driftInfo calculation
-- Added collective zone circle (subtle violet area)
-- Added drift line between user and collective center
-- Added alignment score bar with percentage
-- Added legend showing "מרכז קולקטיבי" (collective center)
+**API Response includes:**
+- `field_momentum`: stabilizing | drifting | shifting | stable
+- `momentum_direction`: Which direction the field is shifting toward
+- `momentum_strength`: 0-100 strength of movement
+- `momentum_arrow`: {from_x, from_y, to_x, to_y} for visualization
+- `momentum_insight`: Hebrew text explaining the trend
 
-**Test Results:** 100% pass (20/20 tests - 13 backend, 7 frontend)
+**Frontend Visualization:**
+- Momentum arrow on compass (violet, animated) when field is not stable
+- Momentum indicator box with icon, insight text, and strength bar
+- Icon changes based on momentum state (checkmark for stabilizing, warning for drifting, arrow for shifting)
+
+**Test Results:** 100% pass (17/17 tests - 11 backend, 6 frontend)
 
 ---
 
