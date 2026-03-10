@@ -36,7 +36,8 @@ import {
   NextBestDirectionSection,
   RecommendationFollowThroughSection,
   RecommendationCalibrationSection,
-  HomeNavigationSection
+  HomeNavigationSection,
+  DailyOrientationLoopSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -207,6 +208,20 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         {/* ==================== HOME TAB ==================== */}
         {activeTab === TABS.HOME && (
           <div className="space-y-4">
+            {/* Daily Orientation Loop - New Day Welcome */}
+            <DailyOrientationLoopSection
+              history={history}
+              onStartDay={(orientation) => {
+                // When day starts, scroll to action input
+                setTimeout(() => {
+                  const actionInput = document.querySelector('[data-testid="home-action-input"]');
+                  if (actionInput) {
+                    actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }, 300);
+              }}
+            />
+
             {/* Home Navigation - Clean Entry Screen */}
             <HomeNavigationSection
               history={history}
