@@ -36,3 +36,4 @@ export { default as RecommendationCalibrationSection } from './RecommendationCal
 export { default as HomeNavigationSection } from './HomeNavigationSection';
 export { default as DailyOrientationLoopSection } from './DailyOrientationLoopSection';
 export { default as WeeklyOrientationSummarySection } from './WeeklyOrientationSummarySection';
+export { default as MonthlyOrientationSection } from './MonthlyOrientationSection';
