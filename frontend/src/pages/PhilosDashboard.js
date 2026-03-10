@@ -42,7 +42,9 @@ import {
   MonthlyOrientationSection,
   TheorySection,
   OrientationCompassSection,
-  DirectionHistorySection
+  DirectionHistorySection,
+  DecisionPathSection,
+  OrientationIdentitySection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -330,7 +332,19 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             )}
 
             {/* Orientation Compass - Visual Map */}
-            <OrientationCompassSection history={history} state={state} />
+            <OrientationCompassSection history={history} state={state} userId={user?.id} />
+
+            {/* Orientation Identity - Who You Are */}
+            <OrientationIdentitySection userId={user?.id} />
+
+            {/* Decision Path Engine - Concrete Action Recommendation */}
+            <DecisionPathSection 
+              userId={user?.id}
+              onActionFollowed={(actionData) => {
+                // Log action follow-through
+                console.log('Action followed:', actionData);
+              }}
+            />
           </div>
         )}
 

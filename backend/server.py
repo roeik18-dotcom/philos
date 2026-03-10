@@ -2070,6 +2070,48 @@ class UserComparisonResponse(BaseModel):
     comparison_insight: Optional[str] = None   # Hebrew insight about user's position
     week_comparison: Dict[str, float] = {}     # This week vs collective average
 
+class DecisionPathResponse(BaseModel):
+    success: bool
+    user_id: str
+    current_state: Optional[str] = None        # Current imbalance or state
+    drift_type: Optional[str] = None           # harm, avoidance, isolation, rigidity
+    recommended_direction: Optional[str] = None # recovery, order, contribution, exploration
+    headline: Optional[str] = None             # Short Hebrew headline
+    recommended_step: Optional[str] = None     # Practical recommendation
+    concrete_action: Optional[str] = None      # Specific action to take
+    theory_basis: Optional[str] = None         # Why this recommendation (theory link)
+    session_id: Optional[str] = None           # For tracking one per session
+
+class OrientationSnapshot(BaseModel):
+    user_id: str
+    timestamp: str
+    dominant_direction: Optional[str] = None
+    direction_counts: Dict[str, int] = {}
+    positive_ratio: float = 0.0
+    avoidance_ratio: float = 0.0
+    momentum: Optional[str] = None
+
+class OrientationIdentityResponse(BaseModel):
+    success: bool
+    user_id: str
+    identity_type: Optional[str] = None        # The computed identity type
+    identity_label: Optional[str] = None       # Hebrew label for identity
+    identity_description: Optional[str] = None # Hebrew description
+    is_warning_state: bool = False             # True for avoidance loop
+    
+    # Computation inputs
+    dominant_direction: Optional[str] = None
+    momentum: Optional[str] = None             # stabilizing, drifting, shifting, stable
+    time_in_direction: int = 0                 # Days in current dominant direction
+    avoidance_ratio: float = 0.0               # 0-100, percentage of avoidance actions
+    previous_dominant: Optional[str] = None    # Previous dominant direction (for transitions)
+    
+    # Additional context
+    direction_counts: Dict[str, int] = {}
+    total_actions: int = 0
+    weeks_analyzed: int = 0
+    insight: Optional[str] = None              # Supportive Hebrew insight
+
 class UserOrientationResponse(BaseModel):
     success: bool
     user_position: Dict[str, float] = {}       # x, y coordinates
@@ -2670,6 +2712,496 @@ async def get_user_comparison(user_id: str):
         
     except Exception as e:
         logger.error(f"Get user comparison error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/decision-path/{user_id}", response_model=DecisionPathResponse)
+async def get_decision_path(user_id: str):
+    """
+    Decision Path Engine: Generate a concrete action recommendation
+    based on user's current position and imbalance.
+    
+    Theory-based recommendations:
+    - harm → recovery: "יצאת מהמסלול. הצעד הבא: התאוששות."
+    - avoidance → order: "נסחפת להימנעות. הצעד הבא: ליצור מבנה."
+    - isolation → contribution: "מיקוד עצמי גבוה. הצעד הבא: לתרום לאחרים."
+    - rigidity → exploration: "יש קיפאון. הצעד הבא: לפתוח לחדש."
+    """
+    try:
+        # Get user's session data
+        user_session = await db.philos_sessions.find_one(
+            {"user_id": user_id},
+            {"_id": 0}
+        )
+        
+        user_history = user_session.get('history', []) if user_session else []
+        
+        # Direction labels in Hebrew
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה',
+            'harm': 'נזק',
+            'avoidance': 'הימנעות'
+        }
+        
+        # Concrete actions for each direction (Hebrew)
+        concrete_actions = {
+            'recovery': [
+                "קח הפסקה של 5 דקות ונשום עמוק.",
+                "שתה כוס מים ושב בשקט לרגע.",
+                "צא להליכה קצרה של 10 דקות.",
+                "כתוב 3 דברים שאתה אסיר תודה עליהם.",
+                "האזן לשיר אחד שאתה אוהב."
+            ],
+            'order': [
+                "בחר משימה קטנה אחת והשלם אותה עכשיו.",
+                "סדר פינה אחת בחדר שלך.",
+                "כתוב רשימה של 3 דברים לעשות היום.",
+                "קבע זמן קבוע למשימה שדחית.",
+                "מחק 5 הודעות ישנות מהטלפון."
+            ],
+            'contribution': [
+                "שלח הודעה חיובית למישהו שאכפת לך ממנו.",
+                "הצע עזרה קטנה למישהו קרוב.",
+                "הקשב למישהו במשך 5 דקות בלי להפריע.",
+                "שתף משהו מועיל עם אחרים.",
+                "תן מחמאה כנה למישהו."
+            ],
+            'exploration': [
+                "נסה משהו חדש שלא עשית קודם.",
+                "קרא מאמר על נושא שמעניין אותך.",
+                "שאל שאלה שלא שאלת קודם.",
+                "לך בדרך אחרת מהרגיל.",
+                "התחל שיחה עם מישהו חדש."
+            ]
+        }
+        
+        # Recommended steps for each imbalance (Hebrew)
+        recommended_steps = {
+            'harm': "הצעד הבא: התאוששות. חזור לאיזון.",
+            'avoidance': "הצעד הבא: ליצור מבנה וסדר.",
+            'isolation': "הצעד הבא: לתרום לאחרים.",
+            'rigidity': "הצעד הבא: להיפתח לחדש."
+        }
+        
+        # Theory basis for each path
+        theory_basis = {
+            'harm': "נזק → התאוששות: כשיש נזק, הדרך חזרה היא דרך התאוששות.",
+            'avoidance': "הימנעות → סדר: הימנעות מאוזנת על ידי יצירת מבנה.",
+            'isolation': "בידוד → תרומה: מיקוד עצמי מאוזן על ידי תרומה לאחרים.",
+            'rigidity': "נוקשות → חקירה: קיפאון מאוזן על ידי פתיחות וחקירה."
+        }
+        
+        # Headlines for each imbalance
+        headlines = {
+            'harm': "יצאת מהמסלול.",
+            'avoidance': "נסחפת להימנעות.",
+            'isolation': "מיקוד עצמי גבוה.",
+            'rigidity': "יש קיפאון.",
+            'positive': "אתה על המסלול הנכון.",
+            'new_user': "ברוך הבא למסע."
+        }
+        
+        # Default response for new users
+        if not user_history:
+            import random
+            action = random.choice(concrete_actions['recovery'])
+            return DecisionPathResponse(
+                success=True,
+                user_id=user_id,
+                current_state="new_user",
+                drift_type=None,
+                recommended_direction="recovery",
+                headline=headlines['new_user'],
+                recommended_step="התחל עם פעולת התאוששות.",
+                concrete_action=action,
+                theory_basis="התאוששות היא נקודת הפתיחה הטובה ביותר.",
+                session_id=str(uuid.uuid4())[:8]
+            )
+        
+        # Filter to last 7 days
+        now = datetime.now(timezone.utc)
+        seven_days_ago = (now - timedelta(days=7)).isoformat()
+        
+        recent_history = [h for h in user_history if h.get('timestamp', '') >= seven_days_ago]
+        if not recent_history:
+            recent_history = user_history[:10]  # Fallback to recent 10
+        
+        # Count value tags
+        tag_counts = {}
+        for h in recent_history:
+            tag = h.get('value_tag')
+            if tag:
+                tag_counts[tag] = tag_counts.get(tag, 0) + 1
+        
+        total_actions = sum(tag_counts.values())
+        
+        # Detect imbalance type
+        drift_type = None
+        recommended_direction = None
+        current_state = None
+        
+        harm_count = tag_counts.get('harm', 0)
+        avoidance_count = tag_counts.get('avoidance', 0)
+        order_count = tag_counts.get('order', 0)
+        contribution_count = tag_counts.get('contribution', 0)
+        recovery_count = tag_counts.get('recovery', 0)
+        exploration_count = tag_counts.get('exploration', 0)
+        
+        negative_count = harm_count + avoidance_count
+        
+        # Priority 1: Recent harm
+        last_tag = recent_history[0].get('value_tag') if recent_history else None
+        
+        if last_tag == 'harm' or harm_count >= 2:
+            drift_type = 'harm'
+            recommended_direction = 'recovery'
+            current_state = 'drift_toward_harm'
+        
+        # Priority 2: Avoidance pattern
+        elif last_tag == 'avoidance' or avoidance_count >= 3:
+            drift_type = 'avoidance'
+            recommended_direction = 'order'
+            current_state = 'drift_toward_avoidance'
+        
+        # Priority 3: Isolation (no contribution, self-focused)
+        elif total_actions >= 4 and contribution_count == 0:
+            drift_type = 'isolation'
+            recommended_direction = 'contribution'
+            current_state = 'isolation_detected'
+        
+        # Priority 4: Rigidity (too much order, no exploration)
+        elif order_count >= 4 and exploration_count == 0:
+            drift_type = 'rigidity'
+            recommended_direction = 'exploration'
+            current_state = 'rigidity_detected'
+        
+        # Priority 5: Positive state - reinforce or suggest adjacent
+        else:
+            current_state = 'positive'
+            # Find dominant positive direction
+            positive_counts = {
+                'recovery': recovery_count,
+                'order': order_count,
+                'contribution': contribution_count,
+                'exploration': exploration_count
+            }
+            dominant = max(positive_counts, key=positive_counts.get)
+            
+            # Suggest adjacent direction for balance
+            adjacent_map = {
+                'recovery': 'order',
+                'order': 'contribution',
+                'contribution': 'exploration',
+                'exploration': 'recovery'
+            }
+            recommended_direction = adjacent_map.get(dominant, 'recovery')
+        
+        # Select concrete action based on recommendation
+        import random
+        actions_list = concrete_actions.get(recommended_direction, concrete_actions['recovery'])
+        
+        # Use session-based seed for consistent action per session
+        session_id = str(uuid.uuid4())[:8]
+        random.seed(hash(user_id + session_id))
+        concrete_action = random.choice(actions_list)
+        random.seed()  # Reset seed
+        
+        # Build response
+        if drift_type:
+            headline = headlines.get(drift_type, headlines['new_user'])
+            recommended_step = recommended_steps.get(drift_type, "המשך קדימה.")
+            theory = theory_basis.get(drift_type, "")
+        else:
+            headline = headlines['positive']
+            recommended_step = f"לאיזון מלא, נסה גם {direction_labels.get(recommended_direction, recommended_direction)}."
+            theory = "איזון בין הכיוונים מחזק את ההתמצאות."
+        
+        return DecisionPathResponse(
+            success=True,
+            user_id=user_id,
+            current_state=current_state,
+            drift_type=drift_type,
+            recommended_direction=recommended_direction,
+            headline=headline,
+            recommended_step=recommended_step,
+            concrete_action=concrete_action,
+            theory_basis=theory,
+            session_id=session_id
+        )
+        
+    except Exception as e:
+        logger.error(f"Get decision path error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/identity/{user_id}", response_model=OrientationIdentityResponse)
+async def get_orientation_identity(user_id: str):
+    """
+    Orientation Identity Engine: Compute user's orientation identity based on:
+    - dominant_direction
+    - momentum
+    - time_in_direction
+    - avoidance_ratio
+    - previous_dominant
+    
+    Identity types:
+    - avoidance_loop: High avoidance pattern (warning state)
+    - recovery_dominant: Focused on recovery
+    - order_builder: Building structure and order
+    - contribution_oriented: Contributing to others
+    - exploration_driven: Exploring and growing
+    - recovery_to_contribution: Transitioning from recovery to contribution
+    - drifting_from_order: Was order-focused, now drifting
+    """
+    try:
+        # Get user's session data
+        user_session = await db.philos_sessions.find_one(
+            {"user_id": user_id},
+            {"_id": 0}
+        )
+        
+        user_history = user_session.get('history', []) if user_session else []
+        
+        # Direction labels in Hebrew
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה',
+            'harm': 'נזק',
+            'avoidance': 'הימנעות'
+        }
+        
+        # Identity definitions
+        identity_definitions = {
+            'avoidance_loop': {
+                'label': 'לולאת הימנעות',
+                'description': 'נראה שאתה בדפוס של הימנעות. זה בסדר - זיהוי זה הצעד הראשון לשינוי.',
+                'insight': 'הימנעות היא תגובה טבעית. הצעד הבא הוא ליצור מבנה קטן.'
+            },
+            'recovery_dominant': {
+                'label': 'ממוקד בהתאוששות',
+                'description': 'אתה בתהליך התאוששות פעיל. זה זמן חשוב לריפוי ואיזון.',
+                'insight': 'התאוששות היא בסיס חיוני. כשתרגיש מוכן, נסה גם פעולות סדר.'
+            },
+            'order_builder': {
+                'label': 'בונה סדר',
+                'description': 'אתה יוצר מבנה וסדר בחיים שלך. זה סימן של התקדמות.',
+                'insight': 'סדר מאפשר יציבות. השלב הבא יכול להיות תרומה לאחרים.'
+            },
+            'contribution_oriented': {
+                'label': 'מכוון לתרומה',
+                'description': 'אתה ממוקד בתרומה לאחרים. זה מעשיר אותך ואת הסביבה.',
+                'insight': 'תרומה מחברת אותך לאחרים. זכור גם לדאוג לעצמך.'
+            },
+            'exploration_driven': {
+                'label': 'מונע מחקירה',
+                'description': 'אתה פתוח לחדש ולחקירה. זה מרחיב את האופקים שלך.',
+                'insight': 'חקירה מביאה צמיחה. לפעמים כדאי גם לעצור וליצור סדר.'
+            },
+            'recovery_to_contribution': {
+                'label': 'מעבר מהתאוששות לתרומה',
+                'description': 'אתה עובר מהתאוששות לתרומה. זה מסע חיובי מאוד.',
+                'insight': 'המעבר הזה מראה התקדמות משמעותית. המשך בקצב שלך.'
+            },
+            'drifting_from_order': {
+                'label': 'סחף מסדר',
+                'description': 'היית ממוקד בסדר אבל יש סחף. זה הזדמנות לבדוק מה השתנה.',
+                'insight': 'סחף הוא טבעי. חזור ליצור מבנה קטן אחד.'
+            },
+            'balanced': {
+                'label': 'מאוזן',
+                'description': 'אתה מפזר את הפעולות שלך בין הכיוונים. זה מצב בריא.',
+                'insight': 'איזון הוא מטרה טובה. המשך לשמור על מגוון.'
+            },
+            'new_user': {
+                'label': 'מתחיל מסע',
+                'description': 'ברוך הבא! אתה בתחילת המסע שלך.',
+                'insight': 'כל מסע מתחיל בצעד אחד. התחל עם פעולת התאוששות.'
+            }
+        }
+        
+        # Default response for new users
+        if not user_history:
+            return OrientationIdentityResponse(
+                success=True,
+                user_id=user_id,
+                identity_type='new_user',
+                identity_label=identity_definitions['new_user']['label'],
+                identity_description=identity_definitions['new_user']['description'],
+                is_warning_state=False,
+                insight=identity_definitions['new_user']['insight']
+            )
+        
+        # Calculate time boundaries
+        now = datetime.now(timezone.utc)
+        seven_days_ago = (now - timedelta(days=7)).isoformat()
+        fourteen_days_ago = (now - timedelta(days=14)).isoformat()
+        twenty_one_days_ago = (now - timedelta(days=21)).isoformat()
+        
+        # Categorize history by time period
+        recent_history = [h for h in user_history if h.get('timestamp', '') >= seven_days_ago]
+        previous_history = [h for h in user_history if fourteen_days_ago <= h.get('timestamp', '') < seven_days_ago]
+        older_history = [h for h in user_history if twenty_one_days_ago <= h.get('timestamp', '') < fourteen_days_ago]
+        
+        # If not enough recent data, use all history
+        if len(recent_history) < 3:
+            recent_history = user_history[:20]
+        
+        # Count directions for each period
+        def count_directions(history_list):
+            counts = {'recovery': 0, 'order': 0, 'contribution': 0, 'exploration': 0, 'harm': 0, 'avoidance': 0}
+            for h in history_list:
+                tag = h.get('value_tag')
+                if tag and tag in counts:
+                    counts[tag] += 1
+            return counts
+        
+        recent_counts = count_directions(recent_history)
+        previous_counts = count_directions(previous_history)
+        
+        # Calculate totals
+        total_recent = sum(recent_counts.values())
+        total_previous = sum(previous_counts.values())
+        
+        # Calculate avoidance ratio
+        avoidance_count = recent_counts.get('avoidance', 0) + recent_counts.get('harm', 0)
+        avoidance_ratio = round((avoidance_count / total_recent * 100) if total_recent > 0 else 0, 1)
+        
+        # Find dominant direction (recent)
+        positive_directions = ['recovery', 'order', 'contribution', 'exploration']
+        dominant_direction = None
+        max_count = 0
+        for direction in positive_directions:
+            if recent_counts.get(direction, 0) > max_count:
+                max_count = recent_counts.get(direction, 0)
+                dominant_direction = direction
+        
+        # Find previous dominant direction
+        previous_dominant = None
+        prev_max = 0
+        for direction in positive_directions:
+            if previous_counts.get(direction, 0) > prev_max:
+                prev_max = previous_counts.get(direction, 0)
+                previous_dominant = direction
+        
+        # Calculate time in direction (approximate - based on streak)
+        time_in_direction = 0
+        if dominant_direction and dominant_direction == previous_dominant:
+            time_in_direction = 14  # At least 2 weeks
+            # Check older history too
+            older_counts = count_directions(older_history)
+            older_max_dir = max(positive_directions, key=lambda d: older_counts.get(d, 0))
+            if older_max_dir == dominant_direction:
+                time_in_direction = 21  # At least 3 weeks
+        elif dominant_direction:
+            time_in_direction = 7  # This week's dominant
+        
+        # Calculate momentum
+        momentum = 'stable'
+        if total_recent > 0 and total_previous > 0:
+            recent_positive = sum(recent_counts.get(d, 0) for d in positive_directions)
+            prev_positive = sum(previous_counts.get(d, 0) for d in positive_directions)
+            recent_ratio = recent_positive / total_recent
+            prev_ratio = prev_positive / total_previous
+            
+            if recent_ratio > prev_ratio + 0.15:
+                momentum = 'stabilizing'
+            elif recent_ratio < prev_ratio - 0.15:
+                momentum = 'drifting'
+            elif dominant_direction != previous_dominant and previous_dominant:
+                momentum = 'shifting'
+        
+        # === IDENTITY COMPUTATION ===
+        identity_type = 'balanced'
+        is_warning_state = False
+        
+        # Priority 1: Avoidance Loop (warning state)
+        if avoidance_ratio >= 40 or (recent_counts.get('avoidance', 0) >= 3 and total_recent >= 5):
+            identity_type = 'avoidance_loop'
+            is_warning_state = True
+        
+        # Priority 2: Drifting from Order (was order, now drifting)
+        elif previous_dominant == 'order' and momentum == 'drifting':
+            identity_type = 'drifting_from_order'
+        
+        # Priority 3: Transition (recovery → contribution)
+        elif previous_dominant == 'recovery' and dominant_direction == 'contribution':
+            identity_type = 'recovery_to_contribution'
+        
+        # Priority 4: Dominant direction identities
+        elif dominant_direction:
+            if dominant_direction == 'recovery' and max_count >= 3:
+                identity_type = 'recovery_dominant'
+            elif dominant_direction == 'order' and max_count >= 3:
+                identity_type = 'order_builder'
+            elif dominant_direction == 'contribution' and max_count >= 3:
+                identity_type = 'contribution_oriented'
+            elif dominant_direction == 'exploration' and max_count >= 3:
+                identity_type = 'exploration_driven'
+        
+        # Priority 5: Check for balanced state
+        if identity_type == 'balanced':
+            # Check if user is well distributed
+            active_directions = [d for d in positive_directions if recent_counts.get(d, 0) > 0]
+            if len(active_directions) >= 3:
+                identity_type = 'balanced'
+            elif dominant_direction:
+                # Default to dominant direction identity
+                identity_map = {
+                    'recovery': 'recovery_dominant',
+                    'order': 'order_builder',
+                    'contribution': 'contribution_oriented',
+                    'exploration': 'exploration_driven'
+                }
+                identity_type = identity_map.get(dominant_direction, 'balanced')
+        
+        # Get identity details
+        identity_info = identity_definitions.get(identity_type, identity_definitions['balanced'])
+        
+        # Save snapshot to database (for tracking over time)
+        snapshot = {
+            'user_id': user_id,
+            'timestamp': now.isoformat(),
+            'identity_type': identity_type,
+            'dominant_direction': dominant_direction,
+            'direction_counts': recent_counts,
+            'avoidance_ratio': avoidance_ratio,
+            'momentum': momentum,
+            'time_in_direction': time_in_direction
+        }
+        
+        # Upsert snapshot (one per day per user)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        await db.orientation_snapshots.update_one(
+            {'user_id': user_id, 'date': today_start[:10]},
+            {'$set': snapshot, '$setOnInsert': {'date': today_start[:10]}},
+            upsert=True
+        )
+        
+        return OrientationIdentityResponse(
+            success=True,
+            user_id=user_id,
+            identity_type=identity_type,
+            identity_label=identity_info['label'],
+            identity_description=identity_info['description'],
+            is_warning_state=is_warning_state,
+            dominant_direction=dominant_direction,
+            momentum=momentum,
+            time_in_direction=time_in_direction,
+            avoidance_ratio=avoidance_ratio,
+            previous_dominant=previous_dominant,
+            direction_counts=recent_counts,
+            total_actions=total_recent,
+            weeks_analyzed=1 if not previous_history else (2 if not older_history else 3),
+            insight=identity_info['insight']
+        )
+        
+    except Exception as e:
+        logger.error(f"Get orientation identity error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

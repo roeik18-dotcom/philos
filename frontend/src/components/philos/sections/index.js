@@ -40,3 +40,5 @@ export { default as MonthlyOrientationSection } from './MonthlyOrientationSectio
 export { default as TheorySection } from './TheorySection';
 export { default as OrientationCompassSection } from './OrientationCompassSection';
 export { default as DirectionHistorySection } from './DirectionHistorySection';
+export { default as DecisionPathSection } from './DecisionPathSection';
+export { default as OrientationIdentitySection } from './OrientationIdentitySection';

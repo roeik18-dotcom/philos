@@ -16,8 +16,8 @@ export default function OrientationCompassSection({ history, state, userId }) {
   const [comparisonData, setComparisonData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Get user ID from localStorage if not provided
-  const effectiveUserId = userId || localStorage.getItem('philos_anon_id');
+  // Get user ID from localStorage if not provided (use same key as cloudSync.js)
+  const effectiveUserId = userId || localStorage.getItem('philos_user_id');
 
   // Fetch collective field data, history, and comparison
   useEffect(() => {
