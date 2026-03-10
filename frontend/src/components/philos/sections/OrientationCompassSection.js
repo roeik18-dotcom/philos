@@ -13,31 +13,52 @@ export default function OrientationCompassSection({ history, state, userId }) {
   // State for collective field data
   const [collectiveData, setCollectiveData] = useState(null);
   const [historyData, setHistoryData] = useState(null);
+  const [comparisonData, setComparisonData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch collective field data and history
+  // Get user ID from localStorage if not provided
+  const effectiveUserId = userId || localStorage.getItem('philos_anon_id');
+
+  // Fetch collective field data, history, and comparison
   useEffect(() => {
     const fetchCollectiveField = async () => {
       try {
         setLoading(true);
         
-        // Fetch both endpoints in parallel
-        const [fieldResponse, historyResponse] = await Promise.all([
+        // Build fetch promises
+        const fetchPromises = [
           fetch(`${API_URL}/api/orientation/field`),
           fetch(`${API_URL}/api/orientation/history`)
-        ]);
+        ];
         
-        if (fieldResponse.ok) {
-          const data = await fieldResponse.json();
+        // Add comparison fetch if we have a user ID
+        if (effectiveUserId) {
+          fetchPromises.push(fetch(`${API_URL}/api/orientation/compare/${effectiveUserId}`));
+        }
+        
+        const responses = await Promise.all(fetchPromises);
+        
+        // Process field response
+        if (responses[0].ok) {
+          const data = await responses[0].json();
           if (data.success) {
             setCollectiveData(data);
           }
         }
         
-        if (historyResponse.ok) {
-          const data = await historyResponse.json();
+        // Process history response
+        if (responses[1].ok) {
+          const data = await responses[1].json();
           if (data.success) {
             setHistoryData(data);
+          }
+        }
+        
+        // Process comparison response (if available)
+        if (responses[2]?.ok) {
+          const data = await responses[2].json();
+          if (data.success) {
+            setComparisonData(data);
           }
         }
       } catch (error) {
@@ -48,7 +69,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
     };
     
     fetchCollectiveField();
-  }, [history?.length]); // Refetch when history changes
+  }, [history?.length, effectiveUserId]); // Refetch when history changes
 
   // Calculate current position using centralized theory-based function
   const currentPosition = useMemo(() => {
@@ -585,6 +606,129 @@ export default function OrientationCompassSection({ history, state, userId }) {
             <p className="text-xs text-slate-600 mt-3 text-center" data-testid="trend-insight">
               {historyData.trend_insight}
             </p>
+          )}
+        </div>
+      )}
+
+      {/* User Comparison Section */}
+      {comparisonData && comparisonData.total_user_actions > 0 && (
+        <div 
+          className="mt-3 p-3 rounded-xl bg-gradient-to-r from-sky-50 to-cyan-50 border border-sky-200"
+          data-testid="user-comparison-section"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-sky-800">המיקום שלך השבוע</span>
+            <span className="text-xs text-sky-600">{comparisonData.total_user_actions} פעולות</span>
+          </div>
+          
+          {/* Direction Percentile Bars */}
+          <div className="space-y-2">
+            {comparisonData.direction_percentiles
+              .filter(dp => dp.user_count > 0)
+              .sort((a, b) => b.percentile - a.percentile)
+              .slice(0, 3)  // Show top 3 directions
+              .map((dp, idx) => (
+                <div key={dp.direction} className="flex items-center gap-2">
+                  {/* Direction label */}
+                  <span className="text-xs text-sky-700 w-16 text-left">
+                    {directionLabels[dp.direction] || dp.direction}
+                  </span>
+                  
+                  {/* Percentile bar */}
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        dp.percentile >= 75 ? 'bg-sky-500' :
+                        dp.percentile >= 50 ? 'bg-sky-400' :
+                        'bg-sky-300'
+                      }`}
+                      style={{ width: `${dp.percentile}%` }}
+                    />
+                  </div>
+                  
+                  {/* Rank label */}
+                  {dp.rank_label && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap ${
+                      dp.percentile >= 90 ? 'bg-sky-100 text-sky-700 font-medium' :
+                      dp.percentile >= 75 ? 'bg-sky-50 text-sky-600' :
+                      'text-sky-500'
+                    }`}>
+                      {dp.rank_label}
+                    </span>
+                  )}
+                </div>
+              ))}
+          </div>
+          
+          {/* Visual Position Indicator */}
+          {comparisonData.dominant_direction && comparisonData.dominant_percentile > 0 && (
+            <div className="mt-3 pt-3 border-t border-sky-200">
+              <div className="flex items-center gap-2">
+                {/* Small compass indicator */}
+                <div className="relative w-10 h-10 bg-white rounded-lg border border-sky-200 flex-shrink-0">
+                  {/* User position dot */}
+                  <div 
+                    className="absolute w-2 h-2 rounded-full"
+                    style={{
+                      left: '50%',
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      backgroundColor: directionColors[comparisonData.dominant_direction]?.fill || '#0ea5e9'
+                    }}
+                  />
+                  {/* Direction label */}
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[6px] text-sky-600">
+                    {directionLabels[comparisonData.dominant_direction]?.slice(0, 3)}
+                  </span>
+                </div>
+                
+                {/* Comparison insight */}
+                <p className="text-xs text-sky-700 flex-1" data-testid="comparison-insight">
+                  {comparisonData.comparison_insight}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {/* Week Distribution Mini-Chart */}
+          {comparisonData.week_comparison && Object.keys(comparisonData.week_comparison).length > 0 && (
+            <div className="mt-3 pt-3 border-t border-sky-200">
+              <div className="text-[10px] text-sky-600 mb-2">התפלגות השבוע שלך:</div>
+              <div className="flex gap-1 h-4">
+                {Object.entries(comparisonData.week_comparison)
+                  .filter(([, pct]) => pct > 0)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([direction, pct]) => (
+                    <div 
+                      key={direction}
+                      className="rounded-sm"
+                      style={{ 
+                        width: `${pct}%`,
+                        backgroundColor: directionColors[direction]?.fill || '#9ca3af',
+                        minWidth: pct > 0 ? '8px' : '0'
+                      }}
+                      title={`${directionLabels[direction]}: ${pct}%`}
+                    />
+                  ))}
+              </div>
+              {/* Legend for distribution */}
+              <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                {Object.entries(comparisonData.week_comparison)
+                  .filter(([, pct]) => pct > 0)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([direction, pct]) => (
+                    <div key={direction} className="flex items-center gap-1">
+                      <div 
+                        className="w-2 h-2 rounded-sm"
+                        style={{ backgroundColor: directionColors[direction]?.fill || '#9ca3af' }}
+                      />
+                      <span className="text-[9px] text-muted-foreground">
+                        {directionLabels[direction]} {Math.round(pct)}%
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
           )}
         </div>
       )}

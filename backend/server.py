@@ -2054,6 +2054,22 @@ class FieldHistoryResponse(BaseModel):
     trend_insight: Optional[str] = None        # Hebrew insight about the trend
     weeks_analyzed: int = 0
 
+class DirectionPercentile(BaseModel):
+    direction: str
+    user_count: int                            # User's action count in this direction
+    percentile: float                          # 0-100, user's percentile (higher = more focused)
+    rank_label: Optional[str] = None           # "עליון 10%", "עליון 25%", etc.
+
+class UserComparisonResponse(BaseModel):
+    success: bool
+    user_id: str
+    total_user_actions: int = 0
+    direction_percentiles: List[DirectionPercentile] = []  # Percentile for each direction
+    dominant_direction: Optional[str] = None   # User's most frequent direction
+    dominant_percentile: float = 0.0           # Percentile in dominant direction
+    comparison_insight: Optional[str] = None   # Hebrew insight about user's position
+    week_comparison: Dict[str, float] = {}     # This week vs collective average
+
 class UserOrientationResponse(BaseModel):
     success: bool
     user_position: Dict[str, float] = {}       # x, y coordinates
@@ -2508,6 +2524,152 @@ async def get_field_history():
         
     except Exception as e:
         logger.error(f"Get field history error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/compare/{user_id}", response_model=UserComparisonResponse)
+async def get_user_comparison(user_id: str):
+    """
+    Calculate user's percentile ranking within each direction.
+    Compares user to all other users in the collective.
+    """
+    try:
+        # Get all user sessions
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0}).to_list(1000)
+        
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        positive_directions = ['recovery', 'order', 'contribution', 'exploration']
+        
+        # Time boundary - last 7 days
+        now = datetime.now(timezone.utc)
+        seven_days_ago = (now - timedelta(days=7)).isoformat()
+        
+        # Calculate direction counts for each user
+        user_direction_counts = {}  # user_id -> {direction -> count}
+        
+        for session in all_sessions:
+            session_user_id = session.get('user_id')
+            if not session_user_id:
+                continue
+                
+            counts = {d: 0 for d in positive_directions}
+            history = session.get('history', [])
+            
+            for h in history:
+                ts = h.get('timestamp', '')
+                if ts >= seven_days_ago:
+                    tag = h.get('value_tag')
+                    if tag and tag in counts:
+                        counts[tag] += 1
+            
+            user_direction_counts[session_user_id] = counts
+        
+        # Get current user's counts
+        user_counts = user_direction_counts.get(user_id, {d: 0 for d in positive_directions})
+        total_user_actions = sum(user_counts.values())
+        
+        if total_user_actions == 0:
+            return UserComparisonResponse(
+                success=True,
+                user_id=user_id,
+                total_user_actions=0,
+                direction_percentiles=[],
+                comparison_insight="אין מספיק נתונים השבוע. בצע פעולות כדי להשוות את עצמך לאחרים."
+            )
+        
+        # Calculate percentiles for each direction
+        direction_percentiles = []
+        
+        for direction in positive_directions:
+            user_count = user_counts.get(direction, 0)
+            
+            # Get all user counts for this direction
+            all_counts = [counts.get(direction, 0) for counts in user_direction_counts.values()]
+            all_counts = [c for c in all_counts if c > 0]  # Only users with activity
+            
+            if not all_counts:
+                percentile = 50.0
+            else:
+                # Calculate percentile: how many users have LESS activity than this user
+                users_below = sum(1 for c in all_counts if c < user_count)
+                users_equal = sum(1 for c in all_counts if c == user_count)
+                percentile = round((users_below + users_equal * 0.5) / len(all_counts) * 100, 1)
+            
+            # Generate rank label
+            rank_label = None
+            if user_count > 0:
+                if percentile >= 90:
+                    rank_label = "עליון 10%"
+                elif percentile >= 75:
+                    rank_label = "עליון 25%"
+                elif percentile >= 50:
+                    rank_label = "מעל הממוצע"
+                else:
+                    rank_label = "פעיל"
+            
+            direction_percentiles.append(DirectionPercentile(
+                direction=direction,
+                user_count=user_count,
+                percentile=percentile,
+                rank_label=rank_label
+            ))
+        
+        # Find user's dominant direction
+        dominant_direction = None
+        dominant_count = 0
+        dominant_percentile = 0.0
+        
+        for dp in direction_percentiles:
+            if dp.user_count > dominant_count:
+                dominant_count = dp.user_count
+                dominant_direction = dp.direction
+                dominant_percentile = dp.percentile
+        
+        # Calculate week comparison (user's distribution vs collective)
+        week_comparison = {}
+        if total_user_actions > 0:
+            for direction in positive_directions:
+                user_pct = round(user_counts.get(direction, 0) / total_user_actions * 100, 1)
+                week_comparison[direction] = user_pct
+        
+        # Generate comparison insight
+        comparison_insight = None
+        
+        if dominant_direction and dominant_percentile >= 75:
+            comparison_insight = f"אתה בין ה-{100 - int(dominant_percentile)}% המובילים במיקוד על {direction_labels.get(dominant_direction, dominant_direction)} השבוע."
+        elif dominant_direction and dominant_percentile >= 50:
+            comparison_insight = f"אתה מעל הממוצע במיקוד על {direction_labels.get(dominant_direction, dominant_direction)}."
+        elif dominant_direction:
+            comparison_insight = f"הכיוון המוביל שלך השבוע הוא {direction_labels.get(dominant_direction, dominant_direction)}."
+        
+        # Add balance insight if user is well-distributed
+        if total_user_actions >= 4:
+            counts_above_zero = [dp.user_count for dp in direction_percentiles if dp.user_count > 0]
+            if len(counts_above_zero) >= 3:
+                max_count = max(counts_above_zero)
+                min_count = min(counts_above_zero)
+                if max_count - min_count <= 2:
+                    comparison_insight = "המיקוד שלך מאוזן בין הכיוונים. זהו סימן טוב לאיזון."
+        
+        return UserComparisonResponse(
+            success=True,
+            user_id=user_id,
+            total_user_actions=total_user_actions,
+            direction_percentiles=direction_percentiles,
+            dominant_direction=dominant_direction,
+            dominant_percentile=dominant_percentile,
+            comparison_insight=comparison_insight,
+            week_comparison=week_comparison
+        )
+        
+    except Exception as e:
+        logger.error(f"Get user comparison error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
