@@ -184,6 +184,30 @@ export default function OrientationCompassSection({ history, state, userId }) {
 
         {/* SVG Layer for Lines and Markers */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          {/* Arrow marker definitions */}
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="7"
+              refX="9"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+            </marker>
+            <marker
+              id="momentum-arrowhead"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#8b5cf6" />
+            </marker>
+          </defs>
+
           {/* Collective Center Zone (subtle circle) */}
           {collectiveData?.field_center && (
             <circle
@@ -196,6 +220,29 @@ export default function OrientationCompassSection({ history, state, userId }) {
               strokeDasharray="4,2"
               data-testid="collective-zone"
             />
+          )}
+
+          {/* Momentum Arrow (collective field movement) */}
+          {collectiveData?.momentum_arrow?.from_x && collectiveData?.field_momentum !== 'stable' && (
+            <line
+              x1={`${collectiveData.momentum_arrow.from_x}%`}
+              y1={`${collectiveData.momentum_arrow.from_y}%`}
+              x2={`${collectiveData.momentum_arrow.to_x}%`}
+              y2={`${collectiveData.momentum_arrow.to_y}%`}
+              stroke="#8b5cf6"
+              strokeWidth="2.5"
+              markerEnd="url(#momentum-arrowhead)"
+              opacity="0.8"
+              data-testid="momentum-arrow"
+            >
+              {/* Animate the arrow */}
+              <animate
+                attributeName="stroke-dashoffset"
+                values="20;0"
+                dur="1.5s"
+                repeatCount="indefinite"
+              />
+            </line>
           )}
 
           {/* Drift Line (user to collective center) */}
@@ -238,31 +285,17 @@ export default function OrientationCompassSection({ history, state, userId }) {
 
           {/* Recommended Direction Arrow */}
           {recommendedArrow && currentPosition.valueTag && (
-            <>
-              <defs>
-                <marker
-                  id="arrowhead"
-                  markerWidth="10"
-                  markerHeight="7"
-                  refX="9"
-                  refY="3.5"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
-                </marker>
-              </defs>
-              <line
-                x1={`${currentPosition.x}%`}
-                y1={`${currentPosition.y}%`}
-                x2={`${recommendedArrow.to.x}%`}
-                y2={`${recommendedArrow.to.y}%`}
-                stroke="#22c55e"
-                strokeWidth="2"
-                strokeDasharray="4,2"
-                markerEnd="url(#arrowhead)"
-                opacity="0.7"
-              />
-            </>
+            <line
+              x1={`${currentPosition.x}%`}
+              y1={`${currentPosition.y}%`}
+              x2={`${recommendedArrow.to.x}%`}
+              y2={`${recommendedArrow.to.y}%`}
+              stroke="#22c55e"
+              strokeWidth="2"
+              strokeDasharray="4,2"
+              markerEnd="url(#arrowhead)"
+              opacity="0.7"
+            />
           )}
         </svg>
 
@@ -311,6 +344,14 @@ export default function OrientationCompassSection({ history, state, userId }) {
             <span>מרכז קולקטיבי</span>
           </div>
         )}
+        {collectiveData?.momentum_arrow?.from_x && collectiveData?.field_momentum !== 'stable' && (
+          <div className="flex items-center gap-1 text-xs text-violet-600">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            <span>מומנטום</span>
+          </div>
+        )}
         {recommendedArrow && (
           <div className="flex items-center gap-1 text-xs text-green-600">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,6 +361,87 @@ export default function OrientationCompassSection({ history, state, userId }) {
           </div>
         )}
       </div>
+
+      {/* Momentum Indicator */}
+      {collectiveData?.momentum_insight && (
+        <div 
+          className={`mt-3 p-3 rounded-xl border flex items-center gap-3 ${
+            collectiveData.field_momentum === 'stabilizing' 
+              ? 'bg-green-50 border-green-200' 
+              : collectiveData.field_momentum === 'drifting'
+              ? 'bg-amber-50 border-amber-200'
+              : collectiveData.field_momentum === 'shifting'
+              ? 'bg-violet-50 border-violet-200'
+              : 'bg-gray-50 border-gray-200'
+          }`}
+          data-testid="momentum-indicator"
+        >
+          {/* Momentum Icon */}
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+            collectiveData.field_momentum === 'stabilizing' 
+              ? 'bg-green-100' 
+              : collectiveData.field_momentum === 'drifting'
+              ? 'bg-amber-100'
+              : collectiveData.field_momentum === 'shifting'
+              ? 'bg-violet-100'
+              : 'bg-gray-100'
+          }`}>
+            {collectiveData.field_momentum === 'stabilizing' && (
+              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+            {collectiveData.field_momentum === 'drifting' && (
+              <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            )}
+            {collectiveData.field_momentum === 'shifting' && (
+              <svg className="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            )}
+            {collectiveData.field_momentum === 'stable' && (
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              </svg>
+            )}
+          </div>
+          
+          {/* Momentum Text */}
+          <div className="flex-1">
+            <p className={`text-sm font-medium ${
+              collectiveData.field_momentum === 'stabilizing' 
+                ? 'text-green-700' 
+                : collectiveData.field_momentum === 'drifting'
+                ? 'text-amber-700'
+                : collectiveData.field_momentum === 'shifting'
+                ? 'text-violet-700'
+                : 'text-gray-600'
+            }`} data-testid="momentum-insight">
+              {collectiveData.momentum_insight}
+            </p>
+            {collectiveData.momentum_strength > 0 && (
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground">עוצמה:</span>
+                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[100px]">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      collectiveData.field_momentum === 'stabilizing' 
+                        ? 'bg-green-400' 
+                        : collectiveData.field_momentum === 'drifting'
+                        ? 'bg-amber-400'
+                        : 'bg-violet-400'
+                    }`}
+                    style={{ width: `${collectiveData.momentum_strength}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-muted-foreground">{Math.round(collectiveData.momentum_strength)}%</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Alignment Score */}
       {driftInfo && currentPosition.valueTag && (

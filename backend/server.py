@@ -2029,8 +2029,12 @@ class OrientationFieldResponse(BaseModel):
     total_users: int = 0
     total_decisions: int = 0
     dominant_direction: Optional[str] = None
-    field_momentum: Optional[str] = None       # stabilizing, drifting, balancing
+    field_momentum: Optional[str] = None       # stabilizing, drifting, shifting
+    momentum_direction: Optional[str] = None   # which direction the field is moving toward
+    momentum_strength: float = 0.0             # 0-100, strength of momentum
+    momentum_arrow: Dict[str, float] = {}      # from_x, from_y, to_x, to_y for visualization
     field_insight: Optional[str] = None
+    momentum_insight: Optional[str] = None     # specific insight about momentum
 
 class UserOrientationResponse(BaseModel):
     success: bool
@@ -2054,27 +2058,43 @@ class DriftDetectionResponse(BaseModel):
 async def get_orientation_field():
     """
     Get the collective orientation field - distribution of all users across directions.
-    This is the main view of the collective navigation system.
+    Includes momentum calculation from last 7 days of activity.
     """
     try:
         # Get all user sessions to aggregate data
         all_sessions = await db.philos_sessions.find({}, {"_id": 0}).to_list(1000)
         
-        # Count directions from all users' history
-        direction_counts = {
-            'recovery': 0,
-            'order': 0,
-            'contribution': 0,
-            'exploration': 0,
-            'harm': 0,
-            'avoidance': 0
+        # Direction positions for compass mapping
+        direction_positions = {
+            'recovery': (30, 65),
+            'order': (30, 25),
+            'contribution': (70, 25),
+            'exploration': (70, 65),
+            'harm': (15, 85),
+            'avoidance': (50, 90)
         }
+        
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        positive_directions = ['recovery', 'order', 'contribution', 'exploration']
+        
+        # Time boundaries for momentum calculation
+        now = datetime.now(timezone.utc)
+        seven_days_ago = (now - timedelta(days=7)).isoformat()
+        fourteen_days_ago = (now - timedelta(days=14)).isoformat()
+        
+        # Count directions - overall and by time period
+        overall_counts = {d: 0 for d in direction_positions.keys()}
+        recent_counts = {d: 0 for d in direction_positions.keys()}  # Last 7 days
+        previous_counts = {d: 0 for d in direction_positions.keys()}  # 7-14 days ago
         
         # Track unique users
         unique_users = set()
-        total_chaos_order = 0
-        total_ego_collective = 0
-        count_with_positions = 0
         
         # Process each user's session data
         for session in all_sessions:
@@ -2086,41 +2106,32 @@ async def get_orientation_field():
             history = session.get('history', [])
             for h in history:
                 tag = h.get('value_tag')
-                if tag and tag in direction_counts:
-                    direction_counts[tag] += 1
-                
-                # Collect position data
-                if h.get('chaos_order') is not None:
-                    total_chaos_order += h.get('chaos_order', 0)
-                    count_with_positions += 1
-                if h.get('ego_collective') is not None:
-                    total_ego_collective += h.get('ego_collective', 0)
+                if tag and tag in overall_counts:
+                    overall_counts[tag] += 1
+                    
+                    # Categorize by time
+                    ts = h.get('timestamp', '')
+                    if ts >= seven_days_ago:
+                        recent_counts[tag] += 1
+                    elif ts >= fourteen_days_ago:
+                        previous_counts[tag] += 1
             
-            # Also count from global_stats if available
+            # Also count from global_stats for overall (legacy data)
             gs = session.get('global_stats', {})
-            for direction in direction_counts:
-                direction_counts[direction] += gs.get(direction, 0)
+            for direction in overall_counts:
+                overall_counts[direction] += gs.get(direction, 0)
         
-        total_decisions = sum(direction_counts.values())
+        total_decisions = sum(overall_counts.values())
+        total_recent = sum(recent_counts.values())
+        total_previous = sum(previous_counts.values())
         
         # Calculate distribution percentages
         field_distribution = {}
         if total_decisions > 0:
-            for direction, count in direction_counts.items():
+            for direction, count in overall_counts.items():
                 field_distribution[direction] = round((count / total_decisions) * 100, 1)
         
         # Calculate collective center position
-        # Map directions to compass positions (same as frontend)
-        direction_positions = {
-            'recovery': (30, 65),
-            'order': (30, 25),
-            'contribution': (70, 25),
-            'exploration': (70, 65),
-            'harm': (15, 85),
-            'avoidance': (50, 90)
-        }
-        
-        # Weighted average of positions based on distribution
         center_x = 50
         center_y = 50
         if total_decisions > 0:
@@ -2142,39 +2153,124 @@ async def get_orientation_field():
         # Determine dominant direction (positive only)
         dominant_direction = None
         max_pct = 0
-        positive_directions = ['recovery', 'order', 'contribution', 'exploration']
         for direction in positive_directions:
             if field_distribution.get(direction, 0) > max_pct:
                 max_pct = field_distribution.get(direction, 0)
                 dominant_direction = direction
         
-        # Field momentum based on recent trend_history data
+        # === MOMENTUM CALCULATION (Last 7 days vs Previous 7 days) ===
         field_momentum = "stable"
-        # Simple heuristic: if positive directions > 60%, stabilizing
-        positive_total = sum(field_distribution.get(d, 0) for d in positive_directions)
-        negative_total = field_distribution.get('harm', 0) + field_distribution.get('avoidance', 0)
+        momentum_direction = None
+        momentum_strength = 0.0
+        momentum_arrow = {}
+        momentum_insight = None
         
-        if positive_total > 70:
-            field_momentum = "stabilizing"
-        elif negative_total > 30:
-            field_momentum = "drifting"
+        # Calculate recent center vs previous center
+        recent_center_x = 50
+        recent_center_y = 50
+        previous_center_x = 50
+        previous_center_y = 50
+        
+        if total_recent > 0:
+            rwx, rwy, rwt = 0, 0, 0
+            for direction, count in recent_counts.items():
+                if direction in direction_positions and count > 0:
+                    pos = direction_positions[direction]
+                    weight = count / total_recent
+                    rwx += pos[0] * weight
+                    rwy += pos[1] * weight
+                    rwt += weight
+            if rwt > 0:
+                recent_center_x = round(rwx / rwt, 1)
+                recent_center_y = round(rwy / rwt, 1)
+        
+        if total_previous > 0:
+            pwx, pwy, pwt = 0, 0, 0
+            for direction, count in previous_counts.items():
+                if direction in direction_positions and count > 0:
+                    pos = direction_positions[direction]
+                    weight = count / total_previous
+                    pwx += pos[0] * weight
+                    pwy += pos[1] * weight
+                    pwt += weight
+            if pwt > 0:
+                previous_center_x = round(pwx / pwt, 1)
+                previous_center_y = round(pwy / pwt, 1)
+        
+        # Calculate movement vector
+        dx = recent_center_x - previous_center_x
+        dy = recent_center_y - previous_center_y
+        movement_distance = (dx**2 + dy**2)**0.5
+        
+        # Determine momentum characteristics
+        if total_recent >= 3 and total_previous >= 3:
+            # Calculate direction shift
+            recent_positive = sum(recent_counts.get(d, 0) for d in positive_directions)
+            previous_positive = sum(previous_counts.get(d, 0) for d in positive_directions)
+            recent_ratio = recent_positive / total_recent if total_recent > 0 else 0
+            previous_ratio = previous_positive / total_previous if total_previous > 0 else 0
+            
+            # Find which direction gained most
+            direction_changes = {}
+            for direction in positive_directions:
+                recent_pct = (recent_counts.get(direction, 0) / total_recent * 100) if total_recent > 0 else 0
+                previous_pct = (previous_counts.get(direction, 0) / total_previous * 100) if total_previous > 0 else 0
+                direction_changes[direction] = recent_pct - previous_pct
+            
+            max_gain_direction = max(direction_changes, key=direction_changes.get)
+            max_gain = direction_changes[max_gain_direction]
+            
+            # Classify momentum
+            if recent_ratio > previous_ratio + 0.15:
+                field_momentum = "stabilizing"
+                momentum_strength = min(100, (recent_ratio - previous_ratio) * 200)
+            elif recent_ratio < previous_ratio - 0.15:
+                field_momentum = "drifting"
+                momentum_strength = min(100, (previous_ratio - recent_ratio) * 200)
+            elif abs(max_gain) > 10:
+                field_momentum = "shifting"
+                momentum_direction = max_gain_direction
+                momentum_strength = min(100, abs(max_gain) * 2)
+            else:
+                field_momentum = "stable"
+                momentum_strength = 30
+            
+            # Create momentum arrow for visualization
+            if movement_distance > 3:
+                # Normalize and extend for visualization
+                scale = min(15, movement_distance)
+                norm_dx = (dx / movement_distance) * scale if movement_distance > 0 else 0
+                norm_dy = (dy / movement_distance) * scale if movement_distance > 0 else 0
+                
+                momentum_arrow = {
+                    "from_x": round(center_x - norm_dx * 0.3, 1),
+                    "from_y": round(center_y - norm_dy * 0.3, 1),
+                    "to_x": round(center_x + norm_dx * 0.7, 1),
+                    "to_y": round(center_y + norm_dy * 0.7, 1)
+                }
+            
+            # Generate momentum insight
+            if field_momentum == "stabilizing":
+                momentum_insight = "השדה הקולקטיבי מתייצב ונע לכיוון איזון חיובי."
+            elif field_momentum == "drifting":
+                momentum_insight = "השדה הקולקטיבי נסחף מהאיזון בימים האחרונים."
+            elif field_momentum == "shifting" and momentum_direction:
+                momentum_insight = f"השדה הקולקטיבי נע בהדרגה לכיוון {direction_labels.get(momentum_direction, momentum_direction)}."
+            else:
+                momentum_insight = "השדה הקולקטיבי יציב ומאוזן."
         else:
-            field_momentum = "balancing"
+            # Not enough data for momentum
+            momentum_insight = "אין מספיק נתונים לחישוב מומנטום."
         
-        # Generate field insight
-        direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
-        }
-        
+        # Generate field insight (overall state)
         field_insight = None
         if dominant_direction and dominant_direction in direction_labels:
             if field_momentum == "stabilizing":
                 field_insight = f"השדה הקולקטיבי מראה נטייה חזקה ל{direction_labels[dominant_direction]} ומתייצב."
             elif field_momentum == "drifting":
                 field_insight = f"השדה הקולקטיבי נוטה ל{direction_labels[dominant_direction]} אך יש סחף מהאיזון."
+            elif field_momentum == "shifting":
+                field_insight = f"השדה הקולקטיבי נוטה ל{direction_labels[dominant_direction]} ומשנה כיוון."
             else:
                 field_insight = f"השדה הקולקטיבי מראה נטייה ל{direction_labels[dominant_direction]}."
         
@@ -2186,7 +2282,11 @@ async def get_orientation_field():
             total_decisions=total_decisions,
             dominant_direction=dominant_direction,
             field_momentum=field_momentum,
-            field_insight=field_insight
+            momentum_direction=momentum_direction,
+            momentum_strength=round(momentum_strength, 1),
+            momentum_arrow=momentum_arrow,
+            field_insight=field_insight,
+            momentum_insight=momentum_insight
         )
         
     except Exception as e:
