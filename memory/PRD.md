@@ -1,101 +1,54 @@
 # Philos Orientation - Mental Navigation System
 
 ## Product Overview
-A client-side decision engine and dashboard that provides real-time decision analysis and mental navigation. Features Hebrew RTL interface with tabbed navigation (Home, Insights, System, History).
+A client-side decision engine and dashboard that provides real-time decision analysis and mental navigation. Features Hebrew RTL interface with tabbed navigation (Home, Insights, System, Theory, History).
 
 ## Original Problem Statement
 Build a sophisticated single-page tool for decision analysis, behavioral tracking, and self-orientation with cloud sync (MongoDB) and user authentication.
 
-## Core Features
-- Decision tracking and evaluation
-- Value tagging system (contribution, recovery, order, harm, avoidance)
-- Replay insights and counterfactual analysis
-- Collective intelligence (user vs. collective comparison)
-- Recommendation engine with calibration
-- Follow-through analytics
-- Daily/Weekly/Monthly orientation loops
-- Session management and cloud sync
+## Core Theoretical Model
+The system is based on **four directions** and **two axes**:
+
+### Four Directions
+1. **Recovery (התאוששות)** - Returning to balance after stress or harm
+2. **Order (סדר)** - Creating structure, organization, and clarity  
+3. **Contribution (תרומה)** - Acting for the benefit of others
+4. **Exploration (חקירה)** - Openness, flexibility, and forward movement
+
+### Two Tension Axes
+1. **Chaos ↔ Order** - Between spontaneity and structure
+2. **Ego ↔ Collective** - Between self-focus and focus on others
+
+### Balancing Paths (Theory-Driven)
+- **harm → recovery** - Harmful actions require recovery balance
+- **avoidance → order** - Avoidance is balanced by creating structure
+- **isolation → contribution** - Self-focus is balanced by contributing to others
+- **rigidity → exploration** - Stagnation is balanced by openness
 
 ---
 
-## Refactoring Completed (December 2025)
+## Implementation Status (March 2026)
 
-### Phase 1: Recommendation System Centralization ✅
+### System Logic Coherence ✅
 **Status:** Complete
-- Created `/app/frontend/src/services/recommendationService.js`
-- Functions: `calculateRecommendation()`, `analyzeCurrentState()`, `calculateCalibrationWeights()`, `calculateCollectiveGap()`, `buildRecommendationMetadata()`
-- Shared constants: `valueLabels`, `directionColors`, `actionSuggestions`
-- Removed duplicate logic from `HomeNavigationSection.js`
-- Updated `NextBestDirectionSection.js` and `RecommendationCalibrationSection.js` to use centralized service
+- **Compass position** now calculated from **last 7 days** of actions (weighted average)
+- **Recommendation engine** strictly follows theoretical balancing paths
+- **Theory tab, Compass, and Recommendations** all use the **same unified model**
 
-### Phase 2: State Architecture Refactoring ✅
-**Status:** Complete
-- Split `usePhilosState.js` from **1198 lines to 275 lines** (77% reduction)
-- Created 5 domain-specific hooks:
-  1. `useDecisionState.js` - Core decision evaluation and state persistence
-  2. `useCloudSync.js` - Cloud sync, hydration, multi-device continuity
-  3. `useReplayState.js` - Decision replay state and actions
-  4. `useAdaptiveScores.js` - Adaptive scores and path learning
-  5. `useSessionManagement.js` - Global stats, trend history, session snapshots
-- **100% backward API compatibility** maintained
+### Key Code Changes:
+1. `recommendationService.js` - `calculateCompassPosition()` refactored to use 7-day weighted average
+2. `recommendationService.js` - `calculateRecommendation()` simplified to strict theory balancing
+3. `OrientationCompassSection.js` - Fixed undefined variable bug (`recommendedDirection` → `recommendedArrow`)
+4. `NextBestDirectionSection.js` - Simplified to use only history for theory-based recommendations
 
-### Phase 3: Analytics Centralization ✅
-**Status:** Complete
-- Created `/app/frontend/src/services/analyticsService.js`
-- Functions: `countValueTags()`, `filterHistoryByDateRange()`, `filterTodayHistory()`, `filterLastWeekHistory()`, `calculateDriftMetrics()`, `identifyDominantPattern()`, `analyzePeriodComparison()`, `analyzeFollowThrough()`
-- Shared constants: `valueLabels`, `valueColors`
-- Updated `DailyOrientationLoopSection.js` and `MonthlyOrientationSection.js` to use centralized analytics
-
-### Phase 4: Real-User Readiness ✅
-**Status:** Complete
-- Created `/app/frontend/src/components/philos/OnboardingHint.js`
-  - 4-step onboarding overlay for first-time users
-  - Skip button (hidden on final step)
-  - localStorage persistence
-  - Reusable components: `SectionHelperText`, `EmptyState`
-- Added helper text below action input for new users
-- Improved empty state display ("אין נתונים עדיין")
-- Default recommendation (recovery) for users with no history
-
----
-
-## Architecture
-
-### File Structure
-```
-/app/frontend/src/
-├── components/philos/
-│   ├── OnboardingHint.js       # First-time user onboarding
-│   └── sections/               # 30+ section components
-├── hooks/
-│   ├── usePhilosState.js       # Main composing hook (275 lines)
-│   ├── useDecisionState.js     # Core decision state
-│   ├── useCloudSync.js         # Cloud sync
-│   ├── useReplayState.js       # Replay state
-│   ├── useAdaptiveScores.js    # Adaptive scores
-│   └── useSessionManagement.js # Session management
-├── services/
-│   ├── recommendationService.js # Centralized recommendations
-│   ├── analyticsService.js     # Centralized analytics
-│   ├── cloudSync.js            # Cloud sync API
-│   └── dataService.js          # Data caching layer
-└── pages/
-    └── PhilosDashboard.js      # Main dashboard (tabbed UI)
-```
-
-### Key Technical Decisions
-- **State Management:** Composition pattern with domain-specific hooks
-- **Recommendation Logic:** Single source of truth in `recommendationService.js`
-- **Analytics:** Centralized calculations in `analyticsService.js`
-- **UI:** Tabbed navigation (Home, Insights, System, History)
-- **Onboarding:** localStorage-based persistence for first-time user tracking
-
----
-
-## Testing Status
-- **Phase 1 Tests:** 12/12 passed (100%)
-- **Phase 2 Tests:** 21/21 passed (100%)
-- **Phase 4 Tests:** 10/10 passed (100%)
+### Test Results (March 10, 2026):
+- **Frontend:** 100% pass rate (6/6 features verified)
+- **Compass 7-day calculation:** ✅ PASS
+- **Theory balancing paths:** ✅ PASS
+- **Theory tab display:** ✅ PASS
+- **Home recommendation labels:** ✅ PASS
+- **Compass renders:** ✅ PASS
+- **Tab navigation:** ✅ PASS
 
 ---
 
