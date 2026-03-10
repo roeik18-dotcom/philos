@@ -96,6 +96,36 @@ The system is based on **four directions** and **two axes**:
 
 ---
 
+### User Comparison Features (Percentile Ranking) ✅
+**Status:** Complete (March 10, 2026)
+
+**What was built:**
+1. **Percentile Calculation** - Compares user's activity in each direction against all other users
+2. **Rank Labels** - "עליון 10%", "עליון 25%", "מעל הממוצע", "פעיל"
+3. **Comparison Insight** - Meaningful Hebrew messages like "אתה בין ה-20% המובילים במיקוד על התאוששות השבוע"
+4. **Week Distribution Chart** - Visual representation of user's direction breakdown
+5. **Conditional Display** - Only shows when user has activity this week
+
+**Backend Endpoint:**
+- `GET /api/orientation/compare/{user_id}` - Returns percentile rankings and insights
+
+**API Response includes:**
+- `direction_percentiles`: Array with direction, user_count, percentile, rank_label
+- `dominant_direction`: User's most frequent direction
+- `dominant_percentile`: Ranking in dominant direction
+- `comparison_insight`: Hebrew insight about user's position
+- `week_comparison`: User's distribution as percentages
+
+**Frontend Visualization:**
+- Percentile bars for each direction with rank labels
+- Week distribution mini-chart with color-coded bars
+- Comparison insight text
+- Header showing total actions
+
+**Test Results:** 100% pass (23/23 backend tests, all frontend elements verified)
+
+---
+
 ### System Logic Coherence ✅
 **Status:** Complete (March 10, 2026)
 - **Compass position** now calculated from **last 7 days** of actions (weighted average)
