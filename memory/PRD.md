@@ -99,6 +99,46 @@ Build a sophisticated single-page tool for decision analysis, behavioral trackin
 
 ---
 
+## Core Product Features (December 2025)
+
+**Status:** Complete
+
+### 1. Theory Tab (תיאוריה)
+- Created `/app/frontend/src/components/philos/sections/TheorySection.js`
+- **Four Directions:** התאוששות (Recovery), סדר (Order), תרומה (Contribution), חקירה (Exploration)
+- **Two Tensions:** כאוס ↔ סדר (Chaos ↔ Order), אגו ↔ קולקטיב (Ego ↔ Collective)
+- **Decision Logic:** 3-step process (Actions → Patterns → Orientation)
+- **Balancing Paths:** Visual mapping of negative → positive transitions
+- **Hebrew intro and examples included**
+
+### 2. Orientation Compass
+- Created `/app/frontend/src/components/philos/sections/OrientationCompassSection.js`
+- **Quadrant grid map** with axes:
+  - Vertical: סדר (Order) ↔ כאוס (Chaos)
+  - Horizontal: אגו (Ego) ↔ קולקטיב (Collective)
+- **Current position indicator** with pulse animation
+- **Recommended direction arrow** (dashed line)
+- **Trail of recent movements** (last 7 days)
+- **Empty state** for new users
+
+### 3. Direction History with Pattern Detection
+- Created `/app/frontend/src/components/philos/sections/DirectionHistorySection.js`
+- **Timeframe selector:** היום (Today) | 7 ימים (7 days) | הכל (All)
+- **Pattern detection** with Hebrew insights:
+  - "אתה נוטה לנוע לכיוון התאוששות"
+  - "יש חזרתיות בהימנעות ולאחריה סדר"
+  - "נראה מעבר מתמשך לכיוון חיובי"
+- **Distribution chart** showing direction percentages
+- **Movement timeline** showing recent transitions
+
+### 4. Updated Tab Navigation
+- **New tab order:** בית | תובנות | מערכת | תיאוריה | היסטוריה
+- Theory tab is visible and accessible (not hidden in settings)
+- Compass added to Home tab
+- Direction History added to Theory tab
+
+---
+
 ## Loading Skeletons Enhancement (December 2025)
 
 **Status:** Complete
