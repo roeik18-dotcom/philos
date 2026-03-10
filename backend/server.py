@@ -2062,6 +2062,34 @@ class FieldTodayResponse(BaseModel):
     dominant_direction: Optional[str] = None
     insight: Optional[str] = None              # Hebrew insight
 
+class WeeklyInsightResponse(BaseModel):
+    success: bool
+    user_id: str
+    distribution: Dict[str, int] = {}          # direction -> count
+    distribution_percent: Dict[str, float] = {} # direction -> percentage
+    total_actions: int = 0
+    dominant_direction: Optional[str] = None
+    insight_he: Optional[str] = None
+    trend: Optional[str] = None                # improving, stable, declining
+
+class ShareCardResponse(BaseModel):
+    success: bool
+    user_id: str
+    orientation: Optional[str] = None          # Current dominant orientation
+    message_he: Optional[str] = None           # Hebrew message for sharing
+    streak: int = 0
+    compass_position: Dict[str, float] = {}    # x, y for compass visualization
+
+class OrientationIndexResponse(BaseModel):
+    success: bool
+    distribution: Dict[str, float] = {}        # Global distribution percentages
+    dominant_direction: Optional[str] = None
+    total_users: int = 0
+    total_actions_today: int = 0
+    yesterday_dominant: Optional[str] = None
+    direction_change: Optional[str] = None     # same, shifted_to_X
+    headline_he: Optional[str] = None
+
 class DirectionPercentile(BaseModel):
     direction: str
     user_count: int                            # User's action count in this direction
@@ -2128,6 +2156,8 @@ class DailyQuestionResponse(BaseModel):
     suggested_direction: Optional[str] = None  # Direction the question aims for
     question_id: Optional[str] = None          # For tracking responses
     already_answered_today: bool = False       # If user already answered today
+    streak: int = 0                            # Current consecutive days streak
+    longest_streak: int = 0                    # User's longest streak ever
 
 class UserOrientationResponse(BaseModel):
     success: bool
@@ -3311,6 +3341,7 @@ async def get_daily_question(user_id: str):
     """
     Daily Orientation Question: Generate a question based on current orientation identity.
     The question aims to guide the user toward balance.
+    Also calculates and returns streak information.
     """
     try:
         # First, get the user's current identity
@@ -3321,7 +3352,57 @@ async def get_daily_question(user_id: str):
         # Check if user already answered today
         now = datetime.now(timezone.utc)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+        yesterday_start = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
         
+        # Calculate streak from answered questions
+        answered_questions = await db.daily_questions.find({
+            'user_id': user_id,
+            'answered': True
+        }, {'_id': 0, 'date': 1}).sort('date', -1).to_list(100)
+        
+        # Calculate current streak
+        current_streak = 0
+        longest_streak = 0
+        
+        if answered_questions:
+            # Get unique answered dates
+            answered_dates = sorted(set(q.get('date') for q in answered_questions if q.get('date')), reverse=True)
+            
+            # Count consecutive days
+            streak = 0
+            expected_date = today_start
+            
+            # If today not answered yet, start from yesterday
+            if answered_dates and answered_dates[0] != today_start:
+                expected_date = yesterday_start
+            
+            for i, date in enumerate(answered_dates):
+                check_date = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+                
+                # Adjust if today is not answered
+                if answered_dates[0] != today_start:
+                    check_date = (now - timedelta(days=i+1)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+                
+                if date == check_date:
+                    streak += 1
+                else:
+                    break
+            
+            current_streak = streak
+            
+            # Calculate longest streak
+            temp_streak = 1
+            for i in range(1, len(answered_dates)):
+                prev_date = datetime.strptime(answered_dates[i-1], '%Y-%m-%d')
+                curr_date = datetime.strptime(answered_dates[i], '%Y-%m-%d')
+                if (prev_date - curr_date).days == 1:
+                    temp_streak += 1
+                else:
+                    longest_streak = max(longest_streak, temp_streak)
+                    temp_streak = 1
+            longest_streak = max(longest_streak, temp_streak, current_streak)
+        
+        # Check if already answered today
         existing_answer = await db.daily_questions.find_one({
             'user_id': user_id,
             'date': today_start
@@ -3335,7 +3416,9 @@ async def get_daily_question(user_id: str):
                 question_he=existing_answer.get('question_he'),
                 suggested_direction=existing_answer.get('suggested_direction'),
                 question_id=existing_answer.get('question_id'),
-                already_answered_today=existing_answer.get('answered', False)
+                already_answered_today=existing_answer.get('answered', False),
+                streak=current_streak,
+                longest_streak=longest_streak
             )
         
         # Questions based on identity type - each question aims for a balancing direction
@@ -3450,7 +3533,9 @@ async def get_daily_question(user_id: str):
             question_he=selected_question,
             suggested_direction=suggested_direction,
             question_id=question_id,
-            already_answered_today=False
+            already_answered_today=False,
+            streak=current_streak,
+            longest_streak=longest_streak
         )
         
     except Exception as e:
@@ -3529,11 +3614,33 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
                     {'$set': {'history': history, 'global_stats': global_stats}}
                 )
         
+        # Calculate impact on field (percentage of today's actions)
+        impact_percent = 0.0
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        if request.action_taken:
+            # Get today's field data
+            field_data = await get_field_today()
+            total_today = field_data.total_actions + 1  # +1 for this action
+            if total_today > 0:
+                impact_percent = round((1 / total_today) * 100, 2)
+        
+        impact_message = None
+        if request.action_taken and suggested_direction in direction_labels:
+            impact_message = f"הפעולה שלך חיזקה היום את שדה ה{direction_labels[suggested_direction]}"
+        
         return {
             'success': True,
             'message': 'Answer recorded',
             'action_recorded': request.action_taken,
-            'direction': suggested_direction
+            'direction': suggested_direction,
+            'impact_percent': impact_percent,
+            'impact_message': impact_message
         }
         
     except HTTPException:
@@ -3795,6 +3902,240 @@ async def detect_drift(user_id: str):
         
     except Exception as e:
         logger.error(f"Detect drift error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/weekly-insight/{user_id}", response_model=WeeklyInsightResponse)
+async def get_weekly_insight(user_id: str):
+    """
+    Weekly Orientation Insight: Aggregate last 7 days of user actions.
+    Returns distribution and Hebrew insight about the week.
+    """
+    try:
+        # Get user's session data
+        user_session = await db.philos_sessions.find_one(
+            {'user_id': user_id},
+            {'_id': 0}
+        )
+        
+        user_history = user_session.get('history', []) if user_session else []
+        
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        positive_directions = ['contribution', 'recovery', 'order', 'exploration']
+        
+        # Filter to last 7 days
+        now = datetime.now(timezone.utc)
+        seven_days_ago = (now - timedelta(days=7)).isoformat()
+        
+        recent_history = [h for h in user_history if h.get('timestamp', '') >= seven_days_ago]
+        
+        # Count directions
+        direction_counts = {d: 0 for d in positive_directions}
+        for h in recent_history:
+            tag = h.get('value_tag')
+            if tag in direction_counts:
+                direction_counts[tag] += 1
+        
+        total_actions = sum(direction_counts.values())
+        
+        # Calculate percentages
+        distribution_percent = {}
+        for direction, count in direction_counts.items():
+            distribution_percent[direction] = round((count / total_actions * 100) if total_actions > 0 else 0, 1)
+        
+        # Find dominant direction
+        dominant_direction = None
+        max_count = 0
+        for direction, count in direction_counts.items():
+            if count > max_count:
+                max_count = count
+                dominant_direction = direction
+        
+        # Generate insight
+        insight_he = None
+        trend = 'stable'
+        
+        if total_actions == 0:
+            insight_he = "אין מספיק נתונים השבוע. התחל עם פעולה אחת."
+        elif total_actions < 3:
+            insight_he = "שבוע שקט. כדאי להוסיף עוד פעולות."
+        else:
+            # Check for balance
+            active_directions = [d for d in positive_directions if direction_counts.get(d, 0) > 0]
+            
+            if len(active_directions) >= 3:
+                insight_he = "שבוע מאוזן! פעלת במגוון כיוונים."
+                trend = 'improving'
+            elif dominant_direction:
+                label = direction_labels.get(dominant_direction, dominant_direction)
+                pct = distribution_percent.get(dominant_direction, 0)
+                
+                if pct > 60:
+                    insight_he = f"השבוע התמקדת מאוד ב{label}. כדאי לשקול גיוון."
+                elif pct > 40:
+                    insight_he = f"השבוע עברת מהתאוששות לפעולה. כיוון מוביל: {label}."
+                    trend = 'improving'
+                else:
+                    insight_he = f"הכיוון המוביל שלך השבוע: {label}."
+        
+        return WeeklyInsightResponse(
+            success=True,
+            user_id=user_id,
+            distribution=direction_counts,
+            distribution_percent=distribution_percent,
+            total_actions=total_actions,
+            dominant_direction=dominant_direction,
+            insight_he=insight_he,
+            trend=trend
+        )
+        
+    except Exception as e:
+        logger.error(f"Get weekly insight error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/share/{user_id}", response_model=ShareCardResponse)
+async def get_share_card(user_id: str):
+    """
+    Orientation Share Card: Get data for shareable orientation card.
+    """
+    try:
+        # Get user's identity
+        identity = await get_orientation_identity(user_id)
+        
+        # Get user's streak
+        daily_question = await get_daily_question(user_id)
+        
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        orientation = identity.dominant_direction
+        orientation_label = direction_labels.get(orientation, 'איזון')
+        
+        message_he = f"היום אני באוריינטציית {orientation_label}"
+        
+        # Calculate compass position
+        direction_positions = {
+            'recovery': {'x': 30, 'y': 65},
+            'order': {'x': 30, 'y': 25},
+            'contribution': {'x': 70, 'y': 25},
+            'exploration': {'x': 70, 'y': 65}
+        }
+        compass_position = direction_positions.get(orientation, {'x': 50, 'y': 50})
+        
+        return ShareCardResponse(
+            success=True,
+            user_id=user_id,
+            orientation=orientation_label,
+            message_he=message_he,
+            streak=daily_question.streak,
+            compass_position=compass_position
+        )
+        
+    except Exception as e:
+        logger.error(f"Get share card error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/index", response_model=OrientationIndexResponse)
+async def get_orientation_index():
+    """
+    Orientation Index: Public page data showing global orientation distribution.
+    Compares today vs yesterday.
+    """
+    try:
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        positive_directions = ['contribution', 'recovery', 'order', 'exploration']
+        
+        # Get all sessions
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0}).to_list(1000)
+        
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        yesterday_start = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        
+        # Count today and yesterday
+        today_counts = {d: 0 for d in positive_directions}
+        yesterday_counts = {d: 0 for d in positive_directions}
+        active_users = set()
+        
+        for session in all_sessions:
+            user_id = session.get('user_id')
+            history = session.get('history', [])
+            
+            for h in history:
+                ts = h.get('timestamp', '')
+                tag = h.get('value_tag')
+                
+                if tag in positive_directions:
+                    if ts >= today_start:
+                        today_counts[tag] += 1
+                        if user_id:
+                            active_users.add(user_id)
+                    elif ts >= yesterday_start:
+                        yesterday_counts[tag] += 1
+        
+        total_today = sum(today_counts.values())
+        total_yesterday = sum(yesterday_counts.values())
+        
+        # Calculate percentages
+        distribution = {}
+        for direction in positive_directions:
+            distribution[direction] = round((today_counts[direction] / total_today * 100) if total_today > 0 else 25, 1)
+        
+        # Find dominants
+        dominant_today = max(positive_directions, key=lambda d: today_counts.get(d, 0)) if total_today > 0 else None
+        dominant_yesterday = max(positive_directions, key=lambda d: yesterday_counts.get(d, 0)) if total_yesterday > 0 else None
+        
+        # Determine change
+        direction_change = None
+        if dominant_today and dominant_yesterday:
+            if dominant_today == dominant_yesterday:
+                direction_change = 'same'
+            else:
+                direction_change = f'shifted_to_{dominant_today}'
+        
+        # Generate headline
+        headline_he = None
+        if dominant_today:
+            label = direction_labels.get(dominant_today, dominant_today)
+            headline_he = f"מדד ההתמצאות היום: {label} מובילה"
+            
+            if direction_change and direction_change != 'same':
+                yesterday_label = direction_labels.get(dominant_yesterday, dominant_yesterday)
+                headline_he += f" (אתמול: {yesterday_label})"
+        else:
+            headline_he = "מדד ההתמצאות היום: מאוזן"
+        
+        return OrientationIndexResponse(
+            success=True,
+            distribution=distribution,
+            dominant_direction=dominant_today,
+            total_users=len(active_users),
+            total_actions_today=total_today,
+            yesterday_dominant=dominant_yesterday,
+            direction_change=direction_change,
+            headline_he=headline_he
+        )
+        
+    except Exception as e:
+        logger.error(f"Get orientation index error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

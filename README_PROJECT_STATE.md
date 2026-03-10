@@ -64,7 +64,7 @@ DELETE /api/philos/sessions/{user_id}/{id}    # Delete session
 
 ## Preview URL
 
-https://philos-field.preview.emergentagent.com
+https://philos-streak.preview.emergentagent.com
 
 ---
 

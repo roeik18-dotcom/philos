@@ -23,6 +23,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [impactMessage, setImpactMessage] = useState(null);
 
   // Get user ID from localStorage if not provided
   const effectiveUserId = userId || localStorage.getItem('philos_user_id');

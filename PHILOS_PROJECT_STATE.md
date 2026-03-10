@@ -2,7 +2,7 @@
 
 **Last Updated:** March 10, 2026  
 **Phase:** Advanced MVP Complete – Ready for Real User Testing  
-**Preview:** https://philos-field.preview.emergentagent.com
+**Preview:** https://philos-streak.preview.emergentagent.com
 
 ---
 
