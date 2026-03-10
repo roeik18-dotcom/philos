@@ -1,101 +1,11 @@
 import { useMemo } from 'react';
-
-// Hebrew labels for value tags
-const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
-};
-
-// Analyze current state from recent decisions
-const analyzeCurrentState = (history) => {
-  if (!history || history.length === 0) {
-    return {
-      hasData: false,
-      summary: 'אין נתונים עדיין',
-      pattern: null,
-      todayCount: 0
-    };
-  }
-
-  // Get today's decisions
-  const today = new Date().toDateString();
-  const todayDecisions = history.filter(h => {
-    const itemDate = h.timestamp ? new Date(h.timestamp).toDateString() : today;
-    return itemDate === today;
-  });
-
-  // Analyze recent pattern (last 5 decisions)
-  const recent = history.slice(0, 5);
-  const valueCounts = {};
-  recent.forEach(item => {
-    const tag = item.value_tag;
-    if (tag) {
-      valueCounts[tag] = (valueCounts[tag] || 0) + 1;
-    }
-  });
-
-  // Detect dominant pattern
-  const harmCount = valueCounts.harm || 0;
-  const avoidanceCount = valueCounts.avoidance || 0;
-  const contributionCount = valueCounts.contribution || 0;
-  const recoveryCount = valueCounts.recovery || 0;
-  const orderCount = valueCounts.order || 0;
-
-  const negativeRatio = (harmCount + avoidanceCount) / recent.length;
-  const positiveRatio = (contributionCount + recoveryCount + orderCount) / recent.length;
-
-  let summary = '';
-  let pattern = null;
-  let patternType = 'neutral';
-
-  if (negativeRatio > 0.5) {
-    if (harmCount > avoidanceCount) {
-      pattern = 'harm';
-      patternType = 'negative';
-      summary = 'נראה דפוס של לחץ ונזק.';
-    } else {
-      pattern = 'avoidance';
-      patternType = 'negative';
-      summary = 'נראה דפוס של הימנעות.';
-    }
-  } else if (positiveRatio > 0.6) {
-    if (contributionCount >= recoveryCount && contributionCount >= orderCount) {
-      pattern = 'contribution';
-      patternType = 'positive';
-      summary = 'מומנטום חיובי של תרומה.';
-    } else if (recoveryCount >= orderCount) {
-      pattern = 'recovery';
-      patternType = 'positive';
-      summary = 'איזון טוב של התאוששות.';
-    } else {
-      pattern = 'order';
-      patternType = 'positive';
-      summary = 'מיקוד בסדר וארגון.';
-    }
-  } else {
-    pattern = 'balanced';
-    patternType = 'neutral';
-    summary = 'המערכת מאוזנת.';
-  }
-
-  // Get last decision info
-  const lastDecision = history[0];
-  const lastValueTag = lastDecision?.value_tag;
-
-  return {
-    hasData: true,
-    summary,
-    pattern,
-    patternType,
-    todayCount: todayDecisions.length,
-    totalCount: history.length,
-    lastValueTag,
-    lastAction: lastDecision?.action?.substring(0, 50)
-  };
-};
+import { 
+  calculateRecommendation,
+  analyzeCurrentState,
+  valueLabels,
+  directionColors,
+  buildRecommendationMetadata
+} from '../../../services/recommendationService';
 
 export default function HomeNavigationSection({ 
   history, 
@@ -109,87 +19,28 @@ export default function HomeNavigationSection({
   onFollowRecommendation,
   state
 }) {
-  // Analyze current state
+  // Analyze current state using centralized service
   const currentState = useMemo(() => {
     return analyzeCurrentState(history);
   }, [history]);
 
-  // Get recommendation from NextBestDirection logic (simplified inline)
+  // Get recommendation from centralized service (same as NextBestDirection)
   const recommendation = useMemo(() => {
-    if (!history || history.length === 0) {
-      return {
-        direction: 'recovery',
-        actionSuggestion: 'הפסקה קצרה ומודעת',
-        insight: 'התחל עם פעולת התאוששות.'
-      };
-    }
-
-    // Simplified recommendation based on current state
-    const recent = history.slice(0, 10);
-    const valueCounts = {};
-    recent.forEach(item => {
-      if (item.value_tag) valueCounts[item.value_tag] = (valueCounts[item.value_tag] || 0) + 1;
+    return calculateRecommendation({
+      history,
+      adaptiveScores,
+      replayInsights
+      // Note: collectiveData and calibrationWeights not passed for simplified home view
+      // This gives consistent base recommendations without async collective data
     });
-
-    const harmCount = valueCounts.harm || 0;
-    const avoidanceCount = valueCounts.avoidance || 0;
-    const negativeRatio = (harmCount + avoidanceCount) / recent.length;
-
-    if (negativeRatio > 0.4) {
-      if (avoidanceCount > harmCount) {
-        return {
-          direction: 'order',
-          actionSuggestion: 'לסיים משימה פתוחה אחת',
-          insight: 'מומלץ לבצע החלטה קטנה במקום דחייה.'
-        };
-      } else {
-        return {
-          direction: 'recovery',
-          actionSuggestion: 'הפסקה קצרה ומודעת',
-          insight: 'מומלץ לאזן עם התאוששות.'
-        };
-      }
-    }
-
-    // Default positive recommendation
-    const lowestPositive = ['contribution', 'recovery', 'order']
-      .map(dir => ({ dir, count: valueCounts[dir] || 0 }))
-      .sort((a, b) => a.count - b.count)[0];
-
-    const suggestions = {
-      contribution: { action: 'פעולה קטנה של עזרה למישהו', insight: 'כדאי לשקול פעולה בכיוון תרומה.' },
-      recovery: { action: 'הפסקה קצרה ומודעת', insight: 'התאוששות תמיד בחירה טובה.' },
-      order: { action: 'לסיים משימה פתוחה אחת', insight: 'כדאי לשקול פעולה בכיוון סדר.' }
-    };
-
-    return {
-      direction: lowestPositive.dir,
-      actionSuggestion: suggestions[lowestPositive.dir].action,
-      insight: suggestions[lowestPositive.dir].insight
-    };
-  }, [history]);
-
-  // Direction colors
-  const directionColors = {
-    contribution: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
-    recovery: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
-    order: { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-300' }
-  };
+  }, [history, adaptiveScores, replayInsights]);
 
   const colors = directionColors[recommendation.direction] || directionColors.recovery;
 
-  // Handle follow recommendation
+  // Handle follow recommendation using centralized metadata builder
   const handleFollowRecommendation = () => {
     if (onFollowRecommendation) {
-      onFollowRecommendation({
-        recommendation_text: recommendation.actionSuggestion,
-        recommendation_direction: recommendation.direction,
-        recommendation_reason: 'home_navigation',
-        recommendation_strength: 50,
-        recommendation_insight: recommendation.insight,
-        followed_recommendation: true,
-        timestamp: new Date().toISOString()
-      });
+      onFollowRecommendation(buildRecommendationMetadata(recommendation));
     }
   };
 
