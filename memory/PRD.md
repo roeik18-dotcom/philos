@@ -126,6 +126,57 @@ The system is based on **four directions** and **two axes**:
 
 ---
 
+### Decision Path Engine ✅
+**Status:** Complete (March 10, 2026)
+
+**What was built:**
+1. **Theory-based Recommendations** - Generates actions based on harm→recovery, avoidance→order, isolation→contribution, rigidity→exploration
+2. **Concrete Actions** - Hebrew practical steps like "כתוב 3 דברים שאתה אסיר תודה עליהם"
+3. **Session Persistence** - One action per session with localStorage tracking
+4. **Action Completion** - "עשיתי את זה" button with completion state
+
+**Backend Endpoint:**
+- `GET /api/decision-path/{user_id}` - Returns headline, recommended_step, concrete_action, theory_basis
+
+**Identity Types Detected:**
+- harm → recovery recommendation
+- avoidance → order recommendation
+- isolation → contribution recommendation
+- rigidity → exploration recommendation
+- positive state → adjacent direction suggestion
+
+**Test Results:** 100% pass
+
+---
+
+### Orientation Identity Layer ✅
+**Status:** Complete (March 10, 2026)
+
+**What was built:**
+1. **Identity Computation** - Based on dominant_direction, momentum, time_in_direction, avoidance_ratio, previous_dominant
+2. **9 Identity Types:**
+   - `avoidance_loop` - Warning state with red styling
+   - `recovery_dominant` - Focused on recovery
+   - `order_builder` - Building structure
+   - `contribution_oriented` - Contributing to others
+   - `exploration_driven` - Exploring and growing
+   - `recovery_to_contribution` - Transition state
+   - `drifting_from_order` - Was order, now drifting
+   - `balanced` - Well distributed
+   - `new_user` - Starting journey
+3. **Snapshot Persistence** - Saves daily snapshots to `orientation_snapshots` collection
+4. **Warning State UI** - Red gradient + warning icon + supportive Hebrew messages
+
+**Backend Endpoint:**
+- `GET /api/orientation/identity/{user_id}` - Returns identity_type, identity_label, identity_description, is_warning_state, insight
+
+**Frontend Layout Order:**
+- Compass → Orientation Identity → Decision Path → Field Comparison
+
+**Test Results:** 100% pass (21/21 backend, all frontend elements verified)
+
+---
+
 ### System Logic Coherence ✅
 **Status:** Complete (March 10, 2026)
 - **Compass position** now calculated from **last 7 days** of actions (weighted average)
