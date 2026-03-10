@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getUserId } from '../../../services/cloudSync';
 import { fetchReplayInsights } from '../../../services/dataService';
+import { ReplaySkeleton } from '../LoadingSkeletons';
 
 // Hebrew value tag labels
 const valueLabels = {
@@ -62,9 +63,13 @@ export default function ReplayInsightsSummarySection({ user, replayCount = 0 }) 
     // Refresh when user changes or new replays are added
   }, [user, replayCount]);
 
-  // Show loading state briefly, then hide if no data
+  // Show loading skeleton only if user might have data
+  if (loading && replayCount > 0) {
+    return <ReplaySkeleton />;
+  }
+  
   if (loading) {
-    return null; // Don't show loading spinner, just wait
+    return null; // No skeleton for first load if no known replays
   }
 
   // Don't show section if no data

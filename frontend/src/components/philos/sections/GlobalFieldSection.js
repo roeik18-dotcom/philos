@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { fetchCollectiveLayer } from '../../../services/dataService';
+import { SectionSkeleton } from '../LoadingSkeletons';
 
 // Hebrew labels
 const valueLabels = {
@@ -293,17 +294,7 @@ export default function GlobalFieldSection() {
   }, [fieldData]);
 
   if (loading) {
-    return (
-      <section 
-        className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-3xl p-5 shadow-sm border border-slate-200"
-        dir="rtl"
-      >
-        <div className="animate-pulse">
-          <div className="h-6 bg-slate-200 rounded w-1/3 mb-4"></div>
-          <div className="h-64 bg-slate-100 rounded"></div>
-        </div>
-      </section>
-    );
+    return <SectionSkeleton lines={4} />;
   }
 
   if (error) {

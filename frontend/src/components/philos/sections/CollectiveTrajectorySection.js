@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { fetchCollectiveLayer } from '../../../services/dataService';
+import { CollectiveSkeleton } from '../LoadingSkeletons';
 
 // Hebrew labels for metrics
 const metricLabels = {
@@ -262,19 +263,7 @@ export default function CollectiveTrajectorySection({ history }) {
 
   // Show loading state
   if (loading) {
-    return (
-      <section 
-        className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-indigo-200"
-        dir="rtl"
-        data-testid="collective-trajectory-section"
-      >
-        <div className="animate-pulse">
-          <div className="h-6 bg-indigo-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-indigo-100 rounded w-2/3 mb-2"></div>
-          <div className="h-32 bg-indigo-100 rounded"></div>
-        </div>
-      </section>
-    );
+    return <CollectiveSkeleton />;
   }
 
   // Show error state

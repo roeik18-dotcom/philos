@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getUserId } from '../../../services/cloudSync';
 import { fetchCollectiveLayer } from '../../../services/dataService';
+import { CollectiveSkeleton } from '../LoadingSkeletons';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -236,19 +237,7 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
 
   // Show loading state
   if (loading) {
-    return (
-      <section 
-        className="bg-gradient-to-br from-cyan-50 to-sky-50 rounded-3xl p-5 shadow-sm border border-cyan-200"
-        dir="rtl"
-        data-testid="collective-mirror-section"
-      >
-        <div className="animate-pulse">
-          <div className="h-6 bg-cyan-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-cyan-100 rounded w-2/3 mb-2"></div>
-          <div className="h-40 bg-cyan-100 rounded"></div>
-        </div>
-      </section>
-    );
+    return <CollectiveSkeleton />;
   }
 
   // Show error state
