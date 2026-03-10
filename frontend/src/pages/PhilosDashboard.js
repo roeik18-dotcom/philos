@@ -45,7 +45,8 @@ import {
   DirectionHistorySection,
   DecisionPathSection,
   OrientationIdentitySection,
-  DailyOrientationQuestion
+  DailyOrientationQuestion,
+  OrientationFieldToday
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -348,6 +349,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
             {/* Orientation Identity - Who You Are */}
             <OrientationIdentitySection userId={user?.id} />
+
+            {/* Orientation Field Today - Collective Distribution */}
+            <OrientationFieldToday />
 
             {/* Decision Path Engine - Concrete Action Recommendation */}
             <DecisionPathSection 

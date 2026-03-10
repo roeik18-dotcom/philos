@@ -43,3 +43,4 @@ export { default as DirectionHistorySection } from './DirectionHistorySection';
 export { default as DecisionPathSection } from './DecisionPathSection';
 export { default as OrientationIdentitySection } from './OrientationIdentitySection';
 export { default as DailyOrientationQuestion } from './DailyOrientationQuestion';
+export { default as OrientationFieldToday } from './OrientationFieldToday';

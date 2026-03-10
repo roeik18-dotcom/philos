@@ -2054,6 +2054,14 @@ class FieldHistoryResponse(BaseModel):
     trend_insight: Optional[str] = None        # Hebrew insight about the trend
     weeks_analyzed: int = 0
 
+class FieldTodayResponse(BaseModel):
+    success: bool
+    distribution: Dict[str, float] = {}        # direction -> percentage (only 4 positive directions)
+    total_actions: int = 0
+    active_users: int = 0
+    dominant_direction: Optional[str] = None
+    insight: Optional[str] = None              # Hebrew insight
+
 class DirectionPercentile(BaseModel):
     direction: str
     user_count: int                            # User's action count in this direction
@@ -2138,6 +2146,90 @@ class DriftDetectionResponse(BaseModel):
     drift_strength: float = 0.0                # 0-100
     recent_pattern: List[str] = []             # last 7 days pattern
     insight: Optional[str] = None
+
+@api_router.get("/orientation/field-today", response_model=FieldTodayResponse)
+async def get_field_today():
+    """
+    Get today's orientation field - distribution of all users' actions in last 24 hours.
+    Returns only the 4 positive directions: Contribution, Recovery, Order, Exploration.
+    """
+    try:
+        # Get all user sessions
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0}).to_list(1000)
+        
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        positive_directions = ['contribution', 'recovery', 'order', 'exploration']
+        
+        # Time boundary - last 24 hours
+        now = datetime.now(timezone.utc)
+        twenty_four_hours_ago = (now - timedelta(hours=24)).isoformat()
+        
+        # Count directions from last 24 hours
+        direction_counts = {d: 0 for d in positive_directions}
+        active_users = set()
+        
+        for session in all_sessions:
+            user_id = session.get('user_id')
+            history = session.get('history', [])
+            
+            user_active_today = False
+            for h in history:
+                ts = h.get('timestamp', '')
+                if ts >= twenty_four_hours_ago:
+                    tag = h.get('value_tag')
+                    if tag in positive_directions:
+                        direction_counts[tag] += 1
+                        user_active_today = True
+            
+            if user_active_today and user_id:
+                active_users.add(user_id)
+        
+        total_actions = sum(direction_counts.values())
+        
+        # Calculate distribution percentages
+        distribution = {}
+        if total_actions > 0:
+            for direction in positive_directions:
+                distribution[direction] = round((direction_counts[direction] / total_actions) * 100, 1)
+        else:
+            # Default equal distribution if no data
+            for direction in positive_directions:
+                distribution[direction] = 25.0
+        
+        # Find dominant direction
+        dominant_direction = None
+        max_pct = 0
+        for direction, pct in distribution.items():
+            if pct > max_pct:
+                max_pct = pct
+                dominant_direction = direction
+        
+        # Generate insight
+        insight = None
+        if total_actions > 0 and dominant_direction:
+            insight = f"היום השדה נוטה לכיוון {direction_labels.get(dominant_direction, dominant_direction)}."
+        else:
+            insight = "השדה מאוזן היום."
+        
+        return FieldTodayResponse(
+            success=True,
+            distribution=distribution,
+            total_actions=total_actions,
+            active_users=len(active_users),
+            dominant_direction=dominant_direction,
+            insight=insight
+        )
+        
+    except Exception as e:
+        logger.error(f"Get field today error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @api_router.get("/orientation/field", response_model=OrientationFieldResponse)
 async def get_orientation_field():
