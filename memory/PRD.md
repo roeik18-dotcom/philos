@@ -177,6 +177,37 @@ The system is based on **four directions** and **two axes**:
 
 ---
 
+### Daily Orientation Question ✅
+**Status:** Complete (March 10, 2026)
+
+**What was built:**
+1. **Identity-based Question Generation** - Questions aim for balancing direction based on current identity
+2. **Question Persistence** - Same question returned throughout the day (stored in `daily_questions` collection)
+3. **Action Recording** - Answers update user history with suggested direction
+4. **Completion Tracking** - already_answered_today flag prevents duplicate answers
+
+**Backend Endpoints:**
+- `GET /api/orientation/daily-question/{user_id}` - Returns identity, question_he, suggested_direction, question_id
+- `POST /api/orientation/daily-answer/{user_id}` - Records action, updates history, returns direction
+
+**Question Mapping (Identity → Target Direction):**
+- avoidance_loop → order
+- recovery_dominant → contribution
+- order_builder → exploration
+- contribution_oriented → recovery
+- exploration_driven → order
+- new_user → recovery
+
+**Frontend:**
+- DailyOrientationQuestion component at TOP of Home tab
+- Shows question with direction badge
+- "עשיתי את זה" (I did it) button
+- Completion state with green checkmark and strikethrough
+
+**Test Results:** 100% pass (16/16 backend, all frontend elements verified)
+
+---
+
 ### System Logic Coherence ✅
 **Status:** Complete (March 10, 2026)
 - **Compass position** now calculated from **last 7 days** of actions (weighted average)
