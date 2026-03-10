@@ -44,7 +44,8 @@ import {
   OrientationCompassSection,
   DirectionHistorySection,
   DecisionPathSection,
-  OrientationIdentitySection
+  OrientationIdentitySection,
+  DailyOrientationQuestion
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -221,6 +222,17 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         {/* ==================== HOME TAB ==================== */}
         {activeTab === TABS.HOME && (
           <div className="space-y-4">
+            {/* Daily Orientation Question - TOP PRIORITY */}
+            <DailyOrientationQuestion 
+              userId={user?.id}
+              onActionRecorded={(actionData) => {
+                // Refresh data after action is recorded
+                console.log('Daily action recorded:', actionData);
+                // Trigger a refresh of the dashboard data
+                window.location.reload();
+              }}
+            />
+
             {/* Monthly Orientation - New Month Welcome */}
             <MonthlyOrientationSection
               history={history}

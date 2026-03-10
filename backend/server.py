@@ -2112,6 +2112,15 @@ class OrientationIdentityResponse(BaseModel):
     weeks_analyzed: int = 0
     insight: Optional[str] = None              # Supportive Hebrew insight
 
+class DailyQuestionResponse(BaseModel):
+    success: bool
+    user_id: str
+    identity: Optional[str] = None             # Current orientation identity
+    question_he: Optional[str] = None          # Hebrew question based on identity
+    suggested_direction: Optional[str] = None  # Direction the question aims for
+    question_id: Optional[str] = None          # For tracking responses
+    already_answered_today: bool = False       # If user already answered today
+
 class UserOrientationResponse(BaseModel):
     success: bool
     user_position: Dict[str, float] = {}       # x, y coordinates
@@ -3202,6 +3211,243 @@ async def get_orientation_identity(user_id: str):
         
     except Exception as e:
         logger.error(f"Get orientation identity error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/daily-question/{user_id}", response_model=DailyQuestionResponse)
+async def get_daily_question(user_id: str):
+    """
+    Daily Orientation Question: Generate a question based on current orientation identity.
+    The question aims to guide the user toward balance.
+    """
+    try:
+        # First, get the user's current identity
+        identity_response = await get_orientation_identity(user_id)
+        current_identity = identity_response.identity_type
+        dominant_direction = identity_response.dominant_direction
+        
+        # Check if user already answered today
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+        
+        existing_answer = await db.daily_questions.find_one({
+            'user_id': user_id,
+            'date': today_start
+        })
+        
+        if existing_answer:
+            return DailyQuestionResponse(
+                success=True,
+                user_id=user_id,
+                identity=current_identity,
+                question_he=existing_answer.get('question_he'),
+                suggested_direction=existing_answer.get('suggested_direction'),
+                question_id=existing_answer.get('question_id'),
+                already_answered_today=existing_answer.get('answered', False)
+            )
+        
+        # Questions based on identity type - each question aims for a balancing direction
+        identity_questions = {
+            'avoidance_loop': {
+                'questions': [
+                    "מה הדבר הקטן ביותר שאתה יכול לעשות עכשיו כדי ליצור סדר?",
+                    "איזו משימה קטנה אתה יכול להשלים ב-5 דקות הקרובות?",
+                    "מה הצעד הראשון שתוכל לעשות היום לקראת משהו שדחית?"
+                ],
+                'suggested_direction': 'order'
+            },
+            'recovery_dominant': {
+                'questions': [
+                    "מה הדבר הקטן שאתה יכול לעשות היום עבור מישהו אחר?",
+                    "איך תוכל לתרום למישהו קרוב אליך היום?",
+                    "מה תוכל לשתף עם אחרים מהניסיון שלך?"
+                ],
+                'suggested_direction': 'contribution'
+            },
+            'order_builder': {
+                'questions': [
+                    "מה משהו חדש שתוכל לנסות היום?",
+                    "איזו שאלה חדשה תוכל לשאול היום?",
+                    "מה הדבר שתמיד רצית לחקור אבל לא הספקת?"
+                ],
+                'suggested_direction': 'exploration'
+            },
+            'contribution_oriented': {
+                'questions': [
+                    "מה תעשה היום כדי לדאוג לעצמך?",
+                    "איזו הפסקה קטנה מגיעה לך היום?",
+                    "מה יעזור לך להתאושש ולהטען מחדש?"
+                ],
+                'suggested_direction': 'recovery'
+            },
+            'exploration_driven': {
+                'questions': [
+                    "איזו משימה תוכל לסיים היום כדי ליצור סדר?",
+                    "מה הדבר שצריך ארגון בחיים שלך עכשיו?",
+                    "איך תוכל ליצור מבנה קטן שיתמוך בך?"
+                ],
+                'suggested_direction': 'order'
+            },
+            'recovery_to_contribution': {
+                'questions': [
+                    "מה הצעד הבא שתעשה היום בכיוון של תרומה?",
+                    "איך תוכל להמשיך את המומנטום החיובי שלך?",
+                    "מה תוכל לעשות היום שירחיב את המעגל שלך?"
+                ],
+                'suggested_direction': 'contribution'
+            },
+            'drifting_from_order': {
+                'questions': [
+                    "מה המבנה הקטן שתוכל ליצור מחדש היום?",
+                    "איזו הרגל טובה תוכל לחזור אליה?",
+                    "מה יעזור לך להרגיש יותר מאורגן?"
+                ],
+                'suggested_direction': 'order'
+            },
+            'balanced': {
+                'questions': [
+                    "מה הכיוון שהכי מושך אותך היום?",
+                    "באיזה תחום תרצה להתמקד היום?",
+                    "מה יהפוך את היום הזה למשמעותי עבורך?"
+                ],
+                'suggested_direction': dominant_direction or 'recovery'
+            },
+            'new_user': {
+                'questions': [
+                    "מה הדבר הראשון שתעשה היום לטובת עצמך?",
+                    "איך תרצה להתחיל את המסע שלך?",
+                    "מה יגרום לך להרגיש טוב היום?"
+                ],
+                'suggested_direction': 'recovery'
+            }
+        }
+        
+        # Get questions for current identity (fallback to balanced)
+        identity_data = identity_questions.get(current_identity, identity_questions['balanced'])
+        questions = identity_data['questions']
+        suggested_direction = identity_data['suggested_direction']
+        
+        # Select a question (use day-based seed for consistency within a day)
+        import random
+        day_seed = hash(user_id + today_start)
+        random.seed(day_seed)
+        selected_question = random.choice(questions)
+        random.seed()  # Reset seed
+        
+        # Generate question ID
+        question_id = str(uuid.uuid4())[:8]
+        
+        # Save to database
+        question_doc = {
+            'user_id': user_id,
+            'date': today_start,
+            'question_id': question_id,
+            'question_he': selected_question,
+            'identity': current_identity,
+            'suggested_direction': suggested_direction,
+            'created_at': now.isoformat(),
+            'answered': False
+        }
+        
+        await db.daily_questions.insert_one(question_doc)
+        
+        return DailyQuestionResponse(
+            success=True,
+            user_id=user_id,
+            identity=current_identity,
+            question_he=selected_question,
+            suggested_direction=suggested_direction,
+            question_id=question_id,
+            already_answered_today=False
+        )
+        
+    except Exception as e:
+        logger.error(f"Get daily question error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DailyQuestionAnswerRequest(BaseModel):
+    question_id: str
+    response_text: Optional[str] = None
+    action_taken: bool = True
+
+
+@api_router.post("/orientation/daily-answer/{user_id}")
+async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest):
+    """
+    Submit answer to daily orientation question.
+    Records the action and updates the user's state.
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+        
+        # Find the question
+        question = await db.daily_questions.find_one({
+            'user_id': user_id,
+            'question_id': request.question_id
+        })
+        
+        if not question:
+            raise HTTPException(status_code=404, detail="Question not found")
+        
+        suggested_direction = question.get('suggested_direction', 'recovery')
+        
+        # Mark question as answered
+        await db.daily_questions.update_one(
+            {'user_id': user_id, 'question_id': request.question_id},
+            {
+                '$set': {
+                    'answered': True,
+                    'answered_at': now.isoformat(),
+                    'response_text': request.response_text,
+                    'action_taken': request.action_taken
+                }
+            }
+        )
+        
+        # If action was taken, record it in user's history
+        if request.action_taken:
+            # Get user's session
+            user_session = await db.philos_sessions.find_one(
+                {'user_id': user_id},
+                {'_id': 0}
+            )
+            
+            if user_session:
+                # Add to history
+                new_action = {
+                    'id': str(uuid.uuid4()),
+                    'action_text': f"השלמתי את השאלה היומית: {question.get('question_he', '')}",
+                    'value_tag': suggested_direction,
+                    'timestamp': now.isoformat(),
+                    'source': 'daily_question',
+                    'question_id': request.question_id
+                }
+                
+                history = user_session.get('history', [])
+                history.insert(0, new_action)
+                
+                # Update global stats
+                global_stats = user_session.get('global_stats', {})
+                global_stats[suggested_direction] = global_stats.get(suggested_direction, 0) + 1
+                
+                await db.philos_sessions.update_one(
+                    {'user_id': user_id},
+                    {'$set': {'history': history, 'global_stats': global_stats}}
+                )
+        
+        return {
+            'success': True,
+            'message': 'Answer recorded',
+            'action_recorded': request.action_taken,
+            'direction': suggested_direction
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Submit daily answer error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
