@@ -64,7 +64,7 @@ DELETE /api/philos/sessions/{user_id}/{id}    # Delete session
 
 ## Preview URL
 
-https://philos-orient.preview.emergentagent.com
+https://mental-nav-hub-1.preview.emergentagent.com
 
 ---
 

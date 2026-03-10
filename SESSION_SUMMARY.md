@@ -674,7 +674,7 @@ User Input → evaluateAction() → setHistory() → saveDecision() → MongoDB
 
 ## Preview URL
 
-https://philos-orient.preview.emergentagent.com
+https://mental-nav-hub-1.preview.emergentagent.com
 
 ---
 

@@ -71,7 +71,7 @@ Language:   Hebrew RTL UI
 
 ## Deployment
 
-**Preview URL:** https://philos-orient.preview.emergentagent.com
+**Preview URL:** https://mental-nav-hub-1.preview.emergentagent.com
 
 ---
 
