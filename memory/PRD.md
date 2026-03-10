@@ -37,6 +37,12 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 3. **Orientation Circles** — 2x2 grid showing user counts per direction
 4. **Community Streak Overview** — Users on streak + longest streak today
 
+### Phase 4 — Field Mission System (completed 2026-03-10)
+1. **Daily Community Challenge** — Auto-rotating mission per day (contribution/recovery/order/exploration)
+2. **Mission Progress** — Real-time participant count + progress bar toward target (5000)
+3. **Mission Contribution** — Daily answer auto-increments mission when direction matches
+4. **Contribution Feedback** — "הפעולה שלך תרמה למשימת היום" shown after matching action
+
 ## Key API Endpoints
 | Endpoint | Method | Purpose |
 |---|---|---|
@@ -47,6 +53,7 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 | `/api/orientation/index` | GET | Global orientation distribution |
 | `/api/orientation/identity/{user_id}` | GET | User's orientation identity |
 | `/api/orientation/decision-path/{user_id}` | GET | Action recommendation |
+| `/api/orientation/mission-today` | GET | Today's community challenge |
 | `/api/orientation/active-users` | GET | Active users today + streak users |
 | `/api/orientation/relative-score/{user_id}` | GET | User's percentile among all users |
 | `/api/orientation/circles` | GET | User counts per direction |
@@ -58,6 +65,7 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 - `philos_sessions` — User session data + history
 - `philos_decisions` — Individual decisions
 - `daily_questions` — Daily question records + answers
+- `daily_missions` — Daily community challenge (date, direction, participants, target)
 - `users` — User profiles + auth
 
 ## Backlog
