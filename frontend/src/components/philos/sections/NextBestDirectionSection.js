@@ -1,53 +1,23 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { 
   calculateRecommendation, 
-  calculateCollectiveGap,
-  calculateCalibrationWeights,
   valueLabels,
-  directionColors,
-  buildRecommendationMetadata
+  directionColors
 } from '../../../services/recommendationService';
 
-export default function NextBestDirectionSection({ history, adaptiveScores, replayInsights, onFollowRecommendation }) {
-  // State for collective data comparison
-  const [collectiveGap, setCollectiveGap] = useState(null);
-
-  // Fetch collective data and calculate gap using centralized service
-  useEffect(() => {
-    const fetchGap = async () => {
-      const gap = await calculateCollectiveGap(history);
-      setCollectiveGap(gap);
-    };
-    fetchGap();
-  }, [history]);
-
-  // Build collective data object for calculation
-  const collectiveDataForCalc = useMemo(() => {
-    return collectiveGap ? { gap: collectiveGap } : null;
-  }, [collectiveGap]);
-
-  // Calculate calibration weights from follow-through data
-  const calibration = useMemo(() => {
-    return calculateCalibrationWeights(history);
-  }, [history]);
-
-  // Calculate recommendation using centralized service with all data sources
+export default function NextBestDirectionSection({ history, onFollowRecommendation }) {
+  // Calculate recommendation using centralized theory-based service
+  // Only history is needed - the model is based on theoretical framework
   const recommendation = useMemo(() => {
-    return calculateRecommendation({
-      history,
-      adaptiveScores,
-      replayInsights,
-      collectiveData: collectiveDataForCalc,
-      calibrationWeights: calibration.hasData ? calibration.weights : null
-    });
-  }, [history, adaptiveScores, replayInsights, collectiveDataForCalc, calibration]);
+    return calculateRecommendation({ history });
+  }, [history]);
 
   // Don't render if no recommendation
   if (!recommendation) {
     return null;
   }
 
-  const { direction, strength, insight, actionSuggestion, reason, calibrationApplied } = recommendation;
+  const { direction, strength, insight, actionSuggestion, reason, theoryPath } = recommendation;
   const colors = directionColors[direction] || directionColors.recovery;
 
   // Handler for following recommendation
@@ -70,6 +40,7 @@ export default function NextBestDirectionSection({ history, adaptiveScores, repl
     contribution: -45,
     recovery: 45,
     order: 0,
+    exploration: -90,
     harm: 135,
     avoidance: 180
   }[direction] || 0;
@@ -162,18 +133,16 @@ export default function NextBestDirectionSection({ history, adaptiveScores, repl
           </div>
           <div>
             <p className="text-sm text-sky-800">{insight}</p>
+            {theoryPath && (
+              <p className="text-xs text-sky-600 mt-1 font-medium">
+                מסלול תיאורטי: {theoryPath}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-2">
-              {reason === 'negative_harm_drift' && 'מבוסס על ניתוח דפוסי נזק אחרונים'}
-              {reason === 'negative_avoidance_drift' && 'מבוסס על זיהוי דפוסי הימנעות'}
-              {reason === 'collective_gap' && 'מבוסס על פער מול השדה הקולקטיבי'}
-              {reason === 'replay_blind_spot' && 'מבוסס על נקודות עיוורות בהפעלות חוזרות'}
-              {reason === 'positive_contribution_momentum' && 'מבוסס על מומנטום חיובי קיים'}
-              {reason === 'replay_preference' && 'מבוסס על דפוסי הפעלה חוזרת'}
-              {reason === 'calibration_boost' && 'מבוסס על כיול אוטומטי מתוצאות בפועל'}
-              {reason === 'balance_deficit' && 'מבוסס על ניתוח איזון כיוונים'}
-              {reason === 'general_balance' && 'המלצה כללית לאיזון'}
-              {reason === 'default' && 'המלצה ראשונית'}
-              {calibrationApplied && <span className="mr-1 text-amber-600">• משקל מכויל</span>}
+              {reason === 'theory_balancing' && 'מבוסס על מסלול האיזון התיאורטי'}
+              {reason === 'theory_reinforcement' && 'מבוסס על חיזוק כיוון חיובי'}
+              {reason === 'no_history' && 'המלצה ראשונית'}
+              {reason === 'default' && 'המלצה כללית'}
             </p>
           </div>
         </div>

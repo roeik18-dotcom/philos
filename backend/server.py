@@ -2018,6 +2018,435 @@ async def get_collective_trends():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================
+# ORIENTATION FIELD - Collective Navigation System
+# ============================================================
+
+class OrientationFieldResponse(BaseModel):
+    success: bool
+    field_distribution: Dict[str, float] = {}  # direction -> percentage
+    field_center: Dict[str, float] = {}        # x, y coordinates of collective center
+    total_users: int = 0
+    total_decisions: int = 0
+    dominant_direction: Optional[str] = None
+    field_momentum: Optional[str] = None       # stabilizing, drifting, balancing
+    field_insight: Optional[str] = None
+
+class UserOrientationResponse(BaseModel):
+    success: bool
+    user_position: Dict[str, float] = {}       # x, y coordinates
+    collective_center: Dict[str, float] = {}   # x, y coordinates
+    alignment_score: float = 0.0               # 0-100, how aligned with collective
+    drift_pattern: Optional[str] = None        # drift detection result
+    momentum: Optional[str] = None             # user's momentum
+    momentum_direction: Optional[str] = None   # which direction momentum is toward
+    insights: List[str] = []
+
+class DriftDetectionResponse(BaseModel):
+    success: bool
+    drift_detected: bool = False
+    drift_type: Optional[str] = None           # chaos, isolation, order, contribution
+    drift_strength: float = 0.0                # 0-100
+    recent_pattern: List[str] = []             # last 7 days pattern
+    insight: Optional[str] = None
+
+@api_router.get("/orientation/field", response_model=OrientationFieldResponse)
+async def get_orientation_field():
+    """
+    Get the collective orientation field - distribution of all users across directions.
+    This is the main view of the collective navigation system.
+    """
+    try:
+        # Aggregate all decisions from the last 30 days
+        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        
+        # Get all decisions
+        decisions = await db.decisions.find({
+            "timestamp": {"$gte": thirty_days_ago.isoformat()}
+        }, {"_id": 0}).to_list(10000)
+        
+        # Also get learning records for more data
+        learning_records = await db.path_learning.find({}, {"_id": 0}).to_list(5000)
+        
+        # Count directions
+        direction_counts = {
+            'recovery': 0,
+            'order': 0,
+            'contribution': 0,
+            'exploration': 0,
+            'harm': 0,
+            'avoidance': 0
+        }
+        
+        # Track unique users
+        unique_users = set()
+        total_ego_collective = 0
+        total_chaos_order = 0
+        count_with_positions = 0
+        
+        # Process decisions
+        for d in decisions:
+            tag = d.get('value_tag')
+            if tag and tag in direction_counts:
+                direction_counts[tag] += 1
+            
+            user_id = d.get('user_id')
+            if user_id:
+                unique_users.add(user_id)
+            
+            # Collect position data
+            if d.get('ego_collective') is not None:
+                total_ego_collective += d.get('ego_collective', 0)
+                count_with_positions += 1
+            if d.get('chaos_order') is not None:
+                total_chaos_order += d.get('chaos_order', 0)
+        
+        # Process learning records for value tags
+        for lr in learning_records:
+            tag = lr.get('actual_value_tag')
+            if tag and tag in direction_counts:
+                direction_counts[tag] += 1
+        
+        total_decisions = sum(direction_counts.values())
+        
+        # Calculate distribution percentages
+        field_distribution = {}
+        if total_decisions > 0:
+            for direction, count in direction_counts.items():
+                field_distribution[direction] = round((count / total_decisions) * 100, 1)
+        
+        # Calculate collective center position
+        # Map directions to compass positions
+        direction_positions = {
+            'recovery': (30, 65),
+            'order': (30, 25),
+            'contribution': (70, 25),
+            'exploration': (70, 65),
+            'harm': (15, 85),
+            'avoidance': (50, 90)
+        }
+        
+        # Weighted average of positions based on distribution
+        center_x = 50
+        center_y = 50
+        if total_decisions > 0:
+            weighted_x = 0
+            weighted_y = 0
+            for direction, pct in field_distribution.items():
+                if direction in direction_positions:
+                    pos = direction_positions[direction]
+                    weighted_x += pos[0] * (pct / 100)
+                    weighted_y += pos[1] * (pct / 100)
+            center_x = round(weighted_x, 1)
+            center_y = round(weighted_y, 1)
+        
+        field_center = {"x": center_x, "y": center_y}
+        
+        # Determine dominant direction
+        dominant_direction = None
+        max_pct = 0
+        positive_directions = ['recovery', 'order', 'contribution', 'exploration']
+        for direction in positive_directions:
+            if field_distribution.get(direction, 0) > max_pct:
+                max_pct = field_distribution.get(direction, 0)
+                dominant_direction = direction
+        
+        # Calculate field momentum
+        # Get last 7 days vs previous 7 days
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        fourteen_days_ago = datetime.now(timezone.utc) - timedelta(days=14)
+        
+        recent_decisions = [d for d in decisions if d.get('timestamp', '') >= seven_days_ago.isoformat()]
+        previous_decisions = [d for d in decisions if fourteen_days_ago.isoformat() <= d.get('timestamp', '') < seven_days_ago.isoformat()]
+        
+        recent_positive = sum(1 for d in recent_decisions if d.get('value_tag') in positive_directions)
+        previous_positive = sum(1 for d in previous_decisions if d.get('value_tag') in positive_directions)
+        
+        field_momentum = "stable"
+        if len(recent_decisions) > 0 and len(previous_decisions) > 0:
+            recent_ratio = recent_positive / len(recent_decisions) if recent_decisions else 0
+            previous_ratio = previous_positive / len(previous_decisions) if previous_decisions else 0
+            
+            if recent_ratio > previous_ratio + 0.1:
+                field_momentum = "stabilizing"
+            elif recent_ratio < previous_ratio - 0.1:
+                field_momentum = "drifting"
+            else:
+                field_momentum = "balancing"
+        
+        # Generate field insight
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        field_insight = None
+        if dominant_direction and dominant_direction in direction_labels:
+            if field_momentum == "stabilizing":
+                field_insight = f"השדה הקולקטיבי מראה נטייה חזקה ל{direction_labels[dominant_direction]} ומתייצב."
+            elif field_momentum == "drifting":
+                field_insight = f"השדה הקולקטיבי נוטה ל{direction_labels[dominant_direction]} אך יש סחף מהאיזון."
+            else:
+                field_insight = f"השדה הקולקטיבי היום מראה נטייה ל{direction_labels[dominant_direction]}."
+        
+        return OrientationFieldResponse(
+            success=True,
+            field_distribution=field_distribution,
+            field_center=field_center,
+            total_users=len(unique_users),
+            total_decisions=total_decisions,
+            dominant_direction=dominant_direction,
+            field_momentum=field_momentum,
+            field_insight=field_insight
+        )
+        
+    except Exception as e:
+        logger.error(f"Get orientation field error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/user/{user_id}", response_model=UserOrientationResponse)
+async def get_user_orientation(user_id: str):
+    """
+    Get user's position relative to the collective field.
+    Includes drift detection and momentum calculation.
+    """
+    try:
+        # Get user's decisions
+        user_decisions = await db.decisions.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).sort("timestamp", -1).to_list(100)
+        
+        if not user_decisions:
+            return UserOrientationResponse(
+                success=True,
+                user_position={"x": 50, "y": 50},
+                collective_center={"x": 50, "y": 50},
+                alignment_score=50,
+                insights=["אין מספיק נתונים. בצע פעולות כדי לראות את המיקום שלך."]
+            )
+        
+        # Get collective field data
+        field_data = await get_orientation_field()
+        collective_center = field_data.field_center
+        
+        # Calculate user position based on recent decisions
+        direction_positions = {
+            'recovery': (30, 65),
+            'order': (30, 25),
+            'contribution': (70, 25),
+            'exploration': (70, 65),
+            'harm': (15, 85),
+            'avoidance': (50, 90)
+        }
+        
+        # Weight recent decisions more
+        weighted_x = 0
+        weighted_y = 0
+        total_weight = 0
+        
+        for idx, d in enumerate(user_decisions[:20]):
+            tag = d.get('value_tag')
+            if tag and tag in direction_positions:
+                weight = max(0.1, 1 - (idx * 0.05))  # Recent decisions weighted more
+                pos = direction_positions[tag]
+                weighted_x += pos[0] * weight
+                weighted_y += pos[1] * weight
+                total_weight += weight
+        
+        user_x = round(weighted_x / total_weight, 1) if total_weight > 0 else 50
+        user_y = round(weighted_y / total_weight, 1) if total_weight > 0 else 50
+        
+        user_position = {"x": user_x, "y": user_y}
+        
+        # Calculate alignment score (distance from collective center)
+        distance = ((user_x - collective_center["x"])**2 + (user_y - collective_center["y"])**2)**0.5
+        max_distance = 70  # Max possible distance on compass
+        alignment_score = round(max(0, 100 - (distance / max_distance * 100)), 1)
+        
+        # Drift detection
+        drift_pattern = None
+        recent_tags = [d.get('value_tag') for d in user_decisions[:10] if d.get('value_tag')]
+        
+        harm_count = recent_tags.count('harm')
+        avoidance_count = recent_tags.count('avoidance')
+        order_count = recent_tags.count('order')
+        contribution_count = recent_tags.count('contribution')
+        
+        if harm_count + avoidance_count >= 4:
+            drift_pattern = "drift_toward_chaos"
+        elif order_count >= 5 and contribution_count == 0:
+            drift_pattern = "drift_toward_isolation"
+        elif order_count >= 4:
+            drift_pattern = "stabilization_toward_order"
+        elif contribution_count >= 3:
+            drift_pattern = "movement_toward_contribution"
+        
+        # Calculate momentum (last 7 days)
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        recent = [d for d in user_decisions if d.get('timestamp', '') >= seven_days_ago.isoformat()]
+        
+        momentum = "stable"
+        momentum_direction = None
+        
+        if len(recent) >= 3:
+            positive_directions = ['recovery', 'order', 'contribution', 'exploration']
+            recent_positive = sum(1 for d in recent if d.get('value_tag') in positive_directions)
+            positive_ratio = recent_positive / len(recent)
+            
+            if positive_ratio > 0.7:
+                momentum = "stabilizing"
+                # Find which positive direction is strongest
+                pos_counts = {d: recent.count(d) for d in positive_directions}
+                momentum_direction = max(pos_counts, key=lambda k: sum(1 for r in recent if r.get('value_tag') == k))
+            elif positive_ratio < 0.4:
+                momentum = "drifting"
+            else:
+                momentum = "balancing"
+        
+        # Generate insights
+        insights = []
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה',
+            'harm': 'נזק',
+            'avoidance': 'הימנעות'
+        }
+        
+        # Position insight
+        if alignment_score > 70:
+            insights.append("אתה מיושר היטב עם השדה הקולקטיבי.")
+        elif alignment_score < 40:
+            insights.append("יש מרחק בין המיקום שלך לבין מרכז השדה הקולקטיבי.")
+        
+        # Drift insight
+        if drift_pattern == "drift_toward_chaos":
+            insights.append("נראה סחף לכיוון כאוס. מומלץ לשקול פעולת התאוששות או סדר.")
+        elif drift_pattern == "drift_toward_isolation":
+            insights.append("יש נטייה לבידוד. כדאי לשקול פעולת תרומה.")
+        elif drift_pattern == "stabilization_toward_order":
+            insights.append("אתה מתייצב לכיוון סדר אחרי תקופה של הימנעות.")
+        elif drift_pattern == "movement_toward_contribution":
+            insights.append("יש תנועה חיובית לכיוון תרומה.")
+        
+        # Momentum insight
+        if momentum == "stabilizing" and momentum_direction:
+            insights.append(f"המומנטום שלך חיובי לכיוון {direction_labels.get(momentum_direction, momentum_direction)}.")
+        elif momentum == "drifting":
+            insights.append("המומנטום מראה סחף מהאיזון. כדאי לבדוק את הכיוון.")
+        
+        return UserOrientationResponse(
+            success=True,
+            user_position=user_position,
+            collective_center=dict(collective_center),
+            alignment_score=alignment_score,
+            drift_pattern=drift_pattern,
+            momentum=momentum,
+            momentum_direction=momentum_direction,
+            insights=insights
+        )
+        
+    except Exception as e:
+        logger.error(f"Get user orientation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/drift/{user_id}", response_model=DriftDetectionResponse)
+async def detect_drift(user_id: str):
+    """
+    Detailed drift detection for a user.
+    Analyzes patterns over the last 7 days.
+    """
+    try:
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        
+        user_decisions = await db.decisions.find(
+            {
+                "user_id": user_id,
+                "timestamp": {"$gte": seven_days_ago.isoformat()}
+            },
+            {"_id": 0}
+        ).sort("timestamp", -1).to_list(100)
+        
+        if len(user_decisions) < 3:
+            return DriftDetectionResponse(
+                success=True,
+                drift_detected=False,
+                insight="אין מספיק נתונים לזיהוי דפוס. המשך לבצע פעולות."
+            )
+        
+        # Extract pattern
+        recent_pattern = [d.get('value_tag', 'unknown') for d in user_decisions[:7]]
+        
+        # Count directions
+        counts = {}
+        for tag in recent_pattern:
+            counts[tag] = counts.get(tag, 0) + 1
+        
+        # Detect drift
+        drift_detected = False
+        drift_type = None
+        drift_strength = 0
+        insight = None
+        
+        total = len(recent_pattern)
+        
+        # Check for chaos drift (harm + avoidance)
+        chaos_count = counts.get('harm', 0) + counts.get('avoidance', 0)
+        if chaos_count >= total * 0.5:
+            drift_detected = True
+            drift_type = "chaos"
+            drift_strength = round((chaos_count / total) * 100, 1)
+            if counts.get('harm', 0) > counts.get('avoidance', 0):
+                insight = "זוהה סחף לכיוון נזק. מומלץ לאזן עם התאוששות."
+            else:
+                insight = "זוהה סחף לכיוון הימנעות. מומלץ לאזן עם סדר."
+        
+        # Check for isolation drift (only order, no contribution/exploration)
+        elif counts.get('order', 0) >= 3 and counts.get('contribution', 0) == 0 and counts.get('exploration', 0) == 0:
+            drift_detected = True
+            drift_type = "isolation"
+            drift_strength = round((counts.get('order', 0) / total) * 100, 1)
+            insight = "זוהה דפוס של בידוד (סדר ללא תרומה). מומלץ לפתוח לכיוון תרומה."
+        
+        # Check for positive stabilization
+        elif counts.get('order', 0) + counts.get('contribution', 0) >= total * 0.6:
+            drift_detected = False
+            drift_type = "stabilization"
+            drift_strength = round(((counts.get('order', 0) + counts.get('contribution', 0)) / total) * 100, 1)
+            insight = "נראה דפוס של התייצבות חיובית. המשך בכיוון זה."
+        
+        # Check for contribution movement
+        elif counts.get('contribution', 0) >= 2:
+            drift_detected = False
+            drift_type = "contribution_movement"
+            drift_strength = round((counts.get('contribution', 0) / total) * 100, 1)
+            insight = "יש תנועה חיובית לכיוון תרומה."
+        
+        if not insight:
+            insight = "הדפוס הנוכחי מאוזן יחסית."
+        
+        return DriftDetectionResponse(
+            success=True,
+            drift_detected=drift_detected,
+            drift_type=drift_type,
+            drift_strength=drift_strength,
+            recent_pattern=recent_pattern,
+            insight=insight
+        )
+        
+    except Exception as e:
+        logger.error(f"Detect drift error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
 # Include the router in the main app
 app.include_router(api_router)
 

@@ -27,4 +27,4 @@ Decision → Chain → Replay → Adaptive Scoring → Reports → Collective
 ## Next: System Stabilization
 - API caching, loading states, error handling, RTL verification
 
-**Preview:** https://mental-nav-hub-1.preview.emergentagent.com
+**Preview:** https://philos-field.preview.emergentagent.com

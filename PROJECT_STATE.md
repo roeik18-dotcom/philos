@@ -341,7 +341,7 @@ Historical data and sessions:
 
 ## Preview URL
 
-https://mental-nav-hub-1.preview.emergentagent.com
+https://philos-field.preview.emergentagent.com
 
 ---
 

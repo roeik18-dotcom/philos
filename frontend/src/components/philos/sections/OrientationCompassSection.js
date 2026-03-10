@@ -1,70 +1,16 @@
 import { useMemo } from 'react';
-
-// Direction colors for the compass
-const directionColors = {
-  recovery: '#3b82f6',    // Blue
-  order: '#6366f1',       // Indigo
-  contribution: '#22c55e', // Green
-  exploration: '#f59e0b', // Amber
-  harm: '#ef4444',        // Red
-  avoidance: '#9ca3af'    // Gray
-};
-
-// Map value tags to compass positions (normalized 0-100)
-const getPositionFromValueTag = (valueTag, chaosOrder, egoCollective) => {
-  // Base positions by value tag
-  const basePositions = {
-    recovery: { x: 30, y: 70 },      // Lower-left (ego side, chaos side)
-    order: { x: 30, y: 30 },         // Upper-left (ego side, order side)
-    contribution: { x: 70, y: 30 },  // Upper-right (collective side, order side)
-    exploration: { x: 70, y: 70 },   // Lower-right (collective side, chaos side)
-    harm: { x: 20, y: 80 },          // Far lower-left
-    avoidance: { x: 50, y: 85 }      // Bottom center
-  };
-
-  const base = basePositions[valueTag] || { x: 50, y: 50 };
-  
-  // Adjust based on actual chaos_order and ego_collective values
-  // chaos_order: negative = chaos (bottom), positive = order (top)
-  // ego_collective: negative = ego (left), positive = collective (right)
-  const adjustedX = 50 + (egoCollective / 2); // Map -100..100 to 0..100
-  const adjustedY = 50 - (chaosOrder / 2);    // Map -100..100 to 100..0 (inverted for Y)
-
-  // Blend base position with actual values
-  return {
-    x: (base.x + adjustedX) / 2,
-    y: (base.y + adjustedY) / 2
-  };
-};
-
-// Calculate recommended direction position
-const getRecommendedPosition = (currentValueTag) => {
-  const recommendations = {
-    harm: { x: 30, y: 70, direction: 'recovery' },
-    avoidance: { x: 30, y: 30, direction: 'order' },
-    recovery: { x: 70, y: 30, direction: 'contribution' },
-    order: { x: 70, y: 70, direction: 'exploration' },
-    contribution: { x: 30, y: 30, direction: 'order' },
-    exploration: { x: 30, y: 70, direction: 'recovery' }
-  };
-  return recommendations[currentValueTag] || { x: 50, y: 50, direction: 'recovery' };
-};
+import { 
+  calculateCompassPosition, 
+  calculateRecommendedArrow,
+  compassPositions,
+  directionColors,
+  valueLabels 
+} from '../../../services/recommendationService';
 
 export default function OrientationCompassSection({ history, state }) {
-  // Calculate current position based on latest decision
+  // Calculate current position using centralized theory-based function
   const currentPosition = useMemo(() => {
-    if (!history || history.length === 0) {
-      return { x: 50, y: 50, valueTag: null };
-    }
-
-    const latest = history[0];
-    const pos = getPositionFromValueTag(
-      latest.value_tag,
-      latest.chaos_order || state?.chaos_order || 0,
-      latest.ego_collective || state?.ego_collective || 0
-    );
-
-    return { ...pos, valueTag: latest.value_tag };
+    return calculateCompassPosition(history, state);
   }, [history, state]);
 
   // Calculate trail positions (last 7 days)
@@ -79,18 +25,22 @@ export default function OrientationCompassSection({ history, state }) {
         if (!h.timestamp) return true;
         return new Date(h.timestamp) >= weekAgo;
       })
-      .slice(0, 15) // Limit trail length
-      .map((h, idx) => ({
-        ...getPositionFromValueTag(h.value_tag, h.chaos_order || 0, h.ego_collective || 0),
-        valueTag: h.value_tag,
-        opacity: Math.max(0.1, 1 - (idx * 0.06))
-      }));
+      .slice(0, 15)
+      .map((h, idx) => {
+        const basePos = compassPositions[h.value_tag] || { x: 50, y: 50 };
+        return {
+          x: basePos.x,
+          y: basePos.y,
+          valueTag: h.value_tag,
+          opacity: Math.max(0.1, 1 - (idx * 0.06))
+        };
+      });
   }, [history]);
 
-  // Calculate recommended direction
-  const recommendedDirection = useMemo(() => {
+  // Calculate recommended direction arrow using theory
+  const recommendedArrow = useMemo(() => {
     if (!currentPosition.valueTag) return null;
-    return getRecommendedPosition(currentPosition.valueTag);
+    return calculateRecommendedArrow(currentPosition.valueTag);
   }, [currentPosition]);
 
   // Hebrew labels for directions
@@ -163,7 +113,7 @@ export default function OrientationCompassSection({ history, state }) {
                 cx={`${pos.x}%`}
                 cy={`${pos.y}%`}
                 r="3"
-                fill={directionColors[pos.valueTag] || '#9ca3af'}
+                fill={directionColors[pos.valueTag]?.fill || '#9ca3af'}
                 opacity={pos.opacity}
               />
             ))}
@@ -171,7 +121,7 @@ export default function OrientationCompassSection({ history, state }) {
         )}
 
         {/* Recommended Direction Arrow */}
-        {recommendedDirection && currentPosition.valueTag && (
+        {recommendedArrow && currentPosition.valueTag && (
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
             <defs>
               <marker
@@ -188,8 +138,8 @@ export default function OrientationCompassSection({ history, state }) {
             <line
               x1={`${currentPosition.x}%`}
               y1={`${currentPosition.y}%`}
-              x2={`${(currentPosition.x + recommendedDirection.x) / 2}%`}
-              y2={`${(currentPosition.y + recommendedDirection.y) / 2}%`}
+              x2={`${recommendedArrow.to.x}%`}
+              y2={`${recommendedArrow.to.y}%`}
               stroke="#22c55e"
               strokeWidth="2"
               strokeDasharray="4,2"
@@ -224,7 +174,7 @@ export default function OrientationCompassSection({ history, state }) {
           <div className="w-3 h-3 rounded-full bg-current border-2 border-white shadow"></div>
           <span>מיקום נוכחי</span>
         </div>
-        {recommendedDirection && (
+        {recommendedArrow && (
           <div className="flex items-center gap-1 text-xs text-green-600">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -247,14 +197,19 @@ export default function OrientationCompassSection({ history, state }) {
             הכיוון הנוכחי: 
             <span 
               className="font-bold mr-1"
-              style={{ color: directionColors[currentPosition.valueTag] }}
+              style={{ color: directionColors[currentPosition.valueTag]?.fill || '#6b7280' }}
             >
               {directionLabels[currentPosition.valueTag] || currentPosition.valueTag}
             </span>
           </p>
-          {recommendedDirection && (
+          {currentPosition.actionsAnalyzed && (
+            <p className="text-[10px] text-muted-foreground mt-1">
+              מבוסס על {currentPosition.actionsAnalyzed} פעולות ב-7 ימים אחרונים
+            </p>
+          )}
+          {recommendedArrow && (
             <p className="text-xs text-green-600 mt-1">
-              כיוון מאזן מומלץ: {directionLabels[recommendedDirection.direction]}
+              כיוון מאזן מומלץ: {directionLabels[recommendedArrow.direction]}
             </p>
           )}
         </div>

@@ -64,5 +64,5 @@ Tasks:
 
 ---
 
-**Preview URL:** https://mental-nav-hub-1.preview.emergentagent.com  
+**Preview URL:** https://philos-field.preview.emergentagent.com  
 **Test Credentials:** newuser@test.com / password123

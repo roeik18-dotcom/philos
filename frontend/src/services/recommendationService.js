@@ -1,15 +1,95 @@
 // Centralized Recommendation Service for Philos Orientation
 // Single source of truth for all recommendation calculations
+// Connected directly to the theoretical framework
 
 import { fetchCollectiveLayer } from './dataService';
 
-// Hebrew value tag labels
+// ==================== THEORETICAL FRAMEWORK ====================
+// These are the core rules from the theory that drive all recommendations
+
+/**
+ * THEORY-BASED BALANCING PATHS
+ * The fundamental rules that connect current direction to recommended direction
+ */
+export const theoryBalancingPaths = {
+  harm: {
+    balancingDirection: 'recovery',
+    explanation: 'פעולות נזק דורשות איזון דרך התאוששות',
+    explanationEn: 'Harm actions require balancing through recovery'
+  },
+  avoidance: {
+    balancingDirection: 'order',
+    explanation: 'הימנעות מאוזנת על ידי יצירת סדר ומבנה',
+    explanationEn: 'Avoidance is balanced by creating order and structure'
+  },
+  isolation: {
+    balancingDirection: 'contribution',
+    explanation: 'מיקוד עצמי מאוזן על ידי תרומה לאחרים',
+    explanationEn: 'Self-focus is balanced by contributing to others'
+  },
+  rigidity: {
+    balancingDirection: 'exploration',
+    explanation: 'קיפאון מאוזן על ידי פתיחות וחקירה',
+    explanationEn: 'Rigidity is balanced by openness and exploration'
+  }
+};
+
+/**
+ * POSITIVE DIRECTION REINFORCEMENT
+ * When current direction is already positive, suggest strengthening or adjacent positive
+ */
+export const positiveReinforcement = {
+  recovery: {
+    strengthen: 'recovery',
+    adjacent: 'order',
+    explanation: 'להמשיך בהתאוששות או להוסיף סדר'
+  },
+  order: {
+    strengthen: 'order',
+    adjacent: 'contribution',
+    explanation: 'לחזק את הסדר או לפתוח לתרומה'
+  },
+  contribution: {
+    strengthen: 'contribution',
+    adjacent: 'exploration',
+    explanation: 'להמשיך בתרומה או לפתוח לחקירה'
+  },
+  exploration: {
+    strengthen: 'exploration',
+    adjacent: 'recovery',
+    explanation: 'להמשיך בחקירה או לאזן עם התאוששות'
+  }
+};
+
+/**
+ * COMPASS POSITION MAPPING
+ * Maps value tags to positions on the quadrant grid
+ * X axis: Ego (0) ↔ Collective (100)
+ * Y axis: Chaos (100) ↔ Order (0)
+ */
+export const compassPositions = {
+  // Positive directions
+  recovery: { x: 30, y: 65, quadrant: 'lower-left' },      // Ego side, toward chaos (stabilizing)
+  order: { x: 30, y: 25, quadrant: 'upper-left' },         // Ego side, toward order
+  contribution: { x: 70, y: 25, quadrant: 'upper-right' }, // Collective side, toward order
+  exploration: { x: 70, y: 65, quadrant: 'lower-right' },  // Collective side, toward chaos (opening)
+  // Negative directions
+  harm: { x: 15, y: 85, quadrant: 'far-lower-left' },      // Extreme ego, extreme chaos
+  avoidance: { x: 50, y: 90, quadrant: 'bottom-center' }   // Center, extreme chaos
+};
+
+// ==================== LABELS AND COLORS ====================
+
+// Hebrew value tag labels (extended for theory)
 export const valueLabels = {
   contribution: 'תרומה',
   recovery: 'התאוששות',
   order: 'סדר',
+  exploration: 'חקירה',
   harm: 'נזק',
-  avoidance: 'הימנעות'
+  avoidance: 'הימנעות',
+  isolation: 'בידוד',
+  rigidity: 'נוקשות'
 };
 
 // Direction colors (shared across components)
@@ -17,6 +97,7 @@ export const directionColors = {
   contribution: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', fill: '#22c55e' },
   recovery: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', fill: '#3b82f6' },
   order: { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-300', fill: '#6366f1' },
+  exploration: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', fill: '#f59e0b' },
   harm: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300', fill: '#ef4444' },
   avoidance: { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300', fill: '#9ca3af' }
 };
@@ -38,6 +119,11 @@ export const actionSuggestions = {
     'לארגן משהו קטן בסביבה',
     'לסיים משימה פתוחה אחת'
   ],
+  exploration: [
+    'לנסות משהו חדש',
+    'לשאול שאלה פתוחה',
+    'לצאת מאזור הנוחות'
+  ],
   harm: [
     'לעצור ולנשום לפני תגובה',
     'לזהות את הרגש ולתת לו מקום',
@@ -48,6 +134,249 @@ export const actionSuggestions = {
     'לקחת צעד ראשון קטן',
     'להתמודד עם משהו אחד קטן'
   ]
+};
+
+// ==================== CORE THEORY FUNCTIONS ====================
+
+/**
+ * Get the theory-based balancing direction for a given current direction
+ * This is the PRIMARY recommendation logic based on the theoretical framework
+ * 
+ * @param {string} currentDirection - The current/dominant direction
+ * @returns {Object} Balancing recommendation { direction, reason, explanation }
+ */
+export const getTheoryBasedRecommendation = (currentDirection) => {
+  // Negative directions → Apply balancing path from theory
+  if (theoryBalancingPaths[currentDirection]) {
+    const path = theoryBalancingPaths[currentDirection];
+    return {
+      direction: path.balancingDirection,
+      reason: 'theory_balancing',
+      explanation: path.explanation,
+      fromTheory: true
+    };
+  }
+
+  // Positive directions → Strengthen or suggest adjacent
+  if (positiveReinforcement[currentDirection]) {
+    const reinforcement = positiveReinforcement[currentDirection];
+    return {
+      direction: reinforcement.adjacent, // Default to adjacent for variety
+      reason: 'theory_reinforcement',
+      explanation: reinforcement.explanation,
+      fromTheory: true,
+      alternativeDirection: reinforcement.strengthen
+    };
+  }
+
+  // Default fallback
+  return {
+    direction: 'recovery',
+    reason: 'default',
+    explanation: 'התאוששות היא תמיד בחירה טובה',
+    fromTheory: false
+  };
+};
+
+/**
+ * Identify the dominant pattern from recent history
+ * Maps actual value tags to theory categories (including isolation, rigidity)
+ * 
+ * @param {Array} history - Decision history
+ * @param {number} limit - Number of recent decisions to analyze
+ * @returns {Object} Pattern analysis
+ */
+export const identifyDominantPattern = (history, limit = 10) => {
+  if (!history || history.length === 0) {
+    return {
+      dominantDirection: null,
+      patternType: 'none',
+      valueCounts: {},
+      theoryCategory: null
+    };
+  }
+
+  const recent = history.slice(0, limit);
+  const valueCounts = {};
+  
+  recent.forEach(item => {
+    const tag = item.value_tag;
+    if (tag) {
+      valueCounts[tag] = (valueCounts[tag] || 0) + 1;
+    }
+  });
+
+  // Find dominant direction
+  const sorted = Object.entries(valueCounts).sort((a, b) => b[1] - a[1]);
+  const dominant = sorted[0];
+
+  if (!dominant) {
+    return {
+      dominantDirection: null,
+      patternType: 'balanced',
+      valueCounts,
+      theoryCategory: null
+    };
+  }
+
+  const [dominantTag, dominantCount] = dominant;
+  const dominanceRatio = dominantCount / recent.length;
+
+  // Map to theory categories
+  let theoryCategory = dominantTag;
+  let patternType = 'positive';
+
+  // Detect negative patterns
+  if (dominantTag === 'harm') {
+    theoryCategory = 'harm';
+    patternType = 'negative';
+  } else if (dominantTag === 'avoidance') {
+    theoryCategory = 'avoidance';
+    patternType = 'negative';
+  }
+
+  // Detect isolation pattern (too much self-focus, low contribution)
+  const contributionCount = valueCounts.contribution || 0;
+  const totalPositive = (valueCounts.recovery || 0) + (valueCounts.order || 0) + contributionCount;
+  if (totalPositive > 0 && contributionCount === 0 && dominanceRatio > 0.5) {
+    theoryCategory = 'isolation';
+    patternType = 'negative';
+  }
+
+  // Detect rigidity pattern (too much order, no exploration/flexibility)
+  const explorationCount = valueCounts.exploration || 0;
+  const orderCount = valueCounts.order || 0;
+  if (orderCount >= 3 && explorationCount === 0 && (valueCounts.recovery || 0) === 0) {
+    theoryCategory = 'rigidity';
+    patternType = 'negative';
+  }
+
+  return {
+    dominantDirection: dominantTag,
+    dominantCount,
+    dominanceRatio,
+    patternType,
+    valueCounts,
+    theoryCategory
+  };
+};
+
+/**
+ * Calculate compass position from history
+ * Uses LAST 7 DAYS of actions to determine weighted position on the quadrant grid
+ * 
+ * @param {Array} history - Decision history
+ * @param {Object} currentState - Current state object (optional)
+ * @returns {Object} Compass position { x, y, valueTag, quadrant, dominantDirection }
+ */
+export const calculateCompassPosition = (history, currentState = {}) => {
+  if (!history || history.length === 0) {
+    return { x: 50, y: 50, valueTag: null, quadrant: 'center', dominantDirection: null };
+  }
+
+  // Filter to last 7 days
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  const recentHistory = history.filter(h => {
+    if (!h.timestamp) return true; // Include if no timestamp (assume recent)
+    const itemDate = new Date(h.timestamp);
+    return itemDate >= sevenDaysAgo;
+  });
+
+  // If no recent history, use all history but limit to 20
+  const relevantHistory = recentHistory.length > 0 ? recentHistory : history.slice(0, 20);
+
+  if (relevantHistory.length === 0) {
+    return { x: 50, y: 50, valueTag: null, quadrant: 'center', dominantDirection: null };
+  }
+
+  // Count value tags and calculate weighted averages
+  const valueCounts = {};
+  let totalChaosOrder = 0;
+  let totalEgoCollective = 0;
+  let countWithValues = 0;
+
+  relevantHistory.forEach((h, index) => {
+    const tag = h.value_tag;
+    if (tag) {
+      // More recent actions have higher weight (decay factor)
+      const weight = Math.max(0.3, 1 - (index * 0.05));
+      valueCounts[tag] = (valueCounts[tag] || 0) + weight;
+    }
+    
+    // Accumulate chaos_order and ego_collective for position
+    if (h.chaos_order !== undefined || h.ego_collective !== undefined) {
+      const weight = Math.max(0.3, 1 - (index * 0.05));
+      totalChaosOrder += (h.chaos_order || 0) * weight;
+      totalEgoCollective += (h.ego_collective || 0) * weight;
+      countWithValues += weight;
+    }
+  });
+
+  // Find dominant direction (highest weighted count)
+  const sortedTags = Object.entries(valueCounts).sort((a, b) => b[1] - a[1]);
+  const dominantDirection = sortedTags.length > 0 ? sortedTags[0][0] : null;
+  
+  // Get latest value tag for display
+  const latestValueTag = relevantHistory[0]?.value_tag || dominantDirection;
+
+  // Calculate average position from actual values
+  const avgChaosOrder = countWithValues > 0 ? totalChaosOrder / countWithValues : 0;
+  const avgEgoCollective = countWithValues > 0 ? totalEgoCollective / countWithValues : 0;
+
+  // Map values to compass coordinates
+  // ego_collective: -100 (ego/left) to +100 (collective/right) → x: 0 to 100
+  // chaos_order: -100 (chaos/bottom) to +100 (order/top) → y: 100 to 0
+  const stateX = 50 + (avgEgoCollective / 2);
+  const stateY = 50 - (avgChaosOrder / 2);
+
+  // Get theory position for dominant direction
+  const theoryPosition = compassPositions[dominantDirection] || { x: 50, y: 50 };
+
+  // Blend theory position with actual state values (60% theory, 40% actual)
+  const x = Math.round((theoryPosition.x * 0.6) + (stateX * 0.4));
+  const y = Math.round((theoryPosition.y * 0.6) + (stateY * 0.4));
+
+  // Determine quadrant
+  let quadrant = 'center';
+  if (x < 50 && y < 50) quadrant = 'upper-left';      // Order + Ego
+  else if (x >= 50 && y < 50) quadrant = 'upper-right'; // Order + Collective
+  else if (x < 50 && y >= 50) quadrant = 'lower-left';  // Chaos + Ego
+  else if (x >= 50 && y >= 50) quadrant = 'lower-right'; // Chaos + Collective
+
+  return { 
+    x, 
+    y, 
+    valueTag: latestValueTag, 
+    quadrant, 
+    dominantDirection,
+    valueCounts,
+    actionsAnalyzed: relevantHistory.length
+  };
+};
+
+/**
+ * Calculate recommended direction arrow on compass
+ * Directly from theory: current position → recommended position
+ * 
+ * @param {string} currentValueTag - Current direction
+ * @returns {Object} Arrow data { from, to, direction }
+ */
+export const calculateRecommendedArrow = (currentValueTag) => {
+  if (!currentValueTag) return null;
+
+  const recommendation = getTheoryBasedRecommendation(currentValueTag);
+  const fromPosition = compassPositions[currentValueTag] || { x: 50, y: 50 };
+  const toPosition = compassPositions[recommendation.direction] || { x: 50, y: 50 };
+
+  return {
+    from: fromPosition,
+    to: toPosition,
+    direction: recommendation.direction,
+    reason: recommendation.reason,
+    explanation: recommendation.explanation
+  };
 };
 
 /**
@@ -249,179 +578,137 @@ export const calculateCalibrationWeights = (history) => {
 };
 
 /**
- * Calculate recommended direction based on multiple data sources
+ * Calculate recommended direction based on the THEORETICAL FRAMEWORK
  * This is the SINGLE SOURCE OF TRUTH for recommendation calculations
  * 
+ * STRICT THEORY BALANCING PATHS:
+ * - harm → recovery
+ * - avoidance → order
+ * - isolation → contribution
+ * - rigidity → exploration
+ * 
+ * When current direction is already positive → suggest adjacent or strengthen
+ * 
  * @param {Object} params - Parameters for recommendation
- * @param {Array} params.history - Decision history
- * @param {Object} params.adaptiveScores - Adaptive scores from learning
- * @param {Object} params.replayInsights - Replay insights data
- * @param {Object} params.collectiveData - Collective comparison data (optional)
- * @param {Object} params.calibrationWeights - Calibration weights (optional, will calculate if not provided)
- * @returns {Object|null} Recommendation result or null if no history
+ * @param {Array} params.history - Decision history (uses last 7 days)
+ * @returns {Object} Recommendation result
  */
-export const calculateRecommendation = ({
-  history,
-  adaptiveScores = null,
-  replayInsights = null,
-  collectiveData = null,
-  calibrationWeights = null
-}) => {
+export const calculateRecommendation = ({ history }) => {
   // Return default recommendation for new users
   if (!history || history.length === 0) {
     return {
       direction: 'recovery',
       reason: 'no_history',
-      strength: 35,
+      strength: 50,
       insight: 'אין מספיק נתונים. מומלץ להתחיל עם התאוששות.',
       actionSuggestion: actionSuggestions.recovery[0],
-      negativeRatio: 0,
-      valueCounts: {},
-      calibrationApplied: false
+      fromTheory: true,
+      theoryPath: null,
+      currentDirection: null
     };
   }
 
-  // Analyze recent history
-  const analysis = analyzeRecentHistory(history, 10);
-  const { 
-    valueCounts, 
-    negativeRatio, 
-    harmCount, 
-    avoidanceCount, 
-    contributionCount, 
-    recoveryCount, 
-    orderCount,
-    recentLength 
-  } = analysis;
-
-  // Use provided calibration weights or calculate them
-  const calibration = calibrationWeights || calculateCalibrationWeights(history);
-  const effectiveCalibrationWeights = calibration.hasData ? calibration.weights : null;
-
-  // Use adaptive scores (including replay-based adjustments)
-  const scores = adaptiveScores || {};
+  // Step 1: Get last 7 days of history
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   
-  // Apply calibration weights to scores (adjustment layer)
-  const calibratedScores = { ...scores };
-  if (effectiveCalibrationWeights) {
-    ['contribution', 'recovery', 'order'].forEach(dir => {
-      calibratedScores[dir] = (calibratedScores[dir] || 0) + (effectiveCalibrationWeights[dir] || 0);
-    });
-  }
-  
-  // Use replay insights for blind spots and preferences
-  const replayAltCounts = replayInsights?.alternative_path_counts || {};
-  const blindSpots = replayInsights?.blind_spots || [];
-  const mostExploredAlt = Object.entries(replayAltCounts)
-    .filter(([key]) => ['contribution', 'recovery', 'order'].includes(key))
-    .sort((a, b) => b[1] - a[1])[0];
+  const recentHistory = history.filter(h => {
+    if (!h.timestamp) return true;
+    return new Date(h.timestamp) >= sevenDaysAgo;
+  });
 
-  // Use collective comparison if available
-  const collectiveGap = collectiveData?.gap || null;
+  const relevantHistory = recentHistory.length > 0 ? recentHistory : history.slice(0, 10);
 
-  // Decision logic with priority order
-  let recommendedDirection = null;
-  let reason = '';
-  let strength = 0;
+  // Step 2: Find the LAST NEGATIVE action (most important for balancing)
+  const lastNegativeAction = relevantHistory.find(h => 
+    ['harm', 'avoidance'].includes(h.value_tag)
+  );
+
+  // Step 3: Count patterns for isolation/rigidity detection
+  const valueCounts = {};
+  relevantHistory.forEach(h => {
+    if (h.value_tag) {
+      valueCounts[h.value_tag] = (valueCounts[h.value_tag] || 0) + 1;
+    }
+  });
+
+  // Step 4: Determine theory category and apply STRICT balancing
+  let theoryCategory = null;
+  let recommendedDirection = 'recovery';
+  let reason = 'default';
   let insight = '';
-  let calibrationApplied = false;
+  let strength = 60;
+  let theoryPath = null;
 
-  // Priority 1: Address strong negative drift (harm/avoidance patterns)
-  if (negativeRatio > 0.4) {
-    if (harmCount > avoidanceCount) {
+  // PRIORITY 1: If last action was negative → apply direct balancing path
+  if (lastNegativeAction) {
+    const lastTag = lastNegativeAction.value_tag;
+    
+    if (lastTag === 'harm') {
+      theoryCategory = 'harm';
       recommendedDirection = 'recovery';
-      reason = 'negative_harm_drift';
-      strength = Math.min(100, negativeRatio * 100 + 20);
-      insight = 'זוהה דפוס של לחץ נזק גבוה. מומלץ לאזן עם התאוששות.';
-    } else {
+      reason = 'theory_balancing';
+      insight = 'פעולות נזק דורשות איזון דרך התאוששות.';
+      theoryPath = 'נזק → התאוששות';
+      strength = 80;
+    } else if (lastTag === 'avoidance') {
+      theoryCategory = 'avoidance';
       recommendedDirection = 'order';
-      reason = 'negative_avoidance_drift';
-      strength = Math.min(100, negativeRatio * 100 + 10);
-      insight = 'המערכת מזהה דפוס של הימנעות. מומלץ לבצע החלטה קטנה במקום דחייה.';
+      reason = 'theory_balancing';
+      insight = 'הימנעות מאוזנת על ידי יצירת סדר ומבנה.';
+      theoryPath = 'הימנעות → סדר';
+      strength = 80;
     }
   }
-  // Priority 2: Address collective gap (user behind collective trend)
-  else if (collectiveGap && collectiveGap.metric && collectiveGap.difference > 15) {
-    recommendedDirection = collectiveGap.metric;
-    reason = 'collective_gap';
-    strength = Math.min(100, 45 + collectiveGap.difference);
-    insight = `נראה פער מול מגמת ה${valueLabels[collectiveGap.metric]}. מומלץ לבצע פעולה קטנה בכיוון זה.`;
+
+  // PRIORITY 2: Detect isolation pattern (no contribution, self-focused)
+  if (!theoryCategory) {
+    const contributionCount = valueCounts.contribution || 0;
+    const totalCount = relevantHistory.length;
+    
+    if (totalCount >= 3 && contributionCount === 0) {
+      theoryCategory = 'isolation';
+      recommendedDirection = 'contribution';
+      reason = 'theory_balancing';
+      insight = 'מיקוד עצמי מאוזן על ידי תרומה לאחרים.';
+      theoryPath = 'בידוד → תרומה';
+      strength = 70;
+    }
   }
-  // Priority 3: Address replay blind spots
-  else if (blindSpots.length > 0) {
-    const relevantBlindSpot = blindSpots.find(spot => 
-      ['contribution', 'recovery', 'order'].includes(spot.to)
-    );
-    if (relevantBlindSpot) {
-      recommendedDirection = relevantBlindSpot.to;
-      reason = 'replay_blind_spot';
+
+  // PRIORITY 3: Detect rigidity pattern (too much order, no exploration)
+  if (!theoryCategory) {
+    const orderCount = valueCounts.order || 0;
+    const explorationCount = valueCounts.exploration || 0;
+    const totalCount = relevantHistory.length;
+    
+    if (totalCount >= 4 && orderCount >= 3 && explorationCount === 0) {
+      theoryCategory = 'rigidity';
+      recommendedDirection = 'exploration';
+      reason = 'theory_balancing';
+      insight = 'קיפאון מאוזן על ידי פתיחות וחקירה.';
+      theoryPath = 'נוקשות → חקירה';
+      strength = 70;
+    }
+  }
+
+  // PRIORITY 4: Current direction is positive → suggest adjacent for balance
+  if (!theoryCategory) {
+    const dominantTag = Object.entries(valueCounts)
+      .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    if (dominantTag && positiveReinforcement[dominantTag]) {
+      const reinforcement = positiveReinforcement[dominantTag];
+      recommendedDirection = reinforcement.adjacent;
+      reason = 'theory_reinforcement';
+      insight = reinforcement.explanation;
       strength = 55;
-      insight = `בהפעלות חוזרות מעולם לא בדקת מסלולי ${valueLabels[relevantBlindSpot.to]}. כדאי לנסות.`;
-    }
-  }
-  // Priority 4: Reinforce positive momentum (with calibration adjustment)
-  if (!recommendedDirection && (contributionCount >= 2 || (calibratedScores.contribution || 0) > 5)) {
-    recommendedDirection = 'contribution';
-    reason = 'positive_contribution_momentum';
-    strength = Math.min(100, 50 + (calibratedScores.contribution || 0) * 3);
-    insight = 'יש לך מומנטום חיובי של תרומה. המשך בכיוון זה.';
-    if (effectiveCalibrationWeights?.contribution > 0) calibrationApplied = true;
-  }
-  // Priority 5: Follow replay exploration preferences
-  else if (!recommendedDirection && mostExploredAlt && mostExploredAlt[1] >= 2) {
-    recommendedDirection = mostExploredAlt[0];
-    reason = 'replay_preference';
-    strength = Math.min(100, 40 + mostExploredAlt[1] * 10);
-    insight = `בהפעלות חוזרות בדקת הרבה מסלולי ${valueLabels[mostExploredAlt[0]]}. אולי זה הכיוון שחסר.`;
-  }
-  // Priority 6: Balance based on calibrated adaptive scores
-  else if (!recommendedDirection) {
-    const positiveScores = [
-      { type: 'contribution', score: calibratedScores.contribution || 0, count: contributionCount },
-      { type: 'recovery', score: calibratedScores.recovery || 0, count: recoveryCount },
-      { type: 'order', score: calibratedScores.order || 0, count: orderCount }
-    ];
-    
-    // Sort by score descending to find the highest calibrated direction
-    const sortedByScore = [...positiveScores].sort((a, b) => b.score - a.score);
-    const highestCalibrated = sortedByScore[0];
-    
-    // Sort ascending to find lowest (for deficit detection)
-    const sortedAsc = [...positiveScores].sort((a, b) => a.score - b.score);
-    const lowestPositive = sortedAsc[0];
-    
-    // If calibration strongly favors a direction, use it
-    if (effectiveCalibrationWeights && highestCalibrated.score >= 3) {
-      recommendedDirection = highestCalibrated.type;
-      reason = 'calibration_boost';
-      strength = Math.min(100, 45 + highestCalibrated.score * 5);
-      insight = `הכיול מצביע על ${valueLabels[highestCalibrated.type]} כבעל הביצועים הטובים ביותר.`;
-      calibrationApplied = true;
-    } else if (lowestPositive.score < 0 || lowestPositive.count === 0) {
-      recommendedDirection = lowestPositive.type;
-      reason = 'balance_deficit';
-      strength = Math.min(100, 35 + Math.abs(lowestPositive.score) * 2);
-      insight = `מסלולי ${valueLabels[lowestPositive.type]} פחות נוכחים. כדאי לשקול פעולה בכיוון זה.`;
-    } else {
-      // Default to recovery as a safe recommendation
-      recommendedDirection = 'recovery';
-      reason = 'general_balance';
-      strength = 40;
-      insight = 'המערכת מאוזנת. התאוששות תמיד בחירה טובה.';
     }
   }
 
-  // Ensure we have a direction (fallback)
-  if (!recommendedDirection) {
-    recommendedDirection = 'recovery';
-    reason = 'default';
-    strength = 35;
-    insight = 'אין מספיק נתונים. מומלץ להתחיל עם התאוששות.';
-  }
-
-  // Select action suggestion (deterministic based on recent count)
+  // Step 5: Select action suggestion
   const suggestions = actionSuggestions[recommendedDirection] || actionSuggestions.recovery;
-  const suggestionIndex = recentLength % suggestions.length;
+  const suggestionIndex = relevantHistory.length % suggestions.length;
   const actionSuggestion = suggestions[suggestionIndex];
 
   return {
@@ -430,9 +717,12 @@ export const calculateRecommendation = ({
     strength,
     insight,
     actionSuggestion,
-    negativeRatio,
+    fromTheory: true,
+    theoryPath,
+    theoryCategory,
+    currentDirection: relevantHistory[0]?.value_tag || null,
     valueCounts,
-    calibrationApplied
+    actionsAnalyzed: relevantHistory.length
   };
 };
 

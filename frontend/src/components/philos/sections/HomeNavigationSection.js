@@ -25,15 +25,10 @@ export default function HomeNavigationSection({
   }, [history]);
 
   // Get recommendation from centralized service (same as NextBestDirection)
+  // Using ONLY history - the theory-based model doesn't need additional parameters
   const recommendation = useMemo(() => {
-    return calculateRecommendation({
-      history,
-      adaptiveScores,
-      replayInsights
-      // Note: collectiveData and calibrationWeights not passed for simplified home view
-      // This gives consistent base recommendations without async collective data
-    });
-  }, [history, adaptiveScores, replayInsights]);
+    return calculateRecommendation({ history });
+  }, [history]);
 
   const colors = directionColors[recommendation.direction] || directionColors.recovery;
 
