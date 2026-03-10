@@ -31,6 +31,12 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 4. **Weekly Orientation Insight** — Distribution bars + Hebrew insight text on Insights tab
 5. **Orientation Index Page** — Global distribution chart with active users/actions on System tab
 
+### Phase 3 — Community Layer (completed 2026-03-10)
+1. **Active Users Indicator** — Header shows active users today + users on streak
+2. **Relative Orientation Score** — User's percentile compared to all users today
+3. **Orientation Circles** — 2x2 grid showing user counts per direction
+4. **Community Streak Overview** — Users on streak + longest streak today
+
 ## Key API Endpoints
 | Endpoint | Method | Purpose |
 |---|---|---|
@@ -41,6 +47,10 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 | `/api/orientation/index` | GET | Global orientation distribution |
 | `/api/orientation/identity/{user_id}` | GET | User's orientation identity |
 | `/api/orientation/decision-path/{user_id}` | GET | Action recommendation |
+| `/api/orientation/active-users` | GET | Active users today + streak users |
+| `/api/orientation/relative-score/{user_id}` | GET | User's percentile among all users |
+| `/api/orientation/circles` | GET | User counts per direction |
+| `/api/orientation/streaks` | GET | Community streak stats |
 | `/api/collective/orientation_field` | GET | Collective field data |
 | `/api/collective/field_history` | GET | Historical field data |
 
