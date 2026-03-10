@@ -47,3 +47,7 @@ export { default as OrientationFieldToday } from './OrientationFieldToday';
 export { default as OrientationShareCard } from './OrientationShareCard';
 export { default as WeeklyInsightSection } from './WeeklyInsightSection';
 export { default as OrientationIndexPage } from './OrientationIndexPage';
+export { default as ActiveUsersIndicator } from './ActiveUsersIndicator';
+export { default as RelativeScoreSection } from './RelativeScoreSection';
+export { default as OrientationCirclesSection } from './OrientationCirclesSection';
+export { default as CommunityStreakSection } from './CommunityStreakSection';

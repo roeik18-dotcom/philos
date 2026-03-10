@@ -1,0 +1,73 @@
+import { useState, useEffect } from 'react';
+import { Award } from 'lucide-react';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+const directionLabels = {
+  recovery: 'התאוששות',
+  order: 'סדר',
+  contribution: 'תרומה',
+  exploration: 'חקירה'
+};
+
+const directionColors = {
+  recovery: '#3b82f6',
+  order: '#6366f1',
+  contribution: '#22c55e',
+  exploration: '#f59e0b'
+};
+
+export default function RelativeScoreSection({ userId }) {
+  const [data, setData] = useState(null);
+
+  const effectiveUserId = userId || localStorage.getItem('philos_user_id');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!effectiveUserId) return;
+      try {
+        const res = await fetch(`${API_URL}/api/orientation/relative-score/${effectiveUserId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) setData(json);
+        }
+      } catch (e) {
+        console.log('Could not fetch relative score:', e);
+      }
+    };
+    fetchData();
+  }, [effectiveUserId]);
+
+  if (!data) return null;
+
+  const color = directionColors[data.direction] || '#8b5cf6';
+
+  return (
+    <section className="bg-white rounded-3xl p-5 shadow-sm border border-border" dir="rtl" data-testid="relative-score-section">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${color}15` }}>
+          <Award className="w-6 h-6" style={{ color }} />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-bold text-gray-800" data-testid="relative-score-message">
+            אתה פעיל יותר מ-{data.percentile}% מהמשתמשים היום
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            כיוון מוביל: {directionLabels[data.direction] || data.direction}
+          </p>
+        </div>
+        <div className="text-2xl font-black" style={{ color }} data-testid="relative-score-percentile">
+          {data.percentile}%
+        </div>
+      </div>
+
+      {/* Percentile bar */}
+      <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${data.percentile}%`, backgroundColor: color }}
+        />
+      </div>
+    </section>
+  );
+}

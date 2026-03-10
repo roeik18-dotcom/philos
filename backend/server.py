@@ -4141,6 +4141,181 @@ async def get_orientation_index():
 
 
 
+# ==================== COMMUNITY LAYER ENDPOINTS ====================
+
+@api_router.get("/orientation/active-users")
+async def get_active_users():
+    """Active Users Indicator: today's active users + users on streak."""
+    try:
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0, "user_id": 1, "history": 1}).to_list(10000)
+
+        active_today = set()
+        for s in all_sessions:
+            uid = s.get("user_id")
+            for h in s.get("history", []):
+                if h.get("timestamp", "") >= today_start:
+                    active_today.add(uid)
+                    break
+
+        # Count users on streak (answered daily question on consecutive days)
+        answered = await db.daily_questions.find(
+            {"answered": True},
+            {"_id": 0, "user_id": 1, "date": 1}
+        ).to_list(50000)
+
+        user_dates = {}
+        for q in answered:
+            uid = q.get("user_id")
+            d = q.get("date")
+            if uid and d:
+                user_dates.setdefault(uid, set()).add(d)
+
+        today_str = now.strftime("%Y-%m-%d")
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        streak_users = sum(
+            1 for dates in user_dates.values()
+            if today_str in dates and yesterday_str in dates
+        )
+
+        return {
+            "success": True,
+            "active_users_today": len(active_today),
+            "active_streak_users": streak_users
+        }
+    except Exception as e:
+        logger.error(f"Get active users error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/relative-score/{user_id}")
+async def get_relative_score(user_id: str):
+    """Relative Orientation Score: user's percentile compared to all users today."""
+    try:
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0, "user_id": 1, "history": 1}).to_list(10000)
+
+        positive = ['contribution', 'recovery', 'order', 'exploration']
+        user_counts = {}
+        user_direction = {}
+
+        for s in all_sessions:
+            uid = s.get("user_id")
+            count = 0
+            dir_counts = {d: 0 for d in positive}
+            for h in s.get("history", []):
+                if h.get("timestamp", "") >= today_start and h.get("value_tag") in positive:
+                    count += 1
+                    dir_counts[h["value_tag"]] += 1
+            user_counts[uid] = count
+            if count > 0:
+                user_direction[uid] = max(dir_counts, key=dir_counts.get)
+
+        my_count = user_counts.get(user_id, 0)
+        all_counts = sorted(user_counts.values())
+        total = len(all_counts)
+
+        if total <= 1:
+            percentile = 50
+        else:
+            below = sum(1 for c in all_counts if c < my_count)
+            percentile = round((below / total) * 100)
+
+        direction = user_direction.get(user_id, "recovery")
+
+        return {
+            "success": True,
+            "percentile": percentile,
+            "direction": direction,
+            "user_actions_today": my_count
+        }
+    except Exception as e:
+        logger.error(f"Get relative score error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/circles")
+async def get_orientation_circles():
+    """Orientation Circles: user counts per direction (all-time)."""
+    try:
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0, "global_stats": 1, "user_id": 1}).to_list(10000)
+
+        positive = ['contribution', 'recovery', 'order', 'exploration']
+        direction_users = {d: 0 for d in positive}
+
+        for s in all_sessions:
+            stats = s.get("global_stats", {})
+            for d in positive:
+                if stats.get(d, 0) > 0:
+                    direction_users[d] += 1
+
+        return {
+            "success": True,
+            "contribution": direction_users["contribution"],
+            "recovery": direction_users["recovery"],
+            "order": direction_users["order"],
+            "exploration": direction_users["exploration"]
+        }
+    except Exception as e:
+        logger.error(f"Get orientation circles error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/streaks")
+async def get_community_streaks():
+    """Community Streak Overview: users on streak + longest streak today."""
+    try:
+        now = datetime.now(timezone.utc)
+        today_str = now.strftime("%Y-%m-%d")
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        answered = await db.daily_questions.find(
+            {"answered": True},
+            {"_id": 0, "user_id": 1, "date": 1}
+        ).to_list(50000)
+
+        user_dates = {}
+        for q in answered:
+            uid = q.get("user_id")
+            d = q.get("date")
+            if uid and d:
+                user_dates.setdefault(uid, []).append(d)
+
+        users_on_streak = 0
+        longest_streak_today = 0
+
+        for uid, dates in user_dates.items():
+            sorted_dates = sorted(set(dates), reverse=True)
+            if not sorted_dates or sorted_dates[0] < yesterday_str:
+                continue
+
+            streak = 1
+            for i in range(1, len(sorted_dates)):
+                prev = datetime.strptime(sorted_dates[i - 1], "%Y-%m-%d")
+                curr = datetime.strptime(sorted_dates[i], "%Y-%m-%d")
+                if (prev - curr).days == 1:
+                    streak += 1
+                else:
+                    break
+
+            if streak >= 2:
+                users_on_streak += 1
+            longest_streak_today = max(longest_streak_today, streak)
+
+        return {
+            "success": True,
+            "users_on_streak": users_on_streak,
+            "longest_streak_today": longest_streak_today
+        }
+    except Exception as e:
+        logger.error(f"Get community streaks error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 

@@ -49,7 +49,11 @@ import {
   OrientationFieldToday,
   OrientationShareCard,
   WeeklyInsightSection,
-  OrientationIndexPage
+  OrientationIndexPage,
+  ActiveUsersIndicator,
+  RelativeScoreSection,
+  OrientationCirclesSection,
+  CommunityStreakSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -204,6 +208,8 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           
           <h1 className="text-2xl font-bold text-foreground">Philos Orientation</h1>
           <p className="text-xs text-muted-foreground">Mental Navigation System</p>
+          {/* Active Users Indicator */}
+          <ActiveUsersIndicator />
         </div>
 
         {/* Tab Navigation */}
@@ -237,6 +243,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
                 window.location.reload();
               }}
             />
+
+            {/* Relative Orientation Score */}
+            <RelativeScoreSection userId={user?.id} />
 
             {/* Monthly Orientation - New Month Welcome */}
             <MonthlyOrientationSection
@@ -356,6 +365,12 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
             {/* Orientation Field Today - Collective Distribution */}
             <OrientationFieldToday />
+
+            {/* Orientation Circles */}
+            <OrientationCirclesSection />
+
+            {/* Community Streak Overview */}
+            <CommunityStreakSection />
 
             {/* Share Orientation Button */}
             <button
