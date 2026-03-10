@@ -99,6 +99,38 @@ Build a sophisticated single-page tool for decision analysis, behavioral trackin
 
 ---
 
+## Loading Skeletons Enhancement (December 2025)
+
+**Status:** Complete
+
+Added lightweight loading skeletons for async components to improve perceived performance:
+
+### New Component
+- `/app/frontend/src/components/philos/LoadingSkeletons.js`
+- 8 reusable skeleton components:
+  - `SectionSkeleton` - Full section placeholder
+  - `CardSkeleton` - Card-like content placeholder
+  - `StatsSkeleton` - Statistics display placeholder
+  - `ChartSkeleton` - Chart/visualization placeholder
+  - `ListSkeleton` - List items placeholder
+  - `InlineLoader` - Inline text replacement
+  - `CollectiveSkeleton` - Specific for collective sections
+  - `ReplaySkeleton` - Specific for replay insights
+
+### Integrated Sections
+- `CollectiveMirrorSection` - Uses `CollectiveSkeleton`
+- `CollectiveTrajectorySection` - Uses `CollectiveSkeleton`
+- `GlobalFieldSection` - Uses `SectionSkeleton`
+- `ReplayInsightsSummarySection` - Uses `ReplaySkeleton` (conditional)
+
+### Technical Details
+- Consistent `animate-pulse bg-gray-200` styling
+- All skeletons include `dir="rtl"` for Hebrew layout
+- Minimal placeholders, no UI redesign
+- Conditional rendering to prevent skeleton flash for new users
+
+---
+
 ## Backlog
 
 ### P1 - High Priority
