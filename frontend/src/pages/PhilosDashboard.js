@@ -37,7 +37,8 @@ import {
   RecommendationFollowThroughSection,
   RecommendationCalibrationSection,
   HomeNavigationSection,
-  DailyOrientationLoopSection
+  DailyOrientationLoopSection,
+  WeeklyOrientationSummarySection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
@@ -208,6 +209,20 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         {/* ==================== HOME TAB ==================== */}
         {activeTab === TABS.HOME && (
           <div className="space-y-4">
+            {/* Weekly Orientation Summary - New Week Welcome */}
+            <WeeklyOrientationSummarySection
+              history={history}
+              onStartWeek={(orientation) => {
+                // When week starts, scroll to action input
+                setTimeout(() => {
+                  const actionInput = document.querySelector('[data-testid="home-action-input"]');
+                  if (actionInput) {
+                    actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }, 300);
+              }}
+            />
+
             {/* Daily Orientation Loop - New Day Welcome */}
             <DailyOrientationLoopSection
               history={history}

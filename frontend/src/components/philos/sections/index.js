@@ -35,3 +35,4 @@ export { default as RecommendationFollowThroughSection } from './RecommendationF
 export { default as RecommendationCalibrationSection } from './RecommendationCalibrationSection';
 export { default as HomeNavigationSection } from './HomeNavigationSection';
 export { default as DailyOrientationLoopSection } from './DailyOrientationLoopSection';
+export { default as WeeklyOrientationSummarySection } from './WeeklyOrientationSummarySection';
