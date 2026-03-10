@@ -208,6 +208,30 @@ The system is based on **four directions** and **two axes**:
 
 ---
 
+### Orientation Field Today ✅
+**Status:** Complete (March 10, 2026)
+
+**What was built:**
+1. **24-hour Distribution** - Aggregates all user actions from the last 24 hours
+2. **4-bar Visualization** - Contribution, Recovery, Order, Exploration with percentages
+3. **Active Users Count** - Shows number of active users and total actions
+4. **Dominant Direction** - Highlights the leading direction with "מוביל" badge
+
+**Backend Endpoint:**
+- `GET /api/orientation/field-today` - Returns distribution, active_users, total_actions, dominant_direction, insight
+
+**Frontend Layout:**
+- Positioned between Identity and Decision Path
+- 4 progress bars with direction colors (green, blue, indigo, amber)
+- "מוביל" (Leading) badge on dominant direction
+- Hebrew insight in violet box
+
+**Current Data:** Recovery 64.3%, Order 19%, Contribution 16.7%, Exploration 0% (42 actions, 13 users)
+
+**Test Results:** 100% pass (13/13 backend, all frontend verified)
+
+---
+
 ### System Logic Coherence ✅
 **Status:** Complete (March 10, 2026)
 - **Compass position** now calculated from **last 7 days** of actions (weighted average)
