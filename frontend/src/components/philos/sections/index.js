@@ -37,3 +37,6 @@ export { default as HomeNavigationSection } from './HomeNavigationSection';
 export { default as DailyOrientationLoopSection } from './DailyOrientationLoopSection';
 export { default as WeeklyOrientationSummarySection } from './WeeklyOrientationSummarySection';
 export { default as MonthlyOrientationSection } from './MonthlyOrientationSection';
+export { default as TheorySection } from './TheorySection';
+export { default as OrientationCompassSection } from './OrientationCompassSection';
+export { default as DirectionHistorySection } from './DirectionHistorySection';

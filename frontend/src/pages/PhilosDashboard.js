@@ -39,7 +39,10 @@ import {
   HomeNavigationSection,
   DailyOrientationLoopSection,
   WeeklyOrientationSummarySection,
-  MonthlyOrientationSection
+  MonthlyOrientationSection,
+  TheorySection,
+  OrientationCompassSection,
+  DirectionHistorySection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -50,6 +53,7 @@ const TABS = {
   HOME: 'home',
   INSIGHTS: 'insights',
   SYSTEM: 'system',
+  THEORY: 'theory',
   HISTORY: 'history'
 };
 
@@ -58,6 +62,7 @@ const TAB_LABELS = {
   [TABS.HOME]: 'בית',
   [TABS.INSIGHTS]: 'תובנות',
   [TABS.SYSTEM]: 'מערכת',
+  [TABS.THEORY]: 'תיאוריה',
   [TABS.HISTORY]: 'היסטוריה'
 };
 
@@ -323,6 +328,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
                 </div>
               </div>
             )}
+
+            {/* Orientation Compass - Visual Map */}
+            <OrientationCompassSection history={history} state={state} />
           </div>
         )}
 
@@ -412,6 +420,17 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
             {/* Collective Value Map */}
             <CollectiveValueMapSection history={history} />
+          </div>
+        )}
+
+        {/* ==================== THEORY TAB ==================== */}
+        {activeTab === TABS.THEORY && (
+          <div className="space-y-6">
+            {/* Theoretical Framework */}
+            <TheorySection />
+
+            {/* Direction History with Patterns */}
+            <DirectionHistorySection history={history} />
           </div>
         )}
 
