@@ -234,10 +234,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard with tabs (~480 lines)
+- `PhilosDashboard.js` - Main dashboard with tabs (~500 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 32 UI components (including WeeklyOrientationSummarySection)
+- `sections/` - 33 UI components (including MonthlyOrientationSection)
 
 ---
 
@@ -338,6 +338,19 @@ State:     Custom Hook (usePhilosState)
     - weekId, week_started, weekly_orientation_direction, weekly_pattern_reference, last_week_decisions
   - Saves to localStorage (`philos_weekly_orientation`) - won't show again same week
   - Purple gradient styling to differentiate from daily (amber)
+
+- ✅ **Monthly Orientation Completed**
+  - MonthlyOrientationSection.js - creates monthly reset and direction-setting loop
+  - Detects new month using year-month format (e.g., 2026-M03)
+  - Shows once per new month at top of Home tab (before weekly/daily):
+    - "התמצאות חודשית" header with "החודש החדש מתחיל מתוך הדפוס של החודש שעבר."
+    - **Hebrew month name** (e.g., פברואר): Dominant pattern, strongest positive (↑), strongest negative (↓)
+    - **החודש** (This Month): Direction badge + insight based on last month's patterns
+  - "התחל את החודש" (Start Month) button saves metadata:
+    - monthId, month_started, monthly_orientation_direction, monthly_pattern_reference, last_month_decisions
+  - Saves to localStorage (`philos_monthly_orientation`) - won't show again same month
+  - Teal/Cyan gradient styling to differentiate from weekly (purple) and daily (amber)
+  - Orientation hierarchy: Monthly → Weekly → Daily → Home Navigation
 
 - ✅ **System Stabilization Pass Completed**
   - Integrated dataService.js centralized caching layer for all collective API calls
