@@ -66,6 +66,36 @@ The system is based on **four directions** and **two axes**:
 
 ---
 
+### Historical Momentum Tracking (4 Weeks Sparkline) ✅
+**Status:** Complete (March 10, 2026)
+
+**What was built:**
+1. **Weekly Snapshots** - Backend calculates field position for each of the last 4 weeks
+2. **Sparkline Visualization** - SVG line chart showing positive_ratio trend over time
+3. **Trend Detection** - Analyzes movement patterns across weeks
+4. **Hebrew Insights** - e.g., "השדה הקולקטיבי נע בהדרגה לכיוון סדר בשבועות האחרונים."
+
+**Backend Endpoint:**
+- `GET /api/orientation/history` - Returns 4 weeks of historical data
+
+**API Response includes:**
+- `weekly_snapshots`: Array of 4 weeks with center_x, center_y, dominant_direction, positive_ratio, total_actions
+- `sparkline_data`: Array of positive_ratio values for visualization
+- `trend_type`: stabilizing | drifting | shifting_* | stable
+- `trend_direction`: Target direction if shifting
+- `trend_insight`: Hebrew explanation of the trend
+
+**Frontend Visualization:**
+- SVG sparkline with data points and gradient fill
+- Week labels in Hebrew (שבוע 1, שבוע 2, שבוע 3, השבוע)
+- Weekly dots showing dominant direction color
+- Action count per week
+- Trend badge (מתייצב/נסחף/משתנה)
+
+**Test Results:** 100% pass (19/19 backend tests, all frontend elements verified)
+
+---
+
 ### System Logic Coherence ✅
 **Status:** Complete (March 10, 2026)
 - **Compass position** now calculated from **last 7 days** of actions (weighted average)
