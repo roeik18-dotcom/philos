@@ -234,10 +234,10 @@ State:     Custom Hook (usePhilosState)
 
 ### Key Files
 - `usePhilosState.js` - Central state management (~1180 lines)
-- `PhilosDashboard.js` - Main dashboard with tabs (~470 lines)
+- `PhilosDashboard.js` - Main dashboard with tabs (~480 lines)
 - `cloudSync.js` - Cloud sync service with getUserId() (~440 lines)
 - `server.py` - FastAPI backend (~2000 lines)
-- `sections/` - 31 UI components (including DailyOrientationLoopSection)
+- `sections/` - 32 UI components (including WeeklyOrientationSummarySection)
 
 ---
 
@@ -326,6 +326,18 @@ State:     Custom Hook (usePhilosState)
     - day_started, orientation_direction, orientation_pattern_reference, yesterday_count
   - Saves to localStorage (`philos_daily_orientation`) - won't show again same day
   - Pattern → Recommendation mapping: harm→recovery, avoidance→order, contribution→continue
+
+- ✅ **Weekly Orientation Summary Completed**
+  - WeeklyOrientationSummarySection.js - creates weekly reset and intention-setting loop
+  - Detects new week using year-week format (e.g., 2026-W11)
+  - Shows once per new week at top of Home tab:
+    - "סיכום שבועי" header with "השבוע החדש מתחיל מתוך הדפוס של השבוע שעבר."
+    - **שבוע שעבר** (Last Week): Dominant pattern, strongest positive (↑), strongest negative (↓)
+    - **השבוע** (This Week): Direction badge + insight based on last week's patterns
+  - "התחל את השבוע" (Start Week) button saves metadata:
+    - weekId, week_started, weekly_orientation_direction, weekly_pattern_reference, last_week_decisions
+  - Saves to localStorage (`philos_weekly_orientation`) - won't show again same week
+  - Purple gradient styling to differentiate from daily (amber)
 
 - ✅ **System Stabilization Pass Completed**
   - Integrated dataService.js centralized caching layer for all collective API calls
