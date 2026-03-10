@@ -12,18 +12,32 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 export default function OrientationCompassSection({ history, state, userId }) {
   // State for collective field data
   const [collectiveData, setCollectiveData] = useState(null);
+  const [historyData, setHistoryData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch collective field data
+  // Fetch collective field data and history
   useEffect(() => {
     const fetchCollectiveField = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/api/orientation/field`);
-        if (response.ok) {
-          const data = await response.json();
+        
+        // Fetch both endpoints in parallel
+        const [fieldResponse, historyResponse] = await Promise.all([
+          fetch(`${API_URL}/api/orientation/field`),
+          fetch(`${API_URL}/api/orientation/history`)
+        ]);
+        
+        if (fieldResponse.ok) {
+          const data = await fieldResponse.json();
           if (data.success) {
             setCollectiveData(data);
+          }
+        }
+        
+        if (historyResponse.ok) {
+          const data = await historyResponse.json();
+          if (data.success) {
+            setHistoryData(data);
           }
         }
       } catch (error) {
@@ -440,6 +454,138 @@ export default function OrientationCompassSection({ history, state, userId }) {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Historical Trend Sparkline (4 weeks) */}
+      {historyData && historyData.weekly_snapshots?.length > 0 && (
+        <div 
+          className="mt-3 p-3 rounded-xl bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200"
+          data-testid="field-history-section"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-slate-700">מגמת השדה (4 שבועות)</span>
+            {historyData.trend_type && historyData.trend_type !== 'stable' && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                historyData.trend_type === 'stabilizing' 
+                  ? 'bg-green-100 text-green-700'
+                  : historyData.trend_type === 'drifting'
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-violet-100 text-violet-700'
+              }`}>
+                {historyData.trend_type === 'stabilizing' ? 'מתייצב' :
+                 historyData.trend_type === 'drifting' ? 'נסחף' :
+                 historyData.trend_direction ? `נע ל${directionLabels[historyData.trend_direction] || historyData.trend_direction}` : 'משתנה'}
+              </span>
+            )}
+          </div>
+          
+          {/* Sparkline */}
+          <div className="relative h-12 mt-2" data-testid="sparkline-container">
+            <svg className="w-full h-full" viewBox="0 0 200 48" preserveAspectRatio="none">
+              {/* Background grid lines */}
+              <line x1="0" y1="12" x2="200" y2="12" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="2,2" />
+              <line x1="0" y1="24" x2="200" y2="24" stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="0" y1="36" x2="200" y2="36" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="2,2" />
+              
+              {/* Sparkline path */}
+              {historyData.sparkline_data?.length > 1 && (
+                <>
+                  {/* Fill area under line */}
+                  <path
+                    d={`M 0 ${48 - (historyData.sparkline_data[0] / 100 * 48)} 
+                        ${historyData.sparkline_data.map((val, i) => 
+                          `L ${(i / (historyData.sparkline_data.length - 1)) * 200} ${48 - (val / 100 * 48)}`
+                        ).join(' ')}
+                        L 200 48 L 0 48 Z`}
+                    fill="url(#sparkline-gradient)"
+                    opacity="0.3"
+                  />
+                  
+                  {/* Line */}
+                  <polyline
+                    points={historyData.sparkline_data.map((val, i) => 
+                      `${(i / (historyData.sparkline_data.length - 1)) * 200},${48 - (val / 100 * 48)}`
+                    ).join(' ')}
+                    fill="none"
+                    stroke={
+                      historyData.trend_type === 'stabilizing' ? '#22c55e' :
+                      historyData.trend_type === 'drifting' ? '#f59e0b' :
+                      '#8b5cf6'
+                    }
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  
+                  {/* Data points */}
+                  {historyData.sparkline_data.map((val, i) => (
+                    <circle
+                      key={i}
+                      cx={(i / (historyData.sparkline_data.length - 1)) * 200}
+                      cy={48 - (val / 100 * 48)}
+                      r="3"
+                      fill={
+                        historyData.trend_type === 'stabilizing' ? '#22c55e' :
+                        historyData.trend_type === 'drifting' ? '#f59e0b' :
+                        '#8b5cf6'
+                      }
+                      stroke="white"
+                      strokeWidth="1.5"
+                    />
+                  ))}
+                  
+                  {/* Gradient definition */}
+                  <defs>
+                    <linearGradient id="sparkline-gradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={
+                        historyData.trend_type === 'stabilizing' ? '#22c55e' :
+                        historyData.trend_type === 'drifting' ? '#f59e0b' :
+                        '#8b5cf6'
+                      } />
+                      <stop offset="100%" stopColor="white" />
+                    </linearGradient>
+                  </defs>
+                </>
+              )}
+            </svg>
+            
+            {/* Week labels */}
+            <div className="flex justify-between text-[9px] text-muted-foreground mt-1">
+              {historyData.weekly_snapshots.map((week, i) => (
+                <span key={i} className="text-center">
+                  {week.week_label}
+                </span>
+              ))}
+            </div>
+          </div>
+          
+          {/* Weekly detail dots showing dominant direction */}
+          <div className="flex justify-between mt-2 px-1">
+            {historyData.weekly_snapshots.map((week, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div 
+                  className="w-2 h-2 rounded-full"
+                  style={{ 
+                    backgroundColor: week.dominant_direction 
+                      ? (directionColors[week.dominant_direction]?.fill || '#9ca3af')
+                      : '#e5e7eb'
+                  }}
+                  title={week.dominant_direction ? directionLabels[week.dominant_direction] : 'אין נתונים'}
+                />
+                <span className="text-[8px] text-muted-foreground mt-0.5">
+                  {week.total_actions > 0 ? week.total_actions : '-'}
+                </span>
+              </div>
+            ))}
+          </div>
+          
+          {/* Trend Insight */}
+          {historyData.trend_insight && (
+            <p className="text-xs text-slate-600 mt-3 text-center" data-testid="trend-insight">
+              {historyData.trend_insight}
+            </p>
+          )}
         </div>
       )}
 

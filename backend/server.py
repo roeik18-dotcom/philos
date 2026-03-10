@@ -2036,6 +2036,24 @@ class OrientationFieldResponse(BaseModel):
     field_insight: Optional[str] = None
     momentum_insight: Optional[str] = None     # specific insight about momentum
 
+class WeeklyFieldSnapshot(BaseModel):
+    week_label: str                            # "שבוע 1", "שבוע 2", etc.
+    week_start: str                            # ISO date
+    center_x: float
+    center_y: float
+    dominant_direction: Optional[str] = None
+    positive_ratio: float = 0.0                # 0-100, % of positive directions
+    total_actions: int = 0
+
+class FieldHistoryResponse(BaseModel):
+    success: bool
+    weekly_snapshots: List[WeeklyFieldSnapshot] = []  # Last 4 weeks
+    sparkline_data: List[float] = []           # positive_ratio for each week (for sparkline)
+    trend_type: Optional[str] = None           # stabilizing, drifting, shifting_recovery, etc.
+    trend_direction: Optional[str] = None      # Which direction trend is moving
+    trend_insight: Optional[str] = None        # Hebrew insight about the trend
+    weeks_analyzed: int = 0
+
 class UserOrientationResponse(BaseModel):
     success: bool
     user_position: Dict[str, float] = {}       # x, y coordinates
@@ -2291,6 +2309,205 @@ async def get_orientation_field():
         
     except Exception as e:
         logger.error(f"Get orientation field error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/history", response_model=FieldHistoryResponse)
+async def get_field_history():
+    """
+    Get historical momentum tracking for the collective field (last 4 weeks).
+    Returns weekly snapshots with trend analysis.
+    """
+    try:
+        # Get all user sessions
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0}).to_list(1000)
+        
+        # Direction positions for compass mapping
+        direction_positions = {
+            'recovery': (30, 65),
+            'order': (30, 25),
+            'contribution': (70, 25),
+            'exploration': (70, 65),
+            'harm': (15, 85),
+            'avoidance': (50, 90)
+        }
+        
+        direction_labels = {
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'contribution': 'תרומה',
+            'exploration': 'חקירה'
+        }
+        
+        positive_directions = ['recovery', 'order', 'contribution', 'exploration']
+        
+        # Calculate week boundaries (last 4 weeks)
+        now = datetime.now(timezone.utc)
+        week_boundaries = []
+        for i in range(4):
+            week_end = now - timedelta(days=i * 7)
+            week_start = week_end - timedelta(days=7)
+            week_boundaries.append({
+                'start': week_start.isoformat(),
+                'end': week_end.isoformat(),
+                'label': f'שבוע {4 - i}' if i > 0 else 'השבוע'
+            })
+        week_boundaries.reverse()  # Oldest first
+        
+        # Collect actions by week
+        weekly_data = []
+        for week in week_boundaries:
+            week_counts = {d: 0 for d in direction_positions.keys()}
+            week_total = 0
+            
+            # Process each user's session data
+            for session in all_sessions:
+                history = session.get('history', [])
+                for h in history:
+                    ts = h.get('timestamp', '')
+                    if week['start'] <= ts < week['end']:
+                        tag = h.get('value_tag')
+                        if tag and tag in week_counts:
+                            week_counts[tag] += 1
+                            week_total += 1
+            
+            # Calculate week center position
+            center_x = 50
+            center_y = 50
+            if week_total > 0:
+                weighted_x = 0
+                weighted_y = 0
+                total_weight = 0
+                for direction, count in week_counts.items():
+                    if direction in direction_positions and count > 0:
+                        pos = direction_positions[direction]
+                        weight = count / week_total
+                        weighted_x += pos[0] * weight
+                        weighted_y += pos[1] * weight
+                        total_weight += weight
+                if total_weight > 0:
+                    center_x = round(weighted_x / total_weight, 1)
+                    center_y = round(weighted_y / total_weight, 1)
+            
+            # Calculate positive ratio
+            positive_count = sum(week_counts.get(d, 0) for d in positive_directions)
+            positive_ratio = round((positive_count / week_total * 100) if week_total > 0 else 50, 1)
+            
+            # Find dominant direction
+            dominant = None
+            max_count = 0
+            for direction in positive_directions:
+                if week_counts.get(direction, 0) > max_count:
+                    max_count = week_counts.get(direction, 0)
+                    dominant = direction
+            
+            weekly_data.append(WeeklyFieldSnapshot(
+                week_label=week['label'],
+                week_start=week['start'][:10],  # Just date
+                center_x=center_x,
+                center_y=center_y,
+                dominant_direction=dominant,
+                positive_ratio=positive_ratio,
+                total_actions=week_total
+            ))
+        
+        # Create sparkline data (positive ratios)
+        sparkline_data = [w.positive_ratio for w in weekly_data]
+        
+        # Analyze trend across weeks
+        trend_type = "stable"
+        trend_direction = None
+        trend_insight = None
+        
+        weeks_with_data = [w for w in weekly_data if w.total_actions > 0]
+        
+        if len(weeks_with_data) >= 2:
+            # Check positive ratio trend
+            first_ratio = weeks_with_data[0].positive_ratio
+            last_ratio = weeks_with_data[-1].positive_ratio
+            ratio_change = last_ratio - first_ratio
+            
+            # Check direction changes
+            direction_trends = {}
+            for direction in positive_directions:
+                first_dominant = weeks_with_data[0].dominant_direction
+                last_dominant = weeks_with_data[-1].dominant_direction
+                direction_trends[direction] = {
+                    'first': first_dominant == direction,
+                    'last': last_dominant == direction
+                }
+            
+            # Find consistent direction shift
+            consistent_direction = None
+            direction_counts = {}
+            for w in weeks_with_data:
+                if w.dominant_direction:
+                    direction_counts[w.dominant_direction] = direction_counts.get(w.dominant_direction, 0) + 1
+            
+            if direction_counts:
+                most_common = max(direction_counts, key=direction_counts.get)
+                if direction_counts[most_common] >= len(weeks_with_data) * 0.5:
+                    consistent_direction = most_common
+            
+            # Determine trend type
+            if ratio_change > 10:
+                trend_type = "stabilizing"
+                trend_insight = "השדה הקולקטיבי מתייצב בשבועות האחרונים."
+            elif ratio_change < -10:
+                trend_type = "drifting"
+                trend_insight = "השדה הקולקטיבי נסחף מהאיזון בשבועות האחרונים."
+            elif consistent_direction:
+                trend_type = f"shifting_{consistent_direction}"
+                trend_direction = consistent_direction
+                trend_insight = f"השדה הקולקטיבי נע בהדרגה לכיוון {direction_labels.get(consistent_direction, consistent_direction)} בשבועות האחרונים."
+            else:
+                trend_type = "stable"
+                trend_insight = "השדה הקולקטיבי יציב ומאוזן בשבועות האחרונים."
+            
+            # More specific insights based on movement
+            if len(weeks_with_data) >= 3:
+                centers = [(w.center_x, w.center_y) for w in weeks_with_data]
+                
+                # Check for consistent movement direction
+                movements = []
+                for i in range(1, len(centers)):
+                    dx = centers[i][0] - centers[i-1][0]
+                    dy = centers[i][1] - centers[i-1][1]
+                    movements.append((dx, dy))
+                
+                # Check for upward movement (toward order)
+                avg_dy = sum(m[1] for m in movements) / len(movements)
+                avg_dx = sum(m[0] for m in movements) / len(movements)
+                
+                if avg_dy < -3:  # Moving up (toward order)
+                    if avg_dx > 3:
+                        trend_direction = "contribution"
+                        trend_insight = "השדה הקולקטיבי נע לכיוון תרומה וסדר בשבועות האחרונים."
+                    elif avg_dx < -3:
+                        trend_direction = "order"
+                        trend_insight = "השדה הקולקטיבי נע לכיוון סדר בשבועות האחרונים."
+                elif avg_dy > 3:  # Moving down (toward chaos)
+                    if avg_dx > 3:
+                        trend_direction = "exploration"
+                        trend_insight = "השדה הקולקטיבי נע לכיוון חקירה בשבועות האחרונים."
+                    elif avg_dx < -3:
+                        trend_direction = "recovery"
+                        trend_insight = "השדה הקולקטיבי נע לכיוון התאוששות בשבועות האחרונים."
+        else:
+            trend_insight = "אין מספיק נתונים היסטוריים לזיהוי מגמה."
+        
+        return FieldHistoryResponse(
+            success=True,
+            weekly_snapshots=weekly_data,
+            sparkline_data=sparkline_data,
+            trend_type=trend_type,
+            trend_direction=trend_direction,
+            trend_insight=trend_insight,
+            weeks_analyzed=len(weeks_with_data)
+        )
+        
+    except Exception as e:
+        logger.error(f"Get field history error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
