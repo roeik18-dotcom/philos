@@ -121,12 +121,16 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 | `/api/orientation/globe-activity` | GET | Globe data + today_stats + mission_glow |
 | `/api/orientation/globe-region/{country_code}` | GET | Region details: dominant dir, count, trend |
 
+### Phase 13 — Polish & Field Pulse (completed 2026-03-11)
+1. **Field Pulse Ripple** — Globe shows expanding ring animations at user point locations using `ringsData` prop. `SendToGlobeButton` dispatches `globe-field-pulse` CustomEvent; `FieldGlobeSection` listens and adds temporary 3s ring. User points from API also show persistent rings.
+2. **Impact Message Persistence** — Extended showSuccess timeout from 4s to 8s; SendToGlobe confirmation from 4s to 6s.
+3. **RTL Polish** — Added `text-align: right` to `.philos-section`, RTL-aware button and flex alignment rules, direction consistency.
+4. **Share Card Animations** — Smooth modal entrance (scale+fade via `cardSlideIn`), exit animation on close/backdrop click, `Loader2` spinner during image generation.
+
 ## Backlog
 
 ### P1 — Upcoming
 - Refactor `server.py` into modular routes/models/services
 
 ### P2 — Future
-- General UI polish and RTL improvements
-- Persist impact message longer after answering
-- Add animations to share card generation
+- Additional UI polish and micro-interactions
