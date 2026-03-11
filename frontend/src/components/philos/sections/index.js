@@ -63,3 +63,7 @@ export { default as DaySummarySection } from './DaySummarySection';
 export { default as FieldGlobeSection } from './FieldGlobeSection';
 export { default as DirectionExplanationsSection } from './DirectionExplanationsSection';
 export { default as SendToGlobeButton } from './SendToGlobeButton';
+export { default as EntryLayer } from './EntryLayer';
+export { default as OppositionLayer } from './OppositionLayer';
+export { default as FieldImpactLayer } from './FieldImpactLayer';
+export { default as ClosingLayer } from './ClosingLayer';
