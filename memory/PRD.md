@@ -108,6 +108,19 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 1. **Dashboard Refactor** — Extracted 5 tab components from PhilosDashboard.js (640→267 lines): `HomeTab.js`, `InsightsTab.js`, `SystemTab.js`, `TheoryTab.js`, `HistoryTab.js` in `/app/frontend/src/pages/tabs/`.
 2. **DecisionTreeSection SVG Fix** — Replaced fragile div-based tree connectors with proper SVG `<path>` elements using cubic bezier curves. Added layout engine for node positioning.
 
+### Phase 12 — Globe Interaction Layer (completed 2026-03-11)
+1. **Send Point to Globe** — `SendToGlobeButton` component appears after daily action completion. Calls `POST /api/orientation/globe-point`, shows launch animation + confirmation "הפעולה שלך נוספה לשדה האנושי".
+2. **Mission Glow** — Globe atmosphere color dynamically matches current daily mission direction (green/blue/indigo/orange).
+3. **Live Globe Header** — Shows today's total action count + dominant direction in Hebrew above globe.
+4. **Region Interaction** — Click points on globe to view region popup: country name, dominant direction, action count, direction bars, trend label.
+5. **New DB collection** — `user_globe_points` stores user-submitted globe points (lat, lng, direction, country_code, timestamp).
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/orientation/globe-point` | POST | Add user action point to globe |
+| `/api/orientation/globe-activity` | GET | Globe data + today_stats + mission_glow |
+| `/api/orientation/globe-region/{country_code}` | GET | Region details: dominant dir, count, trend |
+
 ## Backlog
 
 ### P1 — Upcoming
