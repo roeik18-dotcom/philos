@@ -71,7 +71,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           if (onActionRecorded) {
             onActionRecorded({ direction: questionData.suggested_direction, question_id: questionData.question_id, timestamp: new Date().toISOString(), mission_contributed: result.mission_contributed || false });
           }
-          setTimeout(() => setShowSuccess(false), 4000);
+          setTimeout(() => setShowSuccess(false), 8000);
         }
       }
     } catch (error) {

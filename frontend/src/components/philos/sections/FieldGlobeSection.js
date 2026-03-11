@@ -20,7 +20,7 @@ export default function FieldGlobeSection() {
   const [missionGlow, setMissionGlow] = useState(null);
   const [GlobeComponent, setGlobeComponent] = useState(null);
   const [regionPopup, setRegionPopup] = useState(null);
-  const [regionLoading, setRegionLoading] = useState(false);
+  const [ringsData, setRingsData] = useState([]);
   const globeContainerRef = useRef(null);
   const globeRef = useRef(null);
 
@@ -40,11 +40,25 @@ export default function FieldGlobeSection() {
       if (res.ok) {
         const json = await res.json();
         if (json.success) {
-          setPoints((json.points || []).slice(0, 80));
+          const allPts = (json.points || []).slice(0, 80);
+          setPoints(allPts);
           setColorMap(json.color_map || {});
           setTotalPoints(json.total_points || 0);
           setTodayStats(json.today_stats || null);
           setMissionGlow(json.mission_glow || null);
+
+          // Create rings for user points (field pulse)
+          const userRings = allPts
+            .filter(p => p.is_user)
+            .map(p => ({
+              lat: p.lat,
+              lng: p.lng,
+              maxR: 6,
+              propagationSpeed: 2,
+              repeatPeriod: 1200,
+              color: p.color
+            }));
+          setRingsData(userRings);
         }
       }
     } catch (e) {
@@ -55,6 +69,21 @@ export default function FieldGlobeSection() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Listen for field-pulse events from SendToGlobeButton
+  useEffect(() => {
+    const handlePulse = (e) => {
+      const { lat, lng, color } = e.detail;
+      const ring = { lat, lng, maxR: 8, propagationSpeed: 3, repeatPeriod: 800, color };
+      setRingsData(prev => [...prev, ring]);
+      // Fade ring out after 3s
+      setTimeout(() => {
+        setRingsData(prev => prev.filter(r => r !== ring));
+      }, 3000);
+    };
+    window.addEventListener('globe-field-pulse', handlePulse);
+    return () => window.removeEventListener('globe-field-pulse', handlePulse);
+  }, []);
 
   // Auto-rotate + setup globe
   useEffect(() => {
@@ -72,25 +101,19 @@ export default function FieldGlobeSection() {
   const handlePointClick = useCallback(async (point) => {
     const cc = point.country_code;
     if (!cc) return;
-    setRegionLoading(true);
     setRegionPopup({ loading: true, country_code: cc });
     try {
       const res = await fetch(`${API_URL}/api/orientation/globe-region/${cc}`);
       if (res.ok) {
         const json = await res.json();
-        if (json.success) {
-          setRegionPopup(json);
-        }
+        if (json.success) setRegionPopup(json);
       }
     } catch (e) {
-      console.log('Region fetch error:', e);
       setRegionPopup(null);
-    } finally {
-      setRegionLoading(false);
     }
   }, []);
 
-  // Direction distribution from points
+  // Direction distribution
   const dirDist = useMemo(() => {
     const dist = { contribution: 0, recovery: 0, order: 0, exploration: 0 };
     points.forEach(p => { if (dist[p.direction] !== undefined) dist[p.direction]++; });
@@ -122,7 +145,7 @@ export default function FieldGlobeSection() {
         </button>
       </div>
 
-      {/* Live Globe Header - Today's Stats */}
+      {/* Live Globe Header */}
       {todayStats && todayStats.total_actions > 0 && (
         <div className="flex items-center gap-3 mb-3 p-2 bg-gray-50 rounded-xl" data-testid="globe-live-header">
           <div className="flex items-center gap-1.5">
@@ -166,6 +189,13 @@ export default function FieldGlobeSection() {
             atmosphereAltitude={0.15}
             animateIn={false}
             onPointClick={handlePointClick}
+            ringsData={ringsData}
+            ringLat="lat"
+            ringLng="lng"
+            ringMaxRadius="maxR"
+            ringPropagationSpeed="propagationSpeed"
+            ringRepeatPeriod="repeatPeriod"
+            ringColor={d => [`${d.color}cc`, `${d.color}00`]}
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -191,7 +221,7 @@ export default function FieldGlobeSection() {
                 <MapPin className="w-3.5 h-3.5 text-purple-400" />
                 <span className="text-sm font-semibold text-white">{regionPopup.country_name_he}</span>
               </div>
-              <button onClick={() => setRegionPopup(null)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setRegionPopup(null)} className="text-gray-400 hover:text-white transition-colors">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -214,13 +244,12 @@ export default function FieldGlobeSection() {
                 <p className="text-[9px] text-gray-400">מגמה</p>
               </div>
             </div>
-            {/* Mini direction bars */}
             <div className="space-y-1">
               {Object.entries(regionPopup.direction_counts || {}).map(([d, c]) => c > 0 && (
                 <div key={d} className="flex items-center gap-1.5">
-                  <span className="text-[9px] text-gray-400 w-12">{directionLabels[d]}</span>
+                  <span className="text-[9px] text-gray-400 w-12 text-right">{directionLabels[d]}</span>
                   <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{
+                    <div className="h-full rounded-full transition-all duration-500" style={{
                       width: `${regionPopup.total_actions > 0 ? (c / regionPopup.total_actions) * 100 : 0}%`,
                       backgroundColor: cm[d]
                     }} />
@@ -233,8 +262,8 @@ export default function FieldGlobeSection() {
         )}
       </div>
 
-      {/* Direction distribution mini-legend */}
-      <div className="flex gap-2 mt-3 flex-wrap">
+      {/* Direction distribution legend */}
+      <div className="flex gap-2 mt-3 flex-wrap justify-start">
         {Object.entries(dirDist).map(([dir, count]) => (
           <div key={dir} className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-50" data-testid={`globe-legend-${dir}`}>
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cm[dir] }} />

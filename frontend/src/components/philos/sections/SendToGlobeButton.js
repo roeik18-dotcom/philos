@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Globe, Check, Loader2 } from 'lucide-react';
+import { Globe, Check } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -33,10 +33,20 @@ export default function SendToGlobeButton({ userId, direction }) {
       if (res.ok) {
         const json = await res.json();
         if (json.success) {
+          // Dispatch field-pulse event so globe can show ripple
+          window.dispatchEvent(new CustomEvent('globe-field-pulse', {
+            detail: {
+              lat: json.point.lat,
+              lng: json.point.lng,
+              color: json.point.color
+            }
+          }));
+
           setTimeout(() => {
+            setAnimating(false);
             setSent(true);
             setConfirmed(true);
-            setTimeout(() => setConfirmed(false), 4000);
+            setTimeout(() => setConfirmed(false), 6000);
           }, 1200);
         }
       }
@@ -55,7 +65,10 @@ export default function SendToGlobeButton({ userId, direction }) {
       <div className="relative overflow-hidden" data-testid="send-to-globe-confirmed">
         {confirmed ? (
           <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border border-green-200 bg-green-50 animate-fadeIn">
-            <Check className="w-4 h-4 text-green-600" />
+            <div className="relative">
+              <Check className="w-4 h-4 text-green-600" />
+              <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ backgroundColor: color }} />
+            </div>
             <span className="text-sm font-medium text-green-700">הפעולה שלך נוספה לשדה האנושי</span>
           </div>
         ) : (
@@ -73,17 +86,17 @@ export default function SendToGlobeButton({ userId, direction }) {
       <button
         onClick={handleSend}
         disabled={sending}
-        className="w-full py-3 px-4 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2 bg-[#0a0a1a] text-white hover:bg-[#1a1a2e] active:scale-[0.97] border border-white/10"
+        className="w-full py-3 px-4 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2 bg-[#0a0a1a] text-white hover:bg-[#1a1a2e] active:scale-[0.97] border border-white/10 hover:shadow-lg"
       >
         {animating ? (
           <>
             <div className="relative w-5 h-5">
               <div
-                className="absolute inset-0 rounded-full animate-ping"
-                style={{ backgroundColor: color, opacity: 0.4 }}
+                className="absolute inset-0 rounded-full"
+                style={{ backgroundColor: color, animation: 'fieldPulseRipple 0.8s ease-out infinite' }}
               />
               <div
-                className="absolute inset-0.5 rounded-full animate-pulse"
+                className="absolute inset-1 rounded-full"
                 style={{ backgroundColor: color }}
               />
             </div>
@@ -97,7 +110,7 @@ export default function SendToGlobeButton({ userId, direction }) {
         )}
       </button>
 
-      {/* Launch animation - glowing dot rising */}
+      {/* Launch animation - glowing dot rising with ripple trail */}
       {animating && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden rounded-2xl">
           <div
@@ -106,6 +119,15 @@ export default function SendToGlobeButton({ userId, direction }) {
               backgroundColor: color,
               boxShadow: `0 0 20px ${color}, 0 0 40px ${color}60`,
               animation: 'globeLaunch 1.2s ease-out forwards'
+            }}
+          />
+          {/* Expanding ripple left behind */}
+          <div
+            className="w-4 h-4 rounded-full absolute border-2"
+            style={{
+              borderColor: color,
+              animation: 'fieldPulseRipple 1s ease-out 0.3s forwards',
+              opacity: 0
             }}
           />
         </div>
