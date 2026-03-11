@@ -4239,7 +4239,7 @@ async def get_invite_report():
         total_opens = sum(inv.get("opened_count", 0) for inv in all_invites)
 
         open_rate = round((total_opened / total_sent) * 100, 1) if total_sent > 0 else 0
-        accept_rate = round((total_accepted / total_opened) * 100, 1) if total_opened > 0 else 0
+        accept_rate = min(round((total_accepted / total_opened) * 100, 1), 100) if total_opened > 0 else 0
         overall_conversion = round((total_accepted / total_sent) * 100, 1) if total_sent > 0 else 0
 
         return {

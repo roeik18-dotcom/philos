@@ -55,6 +55,11 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 ### Phase 7 — Referral Leaderboard (completed 2026-03-11)
 1. **Referral Leaderboard** — Top 10 inviters with anonymous aliases, invite counts, streaks, ranked medals for top 3
 
+### Phase 8 — Product Validation (completed 2026-03-11)
+1. **Onboarding** — 3-screen flow: compass meaning, daily question purpose, field effect. Progress dots, skip/next navigation, localStorage persistence
+2. **Admin Retention Review** — Enhanced metrics dashboard with 6 KPIs: active users, question completion rate, D2 retention, mission participation, avg streak, invite conversions
+3. **Invite Tracking Report** — Funnel visualization (sent→opened→accepted) with conversion rates. Invite open tracking via GET /invite/{code}
+
 ## Key API Endpoints
 | Endpoint | Method | Purpose |
 |---|---|---|
