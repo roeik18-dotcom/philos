@@ -52,6 +52,9 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 6. **Tab nav polish** — rounded-2xl, backdrop-blur, hover states
 7. **Hover effects** — philos-section base class with shadow-md hover, active:scale on buttons
 
+### Phase 7 — Referral Leaderboard (completed 2026-03-11)
+1. **Referral Leaderboard** — Top 10 inviters with anonymous aliases, invite counts, streaks, ranked medals for top 3
+
 ## Key API Endpoints
 | Endpoint | Method | Purpose |
 |---|---|---|
