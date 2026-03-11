@@ -4532,14 +4532,13 @@ async def get_metrics_today():
 
 @api_router.get("/orientation/feed")
 async def get_orientation_feed():
-    """Real-time anonymous activity feed."""
+    """Real-time anonymous activity feed (real + demo events)."""
     try:
         now = datetime.now(timezone.utc)
-        # Get recent actions from the last 2 hours
         cutoff = (now - timedelta(hours=2)).isoformat()
 
+        # Real user actions
         all_sessions = await db.philos_sessions.find({}, {"_id": 0, "history": 1}).to_list(10000)
-
         positive = ['contribution', 'recovery', 'order', 'exploration']
         recent_actions = []
         for s in all_sessions:
@@ -4547,10 +4546,24 @@ async def get_orientation_feed():
                 ts = h.get("timestamp", "")
                 vt = h.get("value_tag", "")
                 if ts >= cutoff and vt in positive:
-                    recent_actions.append({"direction": vt, "timestamp": ts})
+                    recent_actions.append({"direction": vt, "timestamp": ts, "demo": False, "location": None})
+
+        # Demo events
+        demo_events = await db.demo_events.find(
+            {"timestamp": {"$gte": cutoff}},
+            {"_id": 0, "direction": 1, "timestamp": 1, "country": 1, "country_code": 1}
+        ).to_list(500)
+        for de in demo_events:
+            recent_actions.append({
+                "direction": de["direction"],
+                "timestamp": de["timestamp"],
+                "demo": True,
+                "location": de.get("country"),
+                "country_code": de.get("country_code")
+            })
 
         recent_actions.sort(key=lambda x: x["timestamp"], reverse=True)
-        recent_actions = recent_actions[:30]
+        recent_actions = recent_actions[:40]
 
         feed = []
         for a in recent_actions:
@@ -4567,11 +4580,16 @@ async def get_orientation_feed():
                     time_str = f"{hours}ש"
             except Exception:
                 time_str = ""
-            feed.append({
-                "type": "action",
+            item = {
+                "type": "demo_action" if a["demo"] else "action",
                 "direction": a["direction"],
                 "time": time_str
-            })
+            }
+            if a.get("location"):
+                item["location"] = a["location"]
+            if a.get("country_code"):
+                item["country_code"] = a["country_code"]
+            feed.append(item)
 
         return {"success": True, "feed": feed}
     except Exception as e:
@@ -4838,3 +4856,111 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+
+# ==================== DEMO AGENTS SYSTEM ====================
+import asyncio
+import random as _random
+
+DEMO_COUNTRIES = [
+    ("Brazil", "BR"), ("India", "IN"), ("Germany", "DE"), ("USA", "US"),
+    ("Japan", "JP"), ("Nigeria", "NG"), ("Israel", "IL"), ("France", "FR"),
+    ("Australia", "AU"), ("South Korea", "KR"), ("Mexico", "MX"), ("UK", "GB"),
+    ("Canada", "CA"), ("Italy", "IT"), ("Spain", "ES"), ("Argentina", "AR"),
+    ("Turkey", "TR"), ("Thailand", "TH"), ("Poland", "PL"), ("Netherlands", "NL")
+]
+
+DEMO_ALIASES = [
+    "Atlas", "Nova", "Sage", "Drift", "Ember", "Coral", "Zenith", "Flux",
+    "Prism", "Echo", "Nimbus", "Pulse", "Aether", "Crest", "Dusk", "Fern",
+    "Glint", "Haven", "Iris", "Jade", "Kite", "Lumen", "Mist", "Nest",
+    "Opal", "Pine", "Quill", "Reef", "Spark", "Thorn", "Ursa", "Vale",
+    "Wren", "Zephyr", "Amber", "Brook", "Cedar", "Dawn", "Elm", "Frost",
+    "Grove", "Haze", "Ivy", "Jet", "Kelp", "Lark", "Moss", "Nyx",
+    "Orion", "Peak"
+]
+
+DIRECTIONS = ['contribution', 'recovery', 'order', 'exploration']
+
+
+def _build_demo_agents():
+    agents = []
+    for i in range(50):
+        country, code = DEMO_COUNTRIES[i % len(DEMO_COUNTRIES)]
+        agents.append({
+            "agent_id": f"demo-agent-{i:03d}",
+            "alias": DEMO_ALIASES[i],
+            "country": country,
+            "country_code": code,
+            "orientation_direction": DIRECTIONS[i % 4]
+        })
+    return agents
+
+
+DEMO_AGENTS = _build_demo_agents()
+
+
+async def _seed_demo_agents():
+    """Seed demo agents into DB if not present."""
+    existing = await db.demo_agents.count_documents({})
+    if existing == 0:
+        await db.demo_agents.insert_many([{**a} for a in DEMO_AGENTS])
+        logger.info(f"Seeded {len(DEMO_AGENTS)} demo agents")
+
+
+async def _generate_demo_events():
+    """Generate a batch of demo activity events."""
+    now = datetime.now(timezone.utc)
+    # Pick 8-15 random agents to act
+    batch_size = _random.randint(8, 15)
+    acting = _random.sample(DEMO_AGENTS, min(batch_size, len(DEMO_AGENTS)))
+
+    events = []
+    for agent in acting:
+        # 70% chance to use their primary direction, 30% random
+        if _random.random() < 0.7:
+            direction = agent["orientation_direction"]
+        else:
+            direction = _random.choice(DIRECTIONS)
+
+        # Spread timestamps over the last 5 minutes
+        offset_seconds = _random.randint(0, 290)
+        ts = (now - timedelta(seconds=offset_seconds)).isoformat()
+
+        events.append({
+            "agent_id": agent["agent_id"],
+            "alias": agent["alias"],
+            "country": agent["country"],
+            "country_code": agent["country_code"],
+            "direction": direction,
+            "timestamp": ts,
+            "demo": True,
+            "type": "demo_action"
+        })
+
+    if events:
+        await db.demo_events.insert_many(events)
+        # Clean events older than 3 hours
+        cutoff = (now - timedelta(hours=3)).isoformat()
+        await db.demo_events.delete_many({"timestamp": {"$lt": cutoff}})
+
+    logger.info(f"Generated {len(events)} demo events")
+
+
+async def _demo_event_loop():
+    """Background loop: generate demo events every 5 minutes."""
+    await asyncio.sleep(5)  # Wait for DB to be ready
+    await _seed_demo_agents()
+    # Generate an initial batch immediately
+    await _generate_demo_events()
+    while True:
+        await asyncio.sleep(300)  # 5 minutes
+        try:
+            await _generate_demo_events()
+        except Exception as e:
+            logger.error(f"Demo event generation error: {str(e)}")
+
+
+@app.on_event("startup")
+async def start_demo_loop():
+    asyncio.create_task(_demo_event_loop())

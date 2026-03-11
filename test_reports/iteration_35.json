@@ -1,0 +1,127 @@
+{
+  "summary": "Iteration 35: Demo Agents System - All features tested successfully. Backend: 18/18 tests passed for demo agents seeding, feed endpoint with demo events, and metrics-today exclusion. Frontend: Feed section displays 36 demo events with country flags, direction labels, and live indicator.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_demo_agents.py",
+    "/app/test_reports/pytest/pytest_demo_agents.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_demo_agents.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)",
+    "frontend": "100% (All UI elements verified)"
+  },
+  "test_credentials": "Anonymous user - no auth required",
+  "seed_data_creation": "Demo data auto-generated: 50 demo agents seeded, 21+ demo events in collection",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Demo agents system fully operational. 50 agents with aliases (Atlas, Nova, Sage, etc.) from 20 countries are seeded in demo_agents collection. Demo events are generated every 5 minutes (8-15 events per batch) and stored in demo_events collection. Events auto-cleanup after 3 hours. Feed endpoint combines real user actions from philos_sessions with demo events from demo_events collection. Metrics-today correctly excludes demo agents by only counting user_ids from philos_sessions (demo agents are NOT stored there).",
+  "tests_executed": {
+    "backend_tests": {
+      "TestDemoAgentsSeeding": {
+        "test_demo_agents_collection_has_50_agents": "PASS",
+        "test_demo_agent_structure_in_events": "PASS"
+      },
+      "TestOrientationFeed": {
+        "test_feed_returns_200": "PASS",
+        "test_feed_has_success_true": "PASS",
+        "test_feed_returns_array": "PASS",
+        "test_demo_events_have_type_demo_action": "PASS",
+        "test_demo_events_have_location_field": "PASS",
+        "test_demo_events_have_country_code": "PASS",
+        "test_demo_events_have_valid_direction": "PASS",
+        "test_demo_events_have_time_field": "PASS",
+        "test_feed_contains_valid_country_codes": "PASS"
+      },
+      "TestMetricsTodayExcludesDemoAgents": {
+        "test_metrics_today_returns_200": "PASS",
+        "test_metrics_today_has_active_users_today": "PASS",
+        "test_active_users_today_excludes_demo_agents": "PASS - active_users_today=0 despite 21+ demo events",
+        "test_metrics_today_response_structure": "PASS"
+      },
+      "TestDemoEventsGeneration": {
+        "test_demo_events_exist_in_feed": "PASS",
+        "test_feed_is_sorted_by_time": "PASS",
+        "test_multiple_countries_in_feed": "PASS - Found flags from multiple countries"
+      }
+    },
+    "frontend_tests": {
+      "OrientationFeedSection": {
+        "section_visible": "PASS - data-testid='orientation-feed-section' found",
+        "feed_list_visible": "PASS - data-testid='feed-list' found",
+        "feed_items_count": "PASS - 36 feed items found",
+        "country_flags_displayed": "PASS - 36 flags with data-testid='feed-flag-{index}'",
+        "flag_emojis": "PASS - Verified: 🇬🇧, 🇰🇷, 🇯🇵, 🇹🇭, 🇫🇷",
+        "direction_labels": "PASS - Hebrew labels visible (חקירה, התאוששות, תרומה, סדר)",
+        "relative_time_display": "PASS - Shows relative time (e.g., '4ד' for 4 minutes)",
+        "live_indicator_text": "PASS - 'חי' (live) text visible",
+        "live_indicator_pulse": "PASS - Pulsing green dot animation active"
+      }
+    }
+  },
+  "api_response_samples": {
+    "orientation_feed": {
+      "endpoint": "GET /api/orientation/feed",
+      "sample_item": {
+        "type": "demo_action",
+        "direction": "exploration",
+        "time": "2ד",
+        "location": "UK",
+        "country_code": "GB"
+      }
+    },
+    "metrics_today": {
+      "endpoint": "GET /api/orientation/metrics-today",
+      "response": {
+        "success": true,
+        "active_users_today": 0,
+        "daily_question_completion_rate": 5.0,
+        "day2_retention": 1.9,
+        "mission_participation_rate": 0,
+        "avg_streak": 1.0,
+        "invite_conversions": 85.7
+      }
+    }
+  },
+  "data_testids_verified": [
+    "orientation-feed-section",
+    "feed-list",
+    "feed-item-{index}",
+    "feed-flag-{index}"
+  ],
+  "mongodb_collections_verified": {
+    "demo_agents": {
+      "count": 50,
+      "sample": {
+        "agent_id": "demo-agent-000",
+        "alias": "Atlas",
+        "country": "Brazil",
+        "country_code": "BR",
+        "orientation_direction": "contribution"
+      }
+    },
+    "demo_events": {
+      "count": "21+ (auto-generated every 5 minutes)",
+      "sample": {
+        "agent_id": "demo-agent-017",
+        "alias": "Haven",
+        "country": "Thailand",
+        "country_code": "TH",
+        "direction": "recovery",
+        "demo": true,
+        "type": "demo_action"
+      }
+    }
+  }
+}
