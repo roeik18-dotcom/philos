@@ -58,7 +58,8 @@ import {
   MetricsDashboardSection,
   OrientationFeedSection,
   InviteSection,
-  WeeklyReportSection
+  WeeklyReportSection,
+  ReferralLeaderboardSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -466,6 +467,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
             {/* Metrics Dashboard - Admin Panel */}
             <MetricsDashboardSection />
+
+            {/* Referral Leaderboard */}
+            <ReferralLeaderboardSection />
 
             {/* Recommendation Calibration */}
             <RecommendationCalibrationSection history={history} />

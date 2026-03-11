@@ -4700,6 +4700,80 @@ async def get_weekly_report(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+ANONYMOUS_ALIASES = [
+    "Explorer", "Builder", "Seeker", "Navigator", "Pioneer",
+    "Guardian", "Visionary", "Pathfinder", "Strategist", "Catalyst",
+    "Dreamer", "Architect", "Sentinel", "Wanderer", "Alchemist",
+    "Sage", "Herald", "Beacon", "Anchor", "Voyager"
+]
+
+
+@api_router.get("/orientation/referral-leaderboard")
+async def get_referral_leaderboard():
+    """Referral leaderboard: top 10 inviters with anonymous aliases."""
+    try:
+        now = datetime.now(timezone.utc)
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        invites = await db.invites.find({}, {"_id": 0, "inviter_id": 1, "use_count": 1}).to_list(10000)
+
+        user_invites = {}
+        for inv in invites:
+            uid = inv.get("inviter_id")
+            count = inv.get("use_count", 0)
+            if uid:
+                user_invites[uid] = user_invites.get(uid, 0) + count
+
+        # Calculate streaks per user
+        answered_all = await db.daily_questions.find(
+            {"answered": True}, {"_id": 0, "user_id": 1, "date": 1}
+        ).to_list(50000)
+        streak_dates = {}
+        for q in answered_all:
+            uid = q.get("user_id")
+            d = q.get("date")
+            if uid and d:
+                streak_dates.setdefault(uid, set()).add(d)
+
+        def calc_streak(uid):
+            dates = streak_dates.get(uid, set())
+            if not dates:
+                return 0
+            sorted_d = sorted(dates, reverse=True)
+            if sorted_d[0] < yesterday_str:
+                return 0
+            streak = 1
+            for i in range(1, len(sorted_d)):
+                prev = datetime.strptime(sorted_d[i - 1], "%Y-%m-%d")
+                curr = datetime.strptime(sorted_d[i], "%Y-%m-%d")
+                if (prev - curr).days == 1:
+                    streak += 1
+                else:
+                    break
+            return streak
+
+        # Sort by invites descending, take top 10
+        sorted_users = sorted(user_invites.items(), key=lambda x: x[1], reverse=True)[:10]
+
+        # Assign deterministic anonymous aliases based on user_id hash
+        leaderboard = []
+        for i, (uid, count) in enumerate(sorted_users):
+            if count == 0:
+                continue
+            alias_index = hash(uid) % len(ANONYMOUS_ALIASES)
+            leaderboard.append({
+                "user_alias": ANONYMOUS_ALIASES[alias_index],
+                "invites_count": count,
+                "streak": calc_streak(uid),
+                "rank": i + 1
+            })
+
+        return {"success": True, "leaderboard": leaderboard}
+    except Exception as e:
+        logger.error(f"Get referral leaderboard error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
