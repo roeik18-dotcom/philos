@@ -123,6 +123,12 @@ export default function FieldGlobeSection() {
   const cm = { ...defaultColors, ...colorMap };
   const atmosphereColor = missionGlow?.color || '#6366f1';
 
+  // Field Heartbeat: pulse speed scales with today's action volume
+  // 0 actions → 6s (slow breath), 200+ → 2s (lively). Color from dominant direction.
+  const heartbeatActions = todayStats?.total_actions || 0;
+  const heartbeatDuration = Math.max(2, 6 - (heartbeatActions / 50));
+  const heartbeatColor = cm[todayStats?.dominant_direction] || atmosphereColor;
+
   return (
     <section className="philos-section bg-white border-border animate-section animate-section-3 overflow-hidden" dir="rtl" data-testid="field-globe-section">
       {/* Header */}
@@ -171,6 +177,17 @@ export default function FieldGlobeSection() {
 
       {/* Globe container */}
       <div ref={globeContainerRef} className="relative w-full rounded-2xl bg-[#0a0a1a] overflow-hidden" style={{ height: 280 }} data-testid="globe-canvas">
+        {/* Field Heartbeat — ambient pulse behind the globe */}
+        {heartbeatActions > 0 && (
+          <div
+            className="absolute inset-0 rounded-2xl pointer-events-none z-0"
+            data-testid="field-heartbeat"
+            style={{
+              boxShadow: `inset 0 0 60px ${heartbeatColor}18, inset 0 0 120px ${heartbeatColor}08`,
+              animation: `fieldHeartbeat ${heartbeatDuration}s ease-in-out infinite`,
+            }}
+          />
+        )}
         {GlobeComponent && points.length > 0 ? (
           <GlobeComponent
             ref={globeRef}

@@ -74,6 +74,12 @@
   100% { transform: translateY(-80px) scale(0.3); opacity: 0; }
 }
 
+/* Field Heartbeat — subtle ambient pulse */
+@keyframes fieldHeartbeat {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
 /* Field pulse ripple - expanding ring */
 @keyframes fieldPulseRipple {
   0% { transform: scale(0.5); opacity: 0.6; }

@@ -127,9 +127,13 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 3. **RTL Polish** — Added `text-align: right` to `.philos-section`, RTL-aware button and flex alignment rules, direction consistency.
 4. **Share Card Animations** — Smooth modal entrance (scale+fade via `cardSlideIn`), exit animation on close/backdrop click, `Loader2` spinner during image generation.
 
+### Phase 14 — Field Heartbeat (completed 2026-03-11)
+1. **Ambient Globe Pulse** — CSS-only `fieldHeartbeat` animation: inset box-shadow glow behind globe. Duration scales from 6s (idle) to 2s (200+ actions). Color derived from today's dominant field direction. Zero JS overhead.
+
 ## Backlog
 
 ### P1 — Upcoming
+- Real-user testing and retention measurement
 - Refactor `server.py` into modular routes/models/services
 
 ### P2 — Future
