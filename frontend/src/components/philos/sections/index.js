@@ -62,3 +62,4 @@ export { default as DailyOpeningSection } from './DailyOpeningSection';
 export { default as DaySummarySection } from './DaySummarySection';
 export { default as FieldGlobeSection } from './FieldGlobeSection';
 export { default as DirectionExplanationsSection } from './DirectionExplanationsSection';
+export { default as SendToGlobeButton } from './SendToGlobeButton';

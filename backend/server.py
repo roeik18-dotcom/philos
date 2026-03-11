@@ -5239,61 +5239,207 @@ async def get_user_profile(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+GLOBE_COUNTRY_COORDS = {
+    "BR": {"lat": -14.2, "lng": -51.9, "name": "ברזיל"}, "IN": {"lat": 20.6, "lng": 78.9, "name": "הודו"},
+    "DE": {"lat": 51.2, "lng": 10.5, "name": "גרמניה"}, "US": {"lat": 37.1, "lng": -95.7, "name": "ארה\"ב"},
+    "JP": {"lat": 36.2, "lng": 138.3, "name": "יפן"}, "NG": {"lat": 9.1, "lng": 8.7, "name": "ניגריה"},
+    "IL": {"lat": 31.0, "lng": 34.9, "name": "ישראל"}, "FR": {"lat": 46.2, "lng": 2.2, "name": "צרפת"},
+    "AU": {"lat": -25.3, "lng": 133.8, "name": "אוסטרליה"}, "KR": {"lat": 35.9, "lng": 127.8, "name": "דרום קוריאה"},
+    "MX": {"lat": 23.6, "lng": -102.6, "name": "מקסיקו"}, "GB": {"lat": 55.4, "lng": -3.4, "name": "בריטניה"},
+    "CA": {"lat": 56.1, "lng": -106.3, "name": "קנדה"}, "IT": {"lat": 41.9, "lng": 12.6, "name": "איטליה"},
+    "ES": {"lat": 40.5, "lng": -3.7, "name": "ספרד"}, "AR": {"lat": -38.4, "lng": -63.6, "name": "ארגנטינה"},
+    "TR": {"lat": 39.0, "lng": 35.2, "name": "טורקיה"}, "TH": {"lat": 15.9, "lng": 100.5, "name": "תאילנד"},
+    "PL": {"lat": 51.9, "lng": 19.1, "name": "פולין"}, "NL": {"lat": 52.1, "lng": 5.3, "name": "הולנד"}
+}
+
+GLOBE_COLOR_MAP = {
+    'contribution': '#22c55e', 'recovery': '#3b82f6',
+    'order': '#6366f1', 'exploration': '#f59e0b'
+}
+
+GLOBE_DIR_LABELS = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+
+
 @api_router.get("/orientation/globe-activity")
 async def get_globe_activity():
-    """Globe-ready dataset from demo agents and real field events."""
+    """Globe-ready dataset with today stats and mission glow."""
     try:
         now = datetime.now(timezone.utc)
         cutoff = (now - timedelta(hours=1)).isoformat()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
 
-        # Demo events with geolocation
+        # Demo events
         demo_events = await db.demo_events.find(
             {"timestamp": {"$gte": cutoff}},
             {"_id": 0, "direction": 1, "timestamp": 1, "country": 1, "country_code": 1}
         ).to_list(200)
 
-        # Country approximate lat/lng for globe
-        country_coords = {
-            "BR": {"lat": -14.2, "lng": -51.9}, "IN": {"lat": 20.6, "lng": 78.9},
-            "DE": {"lat": 51.2, "lng": 10.5}, "US": {"lat": 37.1, "lng": -95.7},
-            "JP": {"lat": 36.2, "lng": 138.3}, "NG": {"lat": 9.1, "lng": 8.7},
-            "IL": {"lat": 31.0, "lng": 34.9}, "FR": {"lat": 46.2, "lng": 2.2},
-            "AU": {"lat": -25.3, "lng": 133.8}, "KR": {"lat": 35.9, "lng": 127.8},
-            "MX": {"lat": 23.6, "lng": -102.6}, "GB": {"lat": 55.4, "lng": -3.4},
-            "CA": {"lat": 56.1, "lng": -106.3}, "IT": {"lat": 41.9, "lng": 12.6},
-            "ES": {"lat": 40.5, "lng": -3.7}, "AR": {"lat": -38.4, "lng": -63.6},
-            "TR": {"lat": 39.0, "lng": 35.2}, "TH": {"lat": 15.9, "lng": 100.5},
-            "PL": {"lat": 51.9, "lng": 19.1}, "NL": {"lat": 52.1, "lng": 5.3}
-        }
-
-        color_map = {
-            'contribution': '#22c55e', 'recovery': '#3b82f6',
-            'order': '#6366f1', 'exploration': '#f59e0b'
-        }
+        # User-submitted globe points (last 3 hours)
+        user_cutoff = (now - timedelta(hours=3)).isoformat()
+        user_points = await db.user_globe_points.find(
+            {"timestamp": {"$gte": user_cutoff}},
+            {"_id": 0, "direction": 1, "timestamp": 1, "country_code": 1, "lat": 1, "lng": 1}
+        ).to_list(100)
 
         points = []
+        dir_counts_today = {'contribution': 0, 'recovery': 0, 'order': 0, 'exploration': 0}
+
         for e in demo_events:
             cc = e.get("country_code", "")
-            coords = country_coords.get(cc)
+            coords = GLOBE_COUNTRY_COORDS.get(cc)
             if coords:
+                d = e["direction"]
                 points.append({
                     "lat": coords["lat"] + (_random.random() - 0.5) * 4,
                     "lng": coords["lng"] + (_random.random() - 0.5) * 4,
-                    "direction": e["direction"],
-                    "color": color_map.get(e["direction"], "#8b5cf6"),
+                    "direction": d,
+                    "color": GLOBE_COLOR_MAP.get(d, "#8b5cf6"),
                     "country": e.get("country", ""),
                     "country_code": cc,
-                    "timestamp": e["timestamp"]
+                    "timestamp": e["timestamp"],
+                    "is_user": False
                 })
+                if e.get("timestamp", "") >= today_start and d in dir_counts_today:
+                    dir_counts_today[d] += 1
+
+        for up in user_points:
+            d = up.get("direction", "")
+            points.append({
+                "lat": up["lat"],
+                "lng": up["lng"],
+                "direction": d,
+                "color": GLOBE_COLOR_MAP.get(d, "#8b5cf6"),
+                "country_code": up.get("country_code", "IL"),
+                "country": GLOBE_COUNTRY_COORDS.get(up.get("country_code", "IL"), {}).get("name", ""),
+                "timestamp": up["timestamp"],
+                "is_user": True
+            })
+            if up.get("timestamp", "") >= today_start and d in dir_counts_today:
+                dir_counts_today[d] += 1
+
+        total_today = sum(dir_counts_today.values())
+        dominant_today = max(dir_counts_today, key=dir_counts_today.get) if total_today > 0 else None
+
+        # Mission glow
+        mission = await _get_or_create_mission_today()
+        mission_dir = mission.get("direction", "contribution")
 
         return {
             "success": True,
             "points": points,
             "total_points": len(points),
-            "color_map": color_map
+            "color_map": GLOBE_COLOR_MAP,
+            "today_stats": {
+                "total_actions": total_today,
+                "dominant_direction": dominant_today,
+                "dominant_direction_he": GLOBE_DIR_LABELS.get(dominant_today, ''),
+                "direction_counts": dir_counts_today
+            },
+            "mission_glow": {
+                "direction": mission_dir,
+                "color": GLOBE_COLOR_MAP.get(mission_dir, "#6366f1")
+            }
         }
     except Exception as e:
         logger.error(f"Get globe activity error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/orientation/globe-point")
+async def add_globe_point(data: dict):
+    """Add a user action point to the globe."""
+    try:
+        user_id = data.get("user_id", "")
+        direction = data.get("direction", "contribution")
+        country_code = data.get("country_code", "IL")
+
+        coords = GLOBE_COUNTRY_COORDS.get(country_code, GLOBE_COUNTRY_COORDS["IL"])
+        lat = coords["lat"] + (_random.random() - 0.5) * 2
+        lng = coords["lng"] + (_random.random() - 0.5) * 2
+        now = datetime.now(timezone.utc).isoformat()
+
+        doc = {
+            "user_id": user_id,
+            "direction": direction,
+            "country_code": country_code,
+            "lat": lat,
+            "lng": lng,
+            "timestamp": now
+        }
+        await db.user_globe_points.insert_one(doc)
+
+        return {
+            "success": True,
+            "point": {
+                "lat": lat,
+                "lng": lng,
+                "direction": direction,
+                "color": GLOBE_COLOR_MAP.get(direction, "#8b5cf6"),
+                "country_code": country_code,
+                "timestamp": now
+            },
+            "message_he": "הפעולה שלך נוספה לשדה האנושי"
+        }
+    except Exception as e:
+        logger.error(f"Add globe point error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/globe-region/{country_code}")
+async def get_globe_region(country_code: str):
+    """Region details: dominant direction, recent count, trend."""
+    try:
+        now = datetime.now(timezone.utc)
+        cutoff_3h = (now - timedelta(hours=3)).isoformat()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        cc = country_code.upper()
+
+        coords = GLOBE_COUNTRY_COORDS.get(cc)
+        if not coords:
+            return {"success": False, "error": "Unknown region"}
+
+        # Demo events for this region
+        events = await db.demo_events.find(
+            {"country_code": cc, "timestamp": {"$gte": cutoff_3h}},
+            {"_id": 0, "direction": 1, "timestamp": 1}
+        ).to_list(500)
+
+        # User points for this region
+        user_pts = await db.user_globe_points.find(
+            {"country_code": cc, "timestamp": {"$gte": cutoff_3h}},
+            {"_id": 0, "direction": 1, "timestamp": 1}
+        ).to_list(100)
+
+        dir_counts = {'contribution': 0, 'recovery': 0, 'order': 0, 'exploration': 0}
+        for e in events + user_pts:
+            d = e.get("direction", "")
+            if d in dir_counts:
+                dir_counts[d] += 1
+
+        total = sum(dir_counts.values())
+        dominant = max(dir_counts, key=dir_counts.get) if total > 0 else None
+
+        # Trend: compare last 1.5h vs previous 1.5h
+        mid = (now - timedelta(hours=1, minutes=30)).isoformat()
+        recent = sum(1 for e in events + user_pts if e.get("timestamp", "") >= mid)
+        older = total - recent
+        if older > 0:
+            trend = "עולה" if recent > older else ("יורד" if recent < older else "יציב")
+        else:
+            trend = "חדש" if recent > 0 else "שקט"
+
+        return {
+            "success": True,
+            "country_code": cc,
+            "country_name_he": coords.get("name", cc),
+            "total_actions": total,
+            "dominant_direction": dominant,
+            "dominant_direction_he": GLOBE_DIR_LABELS.get(dominant, ''),
+            "direction_counts": dir_counts,
+            "trend_he": trend
+        }
+    except Exception as e:
+        logger.error(f"Get globe region error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

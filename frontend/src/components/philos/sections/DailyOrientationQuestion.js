@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Flame, Check, Sun, Loader2, TrendingUp } from 'lucide-react';
+import SendToGlobeButton from './SendToGlobeButton';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -189,6 +190,11 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
               </p>
             </div>
           )}
+
+          {/* Send Point to Globe */}
+          <div className="mt-3 animate-section animate-section-3">
+            <SendToGlobeButton userId={effectiveUserId} direction={questionData.suggested_direction} />
+          </div>
         </div>
       )}
 
