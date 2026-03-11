@@ -141,14 +141,37 @@ Reorganized the entire Home experience into 6 clear narrative layers:
 
 Community features (mission, feed, streaks, invites) moved to collapsible secondary section below the 6 layers.
 
+### Phase 16 — Orientation Feed + Value Engine + Subscription (completed 2026-03-11)
+1. **"For You" Feed** — Personalized feed tab (`FeedTab`) with 5 card types: action (user alias/country/direction/impact), question, reflection, leader, mission. API: `GET /api/orientation/feed/for-you/{user_id}`.
+2. **Value Engine** — Scoring system: internal value (recovery+order), external value (contribution+exploration), collective value (globe points+invites+streaks). API: `GET /api/orientation/value-profile/{user_id}`.
+3. **Value Niches** — 6 niches: Builder of Order, Explorer, Contributor, Regenerator, Social Connector, Deep Thinker. Auto-assigned by action patterns. API: `GET /api/orientation/niches`.
+4. **Gamified Progression** — 10 levels, 10 badges (first_action, streaks, all_directions, niche_found), milestones. All returned in value-profile endpoint.
+5. **Subscription Foundation** — 3 plans: Free ($0), Plus ($9.99), Collective ($24.99) with Stripe integration. APIs: plans, status, checkout, checkout-status, webhook. Components: `SubscriptionSection`.
+6. **Value Economy** — Symbolic value points (internal/external/collective) separated from monetary subscription. Leader status at total_value >= 100.
+
+| New Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/orientation/feed/for-you/{user_id}` | GET | Personalized feed cards |
+| `/api/orientation/value-profile/{user_id}` | GET | Full value profile + progression |
+| `/api/orientation/niches` | GET | All 6 value niches |
+| `/api/orientation/subscription/plans` | GET | Available subscription plans |
+| `/api/orientation/subscription/status/{user_id}` | GET | User's current plan |
+| `/api/orientation/subscription/checkout` | POST | Create Stripe checkout session |
+| `/api/orientation/subscription/checkout-status/{session_id}` | GET | Check payment status |
+| `/api/webhook/stripe` | POST | Stripe webhook handler |
+
+New DB Collections: `user_globe_points`, `payment_transactions`, `subscriptions`
+
 ## Backlog
 
 ### P0 — Next Focus
 - Real-user testing and retention measurement
-- No new product features until validation
 
 ### P1 — Technical Debt
 - Refactor `server.py` into modular routes/models/services
+- Optimize feed endpoint (cache mission query)
 
 ### P2 — Future
 - Additional UI polish and micro-interactions
+- Private/group circles feature
+- Expanded profile page
