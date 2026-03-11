@@ -130,10 +130,24 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 ### Phase 14 — Field Heartbeat (completed 2026-03-11)
 1. **Ambient Globe Pulse** — CSS-only `fieldHeartbeat` animation: inset box-shadow glow behind globe. Duration scales from 6s (idle) to 2s (200+ actions). Color derived from today's dominant field direction. Zero JS overhead.
 
+### Phase 15 — Product Structure Rebuild (completed 2026-03-11)
+Reorganized the entire Home experience into 6 clear narrative layers:
+1. **Entry Layer** (`EntryLayer.js`) — "Why am I here?" Dark manifesto block explaining Philos in emotional Hebrew.
+2. **Personal Orientation** (`DailyOpeningSection`) — "Where am I now?" Compass, dominant force, suggested direction.
+3. **Opposition Layer** (`OppositionLayer.js`) — "Between which poles?" 4 visual tension bars: סדר↔כאוס, התאוששות↔דלדול, תרומה↔נסיגה, חקירה↔קיבעון.
+4. **Action Layer** (`DailyOrientationQuestion`) — "What do I do now?" Daily question with theory context.
+5. **Field Layer** (`FieldImpactLayer.js`) — "How does my action affect the world?" Dark block showing today's field stats and action→field connection.
+6. **Closing Layer** (`ClosingLayer.js`) — "What changed today?" Narrative reflection, direction moved, field effect bars, tomorrow hint.
+
+Community features (mission, feed, streaks, invites) moved to collapsible secondary section below the 6 layers.
+
 ## Backlog
 
-### P1 — Upcoming
+### P0 — Next Focus
 - Real-user testing and retention measurement
+- No new product features until validation
+
+### P1 — Technical Debt
 - Refactor `server.py` into modular routes/models/services
 
 ### P2 — Future
