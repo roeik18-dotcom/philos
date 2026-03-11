@@ -5,6 +5,7 @@ import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
 import usePhilosState from '../hooks/usePhilosState';
 import HomeTab from './tabs/HomeTab';
+import FeedTab from './tabs/FeedTab';
 import InsightsTab from './tabs/InsightsTab';
 import SystemTab from './tabs/SystemTab';
 import TheoryTab from './tabs/TheoryTab';
@@ -13,6 +14,7 @@ import HistoryTab from './tabs/HistoryTab';
 // Tab definitions
 const TABS = {
   HOME: 'home',
+  FEED: 'feed',
   INSIGHTS: 'insights',
   SYSTEM: 'system',
   THEORY: 'theory',
@@ -22,6 +24,7 @@ const TABS = {
 // Tab labels in Hebrew
 const TAB_LABELS = {
   [TABS.HOME]: 'בית',
+  [TABS.FEED]: 'פיד',
   [TABS.INSIGHTS]: 'תובנות',
   [TABS.SYSTEM]: 'מערכת',
   [TABS.THEORY]: 'תיאוריה',
@@ -169,7 +172,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 ${
+              className={`flex-1 px-2 py-2.5 text-xs font-medium rounded-xl transition-all duration-300 ${
                 activeTab === tab 
                   ? 'bg-white text-primary shadow-sm' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
@@ -200,6 +203,10 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             setShowShareCard={setShowShareCard}
             setActiveTab={setActiveTab}
           />
+        )}
+
+        {activeTab === TABS.FEED && (
+          <FeedTab user={user} setActiveTab={setActiveTab} />
         )}
 
         {activeTab === TABS.INSIGHTS && (

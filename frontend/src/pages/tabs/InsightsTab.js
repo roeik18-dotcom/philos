@@ -1,4 +1,6 @@
 import {
+  ValueProfileSection,
+  SubscriptionSection,
   WeeklyInsightSection,
   WeeklyReportSection,
   ChainInsightsSection,
@@ -25,6 +27,12 @@ export default function InsightsTab({
 }) {
   return (
     <div className="space-y-5">
+      {/* Value Profile */}
+      <ValueProfileSection userId={user?.id} />
+
+      {/* Subscription */}
+      <SubscriptionSection userId={user?.id} />
+
       {/* Weekly Orientation Insight */}
       <WeeklyInsightSection userId={user?.id} />
 

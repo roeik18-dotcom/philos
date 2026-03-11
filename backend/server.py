@@ -5509,8 +5509,7 @@ async def get_referral_leaderboard():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Include the router in the main app
-app.include_router(api_router)
+# CORS and logging setup (router included after all endpoints below)
 
 app.add_middleware(
     CORSMiddleware,
@@ -5530,6 +5529,313 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+
+# ==================== VALUE ENGINE + FEED + SUBSCRIPTION ====================
+from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
+from fastapi import Request as FastAPIRequest
+
+VALUE_NICHES = {
+    'builder_of_order': {
+        'label_he': 'בונה הסדר', 'description_he': 'אתה יוצר מבנה ויציבות. הפעולות שלך מארגנות את השדה.',
+        'dominant_direction': 'order', 'threshold': 35,
+        'strengthening_actions_he': ['לתכנן את השבוע', 'לסדר סדרי עדיפויות', 'לכתוב רשימת משימות']
+    },
+    'explorer': {
+        'label_he': 'חוקר', 'description_he': 'אתה פותח דלתות חדשות. הסקרנות שלך מרחיבה את השדה.',
+        'dominant_direction': 'exploration', 'threshold': 35,
+        'strengthening_actions_he': ['ללמוד משהו חדש', 'לשאול שאלה קשה', 'לנסות גישה שונה']
+    },
+    'contributor': {
+        'label_he': 'תורם', 'description_he': 'אתה נותן לעולם. הנתינה שלך מחזקת את הקשר בשדה.',
+        'dominant_direction': 'contribution', 'threshold': 35,
+        'strengthening_actions_he': ['לעזור למישהו', 'לשתף ידע', 'להקשיב לחבר']
+    },
+    'regenerator': {
+        'label_he': 'משקם', 'description_he': 'אתה בונה את הבסיס הפנימי. ההתאוששות שלך מייצבת את השדה.',
+        'dominant_direction': 'recovery', 'threshold': 35,
+        'strengthening_actions_he': ['לקחת הפסקה', 'לישון כמו שצריך', 'לצאת לטיול']
+    },
+    'social_connector': {
+        'label_he': 'מחבר חברתי', 'description_he': 'אתה מגשר בין אנשים וכיוונים. הנוכחות שלך מאחדת את השדה.',
+        'dominant_direction': None, 'threshold': 20,
+        'strengthening_actions_he': ['להזמין חבר', 'להשתתף במשימה קולקטיבית', 'לשתף את ההתמצאות']
+    },
+    'deep_thinker': {
+        'label_he': 'הוגה עמוק', 'description_he': 'אתה מאזן בין כל הכיוונים. העומק שלך מעשיר את השדה.',
+        'dominant_direction': None, 'threshold': 20,
+        'strengthening_actions_he': ['לשקול את הצעדים', 'לחזור על החלטה ישנה', 'לרשום תובנה']
+    }
+}
+
+BADGES = [
+    {'id': 'first_action', 'label_he': 'צעד ראשון', 'desc_he': 'ביצעת את הפעולה הראשונה', 'condition': lambda p: p.get('total_actions', 0) >= 1},
+    {'id': 'first_globe_point', 'label_he': 'נקודה בשדה', 'desc_he': 'שלחת נקודה לגלובוס', 'condition': lambda p: p.get('globe_points', 0) >= 1},
+    {'id': 'streak_3', 'label_he': 'רצף 3 ימים', 'desc_he': 'שמרת על רצף של 3 ימים', 'condition': lambda p: p.get('current_streak', 0) >= 3},
+    {'id': 'streak_7', 'label_he': 'נוכחות שבועית', 'desc_he': '7 ימים רצופים בשדה', 'condition': lambda p: p.get('current_streak', 0) >= 7},
+    {'id': 'streak_30', 'label_he': 'נוכחות חודשית', 'desc_he': '30 ימים רצופים', 'condition': lambda p: p.get('current_streak', 0) >= 30},
+    {'id': 'actions_10', 'label_he': 'פעיל', 'desc_he': '10 פעולות', 'condition': lambda p: p.get('total_actions', 0) >= 10},
+    {'id': 'actions_50', 'label_he': 'מחויב', 'desc_he': '50 פעולות', 'condition': lambda p: p.get('total_actions', 0) >= 50},
+    {'id': 'actions_100', 'label_he': 'תורם קבוע', 'desc_he': '100 פעולות', 'condition': lambda p: p.get('total_actions', 0) >= 100},
+    {'id': 'all_directions', 'label_he': 'רב-כיווני', 'desc_he': 'פעלת בכל 4 הכיוונים', 'condition': lambda p: all(p.get('dir_counts', {}).get(d, 0) > 0 for d in ['contribution', 'recovery', 'order', 'exploration'])},
+    {'id': 'niche_found', 'label_he': 'מצאת את הנישה', 'desc_he': 'הנישה שלך זוהתה', 'condition': lambda p: p.get('dominant_niche') is not None},
+]
+
+SUBSCRIPTION_PLANS = {
+    'free': {'label_he': 'חופשי', 'price': 0.0, 'features_he': ['התמצאות יומית', 'מצפן בסיסי', 'גלובוס', 'קהילה'], 'limits': {'feed_cards': 5, 'value_detail': False, 'niche_insights': False, 'weekly_report': False, 'globe_regions': 3}},
+    'plus': {'label_he': 'פלוס', 'price': 9.99, 'features_he': ['כל תכונות חופשי', 'פיד מותאם אישית מלא', 'אנליטיקת ערך מלאה', 'דוח שבועי מעמיק', 'תובנות נישה'], 'limits': {'feed_cards': 50, 'value_detail': True, 'niche_insights': True, 'weekly_report': True, 'globe_regions': 20}},
+    'collective': {'label_he': 'קולקטיב', 'price': 24.99, 'features_he': ['כל תכונות פלוס', 'מעגלים פרטיים', 'תובנות גלובוס פרימיום', 'פרופיל מורחב', 'התקדמות נישה מלאה'], 'limits': {'feed_cards': -1, 'value_detail': True, 'niche_insights': True, 'weekly_report': True, 'globe_regions': -1}}
+}
+
+FEED_ACTIONS_HE = ['ארגנתי את סביבת העבודה', 'עזרתי לחבר', 'למדתי נושא חדש', 'לקחתי הפסקה', 'תכננתי את השבוע', 'שיתפתי ידע', 'ניסיתי גישה שונה', 'ישנתי 8 שעות', 'כתבתי רשימת יעדים', 'פגשתי אדם חדש', 'התנדבתי בקהילה', 'יצאתי לטיול בטבע', 'קראתי מאמר', 'הקשבתי למישהו', 'סידרתי סדרי עדיפויות']
+FEED_QUESTIONS_HE = ['איזה כוח מנחה אותך היום?', 'מה הצעד הבא שלך?', 'מה למדת על עצמך השבוע?', 'איפה אתה מרגיש שאתה תקוע?', 'מה תרצה לשנות מחר?']
+FEED_REFLECTIONS_HE = ['שמתי לב שהכיוון שלי היה בעיקר פנימי. צריך לאזן.', 'השדה הגלובלי נע לכיוון תרומה — אולי זה הזמן להצטרף.', 'גיליתי שסדר עוזר לי יותר ממה שחשבתי.', 'ההתאוששות הייתה הכי חשובה השבוע.']
+
+
+def _calculate_level(total_actions):
+    thresholds = [0, 1, 5, 10, 20, 30, 50, 75, 100, 150, 200]
+    for i in range(len(thresholds) - 1, -1, -1):
+        if total_actions >= thresholds[i]:
+            return i
+    return 0
+
+
+def _determine_niche(dir_counts, total):
+    if total < 3:
+        return None
+    pcts = {d: (c / total) * 100 for d, c in dir_counts.items()}
+    max_dir = max(pcts, key=pcts.get)
+    max_pct = pcts[max_dir]
+    variance = max(pcts.values()) - min(pcts.values())
+    if variance < 10 and total >= 10:
+        return 'deep_thinker'
+    for niche_id, niche in VALUE_NICHES.items():
+        if niche['dominant_direction'] == max_dir and max_pct >= niche['threshold']:
+            return niche_id
+    return None
+
+
+async def _build_value_profile(user_id):
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    decisions = await db.philos_decisions.find({"user_id": user_id}, {"_id": 0}).to_list(500)
+    globe_pts = await db.user_globe_points.count_documents({"user_id": user_id})
+    invites = await db.invite_codes.count_documents({"created_by": user_id})
+    events_count = await db.events.count_documents({"user_id": user_id})
+
+    dir_counts = {'contribution': 0, 'recovery': 0, 'order': 0, 'exploration': 0}
+    for d in decisions:
+        dr = d.get('direction', d.get('value_tag', ''))
+        if dr in dir_counts:
+            dir_counts[dr] += 1
+
+    total = sum(dir_counts.values())
+    streak = user.get('current_streak', 0) if user else 0
+    longest_streak = user.get('longest_streak', 0) if user else 0
+
+    internal_value = (dir_counts['recovery'] * 3) + (dir_counts['order'] * 2)
+    external_value = (dir_counts['contribution'] * 3) + (dir_counts['exploration'] * 2)
+    collective_value = (globe_pts * 5) + (invites * 10) + (streak * 2) + (events_count * 1)
+    total_value = internal_value + external_value + collective_value
+
+    niche = _determine_niche(dir_counts, total)
+    level = _calculate_level(total)
+
+    consistency = 0
+    if total >= 5:
+        vals = list(dir_counts.values())
+        mean = total / 4
+        variance_val = sum((v - mean) ** 2 for v in vals) / 4
+        consistency = max(0, min(100, int(100 - variance_val / max(total, 1) * 10)))
+
+    profile = {
+        'user_id': user_id, 'internal_value': internal_value, 'external_value': external_value,
+        'collective_value': collective_value, 'total_value': total_value, 'dominant_niche': niche,
+        'dominant_direction': max(dir_counts, key=dir_counts.get) if total > 0 else None,
+        'dir_counts': dir_counts, 'total_actions': total, 'current_streak': streak,
+        'longest_streak': longest_streak, 'globe_points': globe_pts, 'action_consistency': consistency,
+        'level': level, 'leader_status': total_value >= 100, 'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    profile['badges'] = [b['id'] for b in BADGES if b['condition'](profile)]
+    return profile
+
+
+@api_router.get("/orientation/feed/for-you/{user_id}")
+async def get_personalized_feed(user_id: str):
+    try:
+        profile = await _build_value_profile(user_id)
+        dominant_dir = profile['dominant_direction'] or 'contribution'
+        niche = profile['dominant_niche']
+
+        demo_events = await db.demo_events.find({}, {"_id": 0, "direction": 1, "timestamp": 1, "country": 1, "country_code": 1}).sort("timestamp", -1).to_list(30)
+
+        cards = []
+        for i, evt in enumerate(demo_events[:12]):
+            d = evt['direction']
+            alias = DEMO_ALIASES[i % len(DEMO_ALIASES)]
+            cc = evt.get('country_code', 'IL')
+            country_name = GLOBE_COUNTRY_COORDS.get(cc, {}).get('name', cc)
+            relevance = 1.0 if d == dominant_dir else 0.5
+            cards.append({
+                'type': 'action', 'alias': alias, 'country': country_name, 'country_code': cc,
+                'direction': d, 'direction_he': GLOBE_DIR_LABELS.get(d, ''),
+                'action_text': FEED_ACTIONS_HE[i % len(FEED_ACTIONS_HE)],
+                'impact_score': round(relevance * _random.uniform(3, 10), 1),
+                'niche_tag': VALUE_NICHES.get(_determine_niche({d: 10, **{x: 1 for x in ['contribution', 'recovery', 'order', 'exploration'] if x != d}}, 14), {}).get('label_he', ''),
+                'leader': _random.random() > 0.8, 'timestamp': evt['timestamp']
+            })
+
+        cards.insert(1, {'type': 'mission', 'mission_direction': (await _get_or_create_mission_today()).get('direction', 'contribution'), 'mission_direction_he': GLOBE_DIR_LABELS.get((await _get_or_create_mission_today()).get('direction', ''), ''), 'participants': (await _get_or_create_mission_today()).get('participants', 0), 'target': (await _get_or_create_mission_today()).get('target', 50), 'timestamp': datetime.now(timezone.utc).isoformat()})
+        cards.insert(3, {'type': 'question', 'question_he': FEED_QUESTIONS_HE[_random.randint(0, len(FEED_QUESTIONS_HE) - 1)], 'direction': dominant_dir, 'direction_he': GLOBE_DIR_LABELS.get(dominant_dir, ''), 'timestamp': datetime.now(timezone.utc).isoformat()})
+        cards.insert(7, {'type': 'reflection', 'reflection_he': FEED_REFLECTIONS_HE[_random.randint(0, len(FEED_REFLECTIONS_HE) - 1)], 'direction': dominant_dir, 'direction_he': GLOBE_DIR_LABELS.get(dominant_dir, ''), 'timestamp': datetime.now(timezone.utc).isoformat()})
+        if profile['total_value'] > 0:
+            cards.insert(5, {'type': 'leader', 'alias': 'Atlas', 'country': 'ישראל', 'country_code': 'IL', 'direction': 'contribution', 'direction_he': 'תרומה', 'total_value': 87, 'niche_tag': 'תורם', 'leader': True, 'timestamp': datetime.now(timezone.utc).isoformat()})
+
+        return {'success': True, 'cards': cards, 'total': len(cards), 'user_direction': dominant_dir, 'user_niche': niche, 'user_niche_he': VALUE_NICHES.get(niche, {}).get('label_he', '') if niche else ''}
+    except Exception as e:
+        logger.error(f"Feed error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/value-profile/{user_id}")
+async def get_value_profile(user_id: str):
+    try:
+        profile = await _build_value_profile(user_id)
+        niche_id = profile['dominant_niche']
+        niche_data = VALUE_NICHES.get(niche_id) if niche_id else None
+        next_niche = None
+        if niche_id:
+            niche_keys = list(VALUE_NICHES.keys())
+            idx = niche_keys.index(niche_id) if niche_id in niche_keys else 0
+            next_niche_id = niche_keys[(idx + 1) % len(niche_keys)]
+            next_niche = {'id': next_niche_id, 'label_he': VALUE_NICHES[next_niche_id]['label_he'], 'strengthening_actions_he': VALUE_NICHES[next_niche_id]['strengthening_actions_he']}
+
+        level = profile['level']
+        thresholds = [0, 1, 5, 10, 20, 30, 50, 75, 100, 150, 200]
+        next_threshold = thresholds[min(level + 1, 10)]
+        level_progress = min(100, int((profile['total_actions'] / max(next_threshold, 1)) * 100))
+
+        milestones = []
+        for label, thresh in [('פעולה ראשונה', 1), ('10 פעולות', 10), ('50 פעולות', 50), ('שבוע רצוף', None)]:
+            if thresh and profile['total_actions'] >= thresh: milestones.append({'label_he': label, 'achieved': True})
+            elif not thresh and profile['current_streak'] >= 7: milestones.append({'label_he': label, 'achieved': True})
+
+        return {
+            'success': True, 'user_id': user_id,
+            'value_scores': {'internal': profile['internal_value'], 'external': profile['external_value'], 'collective': profile['collective_value'], 'total': profile['total_value']},
+            'dominant_niche': niche_id,
+            'niche': {'id': niche_id, 'label_he': niche_data['label_he'], 'description_he': niche_data['description_he'], 'strengthening_actions_he': niche_data['strengthening_actions_he']} if niche_data else None,
+            'next_niche': next_niche,
+            'dominant_direction': profile['dominant_direction'], 'dominant_direction_he': GLOBE_DIR_LABELS.get(profile['dominant_direction'], ''),
+            'leader_status': profile['leader_status'],
+            'progression': {'level': level, 'level_progress': level_progress, 'next_level_at': next_threshold, 'total_actions': profile['total_actions'],
+                'badges': [{'id': b['id'], 'label_he': b['label_he'], 'desc_he': b['desc_he']} for b in BADGES if b['id'] in profile['badges']],
+                'milestones': milestones, 'next_milestone_he': '10 פעולות' if profile['total_actions'] < 10 else '50 פעולות' if profile['total_actions'] < 50 else '100 פעולות'},
+            'stats': {'current_streak': profile['current_streak'], 'longest_streak': profile['longest_streak'], 'action_consistency': profile['action_consistency'], 'globe_points': profile['globe_points'], 'dir_counts': profile['dir_counts']}
+        }
+    except Exception as e:
+        logger.error(f"Value profile error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/niches")
+async def get_niches():
+    return {'success': True, 'niches': {nid: {'label_he': n['label_he'], 'description_he': n['description_he'], 'dominant_direction': n['dominant_direction'], 'strengthening_actions_he': n['strengthening_actions_he']} for nid, n in VALUE_NICHES.items()}}
+
+
+@api_router.get("/orientation/subscription/plans")
+async def get_subscription_plans():
+    return {'success': True, 'plans': {pid: {'label_he': p['label_he'], 'price': p['price'], 'features_he': p['features_he'], 'limits': p['limits']} for pid, p in SUBSCRIPTION_PLANS.items()}}
+
+
+@api_router.get("/orientation/subscription/status/{user_id}")
+async def get_subscription_status(user_id: str):
+    try:
+        sub = await db.subscriptions.find_one({"user_id": user_id, "status": "active"}, {"_id": 0})
+        if not sub:
+            plan = SUBSCRIPTION_PLANS['free']
+            return {'success': True, 'plan': 'free', 'plan_he': plan['label_he'], 'status': 'active', 'limits': plan['limits'], 'features_he': plan['features_he']}
+        plan_id = sub.get('plan', 'free')
+        plan = SUBSCRIPTION_PLANS.get(plan_id, SUBSCRIPTION_PLANS['free'])
+        return {'success': True, 'plan': plan_id, 'plan_he': plan['label_he'], 'status': sub.get('status', 'active'), 'limits': plan['limits'], 'features_he': plan['features_he'], 'expires_at': sub.get('expires_at')}
+    except Exception as e:
+        logger.error(f"Subscription status error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/orientation/subscription/checkout")
+async def create_subscription_checkout(data: dict, request: FastAPIRequest):
+    try:
+        plan_id = data.get('plan_id', 'plus')
+        user_id = data.get('user_id', '')
+        origin_url = data.get('origin_url', '')
+        if plan_id not in SUBSCRIPTION_PLANS or plan_id == 'free':
+            raise HTTPException(status_code=400, detail="Invalid plan")
+        if not origin_url:
+            raise HTTPException(status_code=400, detail="Missing origin_url")
+
+        plan = SUBSCRIPTION_PLANS[plan_id]
+        stripe_key = os.environ.get('STRIPE_API_KEY', '')
+        host_url = str(request.base_url).rstrip('/')
+        webhook_url = f"{host_url}api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+
+        success_url = f"{origin_url}?session_id={{CHECKOUT_SESSION_ID}}&plan={plan_id}"
+        cancel_url = origin_url
+        checkout_req = CheckoutSessionRequest(amount=plan['price'], currency='usd', success_url=success_url, cancel_url=cancel_url, metadata={'user_id': user_id, 'plan_id': plan_id, 'source': 'philos_subscription'})
+        session = await stripe_checkout.create_checkout_session(checkout_req)
+
+        await db.payment_transactions.insert_one({'session_id': session.session_id, 'user_id': user_id, 'amount': plan['price'], 'currency': 'usd', 'plan': plan_id, 'status': 'initiated', 'payment_status': 'pending', 'created_at': datetime.now(timezone.utc).isoformat()})
+        return {'success': True, 'checkout_url': session.url, 'session_id': session.session_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Checkout error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/subscription/checkout-status/{session_id}")
+async def get_checkout_status_endpoint(session_id: str):
+    try:
+        tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+        if not tx:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        if tx.get('payment_status') == 'paid':
+            return {'success': True, 'status': 'paid', 'plan': tx.get('plan')}
+        stripe_key = os.environ.get('STRIPE_API_KEY', '')
+        sc = StripeCheckout(api_key=stripe_key, webhook_url="")
+        status = await sc.get_checkout_status(session_id)
+        await db.payment_transactions.update_one({"session_id": session_id}, {"$set": {"status": status.status, "payment_status": status.payment_status}})
+        if status.payment_status == 'paid' and tx.get('payment_status') != 'paid':
+            await db.subscriptions.update_one({"user_id": tx['user_id']}, {"$set": {"plan": tx['plan'], "status": "active", "session_id": session_id, "activated_at": datetime.now(timezone.utc).isoformat(), "expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()}}, upsert=True)
+        return {'success': True, 'status': status.payment_status, 'plan': tx.get('plan'), 'amount': tx.get('amount')}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Checkout status error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: FastAPIRequest):
+    try:
+        body = await request.body()
+        sig = request.headers.get("Stripe-Signature", "")
+        stripe_key = os.environ.get('STRIPE_API_KEY', '')
+        sc = StripeCheckout(api_key=stripe_key, webhook_url="")
+        event = await sc.handle_webhook(body, sig)
+        if event.payment_status == 'paid' and event.session_id:
+            tx = await db.payment_transactions.find_one({"session_id": event.session_id})
+            if tx and tx.get('payment_status') != 'paid':
+                await db.payment_transactions.update_one({"session_id": event.session_id}, {"$set": {"status": "complete", "payment_status": "paid"}})
+                await db.subscriptions.update_one({"user_id": tx['user_id']}, {"$set": {"plan": tx['plan'], "status": "active", "session_id": event.session_id, "activated_at": datetime.now(timezone.utc).isoformat(), "expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()}}, upsert=True)
+        return {"received": True}
+    except Exception as e:
+        logger.error(f"Webhook error: {str(e)}")
+        return {"received": True}
+
+
+# Include the router AFTER all endpoints are defined
+app.include_router(api_router)
 
 
 # ==================== DEMO AGENTS SYSTEM ====================

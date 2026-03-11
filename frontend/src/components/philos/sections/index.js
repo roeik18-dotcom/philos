@@ -67,3 +67,6 @@ export { default as EntryLayer } from './EntryLayer';
 export { default as OppositionLayer } from './OppositionLayer';
 export { default as FieldImpactLayer } from './FieldImpactLayer';
 export { default as ClosingLayer } from './ClosingLayer';
+export { default as FeedCard } from './FeedCard';
+export { default as ValueProfileSection } from './ValueProfileSection';
+export { default as SubscriptionSection } from './SubscriptionSection';
