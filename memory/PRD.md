@@ -104,14 +104,16 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 - `invites` — Invite codes (code, inviter_id, used_by, use_count)
 - `users` — User profiles + auth
 
+### Phase 11 — Stabilization (completed 2026-03-11)
+1. **Dashboard Refactor** — Extracted 5 tab components from PhilosDashboard.js (640→267 lines): `HomeTab.js`, `InsightsTab.js`, `SystemTab.js`, `TheoryTab.js`, `HistoryTab.js` in `/app/frontend/src/pages/tabs/`.
+2. **DecisionTreeSection SVG Fix** — Replaced fragile div-based tree connectors with proper SVG `<path>` elements using cubic bezier curves. Added layout engine for node positioning.
+
 ## Backlog
 
 ### P1 — Upcoming
-- Refactor `PhilosDashboard.js` into smaller tab-content components
-- Fix unfinished SVG in `DecisionTreeSection.js`
+- Refactor `server.py` into modular routes/models/services
 
 ### P2 — Future
 - General UI polish and RTL improvements
 - Persist impact message longer after answering
 - Add animations to share card generation
-- Refactor `server.py` into modular routes/models/services
