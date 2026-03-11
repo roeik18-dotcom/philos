@@ -60,7 +60,11 @@ import {
   InviteSection,
   WeeklyReportSection,
   ReferralLeaderboardSection,
-  InviteTrackingSection
+  InviteTrackingSection,
+  DailyOpeningSection,
+  DaySummarySection,
+  FieldGlobeSection,
+  DirectionExplanationsSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -241,6 +245,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         {/* ==================== HOME TAB ==================== */}
         {activeTab === TABS.HOME && (
           <div className="space-y-5">
+            {/* Daily Opening - Start of Day State */}
+            <DailyOpeningSection userId={user?.id} />
+
             {/* Daily Orientation Question - TOP PRIORITY */}
             <DailyOrientationQuestion 
               userId={user?.id}
@@ -386,6 +393,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             {/* Live Orientation Feed */}
             <OrientationFeedSection />
 
+            {/* End of Day Summary */}
+            <DaySummarySection userId={user?.id} />
+
             {/* Invite to Field */}
             <InviteSection userId={user?.id} />
 
@@ -463,6 +473,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         {/* ==================== SYSTEM TAB ==================== */}
         {activeTab === TABS.SYSTEM && (
           <div className="space-y-5">
+            {/* Global Field Globe - 3D Visualization */}
+            <FieldGlobeSection />
+
             {/* Orientation Index - Global Public View */}
             <OrientationIndexPage />
 
@@ -521,6 +534,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         {/* ==================== THEORY TAB ==================== */}
         {activeTab === TABS.THEORY && (
           <div className="space-y-5">
+            {/* Direction Explanations - Four Directions Deep Dive */}
+            <DirectionExplanationsSection />
+
             {/* Theoretical Framework */}
             <TheorySection />
 

@@ -58,3 +58,7 @@ export { default as InviteSection } from './InviteSection';
 export { default as WeeklyReportSection } from './WeeklyReportSection';
 export { default as ReferralLeaderboardSection } from './ReferralLeaderboardSection';
 export { default as InviteTrackingSection } from './InviteTrackingSection';
+export { default as DailyOpeningSection } from './DailyOpeningSection';
+export { default as DaySummarySection } from './DaySummarySection';
+export { default as FieldGlobeSection } from './FieldGlobeSection';
+export { default as DirectionExplanationsSection } from './DirectionExplanationsSection';
