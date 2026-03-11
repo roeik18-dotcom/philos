@@ -78,7 +78,15 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 | `/api/collective/orientation_field` | GET | Collective field data |
 | `/api/collective/field_history` | GET | Historical field data |
 
+### Phase 9 — Demo Agents (completed 2026-03-11)
+1. **50 Demo Agents** — Seeded with aliases (Atlas, Nova, Sage...), 20 countries, 4 orientation directions
+2. **Auto-generation** — Background task generates 8-15 events every 5 minutes, auto-cleans events older than 3 hours
+3. **Feed integration** — Demo events appear in Orientation Feed with country flags, marked as demo=true
+4. **Metrics isolation** — Demo agents excluded from all KPI metrics (active_users_today, etc.)
+
 ## Database Collections
+- `demo_agents` — 50 simulated agents (agent_id, alias, country, country_code, orientation_direction)
+- `demo_events` — Auto-generated activity events (direction, timestamp, demo=true, country_code)
 - `philos_sessions` — User session data + history
 - `philos_decisions` — Individual decisions
 - `daily_questions` — Daily question records + answers
