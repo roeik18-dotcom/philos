@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, Users, CheckCircle, UserPlus, Flame, Target, Lock } from 'lucide-react';
+import { BarChart3, Users, CheckCircle, UserPlus, Flame, Target, Lock, Link } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -8,7 +8,8 @@ const metrics = [
   { key: 'daily_question_completion_rate', label: 'השלמת שאלה יומית', Icon: CheckCircle, color: '#22c55e', format: v => `${v}%` },
   { key: 'day2_retention', label: 'שימור יום 2', Icon: UserPlus, color: '#6366f1', format: v => `${v}%` },
   { key: 'mission_participation_rate', label: 'השתתפות במשימה', Icon: Target, color: '#f59e0b', format: v => `${v}%` },
-  { key: 'avg_streak', label: 'רצף ממוצע', Icon: Flame, color: '#ef4444', format: v => v.toFixed(1) }
+  { key: 'avg_streak', label: 'רצף ממוצע', Icon: Flame, color: '#ef4444', format: v => v.toFixed(1) },
+  { key: 'invite_conversions', label: 'המרת הזמנות', Icon: Link, color: '#8b5cf6', format: v => `${v}%` }
 ];
 
 export default function MetricsDashboardSection() {
@@ -55,7 +56,7 @@ export default function MetricsDashboardSection() {
         <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">
           <BarChart3 className="w-5 h-5 text-gray-600" />
         </div>
-        <span className="text-sm font-medium text-gray-700">מדדי מערכת</span>
+        <span className="text-sm font-medium text-gray-700">סקירת שימור</span>
         <Lock className="w-3 h-3 text-gray-400 mr-auto" />
       </div>
 

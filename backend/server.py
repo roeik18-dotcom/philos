@@ -4227,6 +4227,36 @@ async def get_mission_today():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/orientation/invite-report")
+async def get_invite_report():
+    """Invite tracking report: sent, opened, accepted, conversion %."""
+    try:
+        all_invites = await db.invites.find({}, {"_id": 0, "code": 1, "use_count": 1, "opened_count": 1, "created_at": 1}).to_list(10000)
+
+        total_sent = len(all_invites)
+        total_opened = sum(1 for inv in all_invites if inv.get("opened_count", 0) > 0)
+        total_accepted = sum(inv.get("use_count", 0) for inv in all_invites)
+        total_opens = sum(inv.get("opened_count", 0) for inv in all_invites)
+
+        open_rate = round((total_opened / total_sent) * 100, 1) if total_sent > 0 else 0
+        accept_rate = round((total_accepted / total_opened) * 100, 1) if total_opened > 0 else 0
+        overall_conversion = round((total_accepted / total_sent) * 100, 1) if total_sent > 0 else 0
+
+        return {
+            "success": True,
+            "invites_sent": total_sent,
+            "invites_opened": total_opened,
+            "invites_accepted": total_accepted,
+            "total_opens": total_opens,
+            "open_rate": open_rate,
+            "accept_rate": accept_rate,
+            "overall_conversion": overall_conversion
+        }
+    except Exception as e:
+        logger.error(f"Get invite report error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== COMMUNITY LAYER ENDPOINTS ====================
 
 @api_router.get("/orientation/active-users")
@@ -4480,13 +4510,20 @@ async def get_metrics_today():
                 streaks.append(streak)
         avg_streak = round(sum(streaks) / len(streaks), 1) if streaks else 0
 
+        # --- invite_conversions ---
+        all_invites = await db.invites.find({}, {"_id": 0, "use_count": 1}).to_list(10000)
+        total_invites_sent = len(all_invites)
+        total_accepted = sum(inv.get("use_count", 0) for inv in all_invites)
+        invite_conversion = round((total_accepted / total_invites_sent) * 100, 1) if total_invites_sent > 0 else 0
+
         return {
             "success": True,
             "active_users_today": active_users_today,
             "daily_question_completion_rate": daily_question_completion_rate,
             "day2_retention": day2_retention,
             "mission_participation_rate": mission_participation_rate,
-            "avg_streak": avg_streak
+            "avg_streak": avg_streak,
+            "invite_conversions": invite_conversion
         }
     except Exception as e:
         logger.error(f"Get metrics today error: {str(e)}")
@@ -4570,11 +4607,17 @@ async def create_invite(user_id: str):
 
 @api_router.get("/orientation/invite/{code}")
 async def get_invite(code: str):
-    """Validate and retrieve invite details."""
+    """Validate and retrieve invite details. Also tracks 'opened' event."""
     try:
         invite = await db.invites.find_one({"code": code}, {"_id": 0})
         if not invite:
             raise HTTPException(status_code=404, detail="Invite not found")
+
+        # Track opened event
+        await db.invites.update_one(
+            {"code": code},
+            {"$inc": {"opened_count": 1}}
+        )
 
         return {
             "success": True,

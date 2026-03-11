@@ -57,3 +57,4 @@ export { default as OrientationFeedSection } from './OrientationFeedSection';
 export { default as InviteSection } from './InviteSection';
 export { default as WeeklyReportSection } from './WeeklyReportSection';
 export { default as ReferralLeaderboardSection } from './ReferralLeaderboardSection';
+export { default as InviteTrackingSection } from './InviteTrackingSection';
