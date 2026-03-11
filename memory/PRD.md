@@ -75,6 +75,7 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 - `philos_decisions` — Individual decisions
 - `daily_questions` — Daily question records + answers
 - `daily_missions` — Daily community challenge (date, direction, participants, target)
+- `invites` — Invite codes (code, inviter_id, used_by, use_count)
 - `users` — User profiles + auth
 
 ## Backlog
