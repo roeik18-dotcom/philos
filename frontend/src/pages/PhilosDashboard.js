@@ -54,7 +54,11 @@ import {
   RelativeScoreSection,
   OrientationCirclesSection,
   CommunityStreakSection,
-  FieldMissionSection
+  FieldMissionSection,
+  MetricsDashboardSection,
+  OrientationFeedSection,
+  InviteSection,
+  WeeklyReportSection
 } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
@@ -377,6 +381,12 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             {/* Community Streak Overview */}
             <CommunityStreakSection />
 
+            {/* Live Orientation Feed */}
+            <OrientationFeedSection />
+
+            {/* Invite to Field */}
+            <InviteSection userId={user?.id} />
+
             {/* Share Orientation Button */}
             <button
               onClick={() => setShowShareCard(true)}
@@ -404,6 +414,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           <div className="space-y-5">
             {/* Weekly Orientation Insight */}
             <WeeklyInsightSection userId={user?.id} />
+
+            {/* Weekly Report */}
+            <WeeklyReportSection userId={user?.id} />
 
             {/* Chain Insights */}
             <ChainInsightsSection history={history} />
@@ -450,6 +463,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           <div className="space-y-5">
             {/* Orientation Index - Global Public View */}
             <OrientationIndexPage />
+
+            {/* Metrics Dashboard - Admin Panel */}
+            <MetricsDashboardSection />
 
             {/* Recommendation Calibration */}
             <RecommendationCalibrationSection history={history} />

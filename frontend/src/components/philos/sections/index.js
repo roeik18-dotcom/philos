@@ -52,3 +52,7 @@ export { default as RelativeScoreSection } from './RelativeScoreSection';
 export { default as OrientationCirclesSection } from './OrientationCirclesSection';
 export { default as CommunityStreakSection } from './CommunityStreakSection';
 export { default as FieldMissionSection } from './FieldMissionSection';
+export { default as MetricsDashboardSection } from './MetricsDashboardSection';
+export { default as OrientationFeedSection } from './OrientationFeedSection';
+export { default as InviteSection } from './InviteSection';
+export { default as WeeklyReportSection } from './WeeklyReportSection';

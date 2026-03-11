@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import PhilosDashboard from './pages/PhilosDashboard';
+import InvitePage from './pages/InvitePage';
 import AuthScreen from './components/auth/AuthScreen';
 import { getUserId } from './services/cloudSync';
 import './App.css';
@@ -10,12 +11,19 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
+  const [inviteCode, setInviteCode] = useState(null);
 
-  // Initialize persistent user ID on app load
+  // Initialize persistent user ID on app load + check for invite route
   useEffect(() => {
-    // This ensures a persistent anonymous user ID is created immediately
     const persistentUserId = getUserId();
     console.log('Persistent User ID:', persistentUserId);
+
+    // Check if we're on an invite page
+    const path = window.location.pathname;
+    const match = path.match(/^\/invite\/([a-zA-Z0-9]+)$/);
+    if (match) {
+      setInviteCode(match[1]);
+    }
   }, []);
 
   // Check for existing auth on mount
@@ -79,6 +87,19 @@ function App() {
           <p className="text-gray-600">טוען...</p>
         </div>
       </div>
+    );
+  }
+
+  // Invite page
+  if (inviteCode) {
+    return (
+      <InvitePage
+        code={inviteCode}
+        onEnter={() => {
+          setInviteCode(null);
+          window.history.pushState({}, '', '/');
+        }}
+      />
     );
   }
 

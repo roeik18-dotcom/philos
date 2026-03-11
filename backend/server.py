@@ -4402,6 +4402,304 @@ async def get_community_streaks():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/orientation/metrics-today")
+async def get_metrics_today():
+    """Admin metrics dashboard: core engagement KPIs."""
+    try:
+        now = datetime.now(timezone.utc)
+        today_str = now.strftime("%Y-%m-%d")
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0, "user_id": 1, "history": 1}).to_list(10000)
+        active_today = set()
+        for s in all_sessions:
+            uid = s.get("user_id")
+            for h in s.get("history", []):
+                if h.get("timestamp", "") >= today_start:
+                    active_today.add(uid)
+                    break
+        active_users_today = len(active_today)
+
+        questions_today = await db.daily_questions.find(
+            {"date": today_str}, {"_id": 0, "user_id": 1, "answered": 1}
+        ).to_list(50000)
+        total_questions = len(questions_today)
+        answered_questions = sum(1 for q in questions_today if q.get("answered"))
+        daily_question_completion_rate = round((answered_questions / total_questions) * 100, 1) if total_questions > 0 else 0
+
+        all_questions = await db.daily_questions.find({}, {"_id": 0, "user_id": 1, "date": 1}).to_list(50000)
+        user_dates = {}
+        for q in all_questions:
+            uid = q.get("user_id")
+            d = q.get("date")
+            if uid and d:
+                user_dates.setdefault(uid, set()).add(d)
+
+        retained = 0
+        eligible = 0
+        for uid, dates in user_dates.items():
+            sorted_d = sorted(dates)
+            if sorted_d:
+                first = sorted_d[0]
+                next_day = (datetime.strptime(first, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+                if next_day <= today_str:
+                    eligible += 1
+                    if next_day in dates:
+                        retained += 1
+        day2_retention = round((retained / eligible) * 100, 1) if eligible > 0 else 0
+
+        mission = await db.daily_missions.find_one({"date": today_str}, {"_id": 0})
+        mission_participants = mission.get("participants", 0) if mission else 0
+        mission_participation_rate = round((mission_participants / active_users_today) * 100, 1) if active_users_today > 0 else 0
+
+        answered_all = await db.daily_questions.find(
+            {"answered": True}, {"_id": 0, "user_id": 1, "date": 1}
+        ).to_list(50000)
+        streak_user_dates = {}
+        for q in answered_all:
+            uid = q.get("user_id")
+            d = q.get("date")
+            if uid and d:
+                streak_user_dates.setdefault(uid, set()).add(d)
+
+        streaks = []
+        for uid, dates in streak_user_dates.items():
+            sorted_dates = sorted(dates, reverse=True)
+            if not sorted_dates or sorted_dates[0] < yesterday_str:
+                continue
+            streak = 1
+            for i in range(1, len(sorted_dates)):
+                prev = datetime.strptime(sorted_dates[i - 1], "%Y-%m-%d")
+                curr = datetime.strptime(sorted_dates[i], "%Y-%m-%d")
+                if (prev - curr).days == 1:
+                    streak += 1
+                else:
+                    break
+            if streak >= 1:
+                streaks.append(streak)
+        avg_streak = round(sum(streaks) / len(streaks), 1) if streaks else 0
+
+        return {
+            "success": True,
+            "active_users_today": active_users_today,
+            "daily_question_completion_rate": daily_question_completion_rate,
+            "day2_retention": day2_retention,
+            "mission_participation_rate": mission_participation_rate,
+            "avg_streak": avg_streak
+        }
+    except Exception as e:
+        logger.error(f"Get metrics today error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/feed")
+async def get_orientation_feed():
+    """Real-time anonymous activity feed."""
+    try:
+        now = datetime.now(timezone.utc)
+        # Get recent actions from the last 2 hours
+        cutoff = (now - timedelta(hours=2)).isoformat()
+
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0, "history": 1}).to_list(10000)
+
+        positive = ['contribution', 'recovery', 'order', 'exploration']
+        recent_actions = []
+        for s in all_sessions:
+            for h in s.get("history", []):
+                ts = h.get("timestamp", "")
+                vt = h.get("value_tag", "")
+                if ts >= cutoff and vt in positive:
+                    recent_actions.append({"direction": vt, "timestamp": ts})
+
+        recent_actions.sort(key=lambda x: x["timestamp"], reverse=True)
+        recent_actions = recent_actions[:30]
+
+        feed = []
+        for a in recent_actions:
+            try:
+                action_time = datetime.fromisoformat(a["timestamp"].replace("Z", "+00:00"))
+                diff = now - action_time
+                minutes = int(diff.total_seconds() / 60)
+                if minutes < 1:
+                    time_str = "עכשיו"
+                elif minutes < 60:
+                    time_str = f"{minutes}ד"
+                else:
+                    hours = minutes // 60
+                    time_str = f"{hours}ש"
+            except Exception:
+                time_str = ""
+            feed.append({
+                "type": "action",
+                "direction": a["direction"],
+                "time": time_str
+            })
+
+        return {"success": True, "feed": feed}
+    except Exception as e:
+        logger.error(f"Get orientation feed error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/orientation/create-invite/{user_id}")
+async def create_invite(user_id: str):
+    """Create an invite code for a user."""
+    try:
+        import uuid
+        code = uuid.uuid4().hex[:8]
+        now = datetime.now(timezone.utc)
+
+        await db.invites.insert_one({
+            "code": code,
+            "inviter_id": user_id,
+            "created_at": now.isoformat(),
+            "used_by": [],
+            "use_count": 0
+        })
+
+        return {
+            "success": True,
+            "code": code,
+            "invite_url": f"/invite/{code}"
+        }
+    except Exception as e:
+        logger.error(f"Create invite error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/invite/{code}")
+async def get_invite(code: str):
+    """Validate and retrieve invite details."""
+    try:
+        invite = await db.invites.find_one({"code": code}, {"_id": 0})
+        if not invite:
+            raise HTTPException(status_code=404, detail="Invite not found")
+
+        return {
+            "success": True,
+            "code": invite["code"],
+            "inviter_id": invite.get("inviter_id"),
+            "use_count": invite.get("use_count", 0)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get invite error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/orientation/accept-invite/{code}/{user_id}")
+async def accept_invite(code: str, user_id: str):
+    """Accept an invite and track it."""
+    try:
+        invite = await db.invites.find_one({"code": code}, {"_id": 0})
+        if not invite:
+            raise HTTPException(status_code=404, detail="Invite not found")
+
+        await db.invites.update_one(
+            {"code": code},
+            {"$push": {"used_by": user_id}, "$inc": {"use_count": 1}}
+        )
+
+        return {"success": True, "message": "Invite accepted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Accept invite error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/weekly-report/{user_id}")
+async def get_weekly_report(user_id: str):
+    """Weekly user report: distribution, insight, streak, mission participation."""
+    try:
+        now = datetime.now(timezone.utc)
+        today_str = now.strftime("%Y-%m-%d")
+        week_ago = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        # Distribution from daily questions this week
+        questions = await db.daily_questions.find(
+            {"user_id": user_id, "answered": True, "date": {"$gte": week_ago}},
+            {"_id": 0, "suggested_direction": 1, "date": 1}
+        ).to_list(100)
+
+        directions = ['contribution', 'recovery', 'order', 'exploration']
+        dist = {d: 0 for d in directions}
+        dates_answered = set()
+        for q in questions:
+            d = q.get("suggested_direction")
+            if d in dist:
+                dist[d] += 1
+            dates_answered.add(q.get("date"))
+
+        total = sum(dist.values()) or 1
+        distribution = {d: round((c / total) * 100) for d, c in dist.items()}
+
+        # Dominant direction
+        dominant = max(dist, key=dist.get) if sum(dist.values()) > 0 else None
+
+        direction_labels_he = {
+            'recovery': 'התאוששות', 'order': 'סדר',
+            'contribution': 'תרומה', 'exploration': 'חקירה'
+        }
+
+        # Insight text
+        if sum(dist.values()) == 0:
+            insight_he = "אין מספיק נתונים השבוע. נסה לענות על השאלה היומית כל יום."
+        elif dominant:
+            insight_he = f"השבוע הכיוון המוביל שלך היה {direction_labels_he.get(dominant, dominant)} ({distribution[dominant]}%). המשך לפעול בכיוון זה או נסה לאזן."
+        else:
+            insight_he = "השבוע הייתה לך פעילות מאוזנת בכל הכיוונים."
+
+        # Streak
+        all_answered = await db.daily_questions.find(
+            {"user_id": user_id, "answered": True},
+            {"_id": 0, "date": 1}
+        ).to_list(500)
+        all_dates = sorted(set(q.get("date") for q in all_answered if q.get("date")), reverse=True)
+        streak = 0
+        if all_dates and all_dates[0] >= yesterday_str:
+            streak = 1
+            for i in range(1, len(all_dates)):
+                prev = datetime.strptime(all_dates[i - 1], "%Y-%m-%d")
+                curr = datetime.strptime(all_dates[i], "%Y-%m-%d")
+                if (prev - curr).days == 1:
+                    streak += 1
+                else:
+                    break
+
+        # Mission participation this week
+        missions = await db.daily_missions.find(
+            {"date": {"$gte": week_ago}}, {"_id": 0, "date": 1, "direction": 1, "participants": 1}
+        ).to_list(10)
+        mission_days = len(missions)
+        participated_days = 0
+        for m in missions:
+            mission_dir = m.get("direction")
+            # Check if user answered with same direction on that day
+            user_q = next((q for q in questions if q.get("date") == m.get("date") and q.get("suggested_direction") == mission_dir), None)
+            if user_q:
+                participated_days += 1
+        mission_participation = round((participated_days / mission_days) * 100) if mission_days > 0 else 0
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "distribution": distribution,
+            "dominant_direction": dominant,
+            "insight_he": insight_he,
+            "streak": streak,
+            "mission_participation": mission_participation,
+            "days_active": len(dates_answered),
+            "total_actions": sum(dist.values())
+        }
+    except Exception as e:
+        logger.error(f"Get weekly report error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
