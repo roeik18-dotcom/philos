@@ -4,10 +4,10 @@ import { CalendarDays, TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const directionColors = {
-  recovery: { color: '#3b82f6', bg: 'bg-blue-100', label: 'התאוששות' },
-  order: { color: '#6366f1', bg: 'bg-indigo-100', label: 'סדר' },
-  contribution: { color: '#22c55e', bg: 'bg-green-100', label: 'תרומה' },
-  exploration: { color: '#f59e0b', bg: 'bg-amber-100', label: 'חקירה' }
+  recovery: { color: '#3b82f6', label: 'התאוששות' },
+  order: { color: '#6366f1', label: 'סדר' },
+  contribution: { color: '#22c55e', label: 'תרומה' },
+  exploration: { color: '#f59e0b', label: 'חקירה' }
 };
 
 const trendIcons = {
@@ -19,6 +19,7 @@ const trendIcons = {
 export default function WeeklyInsightSection({ userId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [animateBars, setAnimateBars] = useState(false);
 
   const effectiveUserId = userId || localStorage.getItem('philos_user_id');
 
@@ -29,7 +30,10 @@ export default function WeeklyInsightSection({ userId }) {
         const res = await fetch(`${API_URL}/api/orientation/weekly-insight/${effectiveUserId}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.success) setData(json);
+          if (json.success) {
+            setData(json);
+            setTimeout(() => setAnimateBars(true), 300);
+          }
         }
       } catch (e) {
         console.log('Could not fetch weekly insight:', e);
@@ -42,7 +46,7 @@ export default function WeeklyInsightSection({ userId }) {
 
   if (loading) {
     return (
-      <section className="bg-white rounded-3xl p-5 shadow-sm border border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-3"></div>
         <div className="h-16 bg-gray-200 rounded mb-3"></div>
         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -55,7 +59,7 @@ export default function WeeklyInsightSection({ userId }) {
   const maxPercent = Math.max(...Object.values(data.distribution_percent || {}), 1);
 
   return (
-    <section className="bg-white rounded-3xl p-5 shadow-sm border border-border" dir="rtl" data-testid="weekly-insight-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-1" dir="rtl" data-testid="weekly-insight-section">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -75,19 +79,25 @@ export default function WeeklyInsightSection({ userId }) {
       {/* Distribution bars */}
       {data.total_actions > 0 ? (
         <div className="space-y-2.5 mb-4">
-          {Object.entries(directionColors).map(([key, meta]) => {
+          {Object.entries(directionColors).map(([key, meta], index) => {
             const pct = data.distribution_percent?.[key] || 0;
             const count = data.distribution?.[key] || 0;
+            const targetWidth = maxPercent > 0 ? (pct / maxPercent) * 100 : 0;
             return (
               <div key={key} className="flex items-center gap-3" data-testid={`weekly-bar-${key}`}>
-                <span className="text-xs text-gray-600 w-16 text-left">{meta.label}</span>
+                <span className="text-xs text-gray-600 w-16 text-right">{meta.label}</span>
                 <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden relative">
                   <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${(pct / maxPercent) * 100}%`, backgroundColor: meta.color, minWidth: count > 0 ? '8px' : '0' }}
+                    className="h-full rounded-full transition-all duration-700 ease-out"
+                    style={{
+                      width: animateBars ? `${targetWidth}%` : '0%',
+                      backgroundColor: meta.color,
+                      minWidth: count > 0 ? '8px' : '0',
+                      transitionDelay: `${index * 100}ms`
+                    }}
                   />
                 </div>
-                <span className="text-xs font-medium text-gray-500 w-10 text-left">{pct}%</span>
+                <span className="text-xs font-medium text-gray-500 w-10 text-left" dir="ltr">{pct}%</span>
               </div>
             );
           })}

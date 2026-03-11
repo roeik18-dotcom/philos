@@ -26,7 +26,7 @@ export default function CommunityStreakSection() {
 
   if (loading) {
     return (
-      <section className="bg-white rounded-3xl p-5 shadow-sm border border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-3"></div>
         <div className="h-10 bg-gray-200 rounded w-2/3"></div>
       </section>
@@ -36,7 +36,7 @@ export default function CommunityStreakSection() {
   if (!data) return null;
 
   return (
-    <section className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-3xl p-5 shadow-sm border border-orange-200" dir="rtl" data-testid="community-streak-section">
+    <section className="philos-section animate-section animate-section-7 bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200" dir="rtl" data-testid="community-streak-section">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center">
           <Flame className="w-5 h-5 text-orange-600" />
@@ -46,7 +46,7 @@ export default function CommunityStreakSection() {
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-lg font-bold text-gray-800" data-testid="streak-users-message">
+          <p className="text-base font-bold text-gray-800" data-testid="streak-users-message">
             {data.users_on_streak.toLocaleString('he-IL')} אנשים נמצאים ברצף היום
           </p>
           {data.longest_streak_today > 0 && (
@@ -58,7 +58,7 @@ export default function CommunityStreakSection() {
             </div>
           )}
         </div>
-        <div className="text-4xl font-black text-orange-500 opacity-80" data-testid="streak-users-count">
+        <div className="text-3xl font-black text-orange-500 opacity-80 animate-glow-in" data-testid="streak-users-count">
           {data.users_on_streak}
         </div>
       </div>

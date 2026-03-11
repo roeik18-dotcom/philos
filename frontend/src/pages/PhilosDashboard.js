@@ -165,11 +165,11 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-24">
+    <div className="min-h-screen bg-background p-4 sm:p-6 pb-24">
       {/* Onboarding Hint for first-time users */}
       <OnboardingHint />
       
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-2xl mx-auto space-y-5">
         
         {/* Compact Header */}
         <div className="text-center mb-2">
@@ -215,15 +215,15 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex justify-center gap-1 p-1 bg-gray-100 rounded-xl" dir="rtl" data-testid="tab-navigation">
+        <div className="flex justify-center gap-1 p-1 bg-gray-100/80 rounded-2xl backdrop-blur-sm" dir="rtl" data-testid="tab-navigation">
           {Object.values(TABS).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 ${
                 activeTab === tab 
                   ? 'bg-white text-primary shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
               }`}
               data-testid={`tab-${tab}`}
             >
@@ -234,7 +234,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* ==================== HOME TAB ==================== */}
         {activeTab === TABS.HOME && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Daily Orientation Question - TOP PRIORITY */}
             <DailyOrientationQuestion 
               userId={user?.id}
@@ -380,7 +380,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             {/* Share Orientation Button */}
             <button
               onClick={() => setShowShareCard(true)}
-              className="w-full py-3 px-4 bg-white rounded-2xl shadow-sm border border-border flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              className="w-full py-3 px-4 bg-white rounded-2xl shadow-sm border border-border flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:shadow-md active:scale-[0.98] transition-all duration-300 animate-section animate-section-8"
               dir="rtl"
               data-testid="open-share-card-btn"
             >
@@ -401,7 +401,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* ==================== INSIGHTS TAB ==================== */}
         {activeTab === TABS.INSIGHTS && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Weekly Orientation Insight */}
             <WeeklyInsightSection userId={user?.id} />
 
@@ -447,7 +447,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* ==================== SYSTEM TAB ==================== */}
         {activeTab === TABS.SYSTEM && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Orientation Index - Global Public View */}
             <OrientationIndexPage />
 
@@ -496,7 +496,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* ==================== THEORY TAB ==================== */}
         {activeTab === TABS.THEORY && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Theoretical Framework */}
             <TheorySection />
 
@@ -507,7 +507,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
         {/* ==================== HISTORY TAB ==================== */}
         {activeTab === TABS.HISTORY && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Decision History with Chains */}
             <DecisionHistorySection
               history={history}
