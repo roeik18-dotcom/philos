@@ -1,75 +1,14 @@
 import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import {
-  DailyOrientationSection,
-  ActionEvaluationSection,
-  DecisionMapSection,
-  PersonalMapSection,
-  CollectiveValueMapSection,
-  OrientationFieldSection,
-  GlobalValueFieldSection,
-  GlobalTrendSection,
-  SessionSummarySection,
-  SessionLibrarySection,
-  ValueConstellationSection,
-  SessionComparisonSection,
-  WeeklySummarySection,
-  DecisionPathEngineSection,
-  PathLearningSection,
-  AdaptiveLearningSection,
-  CollectiveLayerSection,
-  CollectiveTrendsSection,
-  GlobalFieldSection,
-  DecisionHistorySection,
-  DecisionTreeSection,
-  ChainInsightsSection,
-  WeeklyBehavioralReportSection,
-  MonthlyProgressReportSection,
-  QuarterlyReviewSection,
-  DailyDecisionPromptSection,
-  DecisionReplaySection,
-  ReplayInsightsSummarySection,
-  ReplayAdaptiveEffectSection,
-  ContinuePreviousSessionSection,
-  CollectiveMirrorSection,
-  CollectiveTrajectorySection,
-  NextBestDirectionSection,
-  RecommendationFollowThroughSection,
-  RecommendationCalibrationSection,
-  HomeNavigationSection,
-  DailyOrientationLoopSection,
-  WeeklyOrientationSummarySection,
-  MonthlyOrientationSection,
-  TheorySection,
-  OrientationCompassSection,
-  DirectionHistorySection,
-  DecisionPathSection,
-  OrientationIdentitySection,
-  DailyOrientationQuestion,
-  OrientationFieldToday,
-  OrientationShareCard,
-  WeeklyInsightSection,
-  OrientationIndexPage,
-  ActiveUsersIndicator,
-  RelativeScoreSection,
-  OrientationCirclesSection,
-  CommunityStreakSection,
-  FieldMissionSection,
-  MetricsDashboardSection,
-  OrientationFeedSection,
-  InviteSection,
-  WeeklyReportSection,
-  ReferralLeaderboardSection,
-  InviteTrackingSection,
-  DailyOpeningSection,
-  DaySummarySection,
-  FieldGlobeSection,
-  DirectionExplanationsSection
-} from '../components/philos/sections';
+import { ActiveUsersIndicator, OrientationShareCard } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
-import usePhilosState, { calculateSuggestedVector, analyzePersonalMap } from '../hooks/usePhilosState';
-import { Share2 } from 'lucide-react';
+import usePhilosState from '../hooks/usePhilosState';
+import HomeTab from './tabs/HomeTab';
+import InsightsTab from './tabs/InsightsTab';
+import SystemTab from './tabs/SystemTab';
+import TheoryTab from './tabs/TheoryTab';
+import HistoryTab from './tabs/HistoryTab';
 
 // Tab definitions
 const TABS = {
@@ -242,387 +181,75 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           ))}
         </div>
 
-        {/* ==================== HOME TAB ==================== */}
         {activeTab === TABS.HOME && (
-          <div className="space-y-5">
-            {/* Daily Opening - Start of Day State */}
-            <DailyOpeningSection userId={user?.id} />
-
-            {/* Daily Orientation Question - TOP PRIORITY */}
-            <DailyOrientationQuestion 
-              userId={user?.id}
-              onActionRecorded={(actionData) => {
-                console.log('Daily action recorded:', actionData);
-                if (actionData.mission_contributed) {
-                  setMissionContributed(true);
-                }
-              }}
-            />
-
-            {/* Field Mission - Daily Community Challenge */}
-            <FieldMissionSection missionContributed={missionContributed} />
-
-            {/* Relative Orientation Score */}
-            <RelativeScoreSection userId={user?.id} />
-
-            {/* Monthly Orientation - New Month Welcome */}
-            <MonthlyOrientationSection
-              history={history}
-              onStartMonth={(orientation) => {
-                // When month starts, scroll to action input
-                setTimeout(() => {
-                  const actionInput = document.querySelector('[data-testid="home-action-input"]');
-                  if (actionInput) {
-                    actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }, 300);
-              }}
-            />
-
-            {/* Weekly Orientation Summary - New Week Welcome */}
-            <WeeklyOrientationSummarySection
-              history={history}
-              onStartWeek={(orientation) => {
-                // When week starts, scroll to action input
-                setTimeout(() => {
-                  const actionInput = document.querySelector('[data-testid="home-action-input"]');
-                  if (actionInput) {
-                    actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }, 300);
-              }}
-            />
-
-            {/* Daily Orientation Loop - New Day Welcome */}
-            <DailyOrientationLoopSection
-              history={history}
-              onStartDay={(orientation) => {
-                // When day starts, scroll to action input
-                setTimeout(() => {
-                  const actionInput = document.querySelector('[data-testid="home-action-input"]');
-                  if (actionInput) {
-                    actionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }, 300);
-              }}
-            />
-
-            {/* Home Navigation - Clean Entry Screen */}
-            <HomeNavigationSection
-              history={history}
-              adaptiveScores={adaptiveScores}
-              replayInsights={replayInsights}
-              actionText={actionText}
-              setActionText={setActionText}
-              evaluateAction={evaluateActionWithRecommendation}
-              recommendationMetadata={recommendationMetadata}
-              onClearRecommendation={handleClearRecommendation}
-              onFollowRecommendation={handleFollowRecommendation}
-              state={state}
-            />
-
-            {/* Decision Result (shows after evaluation) */}
-            {decisionResult && (
-              <div className="bg-white rounded-3xl p-4 shadow-sm border border-border" dir="rtl" data-testid="decision-result">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">תוצאת הערכה</h3>
-                <div className="flex items-center gap-3">
-                  <span className={`text-2xl font-bold ${
-                    decisionResult.value_tag === 'contribution' ? 'text-green-600' :
-                    decisionResult.value_tag === 'recovery' ? 'text-blue-600' :
-                    decisionResult.value_tag === 'order' ? 'text-indigo-600' :
-                    decisionResult.value_tag === 'harm' ? 'text-red-600' :
-                    'text-gray-600'
-                  }`}>
-                    {decisionResult.value_tag === 'contribution' && 'תרומה'}
-                    {decisionResult.value_tag === 'recovery' && 'התאוששות'}
-                    {decisionResult.value_tag === 'order' && 'סדר'}
-                    {decisionResult.value_tag === 'harm' && 'נזק'}
-                    {decisionResult.value_tag === 'avoidance' && 'הימנעות'}
-                  </span>
-                  <span className="text-sm text-muted-foreground">{decisionResult.decision}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Recent History (compact) */}
-            {history.length > 0 && (
-              <div className="bg-white rounded-3xl p-4 shadow-sm border border-border" dir="rtl" data-testid="recent-history">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-muted-foreground">החלטות אחרונות</h3>
-                  <button
-                    onClick={() => setActiveTab(TABS.HISTORY)}
-                    className="text-xs text-primary hover:underline"
-                    data-testid="show-all-history"
-                  >
-                    הצג הכל
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {history.slice(0, 3).map((item, index) => (
-                    <div key={item.id || index} className="flex items-center gap-2 text-sm">
-                      <span className={`w-2 h-2 rounded-full ${
-                        item.value_tag === 'contribution' ? 'bg-green-500' :
-                        item.value_tag === 'recovery' ? 'bg-blue-500' :
-                        item.value_tag === 'order' ? 'bg-indigo-500' :
-                        item.value_tag === 'harm' ? 'bg-red-500' :
-                        'bg-gray-400'
-                      }`}></span>
-                      <span className="truncate flex-1">{item.action}</span>
-                      <span className="text-xs text-muted-foreground">{item.time}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Orientation Compass - Visual Map */}
-            <OrientationCompassSection history={history} state={state} userId={user?.id} />
-
-            {/* Orientation Identity - Who You Are */}
-            <OrientationIdentitySection userId={user?.id} />
-
-            {/* Orientation Field Today - Collective Distribution */}
-            <OrientationFieldToday />
-
-            {/* Orientation Circles */}
-            <OrientationCirclesSection />
-
-            {/* Community Streak Overview */}
-            <CommunityStreakSection />
-
-            {/* Live Orientation Feed */}
-            <OrientationFeedSection />
-
-            {/* End of Day Summary */}
-            <DaySummarySection userId={user?.id} />
-
-            {/* Invite to Field */}
-            <InviteSection userId={user?.id} />
-
-            {/* Share Orientation Button */}
-            <button
-              onClick={() => setShowShareCard(true)}
-              className="w-full py-3 px-4 bg-white rounded-2xl shadow-sm border border-border flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:shadow-md active:scale-[0.98] transition-all duration-300 animate-section animate-section-8"
-              dir="rtl"
-              data-testid="open-share-card-btn"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>שתף את ההתמצאות שלך</span>
-            </button>
-
-            {/* Decision Path Engine - Concrete Action Recommendation */}
-            <DecisionPathSection 
-              userId={user?.id}
-              onActionFollowed={(actionData) => {
-                // Log action follow-through
-                console.log('Action followed:', actionData);
-              }}
-            />
-          </div>
+          <HomeTab
+            user={user}
+            history={history}
+            state={state}
+            actionText={actionText}
+            setActionText={setActionText}
+            evaluateAction={evaluateActionWithRecommendation}
+            recommendationMetadata={recommendationMetadata}
+            onClearRecommendation={handleClearRecommendation}
+            onFollowRecommendation={handleFollowRecommendation}
+            decisionResult={decisionResult}
+            adaptiveScores={adaptiveScores}
+            replayInsights={replayInsights}
+            missionContributed={missionContributed}
+            setMissionContributed={setMissionContributed}
+            setShowShareCard={setShowShareCard}
+            setActiveTab={setActiveTab}
+          />
         )}
 
-        {/* ==================== INSIGHTS TAB ==================== */}
         {activeTab === TABS.INSIGHTS && (
-          <div className="space-y-5">
-            {/* Weekly Orientation Insight */}
-            <WeeklyInsightSection userId={user?.id} />
-
-            {/* Weekly Report */}
-            <WeeklyReportSection userId={user?.id} />
-
-            {/* Chain Insights */}
-            <ChainInsightsSection history={history} />
-
-            {/* Recommendation Follow-Through Analytics */}
-            <RecommendationFollowThroughSection history={history} />
-
-            {/* Weekly Behavioral Report */}
-            <WeeklyBehavioralReportSection history={history} user={user} />
-
-            {/* Monthly Progress Report */}
-            <MonthlyProgressReportSection history={history} />
-
-            {/* Quarterly Review */}
-            <QuarterlyReviewSection history={history} />
-
-            {/* Replay Insights Summary */}
-            <ReplayInsightsSummarySection user={user} replayCount={replayHistory?.length || 0} />
-
-            {/* Decision Path Engine */}
-            <DecisionPathEngineSection
-              state={state}
-              history={history}
-              onSelectPath={handlePathSelection}
-              adaptiveScores={adaptiveScores}
-            />
-
-            {/* Path Learning */}
-            <PathLearningSection
-              selectedPath={selectedPathData}
-              actualOutcome={decisionResult}
-            />
-
-            {/* Adaptive Learning */}
-            <AdaptiveLearningSection
-              learningHistory={learningHistory}
-              adaptiveScores={adaptiveScores}
-            />
-          </div>
+          <InsightsTab
+            user={user}
+            history={history}
+            state={state}
+            decisionResult={decisionResult}
+            handlePathSelection={handlePathSelection}
+            adaptiveScores={adaptiveScores}
+            selectedPathData={selectedPathData}
+            learningHistory={learningHistory}
+            replayHistory={replayHistory}
+          />
         )}
 
-        {/* ==================== SYSTEM TAB ==================== */}
         {activeTab === TABS.SYSTEM && (
-          <div className="space-y-5">
-            {/* Global Field Globe - 3D Visualization */}
-            <FieldGlobeSection />
-
-            {/* Orientation Index - Global Public View */}
-            <OrientationIndexPage />
-
-            {/* Metrics Dashboard - Admin Panel */}
-            <MetricsDashboardSection />
-
-            {/* Referral Leaderboard */}
-            <ReferralLeaderboardSection />
-
-            {/* Invite Tracking Report */}
-            <InviteTrackingSection />
-
-            {/* Recommendation Calibration */}
-            <RecommendationCalibrationSection history={history} />
-
-            {/* Replay Adaptive Effect */}
-            <ReplayAdaptiveEffectSection 
-              adjustments={replayAdaptiveAdjustments}
-              adaptiveScores={adaptiveScores}
-              replayInsights={replayInsights}
-            />
-
-            {/* Collective Mirror */}
-            <CollectiveMirrorSection
-              history={history}
-              learningHistory={learningHistory}
-              replayInsights={replayInsights}
-            />
-
-            {/* Collective Trajectory */}
-            <CollectiveTrajectorySection history={history} />
-
-            {/* Collective Layer */}
-            <CollectiveLayerSection />
-
-            {/* Collective Trends */}
-            <CollectiveTrendsSection />
-
-            {/* Global Field */}
-            <GlobalFieldSection />
-
-            {/* Value Constellation */}
-            <ValueConstellationSection history={history} />
-
-            {/* Personal Map */}
-            <PersonalMapSection
-              history={history}
-              analyzePersonalMap={analyzePersonalMap}
-            />
-
-            {/* Collective Value Map */}
-            <CollectiveValueMapSection history={history} />
-          </div>
+          <SystemTab
+            history={history}
+            learningHistory={learningHistory}
+            replayInsights={replayInsights}
+            replayAdaptiveAdjustments={replayAdaptiveAdjustments}
+            adaptiveScores={adaptiveScores}
+          />
         )}
 
-        {/* ==================== THEORY TAB ==================== */}
         {activeTab === TABS.THEORY && (
-          <div className="space-y-5">
-            {/* Direction Explanations - Four Directions Deep Dive */}
-            <DirectionExplanationsSection />
-
-            {/* Theoretical Framework */}
-            <TheorySection />
-
-            {/* Direction History with Patterns */}
-            <DirectionHistorySection history={history} />
-          </div>
+          <TheoryTab history={history} />
         )}
 
-        {/* ==================== HISTORY TAB ==================== */}
         {activeTab === TABS.HISTORY && (
-          <div className="space-y-5">
-            {/* Decision History with Chains */}
-            <DecisionHistorySection
-              history={history}
-              onAddFollowUp={handleAddFollowUp}
-              onReplayDecision={handleReplayDecision}
-            />
-
-            {/* Decision Replay Section */}
-            {replayDecision && (
-              <DecisionReplaySection
-                replayDecision={replayDecision}
-                onClose={closeReplay}
-                onSaveReplay={saveReplayMetadata}
-                adaptiveScores={adaptiveScores}
-              />
-            )}
-
-            {/* Decision Tree Visualization */}
-            <DecisionTreeSection history={history} />
-
-            {/* Decision Map */}
-            <DecisionMapSection
-              state={state}
-              decisionResult={decisionResult}
-              history={history}
-              calculateSuggestedVector={calculateSuggestedVector}
-            />
-
-            {/* Orientation Status */}
-            <OrientationFieldSection history={history} />
-
-            {/* Session Library */}
-            <SessionLibrarySection
-              history={history}
-              onLoadSession={loadSessionFromLibrary}
-            />
-
-            {/* Session Comparison */}
-            <SessionComparisonSection />
-
-            {/* Weekly Cognitive Report */}
-            <WeeklySummarySection trendHistory={trendHistory} />
-
-            {/* Global Value Field */}
-            <GlobalValueFieldSection
-              globalStats={globalStats}
-              resetGlobalStats={resetGlobalStats}
-            />
-
-            {/* Global Trend */}
-            <GlobalTrendSection trendHistory={trendHistory} />
-
-            {/* Session Summary */}
-            <SessionSummarySection 
-              history={history}
-              state={state}
-              getTrajectoryDirection={getTrajectoryDirection}
-              exportSession={exportSession}
-              setShowShareCard={setShowShareCard}
-              decisionResult={decisionResult}
-            />
-
-            {/* Reset Session */}
-            {history.length > 0 && (
-              <div className="flex justify-center">
-                <button
-                  onClick={resetSession}
-                  className="text-xs text-red-500 hover:text-red-700 underline"
-                  data-testid="reset-session-btn"
-                >
-                  איפוס סשן
-                </button>
-              </div>
-            )}
-          </div>
+          <HistoryTab
+            history={history}
+            state={state}
+            decisionResult={decisionResult}
+            trendHistory={trendHistory}
+            globalStats={globalStats}
+            handleAddFollowUp={handleAddFollowUp}
+            handleReplayDecision={handleReplayDecision}
+            replayDecision={replayDecision}
+            closeReplay={closeReplay}
+            saveReplayMetadata={saveReplayMetadata}
+            adaptiveScores={adaptiveScores}
+            loadSessionFromLibrary={loadSessionFromLibrary}
+            resetGlobalStats={resetGlobalStats}
+            resetSession={resetSession}
+            getTrajectoryDirection={getTrajectoryDirection}
+            exportSession={exportSession}
+            setShowShareCard={setShowShareCard}
+          />
         )}
 
       </div>

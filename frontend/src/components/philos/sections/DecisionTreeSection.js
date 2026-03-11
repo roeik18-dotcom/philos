@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect, useState } from 'react';
 
 // Hebrew labels
 const valueLabels = {
@@ -10,38 +10,84 @@ const valueLabels = {
 };
 
 // Node colors
-const nodeColorClasses = {
-  contribution: 'bg-green-500',
-  recovery: 'bg-blue-500',
-  order: 'bg-indigo-500',
-  harm: 'bg-red-500',
-  avoidance: 'bg-gray-400'
+const nodeColors = {
+  contribution: { bg: '#22c55e', ring: '#86efac' },
+  recovery: { bg: '#3b82f6', ring: '#93c5fd' },
+  order: { bg: '#6366f1', ring: '#a5b4fc' },
+  harm: { bg: '#ef4444', ring: '#fca5a5' },
+  avoidance: { bg: '#9ca3af', ring: '#d1d5db' }
 };
 
+// Recursively measure tree width (in node units)
+function getTreeWidth(nodeId, nodeMap) {
+  const node = nodeMap[nodeId];
+  if (!node || !node.childIds || node.childIds.length === 0) return 1;
+  return node.childIds.reduce((sum, cid) => sum + getTreeWidth(cid, nodeMap), 0);
+}
+
+// Layout nodes with x,y positions
+function layoutTree(roots, nodeMap) {
+  const NODE_W = 150;
+  const NODE_H = 56;
+  const GAP_X = 20;
+  const GAP_Y = 80;
+  const positions = {};
+
+  function place(nodeId, x, y, depth) {
+    const node = nodeMap[nodeId];
+    if (!node || depth > 6) return;
+    positions[nodeId] = { x, y, w: NODE_W, h: NODE_H };
+
+    if (node.childIds && node.childIds.length > 0) {
+      const childWidths = node.childIds.map(cid => getTreeWidth(cid, nodeMap));
+      const totalChildWidth = childWidths.reduce((a, b) => a + b, 0);
+      const totalGaps = totalChildWidth - 1;
+      const totalSpan = totalChildWidth * NODE_W + totalGaps * GAP_X;
+      let cx = x + NODE_W / 2 - totalSpan / 2;
+
+      node.childIds.forEach((cid, i) => {
+        const cw = childWidths[i];
+        const childSpan = cw * NODE_W + (cw - 1) * GAP_X;
+        const childX = cx + childSpan / 2 - NODE_W / 2;
+        place(cid, childX, y + NODE_H + GAP_Y, depth + 1);
+        cx += childSpan + GAP_X;
+      });
+    }
+  }
+
+  let startX = 0;
+  roots.forEach(root => {
+    const w = getTreeWidth(root.id, nodeMap);
+    const span = w * NODE_W + (w - 1) * GAP_X;
+    place(root.id, startX + span / 2 - NODE_W / 2, 0, 0);
+    startX += span + GAP_X * 2;
+  });
+
+  return positions;
+}
+
 export default function DecisionTreeSection({ history }) {
+  const containerRef = useRef(null);
+  const [svgSize, setSvgSize] = useState({ w: 0, h: 0 });
+
   // Build tree data
   const treeData = useMemo(() => {
     if (!history || history.length === 0) {
-      return { roots: [], flatNodes: [], totalEdges: 0 };
+      return { roots: [], flatNodes: [], nodeMap: {}, totalEdges: 0 };
     }
 
-    // Assign IDs
     const items = history.map((item, idx) => ({
       ...item,
       id: item.id || `node_${idx}`,
       childIds: []
     }));
 
-    // Create node map
     const nodeMap = {};
-    items.forEach(item => {
-      nodeMap[item.id] = item;
-    });
+    items.forEach(item => { nodeMap[item.id] = item; });
 
-    // Build relationships
     const roots = [];
     let edgeCount = 0;
-    
+
     items.forEach(item => {
       if (item.parent_decision_id && nodeMap[item.parent_decision_id]) {
         nodeMap[item.parent_decision_id].childIds.push(item.id);
@@ -54,75 +100,58 @@ export default function DecisionTreeSection({ history }) {
     return { roots, flatNodes: items, nodeMap, totalEdges: edgeCount };
   }, [history]);
 
-  // Check if we should render
   const hasChains = useMemo(() => {
     if (!history || history.length < 2) return false;
-    return history.some(h => h.parent_decision_id || 
+    return history.some(h => h.parent_decision_id ||
       history.some(other => other.parent_decision_id === h.id));
   }, [history]);
+
+  // Compute layout positions
+  const positions = useMemo(() => {
+    if (!hasChains) return {};
+    return layoutTree(treeData.roots, treeData.nodeMap);
+  }, [hasChains, treeData]);
+
+  // Compute SVG size from positions
+  useEffect(() => {
+    if (Object.keys(positions).length === 0) return;
+    let maxX = 0, maxY = 0;
+    Object.values(positions).forEach(p => {
+      if (p.x + p.w > maxX) maxX = p.x + p.w;
+      if (p.y + p.h > maxY) maxY = p.y + p.h;
+    });
+    setSvgSize({ w: maxX + 20, h: maxY + 20 });
+  }, [positions]);
 
   if (!hasChains) return null;
 
   const { roots, flatNodes, nodeMap, totalEdges } = treeData;
 
-  // Render a single node
-  const renderNode = (nodeId, depth = 0) => {
-    const node = nodeMap[nodeId];
-    if (!node || depth > 5) return null; // Limit depth to prevent infinite loops
-    
-    const colorClass = nodeColorClasses[node.value_tag] || 'bg-gray-400';
-    const isHarm = node.value_tag === 'harm';
-    const isPositive = node.value_tag === 'contribution' || node.value_tag === 'recovery';
+  // Build SVG edges
+  const edges = [];
+  flatNodes.forEach(node => {
+    if (!node.childIds) return;
+    const parentPos = positions[node.id];
+    if (!parentPos) return;
+    const px = parentPos.x + parentPos.w / 2;
+    const py = parentPos.y + parentPos.h;
 
-    return (
-      <div key={nodeId} className="flex flex-col items-center">
-        {/* Node card */}
-        <div 
-          className={`relative px-4 py-3 rounded-xl text-white text-center min-w-[140px] max-w-[180px] shadow-md ${colorClass} ${
-            isHarm ? 'ring-2 ring-red-300 ring-offset-2' : ''
-          } ${isPositive ? 'ring-2 ring-green-300 ring-offset-2' : ''}`}
-        >
-          {/* Status dot */}
-          <div 
-            className={`absolute -top-1 -left-1 w-4 h-4 rounded-full border-2 border-white ${
-              node.decision === 'Allowed' ? 'bg-green-400' : 'bg-red-400'
-            }`}
-          />
-          
-          {/* Action text */}
-          <p className="text-xs font-semibold truncate">
-            {node.action?.slice(0, 18) || 'No action'}
-          </p>
-          
-          {/* Meta */}
-          <p className="text-[10px] opacity-80 mt-1">
-            {node.time} | {valueLabels[node.value_tag] || node.value_tag}
-          </p>
-        </div>
-
-        {/* Children */}
-        {node.childIds && node.childIds.length > 0 && (
-          <>
-            <div className="w-0.5 h-6 bg-violet-300" />
-            {node.childIds.length > 1 && (
-              <div className="h-0.5 bg-violet-300" style={{ width: `${(node.childIds.length - 1) * 180}px` }} />
-            )}
-            <div className="flex gap-4">
-              {node.childIds.map(childId => (
-                <div key={childId} className="flex flex-col items-center">
-                  <div className="w-0.5 h-6 bg-violet-300" />
-                  {renderNode(childId, depth + 1)}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
+    node.childIds.forEach(cid => {
+      const childPos = positions[cid];
+      if (!childPos) return;
+      const cx = childPos.x + childPos.w / 2;
+      const cy = childPos.y;
+      const midY = py + (cy - py) / 2;
+      edges.push({
+        key: `${node.id}-${cid}`,
+        d: `M ${px} ${py} C ${px} ${midY}, ${cx} ${midY}, ${cx} ${cy}`,
+        color: nodeColors[nodeMap[cid]?.value_tag]?.bg || '#d1d5db'
+      });
+    });
+  });
 
   return (
-    <section 
+    <section
       className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-violet-200"
       dir="rtl"
       data-testid="decision-tree-section"
@@ -134,32 +163,73 @@ export default function DecisionTreeSection({ history }) {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-3 mb-4 text-xs">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <span>תרומה</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-          <span>התאוששות</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-          <span>סדר</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <span>נזק</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-          <span>הימנעות</span>
-        </div>
+        {Object.entries(valueLabels).map(([key, label]) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: nodeColors[key]?.bg }} />
+            <span>{label}</span>
+          </div>
+        ))}
       </div>
 
-      {/* Tree visualization */}
-      <div className="overflow-x-auto bg-white/80 rounded-2xl p-6 border border-violet-100">
-        <div className="flex gap-8 justify-center" style={{ direction: 'ltr' }}>
-          {roots.map(root => renderNode(root.id, 0))}
+      {/* Tree visualization with SVG */}
+      <div ref={containerRef} className="overflow-x-auto bg-white/80 rounded-2xl p-4 border border-violet-100">
+        <div style={{ position: 'relative', width: svgSize.w || 'auto', height: svgSize.h || 'auto', direction: 'ltr', minHeight: 80 }}>
+          {/* SVG edges layer */}
+          {svgSize.w > 0 && (
+            <svg
+              width={svgSize.w}
+              height={svgSize.h}
+              style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+              data-testid="decision-tree-svg"
+            >
+              {edges.map(e => (
+                <path
+                  key={e.key}
+                  d={e.d}
+                  fill="none"
+                  stroke={e.color}
+                  strokeWidth={2}
+                  strokeOpacity={0.5}
+                />
+              ))}
+            </svg>
+          )}
+
+          {/* Node cards layer */}
+          {flatNodes.map(node => {
+            const pos = positions[node.id];
+            if (!pos) return null;
+            const colors = nodeColors[node.value_tag] || nodeColors.avoidance;
+            return (
+              <div
+                key={node.id}
+                className="absolute rounded-xl text-white text-center shadow-md"
+                style={{
+                  left: pos.x,
+                  top: pos.y,
+                  width: pos.w,
+                  height: pos.h,
+                  backgroundColor: colors.bg,
+                  boxShadow: `0 2px 8px ${colors.bg}40`
+                }}
+                data-testid={`tree-node-${node.id}`}
+              >
+                {/* Status dot */}
+                <div
+                  className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full border-2 border-white"
+                  style={{ backgroundColor: node.decision === 'Allowed' ? '#4ade80' : '#f87171' }}
+                />
+                <div className="px-2 py-1.5">
+                  <p className="text-[11px] font-semibold truncate">
+                    {node.action?.slice(0, 18) || 'No action'}
+                  </p>
+                  <p className="text-[9px] opacity-80 mt-0.5">
+                    {node.time} | {valueLabels[node.value_tag] || node.value_tag}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
