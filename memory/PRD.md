@@ -60,9 +60,19 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 2. **Admin Retention Review** — Enhanced metrics dashboard with 6 KPIs: active users, question completion rate, D2 retention, mission participation, avg streak, invite conversions
 3. **Invite Tracking Report** — Funnel visualization (sent→opened→accepted) with conversion rates. Invite open tracking via GET /invite/{code}
 
+### Phase 10 — Core Theory Integration (completed 2026-03-11)
+1. **Daily Opening Section** — Compass state visualization with 4-direction percentages, Hebrew greeting (time-based), dominant force, suggested direction with theory explanation. Endpoint: `GET /api/orientation/daily-opening/{user_id}`. Component: `DailyOpeningSection.js` on Home tab.
+2. **End of Day Summary** — Reflection text, streak counter, field impact percentage, today's action count, direction breakdown pills, global field effect bars. Endpoint: `GET /api/orientation/day-summary/{user_id}`. Component: `DaySummarySection.js` on Home tab.
+3. **Global Field Globe** — 3D globe visualization using `react-globe.gl` showing demo agent + user activity points across 20 countries, color-coded by direction, with direction legend. Lazy-loaded for performance. Endpoint: `GET /api/orientation/globe-activity`. Component: `FieldGlobeSection.js` on System tab.
+4. **Direction Explanations** — 4 expandable direction cards (Contribution, Recovery, Order, Exploration) each showing symbolic meaning, human behavior example, and collective field effect in Hebrew. Endpoint: `GET /api/orientation/directions`. Component: `DirectionExplanationsSection.js` on Theory tab.
+
 ## Key API Endpoints
 | Endpoint | Method | Purpose |
 |---|---|---|
+| `/api/orientation/daily-opening/{user_id}` | GET | Daily opening: compass state, dominant force, suggested direction |
+| `/api/orientation/day-summary/{user_id}` | GET | End of day: chosen direction, impact, streak, global field effect |
+| `/api/orientation/globe-activity` | GET | Globe data: points with lat/lng/direction/color from demo agents |
+| `/api/orientation/directions` | GET | 4 directions with symbolic meaning, behavior examples, field effects |
 | `/api/orientation/daily-question/{user_id}` | GET | Daily question + streak data |
 | `/api/orientation/daily-answer/{user_id}` | POST | Submit answer + get impact |
 | `/api/orientation/weekly-insight/{user_id}` | GET | 7-day aggregated insight |
@@ -104,3 +114,4 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 - General UI polish and RTL improvements
 - Persist impact message longer after answering
 - Add animations to share card generation
+- Refactor `server.py` into modular routes/models/services
