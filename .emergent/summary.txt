@@ -1,164 +1,134 @@
 <analysis>**original_problem_statement:**
 The user's goal is to build a complex, client-side decision engine and dashboard called Philos Orientation. The application serves as a sophisticated single-page tool for real-time decision analysis and mental navigation, with a Hebrew (RTL) UI.
 
+The project has evolved through multiple phases, including initial features, community engagement, growth infrastructure, and product validation. The current objective is to integrate the core Philos Orientation theory into the product experience.
+
 **PRODUCT REQUIREMENTS:**
-The initial goal was to build a system with a decision map, recommendation engine, session history, and a Theory screen. The project has since evolved significantly. The current set of tasks is to implement five new features to deepen user engagement:
-1.  **Orientation Streak:** Track and display the user's daily consecutive usage.
-2.  **Personal Impact on Field:** Show the user how their daily action contributed to the collective orientation field.
-3.  **Orientation Share Card:** Allow users to generate and share a card with their current orientation.
-4.  **Weekly Orientation Insight:** Provide users with an aggregated insight based on their last 7 days of activity.
-5.  **Orientation Index Page:** A public page showing the global orientation distribution for the entire user base.
+The current task is to implement a Core Theory Integration phase, which includes:
+1.  **Daily Opening:** A system to present the user's state at the start of the day.
+2.  **End of Day Reflection:** A summary of the user's daily activity and its impact.
+3.  **Field Globe:** A 3D global visualization of user and demo agent activity.
+4.  **Direction Explanations:** Clear in-app explanations of the four core directions (Contribution, Recovery, Order, Exploration).
 
 **User's preferred language**: The user communicates in English. The UI text and layout must be in **Hebrew (עִבְרִית)** with a right-to-left (RTL) orientation. The next agent must respond to the user in English.
 
 **what currently exists?**
-A feature-rich full-stack application with a React frontend and a FastAPI/MongoDB backend. The UI is a dense dashboard featuring numerous components implemented over several sessions.
-
-Key modules implemented include:
-- **Orientation Compass:** Visualizes user's position vs. the collective.
-- **Orientation Identity:** Classifies the user's current orientation pattern (e.g., Recovery Dominant).
-- **Daily Orientation Question:** A daily entry-point prompt for users.
-- **Orientation Field Today:** A bar chart showing the 24-hour orientation distribution of all users.
-- **Decision Path:** Provides a single, concrete, actionable recommendation.
-- **Historical Momentum Sparkline:** A 4-week trend graph of the collective field.
-
-The backend has numerous API endpoints to support these features. The agent has repeatedly started backend work on the 5 new features (defining Pydantic models, adding endpoint routes in ) but has been unable to complete the implementation due to hitting the context window limit.
+A mature, feature-rich full-stack application (React frontend, FastAPI/MongoDB backend). The agent has successfully implemented numerous features in batches, including a daily question system, streaks, community metrics, a daily mission system, growth infrastructure (invites, metrics dashboards), a referral leaderboard, a product validation suite (onboarding, retention reports), and a demo agent system that populates the app with simulated activity. The UI has also undergone a polish pass for animations, spacing, and RTL consistency.
 
 **Last working item**:
-- **Last item agent was working:** The agent was stuck in a repetitive loop. The user would ask to continue development on a batch of 5 new features, the agent would start by modifying the backend () and beginning frontend changes ( for the Streak feature), then hit the context limit and be forced to create a summary. This cycle has repeated multiple times, preventing any meaningful progress.
-- **Status:** BLOCKED
+- **Last item agent was working:** The agent was beginning the Core Theory Integration phase. It had analyzed the existing codebase and successfully installed the necessary  and  libraries for the globe visualization feature. The user then interrupted to request a session summary, pausing development before the implementation of backend endpoints and frontend components began.
+- **Status:** IN PROGRESS
 - **Agent Testing Done:** N
 - **Which testing method agent to use?** both
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Repetitive Context Limit Loop (P0 - CRITICAL BLOCKER)**
-  - **Description:** The agent is unable to complete any of the 5 requested features because it attempts to tackle too much at once, leading it to hit the context window limit. It then gets stuck in a cycle of being asked to summarize its state, loading that state, and repeating the same failed attempt.
-  - **Status:** BLOCKED
-
-**Issues Detail:**
-- **Issue 1: Repetitive Context Limit Loop**
-  - **Attempted fixes:** The agent has repeatedly tried to start the work on all 5 features by making preliminary changes to backend models and frontend components. This approach has consistently failed.
-  - **Next debug checklist:**
-    1.  **STOP** attempting to implement all 5 features simultaneously.
-    2.  Propose a new plan to the user in : Implement **ONE** feature at a time, starting with Orientation Streak.
-    3.  For Orientation Streak:
-        - Review the backend changes already made in  for the streak logic. Complete the implementation for the  and the  endpoints.
-        - Implement the frontend changes in  to display the streak.
-        - Test the single feature thoroughly (backend via , frontend via screenshot, then ).
-    4.  Once Orientation Streak is complete and verified, move to the next feature (Personal Impact on Field) and repeat the process.
-  - **Why fix this issue and what will be achieved with the fix?** This is a meta-issue blocking all forward progress. Resolving it by adopting a one-feature-at-a-time strategy is the only way to continue development.
-  - **Status:** BLOCKED
-  - **Is recurring issue?** Y
-  - **Should Test frontend/backend/both after fix?** both
-  - **Blocked on other issue:** This issue is blocking all other tasks.
+There are no outstanding bugs or blocking issues. The previous critical issue of a Repetitive Context Limit Loop has been resolved.
 
 **In progress Task List**:
-- **Task 1: Implement 5 New Features (P0)**
-    - **Description:** Implement Orientation Streak, Personal Impact on Field, Orientation Share Card, Weekly Insight, and Orientation Index Page. This task is currently blocked by the context limit loop.
-    - **Where to resume:** Resume by focusing ONLY on the **Orientation Streak** feature. Review and complete the backend logic in  and the frontend display in .
-    - **What will be achieved with this?** Adds several new layers of user engagement and insight to the application.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** both
-    - **Blocked on something:** Blocked by Repetitive Context Limit Loop.
+- **Task 1: Implement Core Theory Integration (P0)**
+  - **Where to resume:**
+    1.  Implement the backend endpoints for  and . Note that  and  endpoints from a previous abandoned attempt might already exist and can be repurposed or referenced.
+    2.  Create the frontend components: , , , and a component for .
+    3.  Integrate these new components into the .
+    4.  The  and  libraries are already installed in .
+  - **What will be achieved with this?** This will connect the application's various features to the underlying philosophical theory, providing a more cohesive user experience.
+  - **Status:** IN PROGRESS
+  - **Should Test frontend/backend/both after fix?** both
+  - **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **Implement Orientation Streak (P0)**
-    *   **Implement Personal Impact on Field (P1)**
-    *   **Implement Orientation Share Card (P2)**
-    -   **Implement Weekly Orientation Insight (P2)**
-    *   **Implement Orientation Index Page (P2)**
-*   **Future Tasks:**
+    *   Complete the Core Theory Integration phase as described above.
+*   **Future Tasks (Low Priority):**
     *   Refactor  to extract tab content into separate components.
     *   Resolve unfinished SVG implementation in .
 
 **Completed work in this session**
-- **System Coherence Fixes:** Aligned compass calculation and recommendation engine with core theory.
-- **Orientation Field:** Implemented collective field vs. user position visualization.
-- **Collective Momentum:** Added an indicator for the collective field's movement trend.
-- **Historical Momentum Sparkline:** Added a 4-week historical trend visualization.
-- **User Comparison:** Implemented user percentile ranking display.
-- **Decision Path Engine:** Created a component for a single, actionable recommendation.
-- **Orientation Identity Layer:** Implemented user state classification.
-- **Daily Orientation Question:** Added a daily entry-point question to the dashboard.
-- **Orientation Field Today:** Added a 24-hour distribution bar chart of user orientations.
+- **Engagement Features:** Implemented Orientation Streak, Personal Impact message, Orientation Share Card, Weekly Insight, and Orientation Index Page.
+- **Community Layer:** Implemented Active Users Indicator, Relative Orientation Score, Orientation Circles, and Community Streak Overview.
+- **Field Mission System:** Created a daily collective mission with real-time progress tracking.
+- **Growth Infrastructure:** Implemented a Metrics Dashboard, real-time Orientation Feed, Invite System, and Weekly User Report.
+- **Gamification:** Added a Referral Leaderboard.
+- **Product Validation:** Implemented a new 3-step user onboarding flow and an admin invite tracking report.
+- **Data Simulation:** Created a system of 50 demo agents across 8 countries to generate continuous, realistic activity for the feed and globe.
+- **UI Polish:** Performed a comprehensive UI polish pass, adding animations, improving spacing, fixing RTL issues, and enhancing component styles.
 
 **Earlier issues found/mentioned but not fixed**
-- **Unfinished SVG implementation in :** This technical debt from a previous session remains unresolved.
+- **Unfinished SVG implementation in :** This is a minor piece of technical debt from a very early session and is considered low priority.
 
 **Known issue recurrence from previous fork**
-- **Context Limit Loop:** A new recurring issue has emerged in this session where the agent gets stuck trying to implement too many features, hits the context limit, and is forced to summarize, preventing progress.
+- **Context Limit Loop:** This was a major blocker at the start but was successfully resolved by the agent by adopting an incremental, feature-by-feature implementation strategy. This is no longer a concern.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-*   **Frontend:** React, Custom Hooks, Service-Oriented Architecture, Hebrew RTL UI
-*   **Backend:** FastAPI, Pydantic
+*   **Frontend:** React, React Hooks, , , . UI is in Hebrew (RTL).
+*   **Backend:** FastAPI, Pydantic, Pymongo,  for background tasks.
 *   **Database:** MongoDB
-*   **Core Logic:** The application is built around a theoretical model of four orientations (Recovery, Order, Contribution, Exploration) and their balancing paths.
+*   **Core Logic:** The application is built around a theoretical model of four orientations (Recovery, Order, Contribution, Exploration).
 
 **key DB schema**
-- **philos_sessions:** Stores user session data.
-- **philos_decisions:** Stores individual user actions/decisions with , , and .
-- **users:** Stores user profiles, including authentication details. The agent planned to add , , and  to this collection.
+- **philos_decisions:** Stores user actions (, , , etc).
+- **users:** User profiles, including , , , and .
+- **daily_missions:** Stores the mission for each day (Wed Mar 11 13:09:31 UTC 2026, , , ).
+- **invite_codes:** Tracks generated invites (, ,  - 'pending', 'opened', 'accepted').
+- **demo_agents:** A collection of 50 simulated agents used to generate activity.
+- **events:** A collection storing both real user actions and demo agent actions, used by the .
 
 **All files of reference**
-*   : The single backend file containing all API logic. It has been partially modified to include models for the 5 new features.
-*   : The main UI orchestrator, which has become very large.
-*   : The component that needs to be updated for the Streak and Impact features.
-*   : A summary document that has been created multiple times. It can be ignored as this summary supersedes it.
+*   : The monolithic backend file. It contains all API logic, Pydantic models, and the background task for demo agents.
+*   : The main UI orchestrator. It is large and renders all section components based on the active tab.
+*   : The top-level component that handles routing.
+*   : Contains global styles, including keyframe animations for progress bars and component entrances.
+*   : Directory containing all feature components.
 
 **Areas that need refactoring**:
-*    is extremely cluttered. The content for each tab and major section should be broken out into smaller, more manageable components to improve maintainability.
+*    is very large and could be broken down by extracting the content of each tab into its own component.
+*    is a monolithic file. As the application grows, it should be refactored into a more modular structure (e.g., separating routes, models, and services).
 
 **key api endpoints**
-*   
-*   
-*   
-*   
-*   
-*    (Needs streak logic)
-*    (Needs to be created/updated for streak/impact)
-*   
-*   **(Planned):** , , and an endpoint for the public Index page.
+- All CRUD and feature endpoints for the completed work are implemented and tested.
+- **Endpoints to be created:**
+  - 
+  -  (Note: This is different from the existing  endpoint).
+- **Endpoint to be used:**
+  -  (This will be the data source for the Globe visualization).
 
 **Critical Info for New Agent**
-*   **You are stuck in a loop.** Do not attempt to implement all 5 requested features at once. Your top priority is to break this cycle.
-*   **Propose a new, incremental plan:** Use  to propose implementing **one feature at a time**, starting with Orientation Streak. Explain that this is necessary to avoid the context limit issue.
-*   **Review existing work:** The backend file  already contains Pydantic models and endpoint definitions for the new features. Review this file carefully to understand the work already started before you continue.
-*   **Test each feature individually:** After completing each single feature (backend and frontend), run the  to ensure stability before moving to the next one.
+*   You are starting the Core Theory Integration phase. Your main task is to implement the four features requested by the user: Daily Opening, End of Day Reflection, Field Globe, and Direction Explanations.
+*   **Do not restart work.** The libraries  and  are already installed. You can proceed directly to implementing the backend endpoints and frontend components.
+*   The backend file () may contain old, partially implemented endpoints from a previous attempt at this phase (e.g., , ). Review them and decide whether to use, modify, or replace them.
+*   Follow the established pattern of implementing a batch of related features, testing them with  and screenshots, and then using the  for final verification.
 
 **documents and test reports created in this job**
-*    (created multiple times, now obsolete)
-*   Multiple test reports in  corresponding to the successfully completed features.
+*   Numerous test reports have been created in . The latest reports confirm that all existing features are working correctly.
 
 **Last 10 User Messages and any pending HUMAN messages**
-The user's last ~100 messages consist almost entirely of a repeating pattern:
-1.  User: Implement [batch of 5 features].
-2.  Agent: *Starts working, hits context limit.*
-3.  User: Context limit reached. Summarize the project and save it to .
-4.  Agent: *Creates the summary file.*
-5.  User: Load and continue development.
-This loop has prevented any of the 5 new features from being completed. The core pending request is the implementation of these features.
+The user has been providing feature requests in batches, which the agent has been successfully implementing. The last few messages were:
+1.  **User:** Request to implement Core Theory Integration features.
+2.  **Agent:** Starts work, installs .
+3.  **User:** Interrupts with Summarize and save the entire session state... After saving, continue development from this checkpoint.
+The pending user directive is to continue with the Core Theory Integration task.
 
 **Project Health Check:**
-*   **Broken:** The development process is currently broken due to the agent's inability to manage the scope of the user's request, leading to a context limit loop. The application itself is likely in a working state based on the last successful test run, but no new features have been added recently.
+*   **Healthy:** The project is in an excellent state. The development process is unblocked, and the agent has demonstrated the ability to rapidly and correctly implement complex features. All previously implemented features have been tested and are working.
 
 **3rd Party Integrations**
-*   **html-to-image:** Used for exporting a Share Card (this will be needed for the new feature).
-*   **passlib, python-jose:** Used on the backend for password hashing and JWT management.
+*   **html-to-image:** Used for the Orientation Share Card feature.
+*   **passlib, python-jose:** Used on the backend for JWT authentication.
+*   **react-globe.gl, three:** Installed for the upcoming Globe visualization feature.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES, for all features completed *before* the current loop started.
-- **Test files created:** None.
-- **Known regressions:** None, but the state of the new, partially-implemented features is unknown.
+- **Testing agent used after significant changes:** YES. The agent has consistently and successfully used  after every major feature implementation batch.
+- **Troubleshoot agent used after agent stuck in loop:** NO
+- **Test files created:** None. Testing is done via  and the testing agent.
+- **Known regressions:** None. The testing agent has confirmed no regressions in the last several feature implementations.
 
 **Credentials to test flow:**
 *   **Email:** 
 *   **Password:** 
-*   The app also supports an anonymous user flow by default.
 
 **What agent forgot to execute**
-The agent has fundamentally failed to adopt a viable strategy for implementing the user's request. It forgot to break down the large batch of 5 features into smaller, manageable, and individually testable units. This oversight is the direct cause of the current development stall.</analysis>
+The agent did not forget to execute anything. Its work on the Core Theory Integration phase was paused by the user's request to create a summary checkpoint. The next action is to resume this task.</analysis>

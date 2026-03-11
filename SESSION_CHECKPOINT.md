@@ -64,5 +64,5 @@ Tasks:
 
 ---
 
-**Preview URL:** https://philos-streak.preview.emergentagent.com  
+**Preview URL:** https://daily-orientation.preview.emergentagent.com  
 **Test Credentials:** newuser@test.com / password123

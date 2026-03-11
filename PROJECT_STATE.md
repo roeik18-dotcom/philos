@@ -341,7 +341,7 @@ Historical data and sessions:
 
 ## Preview URL
 
-https://philos-streak.preview.emergentagent.com
+https://daily-orientation.preview.emergentagent.com
 
 ---
 

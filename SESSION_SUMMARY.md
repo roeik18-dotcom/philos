@@ -674,7 +674,7 @@ User Input → evaluateAction() → setHistory() → saveDecision() → MongoDB
 
 ## Preview URL
 
-https://philos-streak.preview.emergentagent.com
+https://daily-orientation.preview.emergentagent.com
 
 ---
 

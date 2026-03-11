@@ -4768,6 +4768,522 @@ ANONYMOUS_ALIASES = [
     "Sage", "Herald", "Beacon", "Anchor", "Voyager"
 ]
 
+# ==================== FORCE PROFILE & VALUE VECTOR MAPPINGS ====================
+# Each orientation direction maps to forces and value vectors
+DIRECTION_FORCE_MAP = {
+    'contribution': {'cognitive': 0.2, 'emotional': 0.4, 'physical': 0.1, 'personal': 0.1, 'social': 0.8, 'drives': 0.3},
+    'recovery': {'cognitive': 0.3, 'emotional': 0.6, 'physical': 0.5, 'personal': 0.7, 'social': 0.1, 'drives': 0.2},
+    'order': {'cognitive': 0.7, 'emotional': 0.2, 'physical': 0.3, 'personal': 0.4, 'social': 0.3, 'drives': 0.6},
+    'exploration': {'cognitive': 0.8, 'emotional': 0.5, 'physical': 0.2, 'personal': 0.3, 'social': 0.4, 'drives': 0.7}
+}
+
+DIRECTION_VECTOR_MAP = {
+    'contribution': {'internal': 0.2, 'external': 0.5, 'collective': 0.8},
+    'recovery': {'internal': 0.8, 'external': 0.1, 'collective': 0.2},
+    'order': {'internal': 0.5, 'external': 0.4, 'collective': 0.4},
+    'exploration': {'internal': 0.4, 'external': 0.7, 'collective': 0.3}
+}
+
+FORCE_LABELS_HE = {
+    'cognitive': 'קוגניטיבי', 'emotional': 'רגשי', 'physical': 'פיזי',
+    'personal': 'אישי', 'social': 'חברתי', 'drives': 'דחפים'
+}
+
+VECTOR_LABELS_HE = {
+    'internal': 'פנימי', 'external': 'חיצוני', 'collective': 'קולקטיבי'
+}
+
+
+DIRECTION_THEORY = {
+    'contribution': {
+        'label_he': 'תרומה',
+        'symbol': 'נתינה',
+        'explanation_he': 'כיוון התרומה מבטא את הרצון לתת, לעזור ולהשפיע על הסביבה. זהו הכוח שמחבר בין הפרט לקולקטיב.',
+        'meaning_he': 'כשאתה פועל בכיוון התרומה, אתה מחזק את השדה הקולקטיבי ויוצר ערך שחורג מגבולות העצמי.'
+    },
+    'recovery': {
+        'label_he': 'התאוששות',
+        'symbol': 'שיקום',
+        'explanation_he': 'כיוון ההתאוששות מבטא את הצורך בהטענה, מנוחה ושיקום פנימי. זהו הכוח שמאפשר לחזור לאיזון.',
+        'meaning_he': 'כשאתה פועל בכיוון ההתאוששות, אתה בונה את הבסיס הפנימי שממנו כל פעולה אחרת מתחילה.'
+    },
+    'order': {
+        'label_he': 'סדר',
+        'symbol': 'מבנה',
+        'explanation_he': 'כיוון הסדר מבטא את הרצון לארגן, לתכנן וליצור מבנה. זהו הכוח שמביא יציבות ובהירות.',
+        'meaning_he': 'כשאתה פועל בכיוון הסדר, אתה יוצר מסגרת שמאפשרת לכל הכיוונים האחרים לפעול בצורה יעילה.'
+    },
+    'exploration': {
+        'label_he': 'חקירה',
+        'symbol': 'גילוי',
+        'explanation_he': 'כיוון החקירה מבטא את הסקרנות, הרצון ללמוד ולגלות. זהו הכוח שמניע שינוי וצמיחה.',
+        'meaning_he': 'כשאתה פועל בכיוון החקירה, אתה פותח דלתות חדשות ומרחיב את גבולות ההכרה.'
+    }
+}
+
+
+@api_router.get("/orientation/daily-opening/{user_id}")
+async def get_daily_opening(user_id: str):
+    """Daily Opening: compass state, dominant force, suggested direction for the day."""
+    try:
+        now = datetime.now(timezone.utc)
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "history": 1, "global_stats": 1})
+        stats = session.get("global_stats", {}) if session else {}
+        history = session.get("history", []) if session else []
+
+        dirs = ['contribution', 'recovery', 'order', 'exploration']
+        dir_counts = {d: stats.get(d, 0) for d in dirs}
+        total = sum(dir_counts.values())
+
+        # Compass state: normalized distribution
+        compass_state = {d: round((c / total) * 100) if total > 0 else 25 for d, c in dir_counts.items()}
+
+        # Dominant force from all-time history
+        forces = {f: 0.0 for f in FORCE_LABELS_HE}
+        for h in history:
+            d = h.get("value_tag", "")
+            if d in DIRECTION_FORCE_MAP:
+                for f, w in DIRECTION_FORCE_MAP[d].items():
+                    forces[f] += w
+        if total > 0:
+            forces = {f: round(v / total, 2) for f, v in forces.items()}
+        dominant_force = max(forces, key=forces.get) if total > 0 else 'cognitive'
+
+        # Suggested direction: the least-used direction (balancing logic)
+        if total > 0:
+            suggested = min(dir_counts, key=dir_counts.get)
+        else:
+            # For new users, rotate by day
+            day_idx = now.timetuple().tm_yday % 4
+            suggested = dirs[day_idx]
+
+        dir_labels = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+
+        # Greeting based on time of day
+        hour = now.hour
+        if hour < 12:
+            greeting = 'בוקר טוב'
+        elif hour < 17:
+            greeting = 'צהריים טובים'
+        else:
+            greeting = 'ערב טוב'
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "greeting_he": greeting,
+            "compass_state": compass_state,
+            "dominant_force": dominant_force,
+            "dominant_force_he": FORCE_LABELS_HE.get(dominant_force, ''),
+            "forces": forces,
+            "suggested_direction": suggested,
+            "suggested_direction_he": dir_labels.get(suggested, ''),
+            "total_actions": total,
+            "theory": DIRECTION_THEORY.get(suggested, {})
+        }
+    except Exception as e:
+        logger.error(f"Get daily opening error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/day-summary/{user_id}")
+async def get_day_summary(user_id: str):
+    """End of Day Reflection: chosen direction, impact, streak, global effect."""
+    try:
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        today_str = now.strftime("%Y-%m-%d")
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "history": 1})
+        dir_counts = {'contribution': 0, 'recovery': 0, 'order': 0, 'exploration': 0}
+        today_total = 0
+
+        if session:
+            for h in session.get("history", []):
+                if h.get("timestamp", "") >= today_start:
+                    d = h.get("value_tag", "")
+                    if d in dir_counts:
+                        dir_counts[d] += 1
+                        today_total += 1
+
+        chosen_direction = max(dir_counts, key=dir_counts.get) if today_total > 0 else None
+        dir_labels = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+
+        # Impact on field
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0, "history": 1}).to_list(10000)
+        total_field = sum(
+            1 for s in all_sessions for h in s.get("history", [])
+            if h.get("timestamp", "") >= today_start and h.get("value_tag", "") in dir_counts
+        )
+        impact_percent = round((today_total / total_field) * 100, 1) if total_field > 0 else 0
+
+        # Streak
+        answered = await db.daily_questions.find(
+            {"user_id": user_id, "answered": True}, {"_id": 0, "date": 1}
+        ).to_list(500)
+        all_dates = sorted(set(q.get("date") for q in answered if q.get("date")), reverse=True)
+        streak = 0
+        if all_dates and all_dates[0] >= yesterday_str:
+            streak = 1
+            for i in range(1, len(all_dates)):
+                prev = datetime.strptime(all_dates[i - 1], "%Y-%m-%d")
+                curr = datetime.strptime(all_dates[i], "%Y-%m-%d")
+                if (prev - curr).days == 1:
+                    streak += 1
+                else:
+                    break
+
+        # Global field effect: direction distribution of all today's actions
+        field_dist = {'contribution': 0, 'recovery': 0, 'order': 0, 'exploration': 0}
+        for s in all_sessions:
+            for h in s.get("history", []):
+                if h.get("timestamp", "") >= today_start:
+                    d = h.get("value_tag", "")
+                    if d in field_dist:
+                        field_dist[d] += 1
+        if total_field > 0:
+            field_effect = {d: round((c / total_field) * 100) for d, c in field_dist.items()}
+        else:
+            field_effect = {d: 25 for d in field_dist}
+
+        # Reflection text
+        if today_total == 0:
+            reflection_he = "היום עוד לא ביצעת פעולות. מחר יום חדש."
+        else:
+            reflection_he = f"היום פעלת {today_total} פעמים, בעיקר בכיוון {dir_labels.get(chosen_direction, '')}. ההשפעה שלך על השדה: {impact_percent}%."
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "date": today_str,
+            "chosen_direction": chosen_direction,
+            "chosen_direction_he": dir_labels.get(chosen_direction, ''),
+            "direction_counts": dir_counts,
+            "total_actions": today_total,
+            "impact_on_field": impact_percent,
+            "streak": streak,
+            "global_field_effect": field_effect,
+            "reflection_he": reflection_he
+        }
+    except Exception as e:
+        logger.error(f"Get day summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/directions")
+async def get_directions():
+    """Return the 4 directions with explanations and symbolic meanings."""
+    return {
+        "success": True,
+        "directions": DIRECTION_THEORY
+    }
+
+
+@api_router.get("/orientation/force-profile/{user_id}")
+async def get_force_profile(user_id: str):
+    """Force Profile Engine: compute user's 6-force profile from action history."""
+    try:
+        session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "history": 1, "global_stats": 1})
+
+        forces = {f: 0.0 for f in FORCE_LABELS_HE}
+        total = 0
+
+        if session:
+            for h in session.get("history", []):
+                d = h.get("value_tag", "")
+                if d in DIRECTION_FORCE_MAP:
+                    total += 1
+                    for f, weight in DIRECTION_FORCE_MAP[d].items():
+                        forces[f] += weight
+
+        if total > 0:
+            forces = {f: round(v / total, 2) for f, v in forces.items()}
+
+        dominant = max(forces, key=forces.get) if total > 0 else None
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "forces": forces,
+            "dominant_force": dominant,
+            "dominant_force_he": FORCE_LABELS_HE.get(dominant, ''),
+            "total_actions": total
+        }
+    except Exception as e:
+        logger.error(f"Get force profile error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/value-vectors/{user_id}")
+async def get_value_vectors(user_id: str):
+    """Value Vector System: track 3 value vectors from action history."""
+    try:
+        session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "history": 1})
+
+        vectors = {v: 0.0 for v in VECTOR_LABELS_HE}
+        total = 0
+
+        if session:
+            for h in session.get("history", []):
+                d = h.get("value_tag", "")
+                if d in DIRECTION_VECTOR_MAP:
+                    total += 1
+                    for v, weight in DIRECTION_VECTOR_MAP[d].items():
+                        vectors[v] += weight
+
+        if total > 0:
+            vectors = {v: round(val / total, 2) for v, val in vectors.items()}
+
+        dominant = max(vectors, key=vectors.get) if total > 0 else None
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "vectors": vectors,
+            "dominant_vector": dominant,
+            "dominant_vector_he": VECTOR_LABELS_HE.get(dominant, ''),
+            "total_actions": total
+        }
+    except Exception as e:
+        logger.error(f"Get value vectors error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/daily-summary/{user_id}")
+async def get_daily_summary(user_id: str):
+    """Daily Summary: end-of-day overview of direction, force, vectors, and field impact."""
+    try:
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+        session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "history": 1})
+
+        dir_counts = {'contribution': 0, 'recovery': 0, 'order': 0, 'exploration': 0}
+        forces = {f: 0.0 for f in FORCE_LABELS_HE}
+        vectors = {v: 0.0 for v in VECTOR_LABELS_HE}
+        today_total = 0
+
+        if session:
+            for h in session.get("history", []):
+                if h.get("timestamp", "") >= today_start:
+                    d = h.get("value_tag", "")
+                    if d in dir_counts:
+                        dir_counts[d] += 1
+                        today_total += 1
+                        for f, w in DIRECTION_FORCE_MAP.get(d, {}).items():
+                            forces[f] += w
+                        for v, w in DIRECTION_VECTOR_MAP.get(d, {}).items():
+                            vectors[v] += w
+
+        if today_total > 0:
+            forces = {f: round(v / today_total, 2) for f, v in forces.items()}
+            vectors = {v: round(val / today_total, 2) for v, val in vectors.items()}
+
+        dominant_dir = max(dir_counts, key=dir_counts.get) if today_total > 0 else None
+        dominant_force = max(forces, key=forces.get) if today_total > 0 else None
+        dominant_vector = max(vectors, key=vectors.get) if today_total > 0 else None
+
+        dir_labels = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+
+        # Field impact: what % of today's collective actions came from this user
+        all_sessions = await db.philos_sessions.find({}, {"_id": 0, "history": 1}).to_list(10000)
+        total_today = sum(
+            1 for s in all_sessions for h in s.get("history", [])
+            if h.get("timestamp", "") >= today_start and h.get("value_tag", "") in dir_counts
+        )
+        field_impact = round((today_total / total_today) * 100, 1) if total_today > 0 else 0
+
+        # Build summary text
+        if today_total == 0:
+            summary_he = "עוד לא ביצעת פעולות היום. התחל את היום עם השאלה היומית."
+        else:
+            summary_he = f"היום ביצעת {today_total} פעולות. הכיוון המוביל: {dir_labels.get(dominant_dir, '')}. הכוח הדומיננטי: {FORCE_LABELS_HE.get(dominant_force, '')}."
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "date": now.strftime("%Y-%m-%d"),
+            "total_actions": today_total,
+            "direction_counts": dir_counts,
+            "dominant_direction": dominant_dir,
+            "dominant_direction_he": dir_labels.get(dominant_dir, ''),
+            "forces": forces,
+            "dominant_force": dominant_force,
+            "dominant_force_he": FORCE_LABELS_HE.get(dominant_force, ''),
+            "vectors": vectors,
+            "dominant_vector": dominant_vector,
+            "dominant_vector_he": VECTOR_LABELS_HE.get(dominant_vector, ''),
+            "field_impact": field_impact,
+            "summary_he": summary_he
+        }
+    except Exception as e:
+        logger.error(f"Get daily summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/profile/{user_id}")
+async def get_user_profile(user_id: str):
+    """Profile Page: alias, identity, streak, force profile, value vectors, recent actions, rank."""
+    try:
+        now = datetime.now(timezone.utc)
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        # Alias (deterministic from user_id)
+        alias_index = hash(user_id) % len(ANONYMOUS_ALIASES)
+        alias = ANONYMOUS_ALIASES[alias_index]
+
+        # Session data
+        session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "history": 1, "global_stats": 1})
+        history = session.get("history", []) if session else []
+        stats = session.get("global_stats", {}) if session else {}
+
+        # Identity
+        dirs = ['contribution', 'recovery', 'order', 'exploration']
+        dir_counts = {d: stats.get(d, 0) for d in dirs}
+        total_actions = sum(dir_counts.values())
+        dominant_dir = max(dir_counts, key=dir_counts.get) if total_actions > 0 else None
+        dir_labels = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+        identity = dir_labels.get(dominant_dir, 'חדש') + ' מוביל' if dominant_dir else 'משתמש חדש'
+
+        # Streak
+        answered = await db.daily_questions.find(
+            {"user_id": user_id, "answered": True}, {"_id": 0, "date": 1}
+        ).to_list(500)
+        all_dates = sorted(set(q.get("date") for q in answered if q.get("date")), reverse=True)
+        streak = 0
+        if all_dates and all_dates[0] >= yesterday_str:
+            streak = 1
+            for i in range(1, len(all_dates)):
+                prev = datetime.strptime(all_dates[i - 1], "%Y-%m-%d")
+                curr = datetime.strptime(all_dates[i], "%Y-%m-%d")
+                if (prev - curr).days == 1:
+                    streak += 1
+                else:
+                    break
+
+        # Force profile
+        forces = {f: 0.0 for f in FORCE_LABELS_HE}
+        for h in history:
+            d = h.get("value_tag", "")
+            if d in DIRECTION_FORCE_MAP:
+                for f, w in DIRECTION_FORCE_MAP[d].items():
+                    forces[f] += w
+        if total_actions > 0:
+            forces = {f: round(v / total_actions, 2) for f, v in forces.items()}
+
+        # Value vectors
+        vectors = {v: 0.0 for v in VECTOR_LABELS_HE}
+        for h in history:
+            d = h.get("value_tag", "")
+            if d in DIRECTION_VECTOR_MAP:
+                for v, w in DIRECTION_VECTOR_MAP[d].items():
+                    vectors[v] += w
+        if total_actions > 0:
+            vectors = {v: round(val / total_actions, 2) for v, val in vectors.items()}
+
+        # Recent actions (last 10)
+        recent = sorted(history, key=lambda x: x.get("timestamp", ""), reverse=True)[:10]
+        recent_actions = [{
+            "direction": a.get("value_tag", ""),
+            "action": a.get("action", ""),
+            "timestamp": a.get("timestamp", "")
+        } for a in recent]
+
+        # Community rank (by total actions)
+        all_sessions_list = await db.philos_sessions.find({}, {"_id": 0, "user_id": 1, "global_stats": 1}).to_list(10000)
+        all_totals = sorted([
+            sum(s.get("global_stats", {}).get(d, 0) for d in dirs)
+            for s in all_sessions_list
+        ], reverse=True)
+        my_rank = 1
+        for i, t in enumerate(all_totals):
+            if t <= total_actions:
+                my_rank = i + 1
+                break
+        total_users = len(all_totals)
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "alias": alias,
+            "identity": identity,
+            "streak": streak,
+            "total_actions": total_actions,
+            "direction_distribution": dir_counts,
+            "dominant_direction": dominant_dir,
+            "forces": forces,
+            "dominant_force": max(forces, key=forces.get) if total_actions > 0 else None,
+            "vectors": vectors,
+            "dominant_vector": max(vectors, key=vectors.get) if total_actions > 0 else None,
+            "recent_actions": recent_actions,
+            "community_rank": my_rank,
+            "total_users": total_users
+        }
+    except Exception as e:
+        logger.error(f"Get user profile error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/globe-activity")
+async def get_globe_activity():
+    """Globe-ready dataset from demo agents and real field events."""
+    try:
+        now = datetime.now(timezone.utc)
+        cutoff = (now - timedelta(hours=1)).isoformat()
+
+        # Demo events with geolocation
+        demo_events = await db.demo_events.find(
+            {"timestamp": {"$gte": cutoff}},
+            {"_id": 0, "direction": 1, "timestamp": 1, "country": 1, "country_code": 1}
+        ).to_list(200)
+
+        # Country approximate lat/lng for globe
+        country_coords = {
+            "BR": {"lat": -14.2, "lng": -51.9}, "IN": {"lat": 20.6, "lng": 78.9},
+            "DE": {"lat": 51.2, "lng": 10.5}, "US": {"lat": 37.1, "lng": -95.7},
+            "JP": {"lat": 36.2, "lng": 138.3}, "NG": {"lat": 9.1, "lng": 8.7},
+            "IL": {"lat": 31.0, "lng": 34.9}, "FR": {"lat": 46.2, "lng": 2.2},
+            "AU": {"lat": -25.3, "lng": 133.8}, "KR": {"lat": 35.9, "lng": 127.8},
+            "MX": {"lat": 23.6, "lng": -102.6}, "GB": {"lat": 55.4, "lng": -3.4},
+            "CA": {"lat": 56.1, "lng": -106.3}, "IT": {"lat": 41.9, "lng": 12.6},
+            "ES": {"lat": 40.5, "lng": -3.7}, "AR": {"lat": -38.4, "lng": -63.6},
+            "TR": {"lat": 39.0, "lng": 35.2}, "TH": {"lat": 15.9, "lng": 100.5},
+            "PL": {"lat": 51.9, "lng": 19.1}, "NL": {"lat": 52.1, "lng": 5.3}
+        }
+
+        color_map = {
+            'contribution': '#22c55e', 'recovery': '#3b82f6',
+            'order': '#6366f1', 'exploration': '#f59e0b'
+        }
+
+        points = []
+        for e in demo_events:
+            cc = e.get("country_code", "")
+            coords = country_coords.get(cc)
+            if coords:
+                points.append({
+                    "lat": coords["lat"] + (_random.random() - 0.5) * 4,
+                    "lng": coords["lng"] + (_random.random() - 0.5) * 4,
+                    "direction": e["direction"],
+                    "color": color_map.get(e["direction"], "#8b5cf6"),
+                    "country": e.get("country", ""),
+                    "country_code": cc,
+                    "timestamp": e["timestamp"]
+                })
+
+        return {
+            "success": True,
+            "points": points,
+            "total_points": len(points),
+            "color_map": color_map
+        }
+    except Exception as e:
+        logger.error(f"Get globe activity error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @api_router.get("/orientation/referral-leaderboard")
 async def get_referral_leaderboard():

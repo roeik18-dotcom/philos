@@ -15,7 +15,7 @@
 | Backend | FastAPI (Python async) |
 | Database | MongoDB (Motor driver) |
 | Persistence | localStorage + MongoDB cloud sync |
-| Preview URL | https://philos-streak.preview.emergentagent.com |
+| Preview URL | https://daily-orientation.preview.emergentagent.com |
 
 ---
 
@@ -298,7 +298,7 @@ tail -n 50 /var/log/supervisor/frontend.err.log
 tail -n 50 /var/log/supervisor/backend.err.log
 
 # Test API
-API_URL=https://philos-streak.preview.emergentagent.com
+API_URL=https://daily-orientation.preview.emergentagent.com
 curl -s "$API_URL/api/"
 ```
 
@@ -318,7 +318,7 @@ curl -s "$API_URL/api/"
 
 ## 11. Preview URL
 
-**Live App:** https://philos-streak.preview.emergentagent.com
+**Live App:** https://daily-orientation.preview.emergentagent.com
 
 ---
 
