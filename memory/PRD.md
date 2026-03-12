@@ -185,6 +185,19 @@ All backend endpoints for this phase were completed in Phase 16. This phase wire
 
 New DB Collections: `missions`, `circles`
 
+### Phase 18 — Circle Detail View (completed 2026-03-12)
+1. **Circle Detail Page** — Clicking any circle card in Community tab opens a detail view with header (name, direction tag, description, member count), Join/Leave toggle, and 3 inner tabs.
+2. **Circle Feed** — Inner feed tab showing 8 recent member actions with alias, action text, direction, and impact score.
+3. **Circle Leaderboard** — Top 5 ranked members by impact with alias, country, actions count.
+4. **Circle Missions** — Direction-specific missions tied to the circle with progress bars and target counts.
+5. **Join/Leave Toggle** — Members can join or leave circles. Button state reflects current membership via `is_member` field.
+6. **Back Navigation** — "חזרה למעגלים" button returns to the circles list within the Community tab.
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/orientation/value-circles/{circle_id}?user_id=` | GET | Circle detail: info, is_member, feed, leaderboard, missions |
+| `/api/orientation/value-circles/leave` | POST | Leave a circle |
+
 ## Backlog
 
 ### P0 — Next Focus
