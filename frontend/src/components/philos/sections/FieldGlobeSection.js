@@ -70,6 +70,28 @@ export default function FieldGlobeSection() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Auto-refresh globe data every 45 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchData, 45000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  // Ambient field pulses — simulate living field
+  useEffect(() => {
+    const dirs = ['contribution', 'recovery', 'order', 'exploration'];
+    const ambientPulse = () => {
+      const d = dirs[Math.floor(Math.random() * dirs.length)];
+      const lat = -60 + Math.random() * 120;
+      const lng = -180 + Math.random() * 360;
+      const color = defaultColors[d];
+      const ring = { lat, lng, maxR: 5, propagationSpeed: 1.5, repeatPeriod: 1500, color };
+      setRingsData(prev => [...prev.slice(-3), ring]);
+      setTimeout(() => setRingsData(prev => prev.filter(r => r !== ring)), 4000);
+    };
+    const interval = setInterval(ambientPulse, 8000 + Math.random() * 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Listen for field-pulse events from SendToGlobeButton
   useEffect(() => {
     const handlePulse = (e) => {

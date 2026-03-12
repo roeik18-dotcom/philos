@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Flame, Check, Sun, Loader2, TrendingUp } from 'lucide-react';
+import { Flame, Check, Sun, Loader2, TrendingUp, Target, User } from 'lucide-react';
 import SendToGlobeButton from './SendToGlobeButton';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -65,7 +65,14 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           setCompleted(true);
           setShowSuccess(true);
           if (result.impact_message) {
-            setImpactData({ percent: result.impact_percent, message: result.impact_message });
+            setImpactData({
+              percent: result.impact_percent,
+              message: result.impact_message,
+              score: result.impact_score,
+              streak: result.streak,
+              niche_info: result.niche_info,
+              identity_link: result.identity_link
+            });
           }
           setQuestionData(prev => prev ? { ...prev, streak: (prev.streak || 0) + 1, already_answered_today: true } : prev);
           if (onActionRecorded) {
@@ -183,11 +190,43 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           )}
 
           {impactData && (
-            <div className="mt-2 p-3 bg-white/60 rounded-2xl border border-green-100 animate-section animate-section-2" data-testid="impact-message">
+            <div className="mt-2 p-3 bg-white/60 rounded-2xl border border-green-100 animate-section animate-section-2 space-y-2" data-testid="impact-message">
               <p className="text-sm text-green-700 font-medium">{impactData.message}</p>
-              <p className="text-xs text-green-600 mt-1">
-                {impactData.percent > 0 ? `${impactData.percent}% מהשדה היום` : ''}
-              </p>
+
+              {/* Animated +impact score */}
+              <div className="flex items-center justify-center gap-3 py-1">
+                <span className="text-lg font-black text-green-600 animate-glow-in" data-testid="impact-score-reward">+{impactData.score}</span>
+                <span className="text-[10px] text-green-500">השפעה</span>
+                {impactData.streak > 0 && (
+                  <span className="flex items-center gap-0.5 text-orange-500 text-xs font-bold">
+                    <Flame className="w-3 h-3" />{impactData.streak} רצף
+                  </span>
+                )}
+              </div>
+
+              {/* Niche progress */}
+              {impactData.niche_info && (
+                <div className="flex items-center gap-2 bg-purple-50 rounded-xl p-2 border border-purple-100" data-testid="niche-progress-reward">
+                  <Target className="w-3.5 h-3.5 text-purple-500" />
+                  <div className="flex-1">
+                    <div className="flex justify-between text-[10px] mb-0.5">
+                      <span className="text-purple-600 font-medium">{impactData.niche_info.niche_he}</span>
+                      <span className="text-purple-400">עוד {impactData.niche_info.remaining}</span>
+                    </div>
+                    <div className="h-1 bg-purple-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-purple-400 rounded-full transition-all duration-700" style={{ width: `${impactData.niche_info.progress}%` }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Link to profile */}
+              {impactData.identity_link && (
+                <a href={impactData.identity_link} className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 hover:text-indigo-500 transition-colors pt-1" data-testid="identity-growth-link">
+                  <User className="w-3 h-3" />
+                  <span>צפה ברשומת הפעולות שלך</span>
+                </a>
+              )}
             </div>
           )}
 

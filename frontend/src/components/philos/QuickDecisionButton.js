@@ -1,196 +1,129 @@
-import { useState, useEffect } from 'react';
-import { getUserDecisionStats } from '../../services/cloudSync';
+import { useState } from 'react';
+import { Zap, Loader2, Check, X, Flame, Target, User } from 'lucide-react';
 
-// Decision templates with guiding questions
-const DECISION_TEMPLATES = [
-  { id: 'personal', label: 'אישי', icon: '👤', prompt: 'מהי הפעולה שאני שוקל כרגע?' },
-  { id: 'social', label: 'חברתי', icon: '👥', prompt: 'איך בחרתי להגיב באינטראקציה החברתית?' },
-  { id: 'work', label: 'עבודה', icon: '💼', prompt: 'מה עשיתי כדי להתקדם במשימה?' },
-  { id: 'emotional', label: 'רגשי', icon: '💭', prompt: 'איך הגבתי לרגש שהרגשתי?' },
-  { id: 'ethical', label: 'אתי', icon: '⚖️', prompt: 'מה הייתה ההחלטה המוסרית שקיבלתי?' }
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+const DIRECTIONS = [
+  { id: 'contribution', label: 'תרומה', desc: 'לתת', color: '#22c55e' },
+  { id: 'recovery', label: 'התאוששות', desc: 'להיטען', color: '#3b82f6' },
+  { id: 'order', label: 'סדר', desc: 'לארגן', color: '#6366f1' },
+  { id: 'exploration', label: 'חקירה', desc: 'לגלות', color: '#f59e0b' }
 ];
 
 export default function QuickDecisionButton({ onSubmit }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [quickAction, setQuickAction] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [stats, setStats] = useState({ today_decisions: 0, total_decisions: 0 });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [phase, setPhase] = useState('pick'); // pick | sending | reward
+  const [sending, setSending] = useState(false);
+  const [reward, setReward] = useState(null);
 
-  // Fetch stats on mount and after submissions
-  useEffect(() => {
-    const fetchStats = async () => {
-      const result = await getUserDecisionStats();
-      if (result.success !== false) {
-        setStats(result);
+  const userId = localStorage.getItem('philos_user_id') || '';
+
+  const handlePickDirection = async (dir) => {
+    setPhase('sending');
+    setSending(true);
+    try {
+      const res = await fetch(`${API_URL}/api/onboarding/first-action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, direction: dir.id })
+      });
+      const data = await res.json();
+      if (data?.success) {
+        // Trigger globe pulse
+        window.dispatchEvent(new CustomEvent('globe-field-pulse', { detail: { direction: dir.id } }));
+        setReward({ direction: dir, message: data.message_he });
+        setPhase('reward');
+        // Auto-close after 2.5s
+        setTimeout(() => { setOpen(false); setPhase('pick'); setReward(null); }, 2500);
       }
-    };
-    fetchStats();
-  }, []);
-
-  const handleSubmit = async () => {
-    if (!quickAction.trim()) return;
-    
-    setIsSubmitting(true);
-    await onSubmit(quickAction.trim());
-    setQuickAction('');
-    setSelectedTemplate(null);
-    setIsSubmitting(false);
-    setIsOpen(false);
-    
-    // Update stats after submission
-    const result = await getUserDecisionStats();
-    if (result.success !== false) {
-      setStats(result);
+    } catch (e) {
+      setPhase('pick');
+    } finally {
+      setSending(false);
     }
   };
 
-  const handleTemplateSelect = (template) => {
-    if (selectedTemplate?.id === template.id) {
-      // Deselect if clicking same template
-      setSelectedTemplate(null);
-      setQuickAction('');
-    } else {
-      setSelectedTemplate(template);
-      setQuickAction(template.prompt + ' ');
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-    if (e.key === 'Escape') {
-      setIsOpen(false);
-      setQuickAction('');
-    }
+  const handleClose = () => {
+    setOpen(false);
+    setPhase('pick');
+    setReward(null);
   };
 
   return (
     <>
-      {/* Floating Button */}
+      {/* FAB */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center ${
-          isOpen 
-            ? 'bg-red-500 hover:bg-red-600 rotate-45' 
-            : 'bg-indigo-600 hover:bg-indigo-700 hover:scale-110'
-        }`}
-        data-testid="quick-decision-fab"
-        aria-label={isOpen ? 'סגור' : 'החלטה מהירה'}
+        onClick={() => setOpen(true)}
+        className="fixed bottom-20 right-4 z-40 w-12 h-12 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-gray-800 active:scale-90 transition-all"
+        data-testid="quick-action-fab"
       >
-        <svg 
-          className="w-6 h-6 text-white" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M12 4v16m8-8H4" 
-          />
-        </svg>
+        <Zap className="w-5 h-5" />
       </button>
 
-      {/* Stats Badge */}
-      {!isOpen && stats.today_decisions > 0 && (
-        <div 
-          className="fixed bottom-[72px] left-6 z-50 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow"
-          data-testid="today-decisions-badge"
-        >
-          {stats.today_decisions} היום
-        </div>
-      )}
+      {/* Fast Action Panel */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 backdrop-blur-sm" onClick={handleClose}>
+          <div
+            className="w-full max-w-md bg-white rounded-t-3xl p-5 pb-8 shadow-2xl"
+            dir="rtl"
+            onClick={e => e.stopPropagation()}
+            data-testid="quick-action-panel"
+          >
+            {phase === 'pick' && (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-gray-800">פעולה מהירה</h3>
+                  <button onClick={handleClose} className="text-gray-300 hover:text-gray-500"><X className="w-4 h-4" /></button>
+                </div>
+                <p className="text-xs text-gray-400 mb-3">בחר כיוון — הנקודה נשלחת לגלובוס מיד</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {DIRECTIONS.map(d => (
+                    <button
+                      key={d.id}
+                      onClick={() => handlePickDirection(d)}
+                      className="p-4 rounded-2xl border-2 transition-all active:scale-[0.95] hover:shadow-md text-right"
+                      style={{ borderColor: `${d.color}30`, backgroundColor: `${d.color}05` }}
+                      data-testid={`quick-dir-${d.id}`}
+                    >
+                      <div className="w-6 h-6 rounded-lg mb-2 flex items-center justify-center" style={{ backgroundColor: `${d.color}15` }}>
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                      </div>
+                      <p className="text-sm font-bold" style={{ color: d.color }}>{d.label}</p>
+                      <p className="text-[10px] text-gray-400">{d.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
-      {/* Expanded Quick Input Panel */}
-      {isOpen && (
-        <div 
-          className="fixed bottom-24 left-6 z-50 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
-          dir="rtl"
-          data-testid="quick-decision-panel"
-        >
-          {/* Header */}
-          <div className="bg-gradient-to-l from-indigo-600 to-indigo-500 px-4 py-3">
-            <h3 className="text-white font-semibold text-sm">החלטה מהירה</h3>
-            <p className="text-indigo-100 text-xs">מה עשית או מתכנן לעשות?</p>
-          </div>
-
-          {/* Input */}
-          <div className="p-4">
-            {/* Template Selector */}
-            <div className="mb-3">
-              <p className="text-xs text-gray-500 mb-2">בחר סוג החלטה:</p>
-              <div className="flex flex-wrap gap-1.5">
-                {DECISION_TEMPLATES.map(template => (
-                  <button
-                    key={template.id}
-                    onClick={() => handleTemplateSelect(template)}
-                    className={`px-2.5 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1 ${
-                      selectedTemplate?.id === template.id
-                        ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300'
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                    }`}
-                    data-testid={`template-${template.id}`}
-                  >
-                    <span>{template.icon}</span>
-                    <span>{template.label}</span>
-                  </button>
-                ))}
+            {phase === 'sending' && (
+              <div className="flex flex-col items-center justify-center py-8 gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                <span className="text-xs text-gray-400">שולח לגלובוס...</span>
               </div>
-            </div>
+            )}
 
-            <textarea
-              value={quickAction}
-              onChange={(e) => setQuickAction(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={selectedTemplate ? selectedTemplate.prompt : "הקלד פעולה..."}
-              className="w-full h-20 px-3 py-2 text-sm border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              autoFocus
-              data-testid="quick-decision-input"
-            />
-            
-            {/* Quick suggestions */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {['הליכה', 'מנוחה', 'עזרה', 'עבודה'].map(suggestion => (
-                <button
-                  key={suggestion}
-                  onClick={() => setQuickAction(prev => prev ? `${prev} ${suggestion}` : suggestion)}
-                  className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition-colors"
-                  data-testid={`suggestion-${suggestion}`}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-
-            {/* Submit Button */}
-            <button
-              onClick={handleSubmit}
-              disabled={!quickAction.trim() || isSubmitting}
-              className="w-full mt-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium text-sm rounded-xl transition-colors"
-              data-testid="quick-decision-submit"
-            >
-              {isSubmitting ? 'שומר...' : 'הוסף החלטה'}
-            </button>
-          </div>
-
-          {/* Stats Footer */}
-          <div className="bg-gray-50 px-4 py-2 flex justify-between text-xs text-gray-500 border-t">
-            <span>היום: {stats.today_decisions}</span>
-            <span>סה״כ: {stats.total_decisions}</span>
+            {phase === 'reward' && reward && (
+              <div className="text-center py-4" data-testid="quick-action-reward">
+                <div className="w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: `${reward.direction.color}15` }}>
+                  <Check className="w-7 h-7" style={{ color: reward.direction.color }} />
+                </div>
+                <p className="text-base font-bold text-gray-900 mb-1">{reward.message}</p>
+                <p className="text-lg font-black mb-2" style={{ color: reward.direction.color }}>+{(2.5).toFixed(1)} השפעה</p>
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                  <span className="flex items-center gap-0.5" style={{ color: reward.direction.color }}>
+                    <Zap className="w-3 h-3" />{reward.direction.label}
+                  </span>
+                </div>
+                {userId && (
+                  <a href={`/profile/${userId}`} className="flex items-center justify-center gap-1 text-[10px] text-gray-400 hover:text-indigo-500 mt-3 transition-colors">
+                    <User className="w-3 h-3" />צפה ברשומה שלך
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
-      )}
-
-      {/* Backdrop */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/20"
-          onClick={() => setIsOpen(false)}
-        />
       )}
     </>
   );

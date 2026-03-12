@@ -16,6 +16,20 @@ const tomorrowHints = {
   exploration: 'מחר, נסה לתת מבנה למה שגילית — סדר עוזר לעגן את החקירה.'
 };
 
+const tensionNarratives = {
+  contribution: { opposing: 'recovery', text_he: 'כוח ההתאוששות עולה ברקע. השדה מאזן: כשהנתינה חזקה, הצורך במנוחה גובר.' },
+  recovery: { opposing: 'contribution', text_he: 'כוח התרומה מתעורר. ההטענה שלך יוצרת אנרגיה — מחר היא תחפש כיוון.' },
+  order: { opposing: 'exploration', text_he: 'כוח החקירה מתרחב בצד. ככל שהסדר מתחזק, הפיתוי לגלות חדש גדל.' },
+  exploration: { opposing: 'order', text_he: 'כוח הסדר מתגבש. מה שגילית היום צריך מסגרת — וזה ימשוך אותך מחר.' }
+};
+
+const returnReasons = {
+  contribution: 'מישהו עשוי להמשיך מה שהתחלת. חזור כדי לראות.',
+  recovery: 'האנרגיה שטענת תהפוך לפעולה. חזור כדי לכוון אותה.',
+  order: 'המבנה שבנית ישפיע על השדה. חזור כדי לראות איך.',
+  exploration: 'מה שגילית עוד לא נגמר. חזור כדי להמשיך.'
+};
+
 export default function ClosingLayer({ userId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -128,9 +142,28 @@ export default function ClosingLayer({ userId }) {
 
           {/* Tomorrow hint */}
           {chosenDir && tomorrowHints[chosenDir] && (
-            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100" data-testid="closing-tomorrow">
+            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 mb-3" data-testid="closing-tomorrow">
               <p className="text-[10px] text-gray-400 mb-1">מבט למחר</p>
               <p className="text-xs text-gray-600 leading-relaxed">{tomorrowHints[chosenDir]}</p>
+            </div>
+          )}
+
+          {/* Tension narrative — cliffhanger */}
+          {chosenDir && tensionNarratives[chosenDir] && (
+            <div className="rounded-xl p-3 border mb-3" style={{ backgroundColor: `${directionColors[tensionNarratives[chosenDir].opposing]}06`, borderColor: `${directionColors[tensionNarratives[chosenDir].opposing]}20` }} data-testid="closing-tension">
+              <p className="text-[10px] font-semibold mb-1" style={{ color: directionColors[tensionNarratives[chosenDir].opposing] }}>מתח עולה</p>
+              <p className="text-xs text-gray-600 leading-relaxed">{tensionNarratives[chosenDir].text_he}</p>
+            </div>
+          )}
+
+          {/* Return hook — reason to come back */}
+          {chosenDir && returnReasons[chosenDir] && (
+            <div className="bg-[#0a0a1a] rounded-xl p-3 text-center" data-testid="closing-return-hook">
+              <p className="text-xs text-gray-300 leading-relaxed">{returnReasons[chosenDir]}</p>
+              <div className="flex items-center justify-center gap-1.5 mt-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                <span className="text-[10px] text-indigo-400 font-medium">השדה ממשיך להשתנות</span>
+              </div>
             </div>
           )}
         </>

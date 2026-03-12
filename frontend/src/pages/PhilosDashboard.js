@@ -262,7 +262,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
       )}
 
       {/* Floating Quick Decision Button */}
-      <QuickDecisionButton onSubmit={evaluateAction} />
+      <QuickDecisionButton />
 
       {/* Floating Feedback Button */}
       <FeedbackButton userId={user?.id} currentTab={activeTab} />

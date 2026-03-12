@@ -3568,6 +3568,30 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
         if not question:
             raise HTTPException(status_code=404, detail="Question not found")
         
+        # Calculate streak from answered questions
+        answered_questions = await db.daily_questions.find({
+            'user_id': user_id,
+            'answered': True
+        }, {'_id': 0, 'date': 1}).sort('date', -1).to_list(100)
+        
+        streak = 0
+        if answered_questions:
+            answered_dates = sorted(set(q.get('date') for q in answered_questions if q.get('date')), reverse=True)
+            expected_date = today_start
+            if answered_dates and answered_dates[0] != today_start:
+                expected_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+            for i, date in enumerate(answered_dates):
+                check_date = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+                if answered_dates[0] != today_start:
+                    check_date = (now - timedelta(days=i+1)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()[:10]
+                if date == check_date:
+                    streak += 1
+                else:
+                    break
+        # Add 1 to streak if this is a new answer (streak will include today after this submission)
+        if question.get('answered') != True:
+            streak += 1
+        
         suggested_direction = question.get('suggested_direction', 'recovery')
         
         # Mark question as answered
@@ -3646,6 +3670,25 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
                 )
                 mission_contributed = True
 
+        # Compute identity growth data for reward feedback
+        niche_info = None
+        identity_link = None
+        if request.action_taken:
+            session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "global_stats": 1})
+            stats = session.get("global_stats", {}) if session else {}
+            total_all = sum(stats.get(d, 0) for d in ['contribution', 'recovery', 'order', 'exploration'])
+            # Check niche progress
+            for nid, ndef in VALUE_NICHES.items():
+                nd = ndef.get('dominant_direction')
+                if nd and nd == suggested_direction:
+                    current = stats.get(nd, 0)
+                    threshold = ndef.get('threshold', 35)
+                    remaining = max(0, threshold - current)
+                    if remaining > 0:
+                        niche_info = {'niche_he': ndef['label_he'], 'remaining': remaining, 'progress': min(round((current / threshold) * 100), 100)}
+                    break
+            identity_link = f"/profile/{user_id}"
+
         return {
             'success': True,
             'message': 'Answer recorded',
@@ -3653,7 +3696,11 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
             'direction': suggested_direction,
             'impact_percent': impact_percent,
             'impact_message': impact_message,
-            'mission_contributed': mission_contributed
+            'impact_score': round(2.5 + streak * 0.5, 1),
+            'mission_contributed': mission_contributed,
+            'streak': streak,
+            'niche_info': niche_info,
+            'identity_link': identity_link
         }
         
     except HTTPException:

@@ -48,8 +48,8 @@ export default function HomeTab({
       {/* ═══ 3D FIELD GLOBE ═══ */}
       <FieldGlobeSection />
 
-      {/* ═══ LAYER 1: ENTRY — "Why am I here?" ═══ */}
-      <EntryLayer />
+      {/* ═══ LAYER 1: ENTRY — Dynamic Personal Hook ═══ */}
+      <EntryLayer userId={user?.id} />
 
       {/* ═══ LAYER 2: PERSONAL ORIENTATION — "Where am I now?" ═══ */}
       <DailyOpeningSection userId={user?.id} />
