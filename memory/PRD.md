@@ -18,12 +18,10 @@ Core dashboard, engagement, community, missions, UI polish, referral, validation
 Dark documentary profile page: hero with identity markers, stats strip (impact/actions/streak/field%), opposition axes, influence chain with credits, upgraded share card.
 
 ### Phase 30 — Highlighted Records Discovery (2026-03-12)
-1. **Backend**: `/api/orientation/highlighted-records` — returns top 8 active users (last 7 days) sorted by impact score with alias, dominant_direction, impact_score, invite_count
-2. **Frontend**: `HighlightedRecords.js` — horizontal scrollable dark cards at top of Feed tab
-   - "אנשים בשדה" (People in the field) label
-   - Cards show: direction-colored initial, alias, direction badge (Hebrew), impact score, invite icon+count
-   - Clicking opens `/profile/{user_id}` Human Action Record
-3. **No social mechanics** — observation and navigation only, no likes/comments/follow
+1. **Backend**: `/api/orientation/highlighted-records` — top 8 active users with `present` flag (active in last 24h)
+2. **Frontend**: Horizontal scrollable dark cards in Feed tab, clicking opens profile
+3. **Field Presence**: Slow 4s pulse on initials of users active in last 24h — no numbers, no badges
+4. **No social mechanics** — observation and navigation only
 
 ## Key API Endpoints
 | Endpoint | Method | Returns |

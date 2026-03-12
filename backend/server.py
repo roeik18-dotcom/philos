@@ -5985,6 +5985,12 @@ async def get_highlighted_records():
             invites = await db.invites.find({"inviter_id": uid}, {"_id": 0, "use_count": 1}).to_list(10)
             invite_count = sum(i.get("use_count", 0) for i in invites)
 
+            # Present in the field (active in last 24h)
+            yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+            recent = await db.daily_questions.count_documents(
+                {"user_id": uid, "answered": True, "date": {"$gte": yesterday_str}}
+            )
+
             records.append({
                 "user_id": uid,
                 "alias": alias,
@@ -5992,7 +5998,8 @@ async def get_highlighted_records():
                 "dominant_direction_he": GLOBE_DIR_LABELS.get(dominant_dir, ''),
                 "impact_score": impact_score,
                 "total_actions": total_actions,
-                "invite_count": invite_count
+                "invite_count": invite_count,
+                "present": recent > 0
             })
 
         # Sort by impact score descending, take top 8

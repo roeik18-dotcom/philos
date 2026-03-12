@@ -31,11 +31,16 @@ export default function HighlightedRecords() {
               data-testid={`record-card-${r.user_id}`}
             >
               <div className="flex items-center gap-2 mb-2.5">
-                <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                  style={{ backgroundColor: `${dc}15`, color: dc, border: `1px solid ${dc}25` }}
-                >
-                  {r.alias?.charAt(0)}
+                <span className="relative flex-shrink-0">
+                  {r.present && (
+                    <span className="absolute inset-0 rounded-lg animate-[pulse_4s_ease-in-out_infinite] opacity-[0.15]" style={{ backgroundColor: dc }} />
+                  )}
+                  <span
+                    className="relative w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                    style={{ backgroundColor: `${dc}15`, color: dc, border: `1px solid ${dc}25` }}
+                  >
+                    {r.alias?.charAt(0)}
+                  </span>
                 </span>
                 <span className="text-xs text-white font-medium truncate">{r.alias}</span>
               </div>
