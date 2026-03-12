@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Compass, Zap, ArrowLeft } from 'lucide-react';
+import { Compass, ArrowLeft } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const dirColors = { contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b' };
@@ -55,14 +55,12 @@ export default function EntryLayer({ userId }) {
           <span className="text-xs tracking-wide">Philos Orientation</span>
         </div>
 
-        {/* World direction */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-[10px] text-gray-400">כיוון השדה היום</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: `${worldColor}20`, color: worldColor }} data-testid="entry-world-direction">
-            <Zap className="w-2.5 h-2.5 inline mr-0.5" />{worldDir}
-          </span>
-          {field && <span className="text-[10px] text-gray-500">{field.total_actions_today} פעולות</span>}
-        </div>
+        {/* World state narrative */}
+        {field?.field_narrative_he && (
+          <p className="text-[11px] text-gray-400 mb-3 leading-relaxed" data-testid="entry-world-direction">
+            {field.field_narrative_he}
+          </p>
+        )}
 
         {/* User's dominant force */}
         {userForce && (

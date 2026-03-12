@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Globe as GlobeIcon, RefreshCw, X, TrendingUp, MapPin, Zap, Radio } from 'lucide-react';
+import { RefreshCw, X, MapPin } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const dirLabels = { contribution: 'תרומה', recovery: 'התאוששות', order: 'סדר', exploration: 'חקירה' };
 const dirColors = { contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b' };
 
-// Known hotspot coordinates for regional glow pulses
 const HOTSPOT_COORDS = [
   { lat: 31.5, lng: 34.8, name: 'ישראל' },
   { lat: 48.8, lng: 2.3, name: 'צרפת' },
@@ -29,8 +28,6 @@ export default function FieldGlobeSection() {
   const [GlobeComponent, setGlobeComponent] = useState(null);
   const [regionPopup, setRegionPopup] = useState(null);
   const [ringsData, setRingsData] = useState([]);
-  const [liveCount, setLiveCount] = useState(0);
-  const [lastPulseDir, setLastPulseDir] = useState(null);
   const globeContainerRef = useRef(null);
   const globeRef = useRef(null);
 
@@ -73,80 +70,51 @@ export default function FieldGlobeSection() {
   // Initial load
   useEffect(() => { fetchGlobeData(); fetchFieldState(); }, [fetchGlobeData, fetchFieldState]);
 
-  // Auto-refresh: globe every 40s, field state every 25s
+  // Auto-refresh: globe every 45s, field state every 30s
   useEffect(() => {
-    const g = setInterval(fetchGlobeData, 40000);
-    const f = setInterval(fetchFieldState, 25000);
+    const g = setInterval(fetchGlobeData, 45000);
+    const f = setInterval(fetchFieldState, 30000);
     return () => { clearInterval(g); clearInterval(f); };
   }, [fetchGlobeData, fetchFieldState]);
 
-  // Animate live counter
-  useEffect(() => {
-    const target = fieldData?.total_actions_today || todayStats?.total_actions || 0;
-    if (liveCount === target) return;
-    const step = Math.max(1, Math.ceil(Math.abs(target - liveCount) / 15));
-    const t = setTimeout(() => {
-      setLiveCount(prev => prev < target ? Math.min(prev + step, target) : Math.max(prev - step, target));
-    }, 50);
-    return () => clearTimeout(t);
-  }, [fieldData, todayStats, liveCount]);
-
-  // === AMBIENT FIELD PULSES — direction-coded, regional ===
+  // === AMBIENT PULSE — one clean pulse at a time, direction-coded ===
   useEffect(() => {
     const dirs = Object.keys(dirColors);
-    const ambientPulse = () => {
+    const pulse = () => {
       const d = dirs[Math.floor(Math.random() * dirs.length)];
       const hotspot = HOTSPOT_COORDS[Math.floor(Math.random() * HOTSPOT_COORDS.length)];
-      const lat = hotspot.lat + (Math.random() - 0.5) * 8;
-      const lng = hotspot.lng + (Math.random() - 0.5) * 8;
-      const ring = { lat, lng, maxR: 4, propagationSpeed: 1.2, repeatPeriod: 2000, color: dirColors[d] };
-      setRingsData(prev => [...prev.slice(-4), ring]);
-      setLastPulseDir(d);
-      setTimeout(() => setRingsData(prev => prev.filter(r => r !== ring)), 5000);
+      const ring = {
+        lat: hotspot.lat + (Math.random() - 0.5) * 5,
+        lng: hotspot.lng + (Math.random() - 0.5) * 5,
+        maxR: 5,
+        propagationSpeed: 0.8,
+        repeatPeriod: 3000,
+        color: dirColors[d]
+      };
+      setRingsData(prev => [...prev.slice(-2), ring]);
+      setTimeout(() => setRingsData(prev => prev.filter(r => r !== ring)), 6000);
     };
-    const interval = setInterval(ambientPulse, 6000 + Math.random() * 3000);
+    const interval = setInterval(pulse, 8000 + Math.random() * 4000);
     return () => clearInterval(interval);
   }, []);
 
-  // === LARGE FIELD SPIKE PULSE — periodic, bigger, slower ===
+  // === DOMINANT DIRECTION SPIKE — periodic, bigger, from active region ===
   useEffect(() => {
-    const spikePulse = () => {
+    const spike = () => {
       const dominant = fieldData?.dominant_direction || 'contribution';
-      const hotspot = HOTSPOT_COORDS[Math.floor(Math.random() * 3)]; // top 3 regions
+      const hotspot = HOTSPOT_COORDS[Math.floor(Math.random() * 3)];
       const ring = {
         lat: hotspot.lat,
         lng: hotspot.lng,
-        maxR: 12,
-        propagationSpeed: 0.8,
-        repeatPeriod: 3000,
+        maxR: 10,
+        propagationSpeed: 0.5,
+        repeatPeriod: 4000,
         color: dirColors[dominant]
       };
-      setRingsData(prev => [...prev.slice(-3), ring]);
-      setTimeout(() => setRingsData(prev => prev.filter(r => r !== ring)), 6000);
-    };
-    const interval = setInterval(spikePulse, 20000 + Math.random() * 10000);
-    return () => clearInterval(interval);
-  }, [fieldData]);
-
-  // === REGIONAL HOTSPOT GLOW — soft glow at active regions ===
-  useEffect(() => {
-    if (!fieldData?.top_regions?.length) return;
-    const hotspotGlow = () => {
-      const region = fieldData.top_regions[Math.floor(Math.random() * Math.min(3, fieldData.top_regions.length))];
-      const coord = HOTSPOT_COORDS.find(h => h.name === region?.name) || HOTSPOT_COORDS[0];
-      const ring = {
-        lat: coord.lat,
-        lng: coord.lng,
-        maxR: 6,
-        propagationSpeed: 0.6,
-        repeatPeriod: 4000,
-        color: dirColors[fieldData.dominant_direction] || '#6366f1'
-      };
-      setRingsData(prev => [...prev.slice(-5), ring]);
+      setRingsData(prev => [...prev.slice(-2), ring]);
       setTimeout(() => setRingsData(prev => prev.filter(r => r !== ring)), 8000);
     };
-    const interval = setInterval(hotspotGlow, 15000);
-    hotspotGlow(); // initial
+    const interval = setInterval(spike, 25000 + Math.random() * 10000);
     return () => clearInterval(interval);
   }, [fieldData]);
 
@@ -155,11 +123,16 @@ export default function FieldGlobeSection() {
     const handlePulse = (e) => {
       const { lat, lng, color, direction } = e.detail || {};
       const resolvedColor = color || dirColors[direction] || '#6366f1';
-      const resolvedLat = lat ?? (31 + Math.random() * 10 - 5);
-      const resolvedLng = lng ?? (35 + Math.random() * 10 - 5);
-      const ring = { lat: resolvedLat, lng: resolvedLng, maxR: 10, propagationSpeed: 3, repeatPeriod: 800, color: resolvedColor };
-      setRingsData(prev => [...prev, ring]);
-      setTimeout(() => setRingsData(prev => prev.filter(r => r !== ring)), 3000);
+      const ring = {
+        lat: lat ?? 31 + (Math.random() * 10 - 5),
+        lng: lng ?? 35 + (Math.random() * 10 - 5),
+        maxR: 8,
+        propagationSpeed: 2,
+        repeatPeriod: 1200,
+        color: resolvedColor
+      };
+      setRingsData(prev => [...prev.slice(-3), ring]);
+      setTimeout(() => setRingsData(prev => prev.filter(r => r !== ring)), 4000);
     };
     window.addEventListener('globe-field-pulse', handlePulse);
     return () => window.removeEventListener('globe-field-pulse', handlePulse);
@@ -169,7 +142,7 @@ export default function FieldGlobeSection() {
   useEffect(() => {
     if (globeRef.current) {
       const controls = globeRef.current.controls();
-      if (controls) { controls.autoRotate = true; controls.autoRotateSpeed = 0.5; }
+      if (controls) { controls.autoRotate = true; controls.autoRotateSpeed = 0.4; }
       globeRef.current.pointOfView({ lat: 31, lng: 35, altitude: 2.2 }, 1500);
     }
   }, [GlobeComponent, points]);
@@ -193,88 +166,52 @@ export default function FieldGlobeSection() {
     return dist;
   }, [points]);
 
-  const cm = { ...dirColors, ...colorMap };
+  const cm = useMemo(() => ({ ...dirColors, ...colorMap }), [colorMap]);
   const dominantDir = fieldData?.dominant_direction || todayStats?.dominant_direction || null;
   const dominantColor = cm[dominantDir] || '#6366f1';
-  const momentum = fieldData?.momentum_he || '';
-  const heartbeatDuration = Math.max(2, 6 - ((fieldData?.total_actions_today || 0) / 50));
+  const narrative = fieldData?.field_narrative_he || '';
+  const heartbeatDuration = Math.max(2.5, 6 - ((fieldData?.total_actions_today || 0) / 60));
 
   return (
-    <section className="bg-[#0a0a1a] rounded-3xl overflow-hidden border border-gray-800" dir="rtl" data-testid="field-globe-section">
+    <section className="bg-[#0a0a1a] rounded-3xl overflow-hidden border border-gray-800/60" dir="rtl" data-testid="field-globe-section">
 
-      {/* ═══ WORLD STATE HEADER ═══ */}
-      <div className="p-4 pb-0" data-testid="world-state-header">
-        {/* Title row */}
+      {/* ═══ WORLD STATE HEADER — Calm, symbolic ═══ */}
+      <div className="p-4 pb-2" data-testid="world-state-header">
+        {/* Title + refresh */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <GlobeIcon className="w-4 h-4 text-gray-400" />
-            <span className="text-xs font-bold text-gray-300 tracking-wide">מצב השדה</span>
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[9px] text-green-400">חי</span>
+            <span className="text-xs text-gray-500 tracking-wide">מצב השדה</span>
+            <span className="relative flex items-center">
+              <span className="absolute w-1.5 h-1.5 rounded-full animate-ping opacity-30" style={{ backgroundColor: dominantColor }} />
+              <span className="relative w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dominantColor }} />
             </span>
           </div>
           <button onClick={() => { fetchGlobeData(); fetchFieldState(); }} className="p-1 rounded-lg hover:bg-white/5 transition-colors" data-testid="globe-refresh-btn">
-            <RefreshCw className={`w-3.5 h-3.5 text-gray-500 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3 h-3 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
-        {/* World state metrics */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          {/* Dominant direction */}
-          <div className="bg-white/5 rounded-xl p-2.5 text-center" data-testid="world-state-direction">
-            <div className="w-5 h-5 mx-auto rounded-full mb-1 flex items-center justify-center" style={{ backgroundColor: `${dominantColor}20` }}>
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: dominantColor }} />
-            </div>
-            <p className="text-xs font-bold" style={{ color: dominantColor }}>{dirLabels[dominantDir] || '—'}</p>
-            <p className="text-[8px] text-gray-500">כיוון מוביל</p>
-          </div>
-
-          {/* Live action count */}
-          <div className="bg-white/5 rounded-xl p-2.5 text-center" data-testid="world-state-actions">
-            <p className="text-xl font-black text-white tabular-nums">{liveCount.toLocaleString()}</p>
-            <p className="text-[8px] text-gray-500">פעולות היום</p>
-          </div>
-
-          {/* Momentum */}
-          <div className="bg-white/5 rounded-xl p-2.5 text-center" data-testid="world-state-momentum">
-            <div className="flex items-center justify-center gap-0.5 mb-0.5">
-              <Zap className="w-3 h-3" style={{ color: dominantColor }} />
-            </div>
-            <p className="text-[10px] font-medium text-gray-300">{momentum || 'יציב'}</p>
-            <p className="text-[8px] text-gray-500">מומנטום</p>
-          </div>
-        </div>
-
-        {/* Regional hotspots */}
-        {fieldData?.top_regions?.length > 0 && (
-          <div className="flex gap-1.5 mb-3 overflow-x-auto pb-0.5" data-testid="world-state-regions">
-            {fieldData.top_regions.slice(0, 4).map((r, i) => (
-              <div key={r.code || i} className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 flex-shrink-0">
-                <MapPin className="w-2.5 h-2.5 text-gray-500" />
-                <span className="text-[9px] text-gray-400">{r.name}</span>
-                <span className="text-[9px] font-medium text-gray-300">{r.count}</span>
-              </div>
-            ))}
-          </div>
+        {/* Narrative — the primary read */}
+        {narrative && (
+          <p className="text-sm text-gray-300 leading-relaxed mb-3" data-testid="globe-narrative">
+            {narrative}
+          </p>
         )}
 
-        {/* Direction distribution bar */}
-        <div className="flex h-1 rounded-full overflow-hidden mb-1 bg-white/5">
-          {Object.entries(fieldData?.direction_counts || dirDist).map(([d, c]) => {
-            const total = Object.values(fieldData?.direction_counts || dirDist).reduce((a, b) => a + b, 0) || 1;
-            const pct = (c / total) * 100;
-            return pct > 0 ? <div key={d} className="h-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: cm[d] }} /> : null;
-          })}
-        </div>
-
-        {/* Real-time pulse indicator */}
-        {lastPulseDir && (
-          <div className="flex items-center gap-1.5 py-1.5">
-            <Radio className="w-2.5 h-2.5 animate-pulse" style={{ color: dirColors[lastPulseDir] }} />
-            <span className="text-[8px] text-gray-500">פעולה אחרונה: <span style={{ color: dirColors[lastPulseDir] }}>{dirLabels[lastPulseDir]}</span></span>
+        {/* Dominant direction + minimal direction bar */}
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: dominantColor }} />
+            <span className="text-[10px] font-semibold" style={{ color: dominantColor }}>{dirLabels[dominantDir] || '—'}</span>
           </div>
-        )}
+          <div className="flex-1 flex h-[2px] rounded-full overflow-hidden bg-white/[0.04]">
+            {Object.entries(fieldData?.direction_counts || dirDist).map(([d, c]) => {
+              const total = Object.values(fieldData?.direction_counts || dirDist).reduce((a, b) => a + b, 0) || 1;
+              const pct = (c / total) * 100;
+              return pct > 0 ? <div key={d} className="h-full transition-all duration-1000" style={{ width: `${pct}%`, backgroundColor: cm[d] }} /> : null;
+            })}
+          </div>
+        </div>
       </div>
 
       {/* ═══ GLOBE ═══ */}
@@ -284,7 +221,7 @@ export default function FieldGlobeSection() {
           className="absolute inset-0 pointer-events-none z-0"
           data-testid="field-heartbeat"
           style={{
-            boxShadow: `inset 0 0 80px ${dominantColor}12, inset 0 0 160px ${dominantColor}06`,
+            boxShadow: `inset 0 0 60px ${dominantColor}10, inset 0 0 120px ${dominantColor}05`,
             animation: `fieldHeartbeat ${heartbeatDuration}s ease-in-out infinite`,
           }}
         />
@@ -300,11 +237,11 @@ export default function FieldGlobeSection() {
             pointLat="lat"
             pointLng="lng"
             pointColor="color"
-            pointAltitude={d => d.is_user ? 0.08 : 0.04}
-            pointRadius={d => d.is_user ? 0.5 : 0.35}
+            pointAltitude={d => d.is_user ? 0.07 : 0.03}
+            pointRadius={d => d.is_user ? 0.45 : 0.3}
             pointsMerge={false}
             atmosphereColor={dominantColor}
-            atmosphereAltitude={0.18}
+            atmosphereAltitude={0.2}
             animateIn={false}
             onPointClick={handlePointClick}
             ringsData={ringsData}
@@ -313,56 +250,43 @@ export default function FieldGlobeSection() {
             ringMaxRadius="maxR"
             ringPropagationSpeed="propagationSpeed"
             ringRepeatPeriod="repeatPeriod"
-            ringColor={d => { const c = d.color || '#6366f1'; return [`${c}aa`, `${c}00`]; }}
+            ringColor={d => { const c = d.color || '#6366f1'; return [`${c}80`, `${c}00`]; }}
           />
         ) : (
           <div className="flex items-center justify-center h-full">
             {loading ? (
               <div className="flex flex-col items-center gap-2">
-                <div className="w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                <span className="text-[10px] text-gray-500">טוען שדה גלובלי...</span>
+                <div className="w-5 h-5 border-2 border-indigo-400/40 border-t-indigo-400 rounded-full animate-spin" />
+                <span className="text-[10px] text-gray-600">טוען שדה...</span>
               </div>
             ) : (
-              <span className="text-[10px] text-gray-600">אין נתונים זמינים</span>
+              <span className="text-[10px] text-gray-700">אין נתונים זמינים</span>
             )}
           </div>
         )}
 
         {/* Region Popup */}
         {regionPopup && !regionPopup.loading && (
-          <div className="absolute bottom-3 left-3 right-3 bg-[#1a1a2e]/95 backdrop-blur-md rounded-xl p-3 border border-white/10 z-10" data-testid="globe-region-popup">
+          <div className="absolute bottom-3 left-3 right-3 bg-[#0e0e1e]/95 backdrop-blur-md rounded-xl p-3 border border-white/[0.06] z-10" data-testid="globe-region-popup">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3 h-3 text-purple-400" />
-                <span className="text-sm font-semibold text-white">{regionPopup.country_name_he}</span>
+                <MapPin className="w-3 h-3" style={{ color: dominantColor }} />
+                <span className="text-sm font-medium text-white">{regionPopup.country_name_he}</span>
               </div>
-              <button onClick={() => setRegionPopup(null)} className="text-gray-400 hover:text-white"><X className="w-3 h-3" /></button>
+              <button onClick={() => setRegionPopup(null)} className="text-gray-500 hover:text-white transition-colors"><X className="w-3 h-3" /></button>
             </div>
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              <div className="text-center">
-                <p className="text-base font-bold text-white">{regionPopup.total_actions}</p>
-                <p className="text-[8px] text-gray-400">פעולות</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-bold" style={{ color: cm[regionPopup.dominant_direction] || '#fff' }}>{regionPopup.dominant_direction_he || '—'}</p>
-                <p className="text-[8px] text-gray-400">כיוון מוביל</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-0.5">
-                  <TrendingUp className="w-3 h-3 text-purple-400" />
-                  <p className="text-xs font-bold text-white">{regionPopup.trend_he}</p>
-                </div>
-                <p className="text-[8px] text-gray-400">מגמה</p>
-              </div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-xs text-gray-400">{regionPopup.total_actions} פעולות</span>
+              <span className="text-xs font-medium" style={{ color: cm[regionPopup.dominant_direction] || '#fff' }}>{regionPopup.dominant_direction_he || '—'}</span>
+              <span className="text-xs text-gray-500">{regionPopup.trend_he}</span>
             </div>
             <div className="space-y-1">
               {Object.entries(regionPopup.direction_counts || {}).map(([d, c]) => c > 0 && (
                 <div key={d} className="flex items-center gap-1.5">
-                  <span className="text-[8px] text-gray-400 w-12 text-right">{dirLabels[d]}</span>
-                  <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${regionPopup.total_actions > 0 ? (c / regionPopup.total_actions) * 100 : 0}%`, backgroundColor: cm[d] }} />
+                  <span className="text-[8px] text-gray-500 w-10 text-right">{dirLabels[d]}</span>
+                  <div className="flex-1 h-[2px] bg-white/[0.06] rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${regionPopup.total_actions > 0 ? (c / regionPopup.total_actions) * 100 : 0}%`, backgroundColor: cm[d] }} />
                   </div>
-                  <span className="text-[8px] text-gray-500 w-4">{c}</span>
                 </div>
               ))}
             </div>
@@ -370,13 +294,12 @@ export default function FieldGlobeSection() {
         )}
       </div>
 
-      {/* ═══ DIRECTION LEGEND ═══ */}
-      <div className="flex gap-2 p-3 pt-2 flex-wrap justify-start">
-        {Object.entries(dirDist).map(([dir, count]) => (
-          <div key={dir} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5" data-testid={`globe-legend-${dir}`}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cm[dir] }} />
-            <span className="text-[9px] text-gray-400">{dirLabels[dir]}</span>
-            <span className="text-[9px] font-medium text-gray-300">{count}</span>
+      {/* ═══ DIRECTION LEGEND — minimal ═══ */}
+      <div className="flex gap-3 px-4 py-2.5">
+        {Object.entries(dirLabels).map(([dir, label]) => (
+          <div key={dir} className="flex items-center gap-1" data-testid={`globe-legend-${dir}`}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cm[dir], opacity: dir === dominantDir ? 1 : 0.4 }} />
+            <span className="text-[9px]" style={{ color: dir === dominantDir ? cm[dir] : '#6b7280' }}>{label}</span>
           </div>
         ))}
       </div>

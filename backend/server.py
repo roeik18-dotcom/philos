@@ -5908,6 +5908,65 @@ COMPASS_SUGGESTIONS = {
 }
 
 
+def _generate_field_narrative(dominant, dir_counts, total, momentum, region_count):
+    """Generate a single symbolic Hebrew sentence about the field state. No numbers."""
+    import random as _rng
+
+    if not dominant or total == 0:
+        return 'השדה שקט. ממתין לפעולה ראשונה.'
+
+    dir_he = GLOBE_DIR_LABELS.get(dominant, '')
+
+    # Check if one direction is clearly dominant (>40%) or if balanced
+    total_safe = max(total, 1)
+    dominant_pct = dir_counts.get(dominant, 0) / total_safe
+
+    # Check for rising secondary direction
+    sorted_dirs = sorted(dir_counts.items(), key=lambda x: x[1], reverse=True)
+    secondary = sorted_dirs[1] if len(sorted_dirs) > 1 else None
+    secondary_he = GLOBE_DIR_LABELS.get(secondary[0], '') if secondary else ''
+
+    if momentum == 'עולה' and dominant_pct > 0.4:
+        templates = [
+            f'השדה נוטה ל{dir_he} — התנועה מתחזקת',
+            f'גל של {dir_he} עובר בשדה',
+            f'פעילות {dir_he} עולה ברחבי השדה',
+        ]
+    elif momentum == 'יורד':
+        templates = [
+            f'השדה נרגע — {dir_he} עדיין מוביל',
+            f'התנועה מאטה, {dir_he} שומר על נוכחות',
+            f'השדה שוקע לשקט, עם נטייה ל{dir_he}',
+        ]
+    elif dominant_pct > 0.5:
+        templates = [
+            f'השדה נוטה בבירור ל{dir_he}',
+            f'{dir_he} שולט בשדה היום',
+            f'כוח ה{dir_he} דומיננטי בשדה',
+        ]
+    elif dominant_pct < 0.3 and secondary:
+        templates = [
+            f'השדה מתפצל בין {dir_he} ל{secondary_he}',
+            f'מתח בין {dir_he} ל{secondary_he} — השדה בתנועה',
+            f'{dir_he} ו{secondary_he} מושכים את השדה לכיוונים שונים',
+        ]
+    elif region_count > 4:
+        templates = [
+            f'{dir_he} מתייצב במספר אזורים',
+            f'השדה פעיל ברחבי העולם — {dir_he} מוביל',
+            f'פעילות {dir_he} מתפשטת בין אזורים',
+        ]
+    else:
+        templates = [
+            f'השדה נוטה ל{dir_he} היום',
+            f'תנועת {dir_he} נמשכת בשדה',
+            f'השדה חי — {dir_he} מוביל את הכיוון',
+        ]
+
+    return _rng.choice(templates)
+
+
+
 @api_router.get("/orientation/field-dashboard")
 async def get_field_dashboard():
     """Global field state: dominant direction, total actions, active regions, momentum."""
@@ -5937,6 +5996,9 @@ async def get_field_dashboard():
 
         momentum = 'עולה' if total_today > yesterday_events else ('יורד' if total_today < yesterday_events * 0.8 else 'יציב')
 
+        # Generate symbolic narrative — one short Hebrew sentence, no numbers
+        narrative = _generate_field_narrative(dominant, dir_counts, total_today, momentum, len(region_counts))
+
         return {
             'success': True,
             'dominant_direction': dominant,
@@ -5946,7 +6008,8 @@ async def get_field_dashboard():
             'active_regions': len(region_counts),
             'top_regions': [{'code': r[0], 'name': GLOBE_COUNTRY_COORDS.get(r[0], {}).get('name', r[0]), 'count': r[1]} for r in top_regions],
             'momentum_he': momentum,
-            'yesterday_total': yesterday_events
+            'yesterday_total': yesterday_events,
+            'field_narrative_he': narrative
         }
     except Exception as e:
         logger.error(f"Field dashboard error: {str(e)}")

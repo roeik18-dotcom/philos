@@ -1,115 +1,108 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeftRight } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const oppositions = [
-  { left: 'סדר', right: 'כאוס', leftDir: 'order', rightDir: 'exploration', leftColor: '#6366f1', rightColor: '#f59e0b',
-    desc: 'בין מבנה ליציבות — לבין חופש וגילוי' },
-  { left: 'התאוששות', right: 'דלדול', leftDir: 'recovery', rightDir: null, leftColor: '#3b82f6', rightColor: '#ef4444',
-    desc: 'בין שיקום פנימי — לבין שחיקה והתעלמות' },
-  { left: 'תרומה', right: 'נסיגה', leftDir: 'contribution', rightDir: null, leftColor: '#22c55e', rightColor: '#9ca3af',
-    desc: 'בין נתינה לעולם — לבין הסתגרות בעצמי' },
-  { left: 'חקירה', right: 'קיבעון', leftDir: 'exploration', rightDir: null, leftColor: '#f59e0b', rightColor: '#6b7280',
-    desc: 'בין סקרנות ופתיחות — לבין חזרה על המוכר' }
+const tensions = [
+  { left: 'סדר', right: 'כאוס', axisKey: 'chaos_order', leftColor: '#6366f1', rightColor: '#f59e0b',
+    interpret: (v) => v > 60 ? 'אתה נוטה לסדר — מבנה וביטחון מובילים אותך' : v < 40 ? 'הכאוס מושך אותך — חופש וגילוי בראש' : 'אתה בין סדר לכאוס — בשני העולמות' },
+  { left: 'קולקטיב', right: 'אגו', axisKey: 'ego_collective', leftColor: '#22c55e', rightColor: '#ef4444',
+    interpret: (v) => v > 60 ? 'הנתינה דומיננטית — אתה פועל עבור אחרים' : v < 40 ? 'אתה מתמקד בעצמך — שיקום פנימי קודם' : 'מתח בין פנים לחוץ — שניהם חיים בך' },
+  { left: 'יציבות', right: 'חקירה', axisKey: 'exploration_stability', leftColor: '#3b82f6', rightColor: '#f59e0b',
+    interpret: (v) => v > 60 ? 'אתה מחפש בסיס יציב — שורשים לפני תנועה' : v < 40 ? 'החקירה מושכת אותך — לגלות דברים חדשים' : 'בין השורשים למסע — שני הכוחות שווים' }
 ];
 
 export default function OppositionLayer({ userId }) {
-  const [compass, setCompass] = useState(null);
   const [axes, setAxes] = useState(null);
 
   const effectiveUserId = userId || localStorage.getItem('philos_user_id');
 
   useEffect(() => {
     if (!effectiveUserId) return;
-    fetch(`${API_URL}/api/orientation/daily-opening/${effectiveUserId}`)
+    fetch(`${API_URL}/api/profile/${effectiveUserId}/record`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d?.success) {
-          setCompass(d.compass_state);
+          setAxes(d.opposition_axes);
           window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'opposition' } }));
         }
       })
       .catch(() => {});
-
-    // Fetch real opposition axes from profile
-    fetch(`${API_URL}/api/profile/${effectiveUserId}/record`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.success) setAxes(d.opposition_axes); })
-      .catch(() => {});
   }, [effectiveUserId]);
 
-  return (
-    <section className="philos-section bg-white border-border animate-section animate-section-3" dir="rtl" data-testid="opposition-layer">
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center">
-          <ArrowLeftRight className="w-4 h-4 text-slate-600" />
-        </div>
-        <div>
-          <span className="text-sm font-semibold text-gray-800">בין אילו קטבים אתה נע?</span>
-        </div>
-      </div>
-      <p className="text-xs text-gray-400 mb-4 mr-10">הכוחות שמושכים אותך היום</p>
+  // Find the most active tension (furthest from center)
+  const activeTension = axes ? tensions.reduce((best, t) => {
+    const dist = Math.abs((axes[t.axisKey] ?? 50) - 50);
+    return dist > best.dist ? { ...t, dist } : best;
+  }, { dist: -1 }) : null;
 
-      {/* Personal position summary */}
-      {axes && (
-        <div className="bg-[#0a0a1a] rounded-2xl p-3 mb-4" data-testid="opposition-personal-position">
-          <p className="text-[9px] text-gray-500 mb-2">המיקום שלך בשדה הניגודים</p>
-          <div className="grid grid-cols-3 gap-2">
-            <AxisMini label="סדר ↔ כאוס" value={axes.chaos_order} leftC="#6366f1" rightC="#f59e0b" />
-            <AxisMini label="קולקטיב ↔ אגו" value={axes.ego_collective} leftC="#22c55e" rightC="#ef4444" />
-            <AxisMini label="יציבות ↔ חקירה" value={axes.exploration_stability} leftC="#3b82f6" rightC="#f59e0b" />
-          </div>
-        </div>
+  return (
+    <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] text-white p-5" dir="rtl" data-testid="opposition-layer">
+      {/* Ambient glow from dominant tension */}
+      {activeTension?.dist > 0 && (
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: `radial-gradient(ellipse at 50% 100%, ${activeTension.leftColor}08 0%, transparent 60%)`
+        }} />
       )}
 
-      <div className="space-y-3">
-        {oppositions.map((o, i) => {
-          const leftPct = compass?.[o.leftDir] || 25;
-          const ratio = Math.max(15, Math.min(85, leftPct));
+      <div className="relative z-10">
+        <p className="text-xs text-gray-500 mb-5">בין אילו קטבים אתה נע</p>
 
-          return (
-            <div key={i} className="group" data-testid={`opposition-pair-${i}`}>
-              {/* Pole labels */}
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold" style={{ color: o.leftColor }}>{o.left}</span>
-                <span className="text-xs font-bold" style={{ color: o.rightColor }}>{o.right}</span>
+        <div className="space-y-6">
+          {tensions.map((t) => {
+            const value = axes?.[t.axisKey] ?? 50;
+            const interpretation = t.interpret(value);
+            const dominantColor = value > 55 ? t.leftColor : value < 45 ? t.rightColor : '#6b7280';
+
+            return (
+              <div key={t.axisKey} data-testid={`tension-${t.axisKey}`}>
+                {/* Pole labels */}
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-[11px] font-semibold" style={{ color: t.leftColor }}>{t.left}</span>
+                  <span className="text-[11px] font-semibold" style={{ color: t.rightColor }}>{t.right}</span>
+                </div>
+
+                {/* Tension arc */}
+                <div className="relative h-[3px] rounded-full bg-white/[0.06]">
+                  {/* Left gradient fill */}
+                  <div
+                    className="absolute inset-y-0 right-0 rounded-full transition-all duration-1000 ease-out"
+                    style={{
+                      width: `${value}%`,
+                      background: `linear-gradient(to left, ${t.leftColor}50, ${t.leftColor}10)`
+                    }}
+                  />
+                  {/* Right gradient fill */}
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out"
+                    style={{
+                      width: `${100 - value}%`,
+                      background: `linear-gradient(to right, ${t.rightColor}50, ${t.rightColor}10)`
+                    }}
+                  />
+                  {/* Center line */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-2 bg-white/10" />
+
+                  {/* Personal position — glowing dot */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 transition-all duration-1000 ease-out"
+                    style={{ right: `calc(${value}% - 5px)` }}
+                  >
+                    {/* Outer glow */}
+                    <div className="absolute inset-0 -m-2 rounded-full opacity-40 animate-pulse" style={{ backgroundColor: `${dominantColor}30` }} />
+                    {/* Dot */}
+                    <div className="w-[10px] h-[10px] rounded-full border-2 border-[#0a0a1a]" style={{ backgroundColor: dominantColor, boxShadow: `0 0 8px ${dominantColor}60` }} />
+                  </div>
+                </div>
+
+                {/* Interpretive line */}
+                <p className="text-[10px] text-gray-500 mt-2 leading-relaxed" data-testid={`tension-interpret-${t.axisKey}`}>
+                  {interpretation}
+                </p>
               </div>
-
-              {/* Tension bar */}
-              <div className="relative h-2 rounded-full bg-gray-100 overflow-hidden">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
-                  style={{
-                    width: `${ratio}%`,
-                    background: `linear-gradient(90deg, ${o.leftColor}, ${o.leftColor}60)`
-                  }}
-                />
-                {/* Center marker */}
-                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gray-300" />
-              </div>
-
-              {/* Description */}
-              <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">{o.desc}</p>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </section>
-  );
-}
-
-
-function AxisMini({ label, value, leftC, rightC }) {
-  const v = value ?? 50;
-  const dominantColor = v > 55 ? leftC : v < 45 ? rightC : '#9ca3af';
-  return (
-    <div className="text-center">
-      <div className="relative h-1.5 bg-gray-700/50 rounded-full overflow-hidden mb-1">
-        <div className="absolute top-0 h-full rounded-full transition-all duration-700" style={{ left: 0, width: `${v}%`, background: `linear-gradient(90deg, ${leftC}80, ${leftC}30)` }} />
-        <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white shadow-sm transition-all duration-700" style={{ left: `calc(${v}% - 4px)` }} />
-      </div>
-      <p className="text-[8px] leading-none" style={{ color: dominantColor }}>{label}</p>
-    </div>
   );
 }
