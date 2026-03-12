@@ -6901,6 +6901,11 @@ async def get_human_action_record(user_id: str):
                 'invitees_count': len(invitee_ids)
             },
             'direction_distribution': dir_counts,
+            'field_contribution': {
+                'total_actions': total_actions,
+                'days_active': len(all_dates),
+                'field_percentage': round((total_actions / max(await db.daily_questions.count_documents({"answered": True}), 1)) * 100, 1)
+            },
             'influence_chain': {
                 'invited_by_alias': invited_by_alias,
                 'invitees': invitee_aliases,
