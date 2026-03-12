@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Compass, MapPin, Shield, Zap, Target, Award, ArrowRight, ChevronDown, ChevronUp, Loader2, Flame } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { toPng } from 'html-to-image';
+import { Compass, MapPin, Shield, Zap, Target, Award, ArrowRight, ChevronDown, ChevronUp, Loader2, Flame, Share2, Download, Link2, Check } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const dirColors = { contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b' };
@@ -9,6 +10,7 @@ export default function ProfilePage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedAction, setExpandedAction] = useState(null);
+  const [showShare, setShowShare] = useState(false);
 
   const pathParts = window.location.pathname.split('/');
   const userId = pathParts[pathParts.length - 1];
@@ -46,9 +48,18 @@ export default function ProfilePage() {
       {/* Top bar */}
       <div className="sticky top-0 z-10 bg-[#faf9f6]/90 backdrop-blur-sm border-b border-gray-100 px-4 py-2.5 flex items-center justify-between">
         <span className="text-[10px] tracking-widest text-gray-300 uppercase font-medium">Human Action Record</span>
-        <a href="/" className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600" data-testid="profile-back">
-          <ArrowRight className="w-3 h-3" />Philos
-        </a>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowShare(true)}
+            className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+            data-testid="profile-share-btn"
+          >
+            <Share2 className="w-3 h-3" />שתף
+          </button>
+          <a href="/" className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600" data-testid="profile-back">
+            <ArrowRight className="w-3 h-3" />Philos
+          </a>
+        </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
@@ -58,6 +69,16 @@ export default function ProfilePage() {
         <DirectionBar distribution={direction_distribution} total={value_growth.total_actions} />
         <ActionRecord actions={action_record} expandedAction={expandedAction} setExpandedAction={setExpandedAction} />
       </div>
+
+      {/* Share Modal */}
+      {showShare && (
+        <ShareCardModal
+          data={data}
+          dominantColor={dominantColor}
+          profileUrl={`${window.location.origin}/profile/${userId}`}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   );
 }
@@ -271,6 +292,166 @@ function ProgressRow({ label, value, color }) {
       </div>
       <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${value}%`, backgroundColor: color }} />
+      </div>
+    </div>
+  );
+}
+
+
+function ShareCardModal({ data, dominantColor, profileUrl, onClose }) {
+  const cardRef = useRef(null);
+  const [downloading, setDownloading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const { identity, opposition_axes, value_growth, action_record } = data;
+  const highlightAction = action_record?.[0] || null;
+
+  const axisData = [
+    { key: 'chaos_order', left: 'כאוס', right: 'סדר', leftC: '#f59e0b', rightC: '#6366f1' },
+    { key: 'ego_collective', left: 'אגו', right: 'קולקטיב', leftC: '#ef4444', rightC: '#22c55e' },
+    { key: 'exploration_stability', left: 'חקירה', right: 'יציבות', leftC: '#f59e0b', rightC: '#3b82f6' }
+  ];
+
+  const handleDownload = useCallback(async () => {
+    if (!cardRef.current) return;
+    setDownloading(true);
+    try {
+      const dataUrl = await toPng(cardRef.current, { quality: 0.95, pixelRatio: 2, backgroundColor: '#1a1a2e' });
+      const link = document.createElement('a');
+      link.download = `philos-record-${identity.alias}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (e) {
+      console.error('Share card generation failed:', e);
+    } finally {
+      setDownloading(false);
+    }
+  }, [identity.alias]);
+
+  const handleCopyLink = useCallback(() => {
+    navigator.clipboard.writeText(profileUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  }, [profileUrl]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose} data-testid="share-modal-overlay">
+      <div className="w-full max-w-md" onClick={e => e.stopPropagation()}>
+        {/* The share card — captured by html-to-image */}
+        <div ref={cardRef} className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#1a1a2e' }} data-testid="share-card">
+          {/* Card content */}
+          <div className="p-6" dir="rtl">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-[9px] tracking-[0.25em] uppercase text-gray-500 font-medium">Human Action Record</span>
+              <span className="text-[8px] text-gray-600">Philos Orientation</span>
+            </div>
+
+            {/* Identity */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold" style={{ backgroundColor: dominantColor }}>
+                {identity.alias?.charAt(0)}
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white">{identity.alias}</h2>
+                <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                  <span>{identity.country}</span>
+                  {identity.dominant_direction_he && (
+                    <>
+                      <span className="text-gray-600">·</span>
+                      <span style={{ color: dominantColor }}>{identity.dominant_direction_he}</span>
+                    </>
+                  )}
+                  {identity.niche_label_he && (
+                    <>
+                      <span className="text-gray-600">·</span>
+                      <span className="text-purple-400">{identity.niche_label_he}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-gray-700/50 mb-5" />
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="text-center">
+                <p className="text-xl font-bold text-white">{value_growth.impact_score}</p>
+                <p className="text-[8px] text-gray-500 mt-0.5">השפעה</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-white">Lv.{value_growth.level}</p>
+                <p className="text-[8px] text-gray-500 mt-0.5">דרגה</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-white">{value_growth.total_actions}</p>
+                <p className="text-[8px] text-gray-500 mt-0.5">פעולות</p>
+              </div>
+            </div>
+
+            {/* Opposition Axes */}
+            <div className="space-y-2.5 mb-5">
+              {axisData.map(a => {
+                const val = opposition_axes[a.key] ?? 50;
+                return (
+                  <div key={a.key}>
+                    <div className="flex justify-between text-[8px] mb-1">
+                      <span style={{ color: a.leftC }}>{a.left}</span>
+                      <span style={{ color: a.rightC }}>{a.right}</span>
+                    </div>
+                    <div className="relative h-1.5 bg-gray-700/50 rounded-full">
+                      <div className="absolute top-0 h-full rounded-full" style={{ right: 0, width: `${val}%`, background: `linear-gradient(to left, ${a.rightC}, ${a.rightC}40)` }} />
+                      <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white shadow-lg" style={{ right: `calc(${val}% - 5px)` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Highlighted action */}
+            {highlightAction && (
+              <div className="rounded-xl p-3 mb-4" style={{ backgroundColor: `${dirColors[highlightAction.direction] || dominantColor}10` }}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-1 h-4 rounded-full" style={{ backgroundColor: dirColors[highlightAction.direction] || dominantColor }} />
+                  <span className="text-[9px] font-semibold" style={{ color: dirColors[highlightAction.direction] || dominantColor }}>{highlightAction.direction_he}</span>
+                  <span className="text-[8px] text-gray-500 mr-auto">+{highlightAction.impact}</span>
+                </div>
+                <p className="text-[10px] text-gray-300">{highlightAction.action_he}</p>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-3 border-t border-gray-700/30">
+              <span className="text-[8px] text-gray-600">philos-orientation.com</span>
+              <span className="text-[8px] text-gray-600">{new Date().toLocaleDateString('he-IL')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action buttons (not captured in image) */}
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white text-gray-900 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
+            data-testid="share-download-btn"
+          >
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Download className="w-3.5 h-3.5" />הורד תמונה</>}
+          </button>
+          <button
+            onClick={handleCopyLink}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white/10 text-white rounded-xl text-xs font-medium hover:bg-white/20 transition-colors"
+            data-testid="share-copy-link-btn"
+          >
+            {copied ? <><Check className="w-3.5 h-3.5 text-green-400" /><span className="text-green-400">הועתק!</span></> : <><Link2 className="w-3.5 h-3.5" />העתק קישור</>}
+          </button>
+        </div>
+
+        {/* Close hint */}
+        <p className="text-center text-[10px] text-gray-500 mt-2 cursor-pointer" onClick={onClose}>לחץ בחוץ לסגירה</p>
       </div>
     </div>
   );
