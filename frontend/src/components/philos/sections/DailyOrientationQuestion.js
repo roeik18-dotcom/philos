@@ -80,7 +80,8 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
               streak: result.streak,
               niche_info: result.niche_info,
               identity_link: result.identity_link,
-              invite_reward: result.invite_reward
+              invite_reward: result.invite_reward,
+              ai_interpretation: result.ai_interpretation
             });
           }
           setQuestionData(prev => prev ? { ...prev, streak: (prev.streak || 0) + 1, already_answered_today: true } : prev);
@@ -235,6 +236,13 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
                   <UserPlus className="w-3.5 h-3.5 text-amber-500" />
                   <span className="text-[10px] text-amber-700 font-medium">{impactData.invite_reward.message_he}</span>
                 </div>
+              )}
+
+              {/* AI Interpretation — quiet philosopher observation */}
+              {impactData.ai_interpretation && (
+                <p className="text-[10px] text-gray-400 italic leading-relaxed px-1" data-testid="ai-action-interpretation">
+                  {impactData.ai_interpretation}
+                </p>
               )}
 
               {/* Link to profile */}

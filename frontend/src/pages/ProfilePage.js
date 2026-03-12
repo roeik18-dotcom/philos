@@ -55,7 +55,7 @@ export default function ProfilePage() {
     );
   }
 
-  const { identity, action_record, opposition_axes, value_growth, direction_distribution, influence_chain, field_contribution } = data;
+  const { identity, action_record, opposition_axes, value_growth, direction_distribution, influence_chain, field_contribution, ai_profile_interpretation } = data;
   const dc = dirColors[identity.dominant_direction] || '#6366f1';
 
   return (
@@ -104,6 +104,13 @@ export default function ProfilePage() {
           {identity.invited_by_alias && (
             <p className="text-[10px] text-gray-600 mb-4" data-testid="profile-invited-by">
               הוזמן על ידי <span className="text-gray-400">{identity.invited_by_alias}</span>
+            </p>
+          )}
+
+          {/* AI Profile Interpretation */}
+          {ai_profile_interpretation && (
+            <p className="text-xs text-gray-500 italic leading-relaxed mb-4 max-w-xs mx-auto" data-testid="ai-profile-interpretation">
+              {ai_profile_interpretation}
             </p>
           )}
 

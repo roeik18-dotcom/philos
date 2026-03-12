@@ -14,6 +14,9 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 import random as _random
 import string as _string
+from dotenv import load_dotenv
+load_dotenv()
+from philos_ai import interpret_action, interpret_field, interpret_profile
 
 
 ROOT_DIR = Path(__file__).parent
@@ -3825,7 +3828,8 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
             'streak': streak,
             'niche_info': niche_info,
             'identity_link': identity_link,
-            'invite_reward': invite_reward
+            'invite_reward': invite_reward,
+            'ai_interpretation': await interpret_action(GLOBE_DIR_LABELS.get(suggested_direction, ''), DEPT_LABELS_HE.get((await db.daily_bases.find_one({"user_id": user_id, "date": today_str}, {"_id": 0, "base": 1}) or {}).get("base"))) if request.action_taken else ""
         }
         
     except HTTPException:
@@ -6456,6 +6460,11 @@ async def get_field_dashboard():
         # Generate symbolic narrative — one short Hebrew sentence, no numbers
         narrative = _generate_field_narrative(dominant, dir_counts, total_today, momentum, len(region_counts))
 
+        # AI field interpretation
+        sorted_dirs = sorted(dir_counts.items(), key=lambda x: x[1], reverse=True)
+        secondary_he = GLOBE_DIR_LABELS.get(sorted_dirs[1][0]) if len(sorted_dirs) > 1 else None
+        ai_field = await interpret_field(GLOBE_DIR_LABELS.get(dominant, ''), momentum, secondary_he, len(region_counts))
+
         return {
             'success': True,
             'dominant_direction': dominant,
@@ -6466,7 +6475,8 @@ async def get_field_dashboard():
             'top_regions': [{'code': r[0], 'name': GLOBE_COUNTRY_COORDS.get(r[0], {}).get('name', r[0]), 'count': r[1]} for r in top_regions],
             'momentum_he': momentum,
             'yesterday_total': yesterday_events,
-            'field_narrative_he': narrative
+            'field_narrative_he': narrative,
+            'ai_field_interpretation': ai_field
         }
     except Exception as e:
         logger.error(f"Field dashboard error: {str(e)}")
@@ -6986,7 +6996,8 @@ async def get_human_action_record(user_id: str):
                 'active_invitees': active_invitee_count,
                 'total_invited': len(invitee_ids),
                 'invite_credits': invite_credits
-            }
+            },
+            'ai_profile_interpretation': await interpret_profile(alias, GLOBE_DIR_LABELS.get(dominant_dir, ''), total_actions, streak, len(invitee_ids))
         }
     except Exception as e:
         logger.error(f"Human action record error: {str(e)}")
