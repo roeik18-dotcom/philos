@@ -5996,14 +5996,19 @@ async def join_value_circle(data: dict):
 
 
 @api_router.get("/orientation/value-circles/{circle_id}")
-async def get_value_circle_detail(circle_id: str):
-    """Circle detail with feed and leaderboard."""
+async def get_value_circle_detail(circle_id: str, user_id: str = ""):
+    """Circle detail with feed, leaderboard, missions, and membership status."""
     try:
         if circle_id not in CIRCLE_DEFS:
             raise HTTPException(status_code=404, detail="Circle not found")
         cdef = CIRCLE_DEFS[circle_id]
         member_count = await db.circle_memberships.count_documents({"circle_id": circle_id})
         demo_count = _random.randint(120, 2000)
+
+        is_member = False
+        if user_id:
+            existing = await db.circle_memberships.find_one({"user_id": user_id, "circle_id": circle_id})
+            is_member = existing is not None
 
         feed = []
         for i in range(8):
@@ -6025,16 +6030,54 @@ async def get_value_circle_detail(circle_id: str):
                 'actions': _random.randint(20, 100)
             })
 
+        circle_dir = cdef['direction']
+        missions = []
+        for d in ([circle_dir] if circle_dir else DIRECTIONS[:2]):
+            demo_p = _random.randint(200, 2000)
+            missions.append({
+                'id': f'circle-mission-{circle_id}-{d}',
+                'title_he': {'contribution': 'חזק את הקשר', 'recovery': 'שקם את הבסיס', 'order': 'שחזר סדר', 'exploration': 'הרחב את השדה'}.get(d, 'משימה'),
+                'direction': d,
+                'direction_he': GLOBE_DIR_LABELS.get(d, ''),
+                'description_he': f"משימת מעגל: {cdef['label_he']}",
+                'participants': demo_p,
+                'target': demo_p + _random.randint(500, 2000),
+                'status': 'active'
+            })
+
         return {
             'success': True,
             'circle': {'id': circle_id, 'label_he': cdef['label_he'], 'direction': cdef['direction'], 'color': cdef['color'], 'description_he': cdef['desc_he'], 'member_count': member_count + demo_count},
+            'is_member': is_member,
             'feed': feed,
-            'leaderboard': leaderboard
+            'leaderboard': leaderboard,
+            'missions': missions
         }
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Circle detail error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/orientation/value-circles/leave")
+async def leave_value_circle(data: dict):
+    """Leave a circle."""
+    try:
+        user_id = data.get('user_id', '')
+        circle_id = data.get('circle_id', '')
+        if circle_id not in CIRCLE_DEFS:
+            raise HTTPException(status_code=400, detail="Unknown circle")
+
+        result = await db.circle_memberships.delete_one({"user_id": user_id, "circle_id": circle_id})
+        if result.deleted_count == 0:
+            return {'success': True, 'message_he': 'לא חבר במעגל', 'was_member': False}
+
+        return {'success': True, 'message_he': 'עזבת את המעגל', 'was_member': True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Leave circle error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

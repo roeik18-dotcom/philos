@@ -49,7 +49,13 @@ export default function CirclesSection({ userId, onViewCircle }) {
 
       <div className="grid grid-cols-2 gap-2">
         {circles.map(c => (
-          <div key={c.id} className="rounded-xl p-3 border" style={{ backgroundColor: `${c.color}06`, borderColor: `${c.color}20` }} data-testid={`circle-${c.id}`}>
+          <div
+            key={c.id}
+            className="rounded-xl p-3 border cursor-pointer hover:shadow-md transition-all"
+            style={{ backgroundColor: `${c.color}06`, borderColor: `${c.color}20` }}
+            onClick={() => onViewCircle?.(c.id)}
+            data-testid={`circle-${c.id}`}
+          >
             <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-2" style={{ backgroundColor: `${c.color}15` }}>
               <Users className="w-3.5 h-3.5" style={{ color: c.color }} />
             </div>
@@ -57,7 +63,7 @@ export default function CirclesSection({ userId, onViewCircle }) {
             <p className="text-[9px] text-gray-400 mb-2 leading-relaxed line-clamp-2">{c.description_he}</p>
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-gray-400">{c.member_count.toLocaleString()} חברים</span>
-              <button onClick={() => handleJoin(c.id)} disabled={!!joining} className="text-[10px] font-medium flex items-center gap-0.5 transition-opacity hover:opacity-80" style={{ color: c.color }} data-testid={`join-circle-${c.id}`}>
+              <button onClick={(e) => { e.stopPropagation(); handleJoin(c.id); }} disabled={!!joining} className="text-[10px] font-medium flex items-center gap-0.5 transition-opacity hover:opacity-80" style={{ color: c.color }} data-testid={`join-circle-${c.id}`}>
                 {joining === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><ChevronLeft className="w-3 h-3" />הצטרף</>}
               </button>
             </div>
