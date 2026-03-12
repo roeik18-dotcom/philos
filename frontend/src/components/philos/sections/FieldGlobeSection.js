@@ -73,8 +73,11 @@ export default function FieldGlobeSection() {
   // Listen for field-pulse events from SendToGlobeButton
   useEffect(() => {
     const handlePulse = (e) => {
-      const { lat, lng, color } = e.detail;
-      const ring = { lat, lng, maxR: 8, propagationSpeed: 3, repeatPeriod: 800, color };
+      const { lat, lng, color, direction } = e.detail || {};
+      const resolvedColor = color || defaultColors[direction] || '#6366f1';
+      const resolvedLat = lat ?? (31 + Math.random() * 10 - 5);
+      const resolvedLng = lng ?? (35 + Math.random() * 10 - 5);
+      const ring = { lat: resolvedLat, lng: resolvedLng, maxR: 8, propagationSpeed: 3, repeatPeriod: 800, color: resolvedColor };
       setRingsData(prev => [...prev, ring]);
       // Fade ring out after 3s
       setTimeout(() => {
@@ -212,7 +215,7 @@ export default function FieldGlobeSection() {
             ringMaxRadius="maxR"
             ringPropagationSpeed="propagationSpeed"
             ringRepeatPeriod="repeatPeriod"
-            ringColor={d => [`${d.color}cc`, `${d.color}00`]}
+            ringColor={d => { const c = d.color || '#6366f1'; return [`${c}cc`, `${c}00`]; }}
           />
         ) : (
           <div className="flex items-center justify-center h-full">
