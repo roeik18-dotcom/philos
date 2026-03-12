@@ -483,9 +483,23 @@ function InfluenceChain({ chain }) {
         {chain.invitees && chain.invitees.length > 0 && (
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-[9px] font-bold text-emerald-600">
-              {chain.invitees.length}
+              {chain.total_invited || chain.invitees.length}
             </span>
             <span>הבאת לשדה: <span className="font-medium text-emerald-600">{chain.invitees.join(', ')}</span></span>
+          </div>
+        )}
+        {(chain.active_invitees > 0 || chain.invite_credits > 0) && (
+          <div className="flex gap-3 mt-1">
+            {chain.active_invitees > 0 && (
+              <span className="text-[10px] text-emerald-600" data-testid="profile-active-invitees">
+                {chain.active_invitees} פעילים
+              </span>
+            )}
+            {chain.invite_credits > 0 && (
+              <span className="text-[10px] text-amber-600" data-testid="profile-invite-credits">
+                {chain.invite_credits} נקודות ערך
+              </span>
+            )}
           </div>
         )}
       </div>

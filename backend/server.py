@@ -3760,10 +3760,32 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
         # Compute identity growth data for reward feedback
         niche_info = None
         identity_link = None
+        invite_reward = None
         if request.action_taken:
             session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "global_stats": 1})
             stats = session.get("global_stats", {}) if session else {}
             total_all = sum(stats.get(d, 0) for d in ['contribution', 'recovery', 'order', 'exploration'])
+
+            # === INVITE REWARD: Check if this is the user's first action ===
+            answered_count = await db.daily_questions.count_documents({"user_id": user_id, "answered": True})
+            if answered_count <= 1:  # This is the first answered question
+                user_doc = await db.users.find_one({"id": user_id}, {"_id": 0, "invited_by": 1})
+                inviter_id = user_doc.get("invited_by") if user_doc else None
+                if inviter_id:
+                    # Prevent double credit
+                    existing_reward = await db.invite_rewards.find_one({"inviter_id": inviter_id, "invitee_id": user_id})
+                    if not existing_reward:
+                        await db.users.update_one(
+                            {"id": inviter_id},
+                            {"$inc": {"invite_credits": 1}}
+                        )
+                        await db.invite_rewards.insert_one({
+                            "inviter_id": inviter_id,
+                            "invitee_id": user_id,
+                            "credited_at": now.isoformat(),
+                            "direction": suggested_direction
+                        })
+
             # Check niche progress
             for nid, ndef in VALUE_NICHES.items():
                 nd = ndef.get('dominant_direction')
@@ -3776,6 +3798,21 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
                     break
             identity_link = f"/profile/{user_id}"
 
+        # Check if inviter earned a credit from THIS user's previous action
+        if request.action_taken:
+            user_doc_check = await db.users.find_one({"id": user_id}, {"_id": 0, "invited_by": 1})
+            inviter_check = user_doc_check.get("invited_by") if user_doc_check else None
+            if inviter_check:
+                reward_exists = await db.invite_rewards.find_one(
+                    {"inviter_id": inviter_check, "invitee_id": user_id}, {"_id": 0}
+                )
+                if reward_exists:
+                    inviter_alias_idx = hash(inviter_check) % len(ANONYMOUS_ALIASES)
+                    invite_reward = {
+                        "inviter_alias": ANONYMOUS_ALIASES[inviter_alias_idx],
+                        "message_he": f"הפעולה הראשונה שלך העניקה נקודת ערך ל{ANONYMOUS_ALIASES[inviter_alias_idx]}"
+                    }
+
         return {
             'success': True,
             'message': 'Answer recorded',
@@ -3787,7 +3824,8 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
             'mission_contributed': mission_contributed,
             'streak': streak,
             'niche_info': niche_info,
-            'identity_link': identity_link
+            'identity_link': identity_link,
+            'invite_reward': invite_reward
         }
         
     except HTTPException:
@@ -4837,10 +4875,22 @@ async def get_invite_stats(user_id: str):
         invitees = []
         for iid in invitee_ids[:20]:
             alias_index = hash(iid) % len(ANONYMOUS_ALIASES)
+            # Check if invitee has taken at least one action
+            invitee_answered = await db.daily_questions.count_documents(
+                {"user_id": iid, "answered": True}
+            )
             invitees.append({
                 "user_id": iid,
-                "alias": ANONYMOUS_ALIASES[alias_index]
+                "alias": ANONYMOUS_ALIASES[alias_index],
+                "active": invitee_answered > 0,
+                "actions": invitee_answered
             })
+
+        active_invitees = sum(1 for i in invitees if i["active"])
+
+        # Invite credits
+        user_credit_doc = await db.users.find_one({"id": user_id}, {"_id": 0, "invite_credits": 1})
+        invite_credits = user_credit_doc.get("invite_credits", 0) if user_credit_doc else 0
 
         return {
             "success": True,
@@ -4850,7 +4900,9 @@ async def get_invite_stats(user_id: str):
             "max_codes": MAX_INVITE_CODES,
             "invited_by_id": invited_by_id,
             "invited_by_alias": invited_by_alias,
-            "invitees": invitees
+            "invitees": invitees,
+            "active_invitees": active_invitees,
+            "invite_credits": invite_credits
         }
     except Exception as e:
         logger.error(f"Get invite stats error: {str(e)}")
@@ -6807,9 +6859,17 @@ async def get_human_action_record(user_id: str):
         invitee_ids = []
         for inv in user_invites:
             invitee_ids.extend(inv.get("used_by", []))
+
+        # Count active invitees
+        active_invitee_count = 0
         invitee_aliases = []
         for iid in invitee_ids[:10]:
             invitee_aliases.append(ANONYMOUS_ALIASES[hash(iid) % len(ANONYMOUS_ALIASES)])
+            inv_answered = await db.daily_questions.count_documents({"user_id": iid, "answered": True})
+            if inv_answered > 0:
+                active_invitee_count += 1
+
+        invite_credits = user.get("invite_credits", 0) if user else 0
 
         return {
             'success': True,
@@ -6843,7 +6903,10 @@ async def get_human_action_record(user_id: str):
             'direction_distribution': dir_counts,
             'influence_chain': {
                 'invited_by_alias': invited_by_alias,
-                'invitees': invitee_aliases
+                'invitees': invitee_aliases,
+                'active_invitees': active_invitee_count,
+                'total_invited': len(invitee_ids),
+                'invite_credits': invite_credits
             }
         }
     except Exception as e:

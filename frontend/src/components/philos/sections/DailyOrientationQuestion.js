@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Flame, Check, Sun, Loader2, TrendingUp, Target, User } from 'lucide-react';
+import { Flame, Check, Sun, Loader2, TrendingUp, Target, User, UserPlus } from 'lucide-react';
 import SendToGlobeButton from './SendToGlobeButton';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -79,7 +79,8 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
               score: result.impact_score,
               streak: result.streak,
               niche_info: result.niche_info,
-              identity_link: result.identity_link
+              identity_link: result.identity_link,
+              invite_reward: result.invite_reward
             });
           }
           setQuestionData(prev => prev ? { ...prev, streak: (prev.streak || 0) + 1, already_answered_today: true } : prev);
@@ -225,6 +226,14 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
                       <div className="h-full bg-purple-400 rounded-full transition-all duration-700" style={{ width: `${impactData.niche_info.progress}%` }} />
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Invite reward notification */}
+              {impactData.invite_reward && (
+                <div className="flex items-center gap-2 bg-amber-50 rounded-xl p-2 border border-amber-100 animate-glow-in" data-testid="invite-reward-notification">
+                  <UserPlus className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-[10px] text-amber-700 font-medium">{impactData.invite_reward.message_he}</span>
                 </div>
               )}
 

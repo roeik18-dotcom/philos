@@ -77,6 +77,14 @@ export default function InviteSection({ userId }) {
             <p className="text-sm font-bold text-violet-600">{stats.total_invites_used}</p>
             <p className="text-[9px] text-gray-400">הצטרפו</p>
           </div>
+          <div className="text-center" data-testid="invite-active-count">
+            <p className="text-sm font-bold text-emerald-600">{stats.active_invitees || 0}</p>
+            <p className="text-[9px] text-gray-400">פעילים</p>
+          </div>
+          <div className="text-center" data-testid="invite-credits-count">
+            <p className="text-sm font-bold text-amber-600">{stats.invite_credits || 0}</p>
+            <p className="text-[9px] text-gray-400">נקודות</p>
+          </div>
           <div className="text-center" data-testid="invite-remaining-count">
             <p className="text-sm font-bold text-gray-600">{stats.codes_remaining + unusedCodes.length}</p>
             <p className="text-[9px] text-gray-400">נותרו</p>
@@ -94,10 +102,13 @@ export default function InviteSection({ userId }) {
 
       {/* Invitees — who you brought */}
       {stats.invitees && stats.invitees.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 bg-emerald-50 rounded-xl" data-testid="invite-invitees">
-          <span className="text-[10px] text-emerald-600">
-            הבאת לשדה: {stats.invitees.map(i => i.alias).join(', ')}
-          </span>
+        <div className="flex flex-wrap items-center gap-1.5 mb-3 px-2 py-1.5 bg-emerald-50 rounded-xl" data-testid="invite-invitees">
+          <span className="text-[10px] text-emerald-600">הבאת לשדה:</span>
+          {stats.invitees.map((i, idx) => (
+            <span key={idx} className={`text-[10px] font-medium ${i.active ? 'text-emerald-700' : 'text-gray-400'}`}>
+              {i.alias}{i.active ? '' : ' (טרם פעל)'}{idx < stats.invitees.length - 1 ? ',' : ''}
+            </span>
+          ))}
         </div>
       )}
 
