@@ -3,6 +3,7 @@ import { toPng } from 'html-to-image';
 import { ActiveUsersIndicator, OrientationShareCard } from '../components/philos/sections';
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
+import FeedbackButton from '../components/philos/FeedbackButton';
 import usePhilosState from '../hooks/usePhilosState';
 import HomeTab from './tabs/HomeTab';
 import FeedTab from './tabs/FeedTab';
@@ -262,6 +263,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
 
       {/* Floating Quick Decision Button */}
       <QuickDecisionButton onSubmit={evaluateAction} />
+
+      {/* Floating Feedback Button */}
+      <FeedbackButton userId={user?.id} currentTab={activeTab} />
     </div>
   );
 }

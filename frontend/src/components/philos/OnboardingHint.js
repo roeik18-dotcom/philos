@@ -1,36 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Compass, Sun, Activity } from 'lucide-react';
+import { Compass, Globe, Zap, ChevronLeft, Loader2, Check } from 'lucide-react';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 const ONBOARDING_KEY = 'philos_onboarding_complete';
 
-const steps = [
-  {
-    Icon: Compass,
-    color: '#6366f1',
-    bg: 'bg-indigo-50',
-    title: 'המצפן שלך',
-    description: 'המצפן מראה את המיקום שלך בשדה ההתמצאות — בין ארבעה כיוונים: התאוששות, סדר, תרומה וחקירה. הוא משתנה עם כל פעולה שלך.'
-  },
-  {
-    Icon: Sun,
-    color: '#f59e0b',
-    bg: 'bg-amber-50',
-    title: 'השאלה היומית',
-    description: 'כל יום תקבל שאלה אחת שמזמינה אותך לפעול. כשאתה מבצע את הפעולה ומסמן "עשיתי את זה", הרצף שלך גדל והמערכת לומדת את הדפוסים שלך.'
-  },
-  {
-    Icon: Activity,
-    color: '#22c55e',
-    bg: 'bg-green-50',
-    title: 'ההשפעה שלך על השדה',
-    description: 'כל פעולה שלך משפיעה על שדה ההתמצאות הקולקטיבי. אתה חלק ממשימה יומית משותפת — ביחד אנחנו מכוונים את השדה.'
-  }
+const DIRECTIONS = [
+  { id: 'contribution', label: 'תרומה', desc: 'לתת, לעזור, לחזק אחרים', color: '#22c55e', bg: '#f0fdf4' },
+  { id: 'recovery', label: 'התאוששות', desc: 'להיטען, לשקם, לנוח', color: '#3b82f6', bg: '#eff6ff' },
+  { id: 'order', label: 'סדר', desc: 'לארגן, לתכנן, לייצב', color: '#6366f1', bg: '#eef2ff' },
+  { id: 'exploration', label: 'חקירה', desc: 'לגלות, ללמוד, לנסות חדש', color: '#f59e0b', bg: '#fffbeb' }
 ];
 
 export default function OnboardingHint({ onComplete }) {
   const [step, setStep] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [selectedDirection, setSelectedDirection] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     const completed = localStorage.getItem(ONBOARDING_KEY);
@@ -46,90 +33,149 @@ export default function OnboardingHint({ onComplete }) {
     }, 300);
   };
 
-  const handleNext = () => {
-    if (step < steps.length - 1) setStep(step + 1);
-    else handleComplete();
+  const handleSendToGlobe = async () => {
+    if (!selectedDirection) return;
+    setSending(true);
+    const userId = localStorage.getItem('philos_user_id') || `anon_${Date.now()}`;
+    try {
+      await fetch(`${API_URL}/api/onboarding/first-action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, direction: selectedDirection })
+      });
+      setSent(true);
+      setTimeout(() => {
+        // Dispatch globe pulse event
+        window.dispatchEvent(new CustomEvent('globe-field-pulse', { detail: { direction: selectedDirection } }));
+        handleComplete();
+      }, 1200);
+    } catch (e) {
+      handleComplete();
+    } finally {
+      setSending(false);
+    }
   };
 
   if (!showHint) return null;
-
-  const current = steps[step];
 
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 transition-opacity duration-300 ${exiting ? 'opacity-0' : 'opacity-100'}`}
       data-testid="onboarding-overlay"
     >
-      <div className="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full text-center" dir="rtl" data-testid="onboarding-modal">
-        {/* Progress dots */}
+      <div className="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full" dir="rtl" data-testid="onboarding-modal">
+        {/* Progress */}
         <div className="flex justify-center gap-2 mb-5">
-          {steps.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === step ? 'w-6 bg-gray-800' : i < step ? 'w-1.5 bg-gray-400' : 'w-1.5 bg-gray-200'
-              }`}
-            />
+          {[0, 1, 2].map(i => (
+            <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === step ? 'w-6 bg-gray-800' : i < step ? 'w-1.5 bg-gray-400' : 'w-1.5 bg-gray-200'}`} />
           ))}
         </div>
 
-        {/* Icon */}
-        <div className={`w-14 h-14 mx-auto rounded-2xl ${current.bg} flex items-center justify-center mb-4`}>
-          <current.Icon className="w-7 h-7" style={{ color: current.color }} />
-        </div>
-
-        {/* Content */}
-        <h2 className="text-xl font-bold text-gray-900 mb-3" data-testid="onboarding-title">
-          {current.title}
-        </h2>
-        <p className="text-sm text-gray-600 leading-relaxed mb-6" data-testid="onboarding-description">
-          {current.description}
-        </p>
-
-        {/* Buttons */}
-        <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={handleNext}
-            className="flex-1 py-3 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 transition-colors active:scale-[0.97]"
-            data-testid="onboarding-next"
-          >
-            {step < steps.length - 1 ? 'הבא' : 'בואו נתחיל'}
-          </button>
-          {step < steps.length - 1 && (
+        {/* Step 1: What is Philos */}
+        {step === 0 && (
+          <div className="text-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
+              <Compass className="w-7 h-7 text-indigo-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-3" data-testid="onboarding-title">ברוך הבא ל-Philos</h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-2">
+              Philos עוזר לך להתמצא בחיים דרך פעולה יומית אחת.
+            </p>
+            <p className="text-sm text-gray-500 leading-relaxed mb-6">
+              כל יום תבחר כיוון, תבצע פעולה קטנה, ותראה את ההשפעה שלך על שדה אנושי גלובלי.
+            </p>
             <button
-              onClick={handleComplete}
-              className="px-4 py-3 text-sm text-gray-400 hover:text-gray-600 transition-colors"
-              data-testid="onboarding-skip"
+              onClick={() => setStep(1)}
+              className="w-full py-3 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 transition-colors active:scale-[0.97]"
+              data-testid="onboarding-next"
             >
+              הבא
+            </button>
+            <button onClick={handleComplete} className="w-full mt-2 py-2 text-xs text-gray-400 hover:text-gray-600" data-testid="onboarding-skip">
               דלג
             </button>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Step 2: Choose first direction */}
+        {step === 1 && (
+          <div>
+            <div className="text-center mb-4">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 flex items-center justify-center mb-3">
+                <Zap className="w-7 h-7 text-amber-500" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 mb-1" data-testid="onboarding-title">בחר את הכיוון הראשון שלך</h2>
+              <p className="text-xs text-gray-500">מה הכי מושך אותך עכשיו?</p>
+            </div>
+            <div className="space-y-2 mb-4">
+              {DIRECTIONS.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => setSelectedDirection(d.id)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-right"
+                  style={{
+                    backgroundColor: selectedDirection === d.id ? d.bg : 'white',
+                    borderColor: selectedDirection === d.id ? d.color : '#e5e7eb'
+                  }}
+                  data-testid={`onboarding-direction-${d.id}`}
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${d.color}15` }}>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold" style={{ color: d.color }}>{d.label}</p>
+                    <p className="text-[10px] text-gray-500">{d.desc}</p>
+                  </div>
+                  {selectedDirection === d.id && <Check className="w-4 h-4 flex-shrink-0" style={{ color: d.color }} />}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => selectedDirection && setStep(2)}
+              disabled={!selectedDirection}
+              className="w-full py-3 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-[0.97]"
+              data-testid="onboarding-next"
+            >
+              הבא
+            </button>
+          </div>
+        )}
+
+        {/* Step 3: Send to globe */}
+        {step === 2 && (
+          <div className="text-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-green-50 flex items-center justify-center mb-4">
+              <Globe className="w-7 h-7 text-green-600" />
+            </div>
+            {sent ? (
+              <>
+                <h2 className="text-xl font-bold text-green-600 mb-2" data-testid="onboarding-title">נשלח!</h2>
+                <p className="text-sm text-gray-500 mb-4">הנקודה הראשונה שלך נוספה לשדה הגלובלי</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-bold text-gray-900 mb-2" data-testid="onboarding-title">שלח את הנקודה הראשונה שלך</h2>
+                <p className="text-sm text-gray-500 mb-2">
+                  בחרת <span className="font-bold" style={{ color: DIRECTIONS.find(d => d.id === selectedDirection)?.color }}>
+                    {DIRECTIONS.find(d => d.id === selectedDirection)?.label}
+                  </span>
+                </p>
+                <p className="text-xs text-gray-400 mb-6">
+                  לחץ כדי לשלוח את הפעולה הראשונה שלך לגלובוס ולהצטרף לשדה האנושי.
+                </p>
+                <button
+                  onClick={handleSendToGlobe}
+                  disabled={sending}
+                  className="w-full py-3 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 disabled:opacity-60 transition-all active:scale-[0.97] flex items-center justify-center gap-2"
+                  data-testid="onboarding-send-to-globe"
+                >
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Globe className="w-4 h-4" /> שלח לגלובוס</>}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
-    </div>
-  );
-}
-
-export function SectionHelperText({ children, icon = '?' }) {
-  return (
-    <p className="text-sm text-gray-500 mt-2 flex items-center gap-2" dir="rtl">
-      <span>{icon}</span>
-      <span>{children}</span>
-    </p>
-  );
-}
-
-export function EmptyState({ title, description, actionText, onAction, icon = null }) {
-  return (
-    <div className="text-center py-8 px-4" dir="rtl" data-testid="empty-state">
-      {icon && <div className="text-4xl mb-4">{icon}</div>}
-      <h3 className="text-lg font-medium text-gray-700 mb-2">{title}</h3>
-      <p className="text-gray-500 mb-6 max-w-sm mx-auto">{description}</p>
-      {actionText && onAction && (
-        <button onClick={onAction} className="px-6 py-2 bg-emerald-100 text-emerald-700 rounded-xl hover:bg-emerald-200 transition-colors" data-testid="empty-state-action">
-          {actionText}
-        </button>
-      )}
     </div>
   );
 }

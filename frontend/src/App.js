@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PhilosDashboard from './pages/PhilosDashboard';
 import InvitePage from './pages/InvitePage';
+import AdminPage from './pages/AdminPage';
 import AuthScreen from './components/auth/AuthScreen';
 import { getUserId } from './services/cloudSync';
 import './App.css';
@@ -18,7 +19,7 @@ function App() {
     const persistentUserId = getUserId();
     console.log('Persistent User ID:', persistentUserId);
 
-    // Check if we're on an invite page
+    // Check if we're on an invite page or admin page
     const path = window.location.pathname;
     const match = path.match(/^\/invite\/([a-zA-Z0-9]+)$/);
     if (match) {
@@ -88,6 +89,11 @@ function App() {
         </div>
       </div>
     );
+  }
+
+  // Admin page
+  if (window.location.pathname === '/admin') {
+    return <AdminPage />;
   }
 
   // Invite page
