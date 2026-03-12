@@ -27,4 +27,4 @@ Decision → Chain → Replay → Adaptive Scoring → Reports → Collective
 ## Next: System Stabilization
 - API caching, loading states, error handling, RTL verification
 
-**Preview:** https://orient-global.preview.emergentagent.com
+**Preview:** https://decision-engine-lab.preview.emergentagent.com

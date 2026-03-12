@@ -3,7 +3,7 @@
 
 **Generated:** March 8, 2026  
 **Purpose:** Development continuity across context resets  
-**Preview URL:** https://orient-global.preview.emergentagent.com
+**Preview URL:** https://decision-engine-lab.preview.emergentagent.com
 
 ---
 
@@ -330,7 +330,7 @@ DELETE /api/philos/sessions/{user_id}/{session_id}  # Delete session
 
 ### Frontend (.env)
 ```
-REACT_APP_BACKEND_URL=https://orient-global.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://decision-engine-lab.preview.emergentagent.com
 ```
 
 ### Backend (.env)

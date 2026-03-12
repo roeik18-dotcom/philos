@@ -141,7 +141,7 @@ Fail: "ניצול: רווח אישי גבוה מדי ביחס לקולקטיבי
 
 ### Frontend
 - **Running**: Yes (port 3000)
-- **URL**: https://orient-global.preview.emergentagent.com
+- **URL**: https://decision-engine-lab.preview.emergentagent.com
 - **Status**: LIVE but showing old code (needs restart)
 
 ### Backend  
