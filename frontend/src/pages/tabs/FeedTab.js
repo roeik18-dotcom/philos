@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Rss, Loader2 } from 'lucide-react';
 import FeedCard from '../../components/philos/sections/FeedCard';
+import HighlightedRecords from '../../components/philos/sections/HighlightedRecords';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -40,6 +41,9 @@ export default function FeedTab({ user, setActiveTab }) {
 
   return (
     <div className="space-y-3" data-testid="feed-tab">
+      {/* Highlighted Records — ambient discovery */}
+      <HighlightedRecords />
+
       {/* Feed header */}
       <div className="flex items-center justify-between mb-1" dir="rtl">
         <div className="flex items-center gap-2">

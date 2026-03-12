@@ -77,3 +77,4 @@ export { default as LeadersSection } from './LeadersSection';
 export { default as CompassAISection } from './CompassAISection';
 export { default as CircleDetailView } from './CircleDetailView';
 export { default as DailyBaseSelection } from './DailyBaseSelection';
+export { default as HighlightedRecords } from './HighlightedRecords';

@@ -5938,6 +5938,73 @@ async def get_referral_leaderboard():
         logger.error(f"Get referral leaderboard error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/orientation/highlighted-records")
+async def get_highlighted_records():
+    """Return highlighted public Human Action Records for ambient discovery."""
+    try:
+        now = datetime.now(timezone.utc)
+        seven_days_ago = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+
+        # Find users who have been active in the last 7 days
+        recent_answers = await db.daily_questions.find(
+            {"answered": True, "date": {"$gte": seven_days_ago}},
+            {"_id": 0, "user_id": 1}
+        ).to_list(5000)
+
+        active_user_ids = list(set(a.get("user_id") for a in recent_answers if a.get("user_id")))
+
+        # Gather stats for each active user
+        records = []
+        for uid in active_user_ids[:30]:
+            user = await db.users.find_one({"id": uid}, {"_id": 0, "id": 1, "email": 1, "invited_by": 1, "created_at": 1})
+            if not user:
+                continue
+
+            # Alias
+            alias_index = hash(uid) % len(ANONYMOUS_ALIASES)
+            alias = ANONYMOUS_ALIASES[alias_index]
+
+            # Direction stats
+            all_answers = await db.daily_questions.find(
+                {"user_id": uid, "answered": True}, {"_id": 0, "suggested_direction": 1}
+            ).to_list(500)
+
+            dir_counts = {'contribution': 0, 'recovery': 0, 'order': 0, 'exploration': 0}
+            for a in all_answers:
+                d = a.get("suggested_direction", "")
+                if d in dir_counts:
+                    dir_counts[d] += 1
+
+            total_actions = sum(dir_counts.values())
+            dominant_dir = max(dir_counts, key=dir_counts.get) if total_actions > 0 else 'contribution'
+
+            # Impact score
+            impact_score = min(100, total_actions * 3 + len(set(d for d, c in dir_counts.items() if c > 0)) * 10)
+
+            # Invite count
+            invites = await db.invites.find({"inviter_id": uid}, {"_id": 0, "use_count": 1}).to_list(10)
+            invite_count = sum(i.get("use_count", 0) for i in invites)
+
+            records.append({
+                "user_id": uid,
+                "alias": alias,
+                "dominant_direction": dominant_dir,
+                "dominant_direction_he": GLOBE_DIR_LABELS.get(dominant_dir, ''),
+                "impact_score": impact_score,
+                "total_actions": total_actions,
+                "invite_count": invite_count
+            })
+
+        # Sort by impact score descending, take top 8
+        records.sort(key=lambda x: x["impact_score"], reverse=True)
+
+        return {"success": True, "records": records[:8]}
+    except Exception as e:
+        logger.error(f"Get highlighted records error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 
 # CORS and logging setup (router included after all endpoints below)
 
