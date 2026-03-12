@@ -235,6 +235,17 @@ Rule-based meaning engine: `ACTION_MEANINGS` dict maps each direction to 4 Hebre
 4. **Copy Link** — Copies shareable profile URL to clipboard with visual confirmation.
 5. **No Social API** — Manual sharing only for now.
 
+### Phase 22 — Addictive Autonomous Engagement Loop (completed 2026-03-12)
+Strengthened 6 existing loops without adding new pages/tabs:
+1. **Daily Opening Hook** — EntryLayer rewritten as dynamic personal hook. Fetches live field-dashboard + compass-ai data. Shows: today's world direction, user's dominant force, recommended action, CTA "התחל פעולה" that smooth-scrolls to daily question.
+2. **Fast Action Loop** — QuickDecisionButton rewritten as 3-tap FAB: tap → pick direction (4 buttons) → instant reward. Uses `/api/onboarding/first-action`, dispatches globe pulse.
+3. **Immediate Reward** — DailyOrientationQuestion enhanced: animated "+impact" score, streak indicator, niche progress bar with "עוד X" remaining, link to Human Action Record.
+4. **Identity Growth** — After each action: niche progress nudge, next milestone indicator, profile link ("צפה ברשומה שלך").
+5. **Curiosity Loop** — ClosingLayer enhanced: tension narrative (opposing direction rising), return hook ("השדה ממשיך להשתנות"), emotional cliffhanger per direction.
+6. **Living Field Presence** — Globe ambient pulses every 8-12s, auto-refresh every 45s. GlobalFieldDashboard auto-refreshes every 30s with animated counter and "חי" (live) indicator.
+
+Backend fix: streak calculation added to `POST /api/orientation/daily-answer/{user_id}`. Now returns `impact_score`, `streak`, `niche_info`, `identity_link`.
+
 ## Backlog
 
 ### P0 — Next Focus
