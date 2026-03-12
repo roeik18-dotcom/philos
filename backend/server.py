@@ -5674,6 +5674,7 @@ async def get_personalized_feed(user_id: str):
         for i, evt in enumerate(demo_events[:12]):
             d = evt['direction']
             alias = DEMO_ALIASES[i % len(DEMO_ALIASES)]
+            demo_uid = f"demo_{i % len(DEMO_ALIASES)}"
             cc = evt.get('country_code', 'IL')
             country_name = GLOBE_COUNTRY_COORDS.get(cc, {}).get('name', cc)
             # Upgraded scoring: direction + niche + circle + regional relevance
@@ -5683,7 +5684,7 @@ async def get_personalized_feed(user_id: str):
             circle_score = 0.3 if circle_match else 0.0
             total_relevance = dir_score + niche_score + circle_score
             cards.append({
-                'type': 'action', 'alias': alias, 'country': country_name, 'country_code': cc,
+                'type': 'action', 'alias': alias, 'user_id': demo_uid, 'country': country_name, 'country_code': cc,
                 'direction': d, 'direction_he': GLOBE_DIR_LABELS.get(d, ''),
                 'action_text': FEED_ACTIONS_HE[i % len(FEED_ACTIONS_HE)],
                 'impact_score': round(total_relevance * _random.uniform(3, 10), 1),
@@ -5695,7 +5696,7 @@ async def get_personalized_feed(user_id: str):
         cards.insert(3, {'type': 'question', 'question_he': FEED_QUESTIONS_HE[_random.randint(0, len(FEED_QUESTIONS_HE) - 1)], 'direction': dominant_dir, 'direction_he': GLOBE_DIR_LABELS.get(dominant_dir, ''), 'timestamp': datetime.now(timezone.utc).isoformat()})
         cards.insert(7, {'type': 'reflection', 'reflection_he': FEED_REFLECTIONS_HE[_random.randint(0, len(FEED_REFLECTIONS_HE) - 1)], 'direction': dominant_dir, 'direction_he': GLOBE_DIR_LABELS.get(dominant_dir, ''), 'timestamp': datetime.now(timezone.utc).isoformat()})
         if profile['total_value'] > 0:
-            cards.insert(5, {'type': 'leader', 'alias': 'Atlas', 'country': 'ישראל', 'country_code': 'IL', 'direction': 'contribution', 'direction_he': 'תרומה', 'total_value': 87, 'niche_tag': 'תורם', 'leader': True, 'timestamp': datetime.now(timezone.utc).isoformat()})
+            cards.insert(5, {'type': 'leader', 'alias': 'Atlas', 'user_id': 'demo_0', 'country': 'ישראל', 'country_code': 'IL', 'direction': 'contribution', 'direction_he': 'תרומה', 'total_value': 87, 'niche_tag': 'תורם', 'leader': True, 'timestamp': datetime.now(timezone.utc).isoformat()})
 
         return {'success': True, 'cards': cards, 'total': len(cards), 'user_direction': dominant_dir, 'user_niche': niche, 'user_niche_he': VALUE_NICHES.get(niche, {}).get('label_he', '') if niche else ''}
     except Exception as e:
@@ -6024,6 +6025,7 @@ async def get_value_circle_detail(circle_id: str, user_id: str = ""):
         for i in range(5):
             leaderboard.append({
                 'rank': i + 1,
+                'user_id': f'demo_{i}',
                 'alias': DEMO_ALIASES[i],
                 'country': list(GLOBE_COUNTRY_COORDS.values())[i % len(GLOBE_COUNTRY_COORDS)].get('name', ''),
                 'impact': round(_random.uniform(50, 200), 0),
@@ -6092,6 +6094,7 @@ async def get_leaders():
             niche = niche_keys[i % len(niche_keys)]
             global_leaders.append({
                 'rank': i + 1,
+                'user_id': f'demo_{i}',
                 'alias': DEMO_ALIASES[i],
                 'country': GLOBE_COUNTRY_COORDS[cc].get('name', cc),
                 'country_code': cc,
@@ -6157,6 +6160,231 @@ async def get_compass_ai(user_id: str):
         }
     except Exception as e:
         logger.error(f"Compass AI error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== HUMAN ACTION RECORD (PUBLIC PROFILE) ====================
+
+# Rule-based meaning interpretation for each direction
+ACTION_MEANINGS = {
+    'contribution': {
+        'personal_he': 'פעולה שמרחיבה את הנוכחות שלך מעבר לעצמך',
+        'social_he': 'חיזוק הקשר החברתי — נתינה שמחברת בין אנשים',
+        'value_he': 'ערך התרומה — העולם נבנה מפעולות של נתינה',
+        'system_he': 'כוח תרומה בשדה — מגביר את הכיוון הקולקטיבי'
+    },
+    'recovery': {
+        'personal_he': 'פעולה שמחזקת את הבסיס הפנימי שלך',
+        'social_he': 'מודל של טיפול עצמי — מראה לאחרים שמותר לעצור',
+        'value_he': 'ערך ההתאוששות — בנייה דורשת מנוחה',
+        'system_he': 'כוח איזון בשדה — ייצוב פנימי שמקרין החוצה'
+    },
+    'order': {
+        'personal_he': 'פעולה שיוצרת מבנה ובהירות בחיים שלך',
+        'social_he': 'תרומה למסגרת — סדר אישי משפיע על הסביבה',
+        'value_he': 'ערך הסדר — יציבות כבסיס לצמיחה',
+        'system_he': 'כוח ארגון בשדה — מגביר את היציבות הגלובלית'
+    },
+    'exploration': {
+        'personal_he': 'פעולה שפותחת דלתות חדשות בעולם שלך',
+        'social_he': 'הרחבת אופקים — סקרנות שמזמינה אחרים לגלות',
+        'value_he': 'ערך החקירה — גילוי כמנוע לשינוי',
+        'system_he': 'כוח הרחבה בשדה — מגדיל את מפת האפשרויות'
+    }
+}
+
+
+@api_router.get("/profile/{user_id}/record")
+async def get_human_action_record(user_id: str):
+    """Public Human Action Record — value document for any user."""
+    try:
+        now = datetime.now(timezone.utc)
+        yesterday_str = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        # Alias
+        alias_index = hash(user_id) % len(ANONYMOUS_ALIASES)
+        alias = ANONYMOUS_ALIASES[alias_index]
+
+        # User data
+        user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+        created_at = user.get("created_at", now.isoformat()) if user else now.isoformat()
+
+        # Session data (force profile, history)
+        session = await db.philos_sessions.find_one({"user_id": user_id}, {"_id": 0, "history": 1, "global_stats": 1})
+        history = session.get("history", []) if session else []
+        stats = session.get("global_stats", {}) if session else {}
+
+        dirs = ['contribution', 'recovery', 'order', 'exploration']
+        dir_counts = {d: stats.get(d, 0) for d in dirs}
+        total_actions = sum(dir_counts.values())
+        dominant_dir = max(dir_counts, key=dir_counts.get) if total_actions > 0 else None
+
+        # Globe points for country
+        globe_pts = await db.user_globe_points.find(
+            {"user_id": user_id}, {"_id": 0, "country_code": 1}
+        ).to_list(100)
+        country_code = "IL"
+        if globe_pts:
+            codes = [p.get("country_code", "IL") for p in globe_pts]
+            country_code = max(set(codes), key=codes.count)
+        country_name = GLOBE_COUNTRY_COORDS.get(country_code, {}).get("name", "ישראל")
+
+        # Niche
+        niche = None
+        niche_label_he = None
+        if total_actions >= 5:
+            for nid, ndef in VALUE_NICHES.items():
+                nd = ndef.get('dominant_direction')
+                if nd and dir_counts.get(nd, 0) >= ndef.get('threshold', 35):
+                    niche = nid
+                    niche_label_he = ndef['label_he']
+                    break
+            if not niche:
+                for nid, ndef in VALUE_NICHES.items():
+                    if not ndef.get('dominant_direction') and total_actions >= ndef.get('threshold', 20):
+                        niche = nid
+                        niche_label_he = ndef['label_he']
+                        break
+
+        # Daily questions for additional action data
+        daily_actions = await db.daily_questions.find(
+            {"user_id": user_id}, {"_id": 0}
+        ).sort("answered_at", -1).to_list(200)
+
+        # Build chronological action record with meanings
+        action_record = []
+        for q in daily_actions:
+            direction = q.get("direction", "")
+            if not direction:
+                continue
+            meanings = ACTION_MEANINGS.get(direction, ACTION_MEANINGS['contribution'])
+            impact = round(_random.uniform(2.0, 9.5), 1)
+            action_record.append({
+                'date': q.get("answered_at", q.get("date", "")),
+                'direction': direction,
+                'direction_he': GLOBE_DIR_LABELS.get(direction, ''),
+                'action_he': q.get("question_he", q.get("action_he", FEED_ACTIONS_HE[hash(str(q.get("answered_at", ""))) % len(FEED_ACTIONS_HE)])),
+                'impact': impact,
+                'source': q.get("source", "daily"),
+                'meanings': {
+                    'personal_he': meanings['personal_he'],
+                    'social_he': meanings['social_he'],
+                    'value_he': meanings['value_he'],
+                    'system_he': meanings['system_he']
+                }
+            })
+
+        # Also include session history actions
+        for h in sorted(history, key=lambda x: x.get("timestamp", ""), reverse=True)[:50]:
+            d = h.get("value_tag", "")
+            if not d or d not in ACTION_MEANINGS:
+                continue
+            meanings = ACTION_MEANINGS[d]
+            action_record.append({
+                'date': h.get("timestamp", ""),
+                'direction': d,
+                'direction_he': GLOBE_DIR_LABELS.get(d, ''),
+                'action_he': h.get("action", FEED_ACTIONS_HE[hash(str(h.get("timestamp", ""))) % len(FEED_ACTIONS_HE)]),
+                'impact': round(_random.uniform(2.0, 9.5), 1),
+                'source': 'session',
+                'meanings': {
+                    'personal_he': meanings['personal_he'],
+                    'social_he': meanings['social_he'],
+                    'value_he': meanings['value_he'],
+                    'system_he': meanings['system_he']
+                }
+            })
+
+        # Dedupe by date (keep first)
+        seen_dates = set()
+        unique_actions = []
+        for a in action_record:
+            key = a['date'][:16] if a['date'] else str(len(unique_actions))
+            if key not in seen_dates:
+                seen_dates.add(key)
+                unique_actions.append(a)
+        action_record = unique_actions[:50]
+
+        # Opposition axes (computed from direction ratios)
+        if total_actions > 0:
+            order_score = dir_counts.get('order', 0) / total_actions
+            chaos_score = dir_counts.get('exploration', 0) / total_actions
+            chaos_order = round((order_score - chaos_score + 1) / 2 * 100)
+
+            self_score = (dir_counts.get('recovery', 0) + dir_counts.get('exploration', 0) * 0.5) / total_actions
+            collective_score = (dir_counts.get('contribution', 0) + dir_counts.get('order', 0) * 0.3) / total_actions
+            ego_collective = round((collective_score - self_score + 1) / 2 * 100)
+
+            explore_score = dir_counts.get('exploration', 0) / total_actions
+            stable_score = (dir_counts.get('order', 0) + dir_counts.get('recovery', 0)) / total_actions
+            exploration_stability = round((stable_score - explore_score + 1) / 2 * 100)
+        else:
+            chaos_order = 50
+            ego_collective = 50
+            exploration_stability = 50
+
+        opposition_axes = {
+            'chaos_order': min(max(chaos_order, 0), 100),
+            'ego_collective': min(max(ego_collective, 0), 100),
+            'exploration_stability': min(max(exploration_stability, 0), 100)
+        }
+
+        # Value growth
+        circle_memberships = await db.circle_memberships.count_documents({"user_id": user_id})
+        badges = await db.user_badges.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        badge_list = [b.get("badge_id") for b in badges]
+
+        level = _calculate_level(total_actions)
+        thresholds = [0, 1, 5, 10, 20, 30, 50, 75, 100, 150, 200]
+        next_level_at = thresholds[level + 1] if level < len(thresholds) - 1 else thresholds[-1]
+        level_progress = round((total_actions / max(next_level_at, 1)) * 100) if next_level_at > 0 else 100
+
+        # Streak
+        answered = await db.daily_questions.find(
+            {"user_id": user_id, "answered": True}, {"_id": 0, "date": 1}
+        ).to_list(500)
+        all_dates = sorted(set(q.get("date") for q in answered if q.get("date")), reverse=True)
+        streak = 0
+        if all_dates and all_dates[0] >= yesterday_str:
+            streak = 1
+            for i in range(1, len(all_dates)):
+                prev = datetime.strptime(all_dates[i - 1], "%Y-%m-%d")
+                curr = datetime.strptime(all_dates[i], "%Y-%m-%d")
+                if (prev - curr).days == 1:
+                    streak += 1
+                else:
+                    break
+
+        return {
+            'success': True,
+            'identity': {
+                'user_id': user_id,
+                'alias': alias,
+                'country': country_name,
+                'country_code': country_code,
+                'dominant_direction': dominant_dir,
+                'dominant_direction_he': GLOBE_DIR_LABELS.get(dominant_dir, ''),
+                'niche': niche,
+                'niche_label_he': niche_label_he,
+                'member_since': created_at
+            },
+            'action_record': action_record,
+            'opposition_axes': opposition_axes,
+            'value_growth': {
+                'total_actions': total_actions,
+                'impact_score': round(total_actions * 2.5 + streak * 5, 1),
+                'level': level,
+                'level_progress': min(level_progress, 100),
+                'next_level_at': next_level_at,
+                'niche_progress': min(round((dir_counts.get(VALUE_NICHES.get(niche, {}).get('dominant_direction', ''), 0) / max(VALUE_NICHES.get(niche, {}).get('threshold', 35), 1)) * 100), 100) if niche else 0,
+                'circle_memberships': circle_memberships,
+                'badges': badge_list,
+                'streak': streak
+            },
+            'direction_distribution': dir_counts
+        }
+    except Exception as e:
+        logger.error(f"Human action record error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

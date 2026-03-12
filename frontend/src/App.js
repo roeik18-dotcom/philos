@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import PhilosDashboard from './pages/PhilosDashboard';
 import InvitePage from './pages/InvitePage';
 import AdminPage from './pages/AdminPage';
+import ProfilePage from './pages/ProfilePage';
 import AuthScreen from './components/auth/AuthScreen';
 import { getUserId } from './services/cloudSync';
 import './App.css';
@@ -94,6 +95,11 @@ function App() {
   // Admin page
   if (window.location.pathname === '/admin') {
     return <AdminPage />;
+  }
+
+  // Profile page
+  if (window.location.pathname.startsWith('/profile/')) {
+    return <ProfilePage />;
   }
 
   // Invite page

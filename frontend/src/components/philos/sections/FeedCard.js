@@ -15,16 +15,27 @@ export default function FeedCard({ card, onShowOnGlobe }) {
 
 function ActionCard({ card, onShowOnGlobe }) {
   const color = dirColors[card.direction] || '#6366f1';
+  const profileUrl = card.user_id ? `/profile/${card.user_id}` : null;
   return (
     <div className="bg-white rounded-2xl p-4 border border-border shadow-sm" dir="rtl" data-testid={`feed-card-action`}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: color }}>
-            {card.alias?.charAt(0) || '?'}
-          </div>
+          {profileUrl ? (
+            <a href={profileUrl} className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold hover:ring-2 hover:ring-offset-1 transition-all" style={{ backgroundColor: color, ringColor: color }} data-testid="feed-profile-link">
+              {card.alias?.charAt(0) || '?'}
+            </a>
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: color }}>
+              {card.alias?.charAt(0) || '?'}
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold text-gray-800">{card.alias}</span>
+              {profileUrl ? (
+                <a href={profileUrl} className="text-sm font-semibold text-gray-800 hover:underline">{card.alias}</a>
+              ) : (
+                <span className="text-sm font-semibold text-gray-800">{card.alias}</span>
+              )}
               {card.leader && <Star className="w-3 h-3 text-amber-500" />}
             </div>
             <div className="flex items-center gap-1 text-[10px] text-gray-400">
@@ -79,6 +90,7 @@ function ReflectionCard({ card }) {
 }
 
 function LeaderCard({ card }) {
+  const profileUrl = card.user_id ? `/profile/${card.user_id}` : null;
   return (
     <div className="bg-gradient-to-l from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200 shadow-sm" dir="rtl" data-testid="feed-card-leader">
       <div className="flex items-center gap-2 mb-2">
@@ -86,9 +98,17 @@ function LeaderCard({ card }) {
         <span className="text-xs font-semibold text-amber-700">מוביל שדה</span>
       </div>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center text-amber-800 font-bold">{card.alias?.charAt(0)}</div>
+        {profileUrl ? (
+          <a href={profileUrl} className="w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center text-amber-800 font-bold hover:ring-2 hover:ring-amber-400 hover:ring-offset-1 transition-all" data-testid="leader-profile-link">{card.alias?.charAt(0)}</a>
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center text-amber-800 font-bold">{card.alias?.charAt(0)}</div>
+        )}
         <div>
-          <p className="text-sm font-semibold text-gray-800">{card.alias} · {card.country}</p>
+          {profileUrl ? (
+            <a href={profileUrl} className="text-sm font-semibold text-gray-800 hover:underline">{card.alias} · {card.country}</a>
+          ) : (
+            <p className="text-sm font-semibold text-gray-800">{card.alias} · {card.country}</p>
+          )}
           <p className="text-[10px] text-gray-500">{card.niche_tag} · ערך: {card.total_value}</p>
         </div>
       </div>

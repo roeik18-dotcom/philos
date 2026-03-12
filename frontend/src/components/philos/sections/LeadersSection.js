@@ -29,13 +29,18 @@ export default function LeadersSection() {
 
       <div className="space-y-1.5">
         {data.global_leaders.slice(0, 7).map((l, i) => (
-          <div key={i} className="flex items-center gap-2 p-2 rounded-xl hover:bg-gray-50 transition-colors" data-testid={`leader-${i}`}>
+          <a
+            key={i}
+            href={l.user_id ? `/profile/${l.user_id}` : '#'}
+            className="flex items-center gap-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
+            data-testid={`leader-${i}`}
+          >
             <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${i < 3 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
               {i < 3 ? <Star className="w-3 h-3" /> : l.rank}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-gray-800">{l.alias}</span>
+                <span className="text-xs font-semibold text-gray-800 hover:underline">{l.alias}</span>
                 <span className="text-[9px] text-gray-400 flex items-center gap-0.5"><MapPin className="w-2 h-2" />{l.country}</span>
               </div>
               <span className="text-[9px] text-gray-400">{l.niche_he}</span>
@@ -44,7 +49,7 @@ export default function LeadersSection() {
               <p className="text-xs font-bold text-gray-800">{Math.round(l.impact_score)}</p>
               <p className="text-[8px] text-gray-400">{l.actions} פעולות</p>
             </div>
-          </div>
+          </a>
         ))}
       </div>
     </section>
