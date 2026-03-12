@@ -213,6 +213,21 @@ New DB Collections: `missions`, `circles`
 
 New DB Collection: `feedback`
 
+### Phase 20 — Human Action Record / Public Profile (completed 2026-03-12)
+1. **Public Profile Page** (`/profile/{user_id}`) — Publicly accessible, shareable URL. Document-style layout with Hebrew RTL.
+2. **Identity Header** — Alias, country, member since date, dominant direction badge, niche badge.
+3. **Opposition Axes** — 3 visual sliders: Chaos↔Order, Ego↔Collective, Exploration↔Stability. Computed from direction ratios.
+4. **Value Growth** — Impact score, level, circle memberships, level progress bar, niche progress bar, streak, badges count.
+5. **Direction Distribution** — Stacked color bar showing contribution/recovery/order/exploration breakdown.
+6. **Chronological Action Record** — Expandable list of actions. Each action shows date, direction, action text, impact score. On expand: 4-layer multidimensional meaning (personal/social/value/system) using rule-based interpretation.
+7. **Profile Links** — Added to feed action cards (avatar + alias), feed leader cards, community leaderboard entries, circle detail leaders.
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/profile/{user_id}/record` | GET | Full human action record for any user |
+
+Rule-based meaning engine: `ACTION_MEANINGS` dict maps each direction to 4 Hebrew interpretation layers (personal, social, value, system).
+
 ## Backlog
 
 ### P0 — Next Focus
