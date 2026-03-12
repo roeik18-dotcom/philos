@@ -5669,17 +5669,24 @@ async def get_personalized_feed(user_id: str):
         demo_events = await db.demo_events.find({}, {"_id": 0, "direction": 1, "timestamp": 1, "country": 1, "country_code": 1}).sort("timestamp", -1).to_list(30)
 
         cards = []
+        user_circles = [m['circle_id'] async for m in db.circle_memberships.find({"user_id": user_id}, {"_id": 0, "circle_id": 1})]
+
         for i, evt in enumerate(demo_events[:12]):
             d = evt['direction']
             alias = DEMO_ALIASES[i % len(DEMO_ALIASES)]
             cc = evt.get('country_code', 'IL')
             country_name = GLOBE_COUNTRY_COORDS.get(cc, {}).get('name', cc)
-            relevance = 1.0 if d == dominant_dir else 0.5
+            # Upgraded scoring: direction + niche + circle + regional relevance
+            dir_score = 1.5 if d == dominant_dir else 0.5
+            niche_score = 0.3 if niche and VALUE_NICHES.get(niche, {}).get('dominant_direction') == d else 0.0
+            circle_match = any(CIRCLE_DEFS.get(c, {}).get('direction') == d for c in user_circles)
+            circle_score = 0.3 if circle_match else 0.0
+            total_relevance = dir_score + niche_score + circle_score
             cards.append({
                 'type': 'action', 'alias': alias, 'country': country_name, 'country_code': cc,
                 'direction': d, 'direction_he': GLOBE_DIR_LABELS.get(d, ''),
                 'action_text': FEED_ACTIONS_HE[i % len(FEED_ACTIONS_HE)],
-                'impact_score': round(relevance * _random.uniform(3, 10), 1),
+                'impact_score': round(total_relevance * _random.uniform(3, 10), 1),
                 'niche_tag': VALUE_NICHES.get(_determine_niche({d: 10, **{x: 1 for x in ['contribution', 'recovery', 'order', 'exploration'] if x != d}}, 14), {}).get('label_he', ''),
                 'leader': _random.random() > 0.8, 'timestamp': evt['timestamp']
             })
@@ -5832,6 +5839,282 @@ async def stripe_webhook(request: FastAPIRequest):
     except Exception as e:
         logger.error(f"Webhook error: {str(e)}")
         return {"received": True}
+
+
+# ==================== SOCIAL FIELD EXPANSION ====================
+
+CIRCLE_DEFS = {
+    'builders_of_order': {'label_he': 'בוני הסדר', 'direction': 'order', 'color': '#6366f1', 'desc_he': 'קהילה של אנשים שיוצרים מבנה ויציבות בשדה.'},
+    'explorers': {'label_he': 'חוקרים', 'direction': 'exploration', 'color': '#f59e0b', 'desc_he': 'קהילה של סקרנים שמרחיבים את גבולות השדה.'},
+    'contributors': {'label_he': 'תורמים', 'direction': 'contribution', 'color': '#22c55e', 'desc_he': 'קהילה של נותנים שמחזקים את הקשר בשדה.'},
+    'regenerators': {'label_he': 'משקמים', 'direction': 'recovery', 'color': '#3b82f6', 'desc_he': 'קהילה של אנשים שמייצבים את הבסיס הפנימי.'},
+    'social_connectors': {'label_he': 'מחברים חברתיים', 'direction': None, 'color': '#ec4899', 'desc_he': 'קהילה של מגשרים שמאחדים כיוונים שונים.'},
+    'deep_thinkers': {'label_he': 'הוגים עמוקים', 'direction': None, 'color': '#8b5cf6', 'desc_he': 'קהילה של אנשים שמאזנים בין כל הכיוונים.'}
+}
+
+COMPASS_SUGGESTIONS = {
+    'order': {'weak': 'exploration', 'suggestion_he': 'נסה ללמוד משהו חדש לגמרי היום — לצאת מהמבנה הרגיל.'},
+    'exploration': {'weak': 'order', 'suggestion_he': 'תן מבנה למה שגילית — כתוב רשימה או תכנן צעד הבא.'},
+    'contribution': {'weak': 'recovery', 'suggestion_he': 'קח זמן לעצמך היום — גם נותנים צריכים להיטען.'},
+    'recovery': {'weak': 'contribution', 'suggestion_he': 'עשה משהו קטן עבור מישהו אחר — נתינה מחזקת אחרי התאוששות.'}
+}
+
+
+@api_router.get("/orientation/field-dashboard")
+async def get_field_dashboard():
+    """Global field state: dominant direction, total actions, active regions, momentum."""
+    try:
+        now = datetime.now(timezone.utc)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        yesterday_start = (now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)).isoformat()
+
+        today_events = await db.demo_events.find({"timestamp": {"$gte": today_start}}, {"_id": 0, "direction": 1, "country_code": 1}).to_list(1000)
+        today_user = await db.user_globe_points.find({"timestamp": {"$gte": today_start}}, {"_id": 0, "direction": 1, "country_code": 1}).to_list(200)
+        yesterday_events = await db.demo_events.count_documents({"timestamp": {"$gte": yesterday_start, "$lt": today_start}})
+
+        all_today = today_events + today_user
+        dir_counts = {'contribution': 0, 'recovery': 0, 'order': 0, 'exploration': 0}
+        region_counts = {}
+        for e in all_today:
+            d = e.get('direction', '')
+            if d in dir_counts:
+                dir_counts[d] += 1
+            cc = e.get('country_code', '')
+            if cc:
+                region_counts[cc] = region_counts.get(cc, 0) + 1
+
+        total_today = sum(dir_counts.values())
+        dominant = max(dir_counts, key=dir_counts.get) if total_today > 0 else None
+        top_regions = sorted(region_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        momentum = 'עולה' if total_today > yesterday_events else ('יורד' if total_today < yesterday_events * 0.8 else 'יציב')
+
+        return {
+            'success': True,
+            'dominant_direction': dominant,
+            'dominant_direction_he': GLOBE_DIR_LABELS.get(dominant, ''),
+            'total_actions_today': total_today,
+            'direction_counts': dir_counts,
+            'active_regions': len(region_counts),
+            'top_regions': [{'code': r[0], 'name': GLOBE_COUNTRY_COORDS.get(r[0], {}).get('name', r[0]), 'count': r[1]} for r in top_regions],
+            'momentum_he': momentum,
+            'yesterday_total': yesterday_events
+        }
+    except Exception as e:
+        logger.error(f"Field dashboard error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/missions")
+async def get_missions():
+    """Active and recent missions."""
+    try:
+        today_mission = await _get_or_create_mission_today()
+        now = datetime.now(timezone.utc)
+
+        missions = []
+        for d in ['contribution', 'recovery', 'order', 'exploration']:
+            is_today = today_mission.get('direction') == d
+            demo_count = _random.randint(800, 5000)
+            missions.append({
+                'id': f'mission-{d}',
+                'title_he': {'contribution': 'חזק את הקשר', 'recovery': 'שקם את הבסיס', 'order': 'שחזר סדר', 'exploration': 'הרחב את השדה'}.get(d, ''),
+                'direction': d,
+                'direction_he': GLOBE_DIR_LABELS.get(d, ''),
+                'description_he': {'contribution': 'עשה פעולה אחת של נתינה היום', 'recovery': 'קח זמן אחד להתאוששות', 'order': 'ארגן דבר אחד בסביבה שלך', 'exploration': 'נסה דבר חדש אחד היום'}.get(d, ''),
+                'participants': today_mission.get('participants', 0) if is_today else demo_count,
+                'total_field_impact': (today_mission.get('participants', 0) * 4) if is_today else demo_count * 3,
+                'status': 'active' if is_today else 'available',
+                'is_today': is_today
+            })
+
+        missions.sort(key=lambda m: (0 if m['is_today'] else 1, -m['participants']))
+        return {'success': True, 'missions': missions}
+    except Exception as e:
+        logger.error(f"Missions error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/orientation/missions/join")
+async def join_mission(data: dict):
+    """Join a mission and record action."""
+    try:
+        user_id = data.get('user_id', '')
+        mission_id = data.get('mission_id', '')
+        direction = mission_id.replace('mission-', '') if mission_id.startswith('mission-') else 'contribution'
+
+        await db.mission_participations.insert_one({'user_id': user_id, 'mission_id': mission_id, 'direction': direction, 'timestamp': datetime.now(timezone.utc).isoformat()})
+
+        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        await db.daily_missions.update_one({"date": today}, {"$inc": {"participants": 1}})
+
+        return {'success': True, 'message_he': 'הצטרפת למשימה!'}
+    except Exception as e:
+        logger.error(f"Join mission error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/value-circles")
+async def get_value_circles():
+    """All circles with member counts."""
+    try:
+        circles = []
+        for cid, cdef in CIRCLE_DEFS.items():
+            member_count = await db.circle_memberships.count_documents({"circle_id": cid})
+            demo_count = _random.randint(120, 2000)
+            circles.append({
+                'id': cid, 'label_he': cdef['label_he'], 'direction': cdef['direction'],
+                'color': cdef['color'], 'description_he': cdef['desc_he'],
+                'member_count': member_count + demo_count
+            })
+        return {'success': True, 'circles': circles}
+    except Exception as e:
+        logger.error(f"Circles error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/orientation/value-circles/join")
+async def join_value_circle(data: dict):
+    """Join a circle."""
+    try:
+        user_id = data.get('user_id', '')
+        circle_id = data.get('circle_id', '')
+        if circle_id not in CIRCLE_DEFS:
+            raise HTTPException(status_code=400, detail="Unknown circle")
+
+        existing = await db.circle_memberships.find_one({"user_id": user_id, "circle_id": circle_id})
+        if existing:
+            return {'success': True, 'message_he': 'כבר חבר במעגל', 'already_member': True}
+
+        await db.circle_memberships.insert_one({'user_id': user_id, 'circle_id': circle_id, 'joined_at': datetime.now(timezone.utc).isoformat()})
+        return {'success': True, 'message_he': 'הצטרפת למעגל!', 'already_member': False}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Join circle error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/value-circles/{circle_id}")
+async def get_value_circle_detail(circle_id: str):
+    """Circle detail with feed and leaderboard."""
+    try:
+        if circle_id not in CIRCLE_DEFS:
+            raise HTTPException(status_code=404, detail="Circle not found")
+        cdef = CIRCLE_DEFS[circle_id]
+        member_count = await db.circle_memberships.count_documents({"circle_id": circle_id})
+        demo_count = _random.randint(120, 2000)
+
+        feed = []
+        for i in range(8):
+            feed.append({
+                'alias': DEMO_ALIASES[i % len(DEMO_ALIASES)],
+                'action_he': FEED_ACTIONS_HE[i % len(FEED_ACTIONS_HE)],
+                'direction': cdef['direction'] or DIRECTIONS[i % 4],
+                'impact': round(_random.uniform(3, 10), 1),
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            })
+
+        leaderboard = []
+        for i in range(5):
+            leaderboard.append({
+                'rank': i + 1,
+                'alias': DEMO_ALIASES[i],
+                'country': list(GLOBE_COUNTRY_COORDS.values())[i % len(GLOBE_COUNTRY_COORDS)].get('name', ''),
+                'impact': round(_random.uniform(50, 200), 0),
+                'actions': _random.randint(20, 100)
+            })
+
+        return {
+            'success': True,
+            'circle': {'id': circle_id, 'label_he': cdef['label_he'], 'direction': cdef['direction'], 'color': cdef['color'], 'description_he': cdef['desc_he'], 'member_count': member_count + demo_count},
+            'feed': feed,
+            'leaderboard': leaderboard
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Circle detail error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/leaders")
+async def get_leaders():
+    """Global and regional leaderboards."""
+    try:
+        global_leaders = []
+        for i in range(10):
+            cc = list(GLOBE_COUNTRY_COORDS.keys())[i % len(GLOBE_COUNTRY_COORDS)]
+            niche_keys = list(VALUE_NICHES.keys())
+            niche = niche_keys[i % len(niche_keys)]
+            global_leaders.append({
+                'rank': i + 1,
+                'alias': DEMO_ALIASES[i],
+                'country': GLOBE_COUNTRY_COORDS[cc].get('name', cc),
+                'country_code': cc,
+                'niche_he': VALUE_NICHES[niche]['label_he'],
+                'impact_score': round(500 - i * 30 + _random.uniform(-10, 10), 0),
+                'actions': _random.randint(50, 200),
+                'leader': True
+            })
+
+        regional = {}
+        for cc, data in list(GLOBE_COUNTRY_COORDS.items())[:8]:
+            regional[cc] = {
+                'country_name_he': data.get('name', cc),
+                'leaders': [{'rank': j + 1, 'alias': DEMO_ALIASES[(hash(cc) + j) % len(DEMO_ALIASES)], 'impact_score': round(200 - j * 25 + _random.uniform(-5, 5), 0), 'actions': _random.randint(10, 80)} for j in range(3)]
+            }
+
+        return {'success': True, 'global_leaders': global_leaders, 'regional': regional}
+    except Exception as e:
+        logger.error(f"Leaders error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/compass-ai/{user_id}")
+async def get_compass_ai(user_id: str):
+    """Personal compass AI analysis."""
+    try:
+        profile = await _build_value_profile(user_id)
+        dominant = profile['dominant_direction']
+        dir_counts = profile['dir_counts']
+        total = profile['total_actions']
+
+        if total == 0:
+            return {
+                'success': True, 'user_id': user_id,
+                'dominant_direction': None, 'dominant_direction_he': None,
+                'weak_direction': None, 'weak_direction_he': None,
+                'suggestion_he': 'בצע את הפעולה הראשונה שלך כדי לקבל ניתוח מצפן.',
+                'niche_he': None, 'streak': 0, 'balance_score': 0
+            }
+
+        weak = min(dir_counts, key=dir_counts.get)
+        suggestion = COMPASS_SUGGESTIONS.get(dominant, {}).get('suggestion_he', 'המשך בכיוון שלך.')
+
+        vals = list(dir_counts.values())
+        mean = total / 4
+        variance = sum((v - mean) ** 2 for v in vals) / 4
+        balance = max(0, min(100, int(100 - variance / max(total, 1) * 10)))
+
+        niche_id = profile['dominant_niche']
+        niche_he = VALUE_NICHES.get(niche_id, {}).get('label_he', '') if niche_id else None
+
+        return {
+            'success': True, 'user_id': user_id,
+            'dominant_direction': dominant,
+            'dominant_direction_he': GLOBE_DIR_LABELS.get(dominant, ''),
+            'weak_direction': weak,
+            'weak_direction_he': GLOBE_DIR_LABELS.get(weak, ''),
+            'suggestion_he': suggestion,
+            'niche_he': niche_he,
+            'streak': profile['current_streak'],
+            'balance_score': balance,
+            'dir_percentages': {d: round((c / total) * 100) for d, c in dir_counts.items()} if total > 0 else {}
+        }
+    except Exception as e:
+        logger.error(f"Compass AI error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Include the router AFTER all endpoints are defined

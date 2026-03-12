@@ -341,7 +341,7 @@ Historical data and sessions:
 
 ## Preview URL
 
-https://daily-orientation.preview.emergentagent.com
+https://orient-global.preview.emergentagent.com
 
 ---
 

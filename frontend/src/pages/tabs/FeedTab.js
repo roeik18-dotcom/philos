@@ -26,7 +26,7 @@ export default function FeedTab({ user, setActiveTab }) {
   }, [effectiveUserId]);
 
   const handleShowOnGlobe = () => {
-    setActiveTab('system');
+    setActiveTab('home');
   };
 
   if (loading) {

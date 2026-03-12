@@ -6,8 +6,8 @@ import OnboardingHint from '../components/philos/OnboardingHint';
 import usePhilosState from '../hooks/usePhilosState';
 import HomeTab from './tabs/HomeTab';
 import FeedTab from './tabs/FeedTab';
+import CommunityTab from './tabs/CommunityTab';
 import InsightsTab from './tabs/InsightsTab';
-import SystemTab from './tabs/SystemTab';
 import TheoryTab from './tabs/TheoryTab';
 import HistoryTab from './tabs/HistoryTab';
 
@@ -15,8 +15,8 @@ import HistoryTab from './tabs/HistoryTab';
 const TABS = {
   HOME: 'home',
   FEED: 'feed',
+  COMMUNITY: 'community',
   INSIGHTS: 'insights',
-  SYSTEM: 'system',
   THEORY: 'theory',
   HISTORY: 'history'
 };
@@ -25,8 +25,8 @@ const TABS = {
 const TAB_LABELS = {
   [TABS.HOME]: 'בית',
   [TABS.FEED]: 'פיד',
+  [TABS.COMMUNITY]: 'קהילה',
   [TABS.INSIGHTS]: 'תובנות',
-  [TABS.SYSTEM]: 'מערכת',
   [TABS.THEORY]: 'תיאוריה',
   [TABS.HISTORY]: 'היסטוריה'
 };
@@ -209,6 +209,10 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
           <FeedTab user={user} setActiveTab={setActiveTab} />
         )}
 
+        {activeTab === TABS.COMMUNITY && (
+          <CommunityTab user={user} />
+        )}
+
         {activeTab === TABS.INSIGHTS && (
           <InsightsTab
             user={user}
@@ -220,16 +224,6 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             selectedPathData={selectedPathData}
             learningHistory={learningHistory}
             replayHistory={replayHistory}
-          />
-        )}
-
-        {activeTab === TABS.SYSTEM && (
-          <SystemTab
-            history={history}
-            learningHistory={learningHistory}
-            replayInsights={replayInsights}
-            replayAdaptiveAdjustments={replayAdaptiveAdjustments}
-            adaptiveScores={adaptiveScores}
           />
         )}
 

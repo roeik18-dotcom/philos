@@ -70,3 +70,8 @@ export { default as ClosingLayer } from './ClosingLayer';
 export { default as FeedCard } from './FeedCard';
 export { default as ValueProfileSection } from './ValueProfileSection';
 export { default as SubscriptionSection } from './SubscriptionSection';
+export { default as GlobalFieldDashboard } from './GlobalFieldDashboard';
+export { default as MissionsSection } from './MissionsSection';
+export { default as CirclesSection } from './CirclesSection';
+export { default as LeadersSection } from './LeadersSection';
+export { default as CompassAISection } from './CompassAISection';

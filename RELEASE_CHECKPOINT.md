@@ -71,7 +71,7 @@ Language:   Hebrew RTL UI
 
 ## Deployment
 
-**Preview URL:** https://daily-orientation.preview.emergentagent.com
+**Preview URL:** https://orient-global.preview.emergentagent.com
 
 ---
 

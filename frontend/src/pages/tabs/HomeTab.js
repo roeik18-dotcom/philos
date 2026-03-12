@@ -11,7 +11,9 @@ import {
   OrientationFeedSection,
   CommunityStreakSection,
   InviteSection,
-  DecisionPathSection
+  DecisionPathSection,
+  GlobalFieldDashboard,
+  CompassAISection
 } from '../../components/philos/sections';
 
 export default function HomeTab({
@@ -38,6 +40,9 @@ export default function HomeTab({
 
   return (
     <div className="space-y-4">
+
+      {/* ═══ GLOBAL FIELD STATE ═══ */}
+      <GlobalFieldDashboard />
 
       {/* ═══ LAYER 1: ENTRY — "Why am I here?" ═══ */}
       <EntryLayer />
@@ -67,6 +72,9 @@ export default function HomeTab({
 
       {/* ═══ LAYER 6: CLOSING — "What changed today?" ═══ */}
       <ClosingLayer userId={user?.id} />
+
+      {/* ═══ PERSONAL COMPASS AI ═══ */}
+      <CompassAISection userId={user?.id} />
 
       {/* ─── Divider: narrative ends, community begins ─── */}
       <div className="pt-2">

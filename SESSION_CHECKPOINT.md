@@ -64,5 +64,5 @@ Tasks:
 
 ---
 
-**Preview URL:** https://daily-orientation.preview.emergentagent.com  
+**Preview URL:** https://orient-global.preview.emergentagent.com  
 **Test Credentials:** newuser@test.com / password123

@@ -280,7 +280,7 @@ User requested a "Collective Navigation System" with:
 # 11. PREVIEW URL
 
 ```
-https://daily-orientation.preview.emergentagent.com
+https://orient-global.preview.emergentagent.com
 ```
 
 ---

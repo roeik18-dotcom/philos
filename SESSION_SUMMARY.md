@@ -674,7 +674,7 @@ User Input → evaluateAction() → setHistory() → saveDecision() → MongoDB
 
 ## Preview URL
 
-https://daily-orientation.preview.emergentagent.com
+https://orient-global.preview.emergentagent.com
 
 ---
 

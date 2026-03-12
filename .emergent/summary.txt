@@ -1,134 +1,144 @@
 <analysis>**original_problem_statement:**
 The user's goal is to build a complex, client-side decision engine and dashboard called Philos Orientation. The application serves as a sophisticated single-page tool for real-time decision analysis and mental navigation, with a Hebrew (RTL) UI.
 
-The project has evolved through multiple phases, including initial features, community engagement, growth infrastructure, and product validation. The current objective is to integrate the core Philos Orientation theory into the product experience.
+The project has evolved through multiple phases, and the current goal is to turn the product from a feature set into a living global field system by implementing a Social Field Expansion + Core System Reinforcement phase.
 
 **PRODUCT REQUIREMENTS:**
-The current task is to implement a Core Theory Integration phase, which includes:
-1.  **Daily Opening:** A system to present the user's state at the start of the day.
-2.  **End of Day Reflection:** A summary of the user's daily activity and its impact.
-3.  **Field Globe:** A 3D global visualization of user and demo agent activity.
-4.  **Direction Explanations:** Clear in-app explanations of the four core directions (Contribution, Recovery, Order, Exploration).
+1.  **Global Field Dashboard:** A top-level section showing the field's current state (dominant direction, total actions, active regions).
+2.  **Mission Engine:** Global missions users can join and contribute to.
+3.  **Circles System:** Value-based communities (e.g., Builders of Order) with their own feeds and leaderboards.
+4.  **Value Leaders:** Global, regional, and circle-based leaderboards.
+5.  **Personal Compass AI:** A system to analyze user behavior and suggest actions based on dominant/weak directions.
+6.  **Feed Algorithm Upgrade:** Enhance the For You feed ranking with new factors like niche relevance, circle membership, and leader influence.
 
 **User's preferred language**: The user communicates in English. The UI text and layout must be in **Hebrew (עִבְרִית)** with a right-to-left (RTL) orientation. The next agent must respond to the user in English.
 
 **what currently exists?**
-A mature, feature-rich full-stack application (React frontend, FastAPI/MongoDB backend). The agent has successfully implemented numerous features in batches, including a daily question system, streaks, community metrics, a daily mission system, growth infrastructure (invites, metrics dashboards), a referral leaderboard, a product validation suite (onboarding, retention reports), and a demo agent system that populates the app with simulated activity. The UI has also undergone a polish pass for animations, spacing, and RTL consistency.
+A mature, feature-rich full-stack application with a React frontend, FastAPI/MongoDB backend, and a Hebrew (RTL) UI. The app includes a core orientation system (compass, daily questions), an interactive 3D globe, a narrative-driven home screen, a personalized For You feed, a value engine (scores, niches), a gamified progression layer (levels, badges), and a Stripe-based subscription foundation. The backend logic and endpoints for the current Social Field Expansion phase have already been implemented and tested.
 
 **Last working item**:
-- **Last item agent was working:** The agent was beginning the Core Theory Integration phase. It had analyzed the existing codebase and successfully installed the necessary  and  libraries for the globe visualization feature. The user then interrupted to request a session summary, pausing development before the implementation of backend endpoints and frontend components began.
+- **Last item agent was working:** The agent was in the middle of implementing the frontend for the Social Field Expansion + Core System Reinforcement phase. It had successfully implemented and tested all the required backend endpoints and had just created the six new frontend components in parallel (, , , , , and ). The session was summarized before these components could be integrated into the main application UI.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
 - **Which testing method agent to use?** both
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-There are no outstanding bugs or blocking issues. The previous critical issue of a Repetitive Context Limit Loop has been resolved.
+There are no outstanding bugs or blocking issues.
 
 **In progress Task List**:
-- **Task 1: Implement Core Theory Integration (P0)**
+- **Task 1: Complete Social Field Expansion Frontend Implementation (P0)**
   - **Where to resume:**
-    1.  Implement the backend endpoints for  and . Note that  and  endpoints from a previous abandoned attempt might already exist and can be repurposed or referenced.
-    2.  Create the frontend components: , , , and a component for .
-    3.  Integrate these new components into the .
-    4.  The  and  libraries are already installed in .
-  - **What will be achieved with this?** This will connect the application's various features to the underlying philosophical theory, providing a more cohesive user experience.
+    1.  The six new frontend components have been created under .
+    2.  The next step is to update  to export these new components.
+    3.  Integrate the new components into the appropriate tabs within .
+        *    and  should likely go in .
+        *   , , and  should be organized into a new Community or Field tab, or integrated into the existing .
+        *   The  should replace or enhance the existing  component used in the Feed tab.
+    4.  After integration, perform a full stack test using the testing agent.
+  - **What will be achieved with this?** This will complete the Social Field Expansion phase, making the application more interactive and community-focused.
   - **Status:** IN PROGRESS
   - **Should Test frontend/backend/both after fix?** both
   - **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks:**
-    *   Complete the Core Theory Integration phase as described above.
-*   **Future Tasks (Low Priority):**
-    *   Refactor  to extract tab content into separate components.
-    *   Resolve unfinished SVG implementation in .
+*   **Future Tasks:**
+    *   **Refactor Backend:** Refactor the monolithic  into a more modular structure (e.g., separate files for routes, models, and services) to improve scalability and maintainability.
+    *   **Real-user testing and retention measurement:** As requested by the user, shift focus to testing with real users and measuring retention after the current feature phase is complete.
 
 **Completed work in this session**
-- **Engagement Features:** Implemented Orientation Streak, Personal Impact message, Orientation Share Card, Weekly Insight, and Orientation Index Page.
-- **Community Layer:** Implemented Active Users Indicator, Relative Orientation Score, Orientation Circles, and Community Streak Overview.
-- **Field Mission System:** Created a daily collective mission with real-time progress tracking.
-- **Growth Infrastructure:** Implemented a Metrics Dashboard, real-time Orientation Feed, Invite System, and Weekly User Report.
-- **Gamification:** Added a Referral Leaderboard.
-- **Product Validation:** Implemented a new 3-step user onboarding flow and an admin invite tracking report.
-- **Data Simulation:** Created a system of 50 demo agents across 8 countries to generate continuous, realistic activity for the feed and globe.
-- **UI Polish:** Performed a comprehensive UI polish pass, adding animations, improving spacing, fixing RTL issues, and enhancing component styles.
+- **Core Theory Integration:** Implemented Daily Opening, End of Day Summary, Field Globe, and Direction Explanations.
+- **Architectural Stabilization:** Refactored  into modular tab components (, , etc.) and fixed a legacy SVG rendering issue in .
+- **Globe Interaction Layer:** Added features for users to send actions to the globe, a mission-based atmospheric glow, and a live header with daily stats.
+- **UI/UX Polish:** Implemented a frontend-only Field Pulse ripple animation, a subtle Field Heartbeat ambient animation, and various RTL polish improvements.
+- **Product Structure Rebuild:** Reorganized the home screen into a 6-layer narrative flow to improve user understanding of the core concepts.
+- **Value Engine & Subscription Foundation:** Implemented a personalized feed, a value engine tracking user scores and niches, a gamified progression system (levels, badges), and a Stripe-integrated subscription architecture.
+- **Social Field Expansion (Backend):** Implemented and tested all backend endpoints required for the current phase, including a feed algorithm upgrade.
 
 **Earlier issues found/mentioned but not fixed**
-- **Unfinished SVG implementation in :** This is a minor piece of technical debt from a very early session and is considered low priority.
+There are no known unfixed issues.
 
 **Known issue recurrence from previous fork**
-- **Context Limit Loop:** This was a major blocker at the start but was successfully resolved by the agent by adopting an incremental, feature-by-feature implementation strategy. This is no longer a concern.
+- None. A memory limit issue was encountered due to WebGL rendering during a screenshot but was resolved by a pod upgrade. A route conflict was identified and resolved by renaming the new endpoints.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 *   **Frontend:** React, React Hooks, , , . UI is in Hebrew (RTL).
-*   **Backend:** FastAPI, Pydantic, Pymongo,  for background tasks.
+*   **Backend:** FastAPI, Pydantic, Pymongo, .
 *   **Database:** MongoDB
-*   **Core Logic:** The application is built around a theoretical model of four orientations (Recovery, Order, Contribution, Exploration).
+*   **Payments:** Stripe for subscriptions.
 
 **key DB schema**
-- **philos_decisions:** Stores user actions (, , , etc).
-- **users:** User profiles, including , , , and .
-- **daily_missions:** Stores the mission for each day (Wed Mar 11 13:09:31 UTC 2026, , , ).
-- **invite_codes:** Tracks generated invites (, ,  - 'pending', 'opened', 'accepted').
-- **demo_agents:** A collection of 50 simulated agents used to generate activity.
-- **events:** A collection storing both real user actions and demo agent actions, used by the .
+- **users:** User profiles, auth, streaks, invites, subscription status, and value profile data (level, scores, niche).
+- **philos_decisions:** Stores individual user actions (, , ).
+- **events:** Aggregated feed of real user and demo agent actions.
+- **missions:** Stores global missions and participant data.
+- **circles:** Stores value-based community data.
+- **user_badges:** Tracks badges earned by users.
+- **demo_agents:** 50 simulated agents generating continuous activity.
+- **stripe_customers:** Maps users to Stripe customer IDs.
+
+**changes in tech stack**
+- : Added for handling subscriptions.
 
 **All files of reference**
-*   : The monolithic backend file. It contains all API logic, Pydantic models, and the background task for demo agents.
-*   : The main UI orchestrator. It is large and renders all section components based on the active tab.
-*   : The top-level component that handles routing.
-*   : Contains global styles, including keyframe animations for progress bars and component entrances.
-*   : Directory containing all feature components.
+*   : Contains all backend logic. The agent successfully added all new endpoints for the current phase here.
+*   : The main dashboard. Needs to be updated to integrate the new components/tabs.
+*   : Directory containing the individual tab components (, , etc.) which will host the new sections.
+*   : Directory containing all feature components, including the 6 newly created ones that need to be integrated.
 
 **Areas that need refactoring**:
-*    is very large and could be broken down by extracting the content of each tab into its own component.
-*    is a monolithic file. As the application grows, it should be refactored into a more modular structure (e.g., separating routes, models, and services).
+*    is a monolithic file and is the primary candidate for future refactoring to improve maintainability.
 
 **key api endpoints**
-- All CRUD and feature endpoints for the completed work are implemented and tested.
-- **Endpoints to be created:**
-  - 
-  -  (Note: This is different from the existing  endpoint).
-- **Endpoint to be used:**
-  -  (This will be the data source for the Globe visualization).
+*   
+*    & 
+*   , ,  (Renamed to avoid conflict)
+*   
+*   
+*    (Algorithm upgraded)
+*   
+*    & 
 
 **Critical Info for New Agent**
-*   You are starting the Core Theory Integration phase. Your main task is to implement the four features requested by the user: Daily Opening, End of Day Reflection, Field Globe, and Direction Explanations.
-*   **Do not restart work.** The libraries  and  are already installed. You can proceed directly to implementing the backend endpoints and frontend components.
-*   The backend file () may contain old, partially implemented endpoints from a previous attempt at this phase (e.g., , ). Review them and decide whether to use, modify, or replace them.
-*   Follow the established pattern of implementing a batch of related features, testing them with  and screenshots, and then using the  for final verification.
+*   You are resuming the Social Field Expansion phase.
+*   **The backend is complete.** All necessary endpoints have been created, tested, and are working. Do not modify the backend unless a bug is found during frontend integration.
+*   **The frontend components are created but not integrated.** Your primary task is to wire up the six new components (, , etc.) into the main dashboard UI.
+*   Start by exporting the new components from , then place them into the appropriate Tab components (, , etc.).
+*   After integration, use the  to ensure all new features work correctly and no regressions were introduced.
 
 **documents and test reports created in this job**
-*   Numerous test reports have been created in . The latest reports confirm that all existing features are working correctly.
+*    (Continuously updated)
+*   Multiple test reports in , confirming the health of all previously completed features.
 
 **Last 10 User Messages and any pending HUMAN messages**
-The user has been providing feature requests in batches, which the agent has been successfully implementing. The last few messages were:
-1.  **User:** Request to implement Core Theory Integration features.
-2.  **Agent:** Starts work, installs .
-3.  **User:** Interrupts with Summarize and save the entire session state... After saving, continue development from this checkpoint.
-The pending user directive is to continue with the Core Theory Integration task.
+1.  **User:** Requested the Social Field Expansion phase with 6 core features.
+2.  **Agent:** Acknowledged the request and began implementation.
+3.  **Agent:** Implemented all backend endpoints for the 6 features.
+4.  **Agent:** Successfully tested all new backend endpoints.
+5.  **Agent:** Created the 6 corresponding frontend components.
+6.  **Agent:** The session was summarized before the agent could integrate the new frontend components. The pending task is to complete this integration.
 
 **Project Health Check:**
-*   **Healthy:** The project is in an excellent state. The development process is unblocked, and the agent has demonstrated the ability to rapidly and correctly implement complex features. All previously implemented features have been tested and are working.
+*   **Healthy:** The project is stable and unblocked. All backend requirements for the current phase are complete and tested. The application is ready for the final frontend integration step of the current phase.
 
 **3rd Party Integrations**
-*   **html-to-image:** Used for the Orientation Share Card feature.
-*   **passlib, python-jose:** Used on the backend for JWT authentication.
-*   **react-globe.gl, three:** Installed for the upcoming Globe visualization feature.
+*   **react-globe.gl, three.js:** Used for the 3D globe visualization.
+*   **Stripe:** Integrated for subscription management and payments. Requires a user-provided API key, which has been added to .
+*   **html-to-image:** Used for a share card feature.
+*   **passlib, python-jose:** Used for backend JWT authentication.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES. The agent has consistently and successfully used  after every major feature implementation batch.
+- **Testing agent used after significant changes:** YES. The agent has consistently used  to validate all major feature completions, with all recent runs passing 100%.
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** None. Testing is done via  and the testing agent.
-- **Known regressions:** None. The testing agent has confirmed no regressions in the last several feature implementations.
+- **Test files created:** None.
+- **Known regressions:** None.
 
 **Credentials to test flow:**
 *   **Email:** 
 *   **Password:** 
 
 **What agent forgot to execute**
-The agent did not forget to execute anything. Its work on the Core Theory Integration phase was paused by the user's request to create a summary checkpoint. The next action is to resume this task.</analysis>
+The agent did not forget to execute any steps. Its work was interrupted by the session summary request immediately after creating the necessary frontend component files. The logical next step is to integrate those files into the application.</analysis>
