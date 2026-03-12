@@ -5014,6 +5014,37 @@ async def get_day_summary(user_id: str):
         else:
             reflection_he = f"היום פעלת {today_total} פעמים, בעיקר בכיוון {dir_labels.get(chosen_direction, '')}. ההשפעה שלך על השדה: {impact_percent}%."
 
+        # Department allocation analysis
+        today_base_doc = await db.daily_bases.find_one(
+            {"user_id": user_id, "date": today_str}, {"_id": 0}
+        )
+        chosen_base = today_base_doc.get("base") if today_base_doc else None
+
+        # Map today's directions to departments
+        dept_alloc = {'heart': 0, 'head': 0, 'body': 0}
+        for d, c in dir_counts.items():
+            dept = DIRECTION_TO_DEPT.get(d, 'head')
+            dept_alloc[dept] += c
+
+        dept_total = sum(dept_alloc.values())
+        dept_pct = {d: round((c / dept_total) * 100) if dept_total > 0 else 0 for d, c in dept_alloc.items()}
+        most_used_dept = max(dept_alloc, key=dept_alloc.get) if dept_total > 0 else None
+        neglected_dept = min(dept_alloc, key=dept_alloc.get) if dept_total > 0 else None
+
+        # Historical preferred department (last 14 days)
+        fourteen_days_ago = (now - timedelta(days=14)).strftime("%Y-%m-%d")
+        hist_bases = await db.daily_bases.find(
+            {"user_id": user_id, "date": {"$gte": fourteen_days_ago}},
+            {"_id": 0, "base": 1}
+        ).to_list(14)
+        hist_dept_counts = {'heart': 0, 'head': 0, 'body': 0}
+        for hb in hist_bases:
+            b = hb.get('base', '')
+            if b in hist_dept_counts:
+                hist_dept_counts[b] += 1
+        preferred_dept = max(hist_dept_counts, key=hist_dept_counts.get) if sum(hist_dept_counts.values()) > 0 else None
+        hist_neglected = min(hist_dept_counts, key=hist_dept_counts.get) if sum(hist_dept_counts.values()) > 0 else None
+
         return {
             "success": True,
             "user_id": user_id,
@@ -5025,11 +5056,140 @@ async def get_day_summary(user_id: str):
             "impact_on_field": impact_percent,
             "streak": streak,
             "global_field_effect": field_effect,
-            "reflection_he": reflection_he
+            "reflection_he": reflection_he,
+            "chosen_base": chosen_base,
+            "chosen_base_he": DEPT_LABELS_HE.get(chosen_base, ''),
+            "dept_allocation": dept_pct,
+            "most_used_dept": most_used_dept,
+            "most_used_dept_he": DEPT_LABELS_HE.get(most_used_dept, ''),
+            "neglected_dept": neglected_dept,
+            "neglected_dept_he": DEPT_LABELS_HE.get(neglected_dept, ''),
+            "preferred_dept": preferred_dept,
+            "preferred_dept_he": DEPT_LABELS_HE.get(preferred_dept, ''),
+            "hist_neglected_dept": hist_neglected,
+            "hist_neglected_dept_he": DEPT_LABELS_HE.get(hist_neglected, '')
         }
     except Exception as e:
         logger.error(f"Get day summary error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ═══ DAILY BASE ALLOCATION SYSTEM ═══
+
+BASE_DEFINITIONS = {
+    'heart': {
+        'name_he': 'לב',
+        'description_he': 'מאיזה מרכז אתה פועל היום?',
+        'allocations_he': ['קשרים ומערכות יחסים', 'אמפתיה והקשבה', 'תרומה ונתינה', 'תיקון רגשי'],
+        'allocations_keys': ['relationships', 'empathy', 'contribution', 'emotional_repair']
+    },
+    'head': {
+        'name_he': 'ראש',
+        'description_he': 'מאיזה מרכז אתה פועל היום?',
+        'allocations_he': ['סדר ותכנון', 'למידה וחקירה', 'קבלת החלטות', 'חשיבה אסטרטגית'],
+        'allocations_keys': ['order', 'learning', 'decision_making', 'strategic_thinking']
+    },
+    'body': {
+        'name_he': 'גוף',
+        'description_he': 'מאיזה מרכז אתה פועל היום?',
+        'allocations_he': ['תנועה ובריאות', 'פעולה מעשית', 'משמעת ומחויבות', 'סדר פיזי'],
+        'allocations_keys': ['movement', 'practical_action', 'discipline', 'physical_order']
+    }
+}
+
+# Map existing directions to departments for end-of-day analysis
+DIRECTION_TO_DEPT = {
+    'contribution': 'heart',
+    'recovery': 'body',
+    'order': 'head',
+    'exploration': 'head'
+}
+
+DEPT_LABELS_HE = {'heart': 'לב', 'head': 'ראש', 'body': 'גוף'}
+
+
+@api_router.get("/orientation/daily-base/{user_id}")
+async def get_daily_base(user_id: str):
+    """Get today's base selection and historical department patterns."""
+    try:
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        # Check if base was already selected today
+        today_base = await db.daily_bases.find_one(
+            {"user_id": user_id, "date": today_str}, {"_id": 0}
+        )
+
+        # Historical department usage (last 30 days)
+        thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%d")
+        history = await db.daily_bases.find(
+            {"user_id": user_id, "date": {"$gte": thirty_days_ago}},
+            {"_id": 0, "base": 1, "date": 1}
+        ).to_list(30)
+
+        dept_counts = {'heart': 0, 'head': 0, 'body': 0}
+        for h in history:
+            b = h.get('base', '')
+            if b in dept_counts:
+                dept_counts[b] += 1
+
+        total_days = sum(dept_counts.values())
+        most_used = max(dept_counts, key=dept_counts.get) if total_days > 0 else None
+        neglected = min(dept_counts, key=dept_counts.get) if total_days > 0 else None
+
+        return {
+            "success": True,
+            "base_selected": today_base is not None,
+            "today_base": today_base.get("base") if today_base else None,
+            "today_base_he": DEPT_LABELS_HE.get(today_base.get("base")) if today_base else None,
+            "allocations_he": BASE_DEFINITIONS.get(today_base.get("base"), {}).get("allocations_he", []) if today_base else [],
+            "bases": {k: {"name_he": v["name_he"], "allocations_he": v["allocations_he"]} for k, v in BASE_DEFINITIONS.items()},
+            "dept_history": dept_counts,
+            "most_used_dept": most_used,
+            "most_used_dept_he": DEPT_LABELS_HE.get(most_used, ''),
+            "neglected_dept": neglected,
+            "neglected_dept_he": DEPT_LABELS_HE.get(neglected, ''),
+            "total_days_tracked": total_days
+        }
+    except Exception as e:
+        logger.error(f"Get daily base error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/orientation/daily-base/{user_id}")
+async def set_daily_base(user_id: str, data: dict):
+    """Set today's base selection."""
+    try:
+        base = data.get("base", "")
+        if base not in BASE_DEFINITIONS:
+            raise HTTPException(status_code=400, detail="Invalid base. Must be heart, head, or body.")
+
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        # Upsert — allow changing base same day
+        await db.daily_bases.update_one(
+            {"user_id": user_id, "date": today_str},
+            {"$set": {
+                "user_id": user_id,
+                "date": today_str,
+                "base": base,
+                "chosen_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+
+        base_def = BASE_DEFINITIONS[base]
+        return {
+            "success": True,
+            "base": base,
+            "base_he": base_def["name_he"],
+            "allocations_he": base_def["allocations_he"]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Set daily base error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @api_router.get("/orientation/directions")

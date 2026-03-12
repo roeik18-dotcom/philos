@@ -9,6 +9,9 @@ const directionColors = {
 const directionLabels = {
   recovery: 'התאוששות', order: 'סדר', contribution: 'תרומה', exploration: 'חקירה'
 };
+const deptColors = { heart: '#ef4444', head: '#6366f1', body: '#f59e0b' };
+const deptLabels = { heart: 'לב', head: 'ראש', body: 'גוף' };
+
 const tomorrowHints = {
   contribution: 'מחר, שקול אם יש מקום גם להתאוששות — נתינה מתמדת דורשת הטענה.',
   recovery: 'מחר, כשתרגיש מוכן, נסה לצאת החוצה — פעולה קטנה של תרומה או חקירה.',
@@ -51,8 +54,8 @@ export default function ClosingLayer({ userId }) {
   if (loading) {
     return (
       <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
-        <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
-        <div className="h-20 bg-gray-200 rounded"></div>
+        <div className="h-5 bg-gray-200 rounded w-1/3 mb-4" />
+        <div className="h-20 bg-gray-200 rounded" />
       </section>
     );
   }
@@ -85,6 +88,66 @@ export default function ClosingLayer({ userId }) {
 
       {data.total_actions > 0 ? (
         <>
+          {/* ═══ DEPARTMENT SUMMARY ═══ */}
+          {data.chosen_base && (
+            <div className="bg-[#0a0a1a] rounded-2xl p-3.5 mb-4" data-testid="closing-dept-summary">
+              {/* Chosen base */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] text-gray-500">הבסיס שבחרת היום</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: deptColors[data.chosen_base] }} />
+                  <span className="text-xs font-semibold" style={{ color: deptColors[data.chosen_base] }}>
+                    {data.chosen_base_he}
+                  </span>
+                </div>
+              </div>
+
+              {/* Energy allocation bars */}
+              <div className="space-y-2 mb-3">
+                {Object.entries(data.dept_allocation || {}).map(([dept, pct]) => (
+                  <div key={dept} className="flex items-center gap-2">
+                    <span className="text-[10px] w-6 text-right font-medium" style={{ color: deptColors[dept] }}>
+                      {deptLabels[dept]}
+                    </span>
+                    <div className="flex-1 h-[3px] bg-white/[0.06] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{
+                          width: animateBars ? `${pct}%` : '0%',
+                          backgroundColor: deptColors[dept],
+                          opacity: 0.7
+                        }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-gray-600 w-7 text-left tabular-nums">{pct}%</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Department insights — compact row */}
+              <div className="flex gap-2">
+                {data.most_used_dept && (
+                  <div className="flex-1 rounded-xl p-2 text-center" style={{ backgroundColor: `${deptColors[data.most_used_dept]}08` }} data-testid="closing-most-used-dept">
+                    <p className="text-[9px] text-gray-500 mb-0.5">הכי פעיל</p>
+                    <p className="text-[10px] font-semibold" style={{ color: deptColors[data.most_used_dept] }}>{data.most_used_dept_he}</p>
+                  </div>
+                )}
+                {data.preferred_dept && (
+                  <div className="flex-1 rounded-xl p-2 text-center" style={{ backgroundColor: `${deptColors[data.preferred_dept]}08` }} data-testid="closing-preferred-dept">
+                    <p className="text-[9px] text-gray-500 mb-0.5">מועדף</p>
+                    <p className="text-[10px] font-semibold" style={{ color: deptColors[data.preferred_dept] }}>{data.preferred_dept_he}</p>
+                  </div>
+                )}
+                {data.neglected_dept && (
+                  <div className="flex-1 rounded-xl p-2 text-center bg-white/[0.03]" data-testid="closing-neglected-dept">
+                    <p className="text-[9px] text-gray-500 mb-0.5">מוזנח</p>
+                    <p className="text-[10px] font-semibold text-gray-400">{data.neglected_dept_he}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Direction moved */}
           <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl" style={{ backgroundColor: `${chosenColor}08`, border: `1px solid ${chosenColor}20` }}>
             <ArrowLeft className="w-4 h-4" style={{ color: chosenColor }} />
@@ -148,7 +211,7 @@ export default function ClosingLayer({ userId }) {
             </div>
           )}
 
-          {/* Tension narrative — cliffhanger */}
+          {/* Tension narrative */}
           {chosenDir && tensionNarratives[chosenDir] && (
             <div className="rounded-xl p-3 border mb-3" style={{ backgroundColor: `${directionColors[tensionNarratives[chosenDir].opposing]}06`, borderColor: `${directionColors[tensionNarratives[chosenDir].opposing]}20` }} data-testid="closing-tension">
               <p className="text-[10px] font-semibold mb-1" style={{ color: directionColors[tensionNarratives[chosenDir].opposing] }}>מתח עולה</p>
@@ -156,7 +219,7 @@ export default function ClosingLayer({ userId }) {
             </div>
           )}
 
-          {/* Return hook — reason to come back */}
+          {/* Return hook */}
           {chosenDir && returnReasons[chosenDir] && (
             <div className="bg-[#0a0a1a] rounded-xl p-3 text-center" data-testid="closing-return-hook">
               <p className="text-xs text-gray-300 leading-relaxed">{returnReasons[chosenDir]}</p>

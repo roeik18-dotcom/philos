@@ -14,7 +14,8 @@ import {
   DecisionPathSection,
   GlobalFieldDashboard,
   CompassAISection,
-  FieldGlobeSection
+  FieldGlobeSection,
+  DailyBaseSelection
 } from '../../components/philos/sections';
 
 export default function HomeTab({
@@ -38,6 +39,7 @@ export default function HomeTab({
   const [showCommunity, setShowCommunity] = useState(false);
   const [actionCompleted, setActionCompleted] = useState(false);
   const [actionDirection, setActionDirection] = useState(null);
+  const [baseSelected, setBaseSelected] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -57,15 +59,24 @@ export default function HomeTab({
       {/* ═══ LAYER 3: OPPOSITION — "Between which poles am I moving?" ═══ */}
       <OppositionLayer userId={user?.id} />
 
-      {/* ═══ LAYER 4: ACTION — "What do I do now?" ═══ */}
-      <DailyOrientationQuestion
-        userId={user?.id}
-        onActionRecorded={(actionData) => {
-          setActionCompleted(true);
-          setActionDirection(actionData?.direction || actionData?.suggested_direction || null);
-          if (actionData?.mission_contributed) setMissionContributed(true);
-        }}
-      />
+      {/* ═══ DAILY BASE — "From which center am I operating today?" ═══ */}
+      <DailyBaseSelection userId={user?.id} onBaseSelected={() => setBaseSelected(true)} />
+
+      {/* ═══ LAYER 4: ACTION — "What do I do now?" (requires base selection) ═══ */}
+      {baseSelected ? (
+        <DailyOrientationQuestion
+          userId={user?.id}
+          onActionRecorded={(actionData) => {
+            setActionCompleted(true);
+            setActionDirection(actionData?.direction || actionData?.suggested_direction || null);
+            if (actionData?.mission_contributed) setMissionContributed(true);
+          }}
+        />
+      ) : (
+        <div className="rounded-2xl border border-dashed border-gray-200 p-4 text-center" dir="rtl" data-testid="base-gate">
+          <p className="text-xs text-gray-400">בחר בסיס יומי כדי להמשיך לפעולה</p>
+        </div>
+      )}
 
       {/* ═══ LAYER 5: FIELD — "How does my action affect the world?" ═══ */}
       <FieldImpactLayer
