@@ -1,45 +1,46 @@
-# Philos Orientation - PRD
+# Philos Orientation - Product Requirements Document
 
 ## Original Problem Statement
-Build "Philos Orientation" — a decision engine and dashboard for real-time decision analysis and mental navigation. Hebrew (RTL) UI.
+A Hebrew (RTL) philosophical orientation application where users engage in daily actions, observe a collective "human field" via a 3D globe, and build personal value profiles. The app uses an invite-based growth model and features an AI Interpretation Layer for symbolic, philosophical observations.
 
-## Core Loop
-**Base → Choice → Action → Field → Reflection**
+## Core Architecture
+- **Frontend:** React, react-router-dom, react-globe.gl, three.js, Shadcn UI. Hebrew RTL.
+- **Backend:** FastAPI (monolithic server.py), Pydantic, Pymongo (Motor async), passlib, python-jose.
+- **Database:** MongoDB
+- **AI:** Claude Sonnet 4.5 via emergentintegrations library with Emergent LLM Key.
+- **Other:** html-to-image (share cards), Stripe (subscriptions).
 
-## Architecture
-Frontend: React + Tailwind + Shadcn/UI | Backend: FastAPI + MongoDB | Auth: JWT
+## Key Files
+- `/app/backend/server.py` — Monolithic backend with all routes, models, services
+- `/app/backend/philos_ai.py` — AI Interpretation Layer (Claude Sonnet 4.5)
+- `/app/frontend/src/pages/PhilosDashboard.js` — Main dashboard
+- `/app/frontend/src/pages/ProfilePage.js` — Human Action Record (public profile)
+- `/app/frontend/src/components/philos/sections/GlobalFieldDashboard.js` — Field dashboard with AI interpretation
+- `/app/frontend/src/components/philos/sections/DailyOrientationQuestion.js` — Daily question with AI action interpretation
 
-## Completed Features
+## Implemented Features (Complete)
+1. World State & Globe UI with symbolic narrative
+2. Opposition Engine (personal tension mirror)
+3. Daily Base Allocation System (Heart, Head, Body)
+4. Base-Influenced Daily Questions
+5. Invite System (PH-XXXX codes, limits, tracking)
+6. Invite Reward System (value credits for inviter)
+7. Human Action Record (public profile page)
+8. Profile Discovery (Highlighted Records in Feed)
+9. Presence Indicator (24h activity pulse)
+10. **AI Interpretation Layer (Claude Sonnet 4.5)** — Verified 2026-03-12
+    - Action Interpretation: after daily answer (POST /api/orientation/daily-answer)
+    - Field Interpretation: global dashboard (GET /api/orientation/field-dashboard)
+    - Profile Interpretation: human action record (GET /api/profile/{user_id}/record)
 
-### Phases 1–28 (prior)
-Core dashboard, engagement, community, missions, UI polish, referral, validation, demo agents, theory, stabilization, globe, pulse, heartbeat, product rebuild, feed + value + subscription, social, circles, testing prep, profiles, share, engagement loop, orientation map, clarity & meaning, daily base, base loop, invite codes, invite rewards.
+## Test Reports
+- `/app/test_reports/iteration_58.json` — AI Interpretation Layer: 100% pass (16/16 backend, 3/3 frontend)
 
-### Phase 29 — Human Action Record Redesign (2026-03-12)
-Dark documentary profile page: hero with identity markers, stats strip (impact/actions/streak/field%), opposition axes, influence chain with credits, upgraded share card.
+## Backlog / Future
+- P2: Refactor monolithic server.py into modular routes/models/services
+- User direction needed for next feature phase
 
-### Phase 30 — Highlighted Records Discovery (2026-03-12)
-1. **Backend**: `/api/orientation/highlighted-records` — top 8 active users with `present` flag (active in last 24h)
-2. **Frontend**: Horizontal scrollable dark cards in Feed tab, clicking opens profile
-3. **Field Presence**: Slow 4s pulse on initials of users active in last 24h — no numbers, no badges
-4. **No social mechanics** — observation and navigation only
-
-## Key API Endpoints
-| Endpoint | Method | Returns |
-|---|---|---|
-| `/api/orientation/highlighted-records` | GET | Top 8 active users with stats |
-| `/api/profile/{user_id}/record` | GET | Full profile + field_contribution + influence_chain |
-| `/api/orientation/invite-stats/{user_id}` | GET | Codes + credits + active invitees |
-| `/api/orientation/daily-answer/{user_id}` | POST | Action + invite reward |
-| `/api/orientation/daily-base/{user_id}` | GET/POST | Base selection |
-| `/api/orientation/daily-question/{user_id}` | GET | Base-influenced question |
-| `/api/orientation/day-summary/{user_id}` | GET | Summary + dept + reflection |
-| `/api/orientation/field-dashboard` | GET | Field narrative |
-
-## Backlog
-### P0
-- AI Interpretation layer (deferred)
-- Real-user observation
-### P1
-- Refactor server.py into modules
-### P2
-- Department weekly insights, time-of-day narratives, private circles
+## Test Credentials
+- Email: newuser@test.com
+- Password: password123
+- User ID: 05d47b99-88f1-44b3-a879-6c995634eaa0
