@@ -64,5 +64,5 @@ Tasks:
 
 ---
 
-**Preview URL:** https://decision-engine-lab.preview.emergentagent.com  
+**Preview URL:** https://orient-interpret.preview.emergentagent.com  
 **Test Credentials:** newuser@test.com / password123
