@@ -12,6 +12,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+import random as _random
+import string as _string
 
 
 ROOT_DIR = Path(__file__).parent
@@ -87,6 +89,7 @@ class StatusCheckCreate(BaseModel):
 class UserRegister(BaseModel):
     email: str
     password: str
+    invite_code: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: str
@@ -196,7 +199,7 @@ async def get_status_checks():
 @api_router.post("/auth/register", response_model=AuthResponse)
 async def register_user(data: UserRegister):
     """
-    Register a new user.
+    Register a new user. Optionally accepts an invite_code.
     """
     try:
         # Check if email already exists
@@ -206,24 +209,53 @@ async def register_user(data: UserRegister):
                 success=False,
                 message="כתובת האימייל כבר קיימת במערכת"  # Email already exists
             )
-        
+
+        # Validate invite code if provided
+        inviter_id = None
+        if data.invite_code:
+            invite = await db.invites.find_one({"code": data.invite_code}, {"_id": 0})
+            if not invite:
+                return AuthResponse(success=False, message="קוד ההזמנה אינו תקף")
+            inviter_id = invite.get("inviter_id")
+
         # Create new user
         now = datetime.now(timezone.utc).isoformat()
         user_id = str(uuid.uuid4())
-        
+
         user_doc = {
             "id": user_id,
             "email": data.email.lower(),
             "password_hash": get_password_hash(data.password),
             "created_at": now,
-            "last_login_at": now
+            "last_login_at": now,
+            "invited_by": inviter_id
         }
-        
+
         await db.users.insert_one(user_doc)
-        
+
+        # If invite code was used, track it
+        if data.invite_code and inviter_id:
+            await db.invites.update_one(
+                {"code": data.invite_code},
+                {"$push": {"used_by": user_id}, "$inc": {"use_count": 1}}
+            )
+
+        # Auto-generate 5 invite codes for the new user
+        import string as _string
+        for _ in range(5):
+            code = "PH-" + ''.join(_random.choices(_string.ascii_uppercase + _string.digits, k=4))
+            await db.invites.insert_one({
+                "code": code,
+                "inviter_id": user_id,
+                "created_at": now,
+                "used_by": [],
+                "use_count": 0,
+                "opened_count": 0
+            })
+
         # Create access token
         access_token = create_access_token(data={"sub": user_id})
-        
+
         return AuthResponse(
             success=True,
             user=UserResponse(
@@ -272,7 +304,22 @@ async def login_user(data: UserLogin):
         
         # Create access token
         access_token = create_access_token(data={"sub": user["id"]})
-        
+
+        # Ensure user has invite codes (for existing users pre-invite system)
+        existing_invites = await db.invites.count_documents({"inviter_id": user["id"]})
+        if existing_invites == 0:
+            import string as _string
+            for _ in range(5):
+                code = "PH-" + ''.join(_random.choices(_string.ascii_uppercase + _string.digits, k=4))
+                await db.invites.insert_one({
+                    "code": code,
+                    "inviter_id": user["id"],
+                    "created_at": now,
+                    "used_by": [],
+                    "use_count": 0,
+                    "opened_count": 0
+                })
+
         return AuthResponse(
             success=True,
             user=UserResponse(
@@ -4684,12 +4731,18 @@ async def get_orientation_feed():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+MAX_INVITE_CODES = 5
+
 @api_router.post("/orientation/create-invite/{user_id}")
 async def create_invite(user_id: str):
-    """Create an invite code for a user."""
+    """Create an invite code for a user. Limited to MAX_INVITE_CODES per user."""
     try:
-        import uuid
-        code = uuid.uuid4().hex[:8]
+        import string as _string
+        existing_count = await db.invites.count_documents({"inviter_id": user_id})
+        if existing_count >= MAX_INVITE_CODES:
+            return {"success": False, "message": "הגעת למגבלת קודי ההזמנה"}
+
+        code = "PH-" + ''.join(_random.choices(_string.ascii_uppercase + _string.digits, k=4))
         now = datetime.now(timezone.utc)
 
         await db.invites.insert_one({
@@ -4697,7 +4750,8 @@ async def create_invite(user_id: str):
             "inviter_id": user_id,
             "created_at": now.isoformat(),
             "used_by": [],
-            "use_count": 0
+            "use_count": 0,
+            "opened_count": 0
         })
 
         return {
@@ -4724,16 +4778,82 @@ async def get_invite(code: str):
             {"$inc": {"opened_count": 1}}
         )
 
+        # Get inviter alias
+        inviter_id = invite.get("inviter_id")
+        inviter_alias = None
+        if inviter_id:
+            alias_index = hash(inviter_id) % len(ANONYMOUS_ALIASES)
+            inviter_alias = ANONYMOUS_ALIASES[alias_index]
+
         return {
             "success": True,
             "code": invite["code"],
-            "inviter_id": invite.get("inviter_id"),
+            "inviter_id": inviter_id,
+            "inviter_alias": inviter_alias,
             "use_count": invite.get("use_count", 0)
         }
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Get invite error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/orientation/invite-stats/{user_id}")
+async def get_invite_stats(user_id: str):
+    """Get a user's invite codes, stats, and influence chain."""
+    try:
+        # Get all invite codes for this user
+        user_invites = await db.invites.find(
+            {"inviter_id": user_id}, {"_id": 0}
+        ).to_list(MAX_INVITE_CODES + 5)
+
+        codes = []
+        total_used = 0
+        for inv in user_invites:
+            used = inv.get("use_count", 0)
+            total_used += used
+            codes.append({
+                "code": inv["code"],
+                "used": used > 0,
+                "use_count": used
+            })
+
+        remaining = max(0, MAX_INVITE_CODES - len(user_invites))
+
+        # Who invited this user?
+        user_doc = await db.users.find_one({"id": user_id}, {"_id": 0, "invited_by": 1})
+        invited_by_id = user_doc.get("invited_by") if user_doc else None
+        invited_by_alias = None
+        if invited_by_id:
+            alias_index = hash(invited_by_id) % len(ANONYMOUS_ALIASES)
+            invited_by_alias = ANONYMOUS_ALIASES[alias_index]
+
+        # Who did this user invite? (influence chain)
+        invitee_ids = []
+        for inv in user_invites:
+            invitee_ids.extend(inv.get("used_by", []))
+
+        invitees = []
+        for iid in invitee_ids[:20]:
+            alias_index = hash(iid) % len(ANONYMOUS_ALIASES)
+            invitees.append({
+                "user_id": iid,
+                "alias": ANONYMOUS_ALIASES[alias_index]
+            })
+
+        return {
+            "success": True,
+            "codes": codes,
+            "codes_remaining": remaining,
+            "total_invites_used": total_used,
+            "max_codes": MAX_INVITE_CODES,
+            "invited_by_id": invited_by_id,
+            "invited_by_alias": invited_by_alias,
+            "invitees": invitees
+        }
+    except Exception as e:
+        logger.error(f"Get invite stats error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -6676,6 +6796,21 @@ async def get_human_action_record(user_id: str):
                 else:
                     break
 
+        # Influence chain data
+        invited_by_id = user.get("invited_by") if user else None
+        invited_by_alias = None
+        if invited_by_id:
+            alias_index_inv = hash(invited_by_id) % len(ANONYMOUS_ALIASES)
+            invited_by_alias = ANONYMOUS_ALIASES[alias_index_inv]
+
+        user_invites = await db.invites.find({"inviter_id": user_id}, {"_id": 0, "used_by": 1}).to_list(10)
+        invitee_ids = []
+        for inv in user_invites:
+            invitee_ids.extend(inv.get("used_by", []))
+        invitee_aliases = []
+        for iid in invitee_ids[:10]:
+            invitee_aliases.append(ANONYMOUS_ALIASES[hash(iid) % len(ANONYMOUS_ALIASES)])
+
         return {
             'success': True,
             'identity': {
@@ -6687,7 +6822,9 @@ async def get_human_action_record(user_id: str):
                 'dominant_direction_he': GLOBE_DIR_LABELS.get(dominant_dir, ''),
                 'niche': niche,
                 'niche_label_he': niche_label_he,
-                'member_since': created_at
+                'member_since': created_at,
+                'invited_by_alias': invited_by_alias,
+                'invited_by_id': invited_by_id
             },
             'action_record': action_record,
             'opposition_axes': opposition_axes,
@@ -6700,9 +6837,14 @@ async def get_human_action_record(user_id: str):
                 'niche_progress': min(round((dir_counts.get(VALUE_NICHES.get(niche, {}).get('dominant_direction', ''), 0) / max(VALUE_NICHES.get(niche, {}).get('threshold', 35), 1)) * 100), 100) if niche else 0,
                 'circle_memberships': circle_memberships,
                 'badges': badge_list,
-                'streak': streak
+                'streak': streak,
+                'invitees_count': len(invitee_ids)
             },
-            'direction_distribution': dir_counts
+            'direction_distribution': dir_counts,
+            'influence_chain': {
+                'invited_by_alias': invited_by_alias,
+                'invitees': invitee_aliases
+            }
         }
     except Exception as e:
         logger.error(f"Human action record error: {str(e)}")

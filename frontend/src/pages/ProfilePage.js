@@ -40,7 +40,7 @@ export default function ProfilePage() {
     );
   }
 
-  const { identity, action_record, opposition_axes, value_growth, direction_distribution } = data;
+  const { identity, action_record, opposition_axes, value_growth, direction_distribution, influence_chain } = data;
   const dominantColor = dirColors[identity.dominant_direction] || '#6366f1';
 
   return (
@@ -67,6 +67,9 @@ export default function ProfilePage() {
         <OppositionAxes axes={opposition_axes} />
         <ValueGrowth growth={value_growth} dominantColor={dominantColor} />
         <DirectionBar distribution={direction_distribution} total={value_growth.total_actions} />
+        {influence_chain && (influence_chain.invited_by_alias || (influence_chain.invitees && influence_chain.invitees.length > 0)) && (
+          <InfluenceChain chain={influence_chain} />
+        )}
         <ActionRecord actions={action_record} expandedAction={expandedAction} setExpandedAction={setExpandedAction} />
       </div>
 
@@ -109,6 +112,11 @@ function IdentityHeader({ identity, dominantColor }) {
           </span>
         )}
       </div>
+      {identity.invited_by_alias && (
+        <p className="text-[10px] text-gray-400 mt-2" data-testid="profile-invited-by">
+          הוזמן על ידי <span className="font-medium text-violet-500">{identity.invited_by_alias}</span>
+        </p>
+      )}
     </section>
   );
 }
@@ -456,3 +464,32 @@ function ShareCardModal({ data, dominantColor, profileUrl, onClose }) {
     </div>
   );
 }
+
+
+function InfluenceChain({ chain }) {
+  if (!chain) return null;
+  return (
+    <section className="bg-white rounded-2xl p-4 border border-gray-100" data-testid="profile-influence-chain">
+      <p className="text-[10px] text-gray-400 mb-2.5">שרשרת השפעה</p>
+      <div className="space-y-2">
+        {chain.invited_by_alias && (
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center text-[9px] font-bold text-violet-600">
+              {chain.invited_by_alias.charAt(0)}
+            </span>
+            <span><span className="font-medium text-violet-600">{chain.invited_by_alias}</span> הזמין אותך</span>
+          </div>
+        )}
+        {chain.invitees && chain.invitees.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-[9px] font-bold text-emerald-600">
+              {chain.invitees.length}
+            </span>
+            <span>הבאת לשדה: <span className="font-medium text-emerald-600">{chain.invitees.join(', ')}</span></span>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+

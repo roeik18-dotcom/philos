@@ -7,8 +7,19 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Pre-fill invite code from URL if present
+  useState(() => {
+    const path = window.location.pathname;
+    const match = path.match(/^\/invite\/([a-zA-Z0-9-]+)$/);
+    if (match) {
+      setInviteCode(match[1]);
+      setMode('register');
+    }
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,12 +47,14 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
 
     try {
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const body = mode === 'login'
+        ? { email, password }
+        : { email, password, ...(inviteCode ? { invite_code: inviteCode } : {}) };
+
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -168,6 +181,24 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
                   placeholder="••••••••"
                   data-testid="auth-confirm-password-input"
+                />
+              </div>
+            )}
+
+            {/* Invite Code (Register only, optional) */}
+            {mode === 'register' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  קוד הזמנה <span className="text-gray-400 font-normal">(אופציונלי)</span>
+                </label>
+                <input
+                  type="text"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-200 outline-none transition-all"
+                  placeholder="PH-XXXX"
+                  data-testid="auth-invite-code-input"
+                  dir="ltr"
                 />
               </div>
             )}
