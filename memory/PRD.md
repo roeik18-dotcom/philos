@@ -198,6 +198,21 @@ New DB Collections: `missions`, `circles`
 | `/api/orientation/value-circles/{circle_id}?user_id=` | GET | Circle detail: info, is_member, feed, leaderboard, missions |
 | `/api/orientation/value-circles/leave` | POST | Leave a circle |
 
+### Phase 19 — Real-User Testing Preparation (completed 2026-03-12)
+1. **Admin Analytics Page** (`/admin`) — Hidden page showing KPIs (Total Users, Total Actions, DAU Today, Actions/User), D1/D7 retention rates, 7-day DAU bar chart, and user feedback list.
+2. **Floating Feedback Button** — Appears on all 6 tabs (bottom-left). Opens modal with type selector (confusion/improvement/bug), text input, and submit. Stores to MongoDB via `POST /api/feedback`.
+3. **Onboarding Flow** — 3-step flow for new users: (1) Welcome + explain Philos, (2) Choose first direction from 4 options, (3) Send first point to globe. Dispatches `globe-field-pulse` event on completion. Uses localStorage `philos_onboarding_complete` to show only once.
+4. **Globe Restoration** — `FieldGlobeSection` added back to HomeTab (above fold) after it was lost in the SystemTab→CommunityTab transition.
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/admin/analytics` | GET | DAU, actions/user, D1/D7 retention, totals |
+| `/api/admin/feedback` | GET | List all user feedback (latest 100) |
+| `/api/feedback` | POST | Submit user feedback (text, type, page) |
+| `/api/onboarding/first-action` | POST | Record first direction + add globe point |
+
+New DB Collection: `feedback`
+
 ## Backlog
 
 ### P0 — Next Focus
