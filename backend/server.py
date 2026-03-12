@@ -3501,6 +3501,46 @@ async def get_daily_question(user_id: str):
         identity_data = identity_questions.get(current_identity, identity_questions['balanced'])
         questions = identity_data['questions']
         suggested_direction = identity_data['suggested_direction']
+
+        # === BASE-INFLUENCED QUESTION OVERRIDE ===
+        # If user chose a daily base, override with base-specific question
+        today_base = await db.daily_bases.find_one(
+            {"user_id": user_id, "date": today_start}, {"_id": 0, "base": 1}
+        )
+        if today_base and today_base.get("base"):
+            base = today_base["base"]
+            base_questions = {
+                'body': {
+                    'questions': [
+                        "עשה פעולה פיזית קטנה שמסדרת משהו סביבך.",
+                        "הזז את הגוף היום — אפילו הליכה קצרה.",
+                        "סדר פינה אחת בסביבה שלך.",
+                        "עשה משהו מעשי שדחית."
+                    ],
+                    'suggested_direction': 'order'
+                },
+                'heart': {
+                    'questions': [
+                        "שלח מילה טובה למישהו שלא ציפה לזה.",
+                        "הקשב למישהו היום — באמת הקשב.",
+                        "עשה משהו קטן עבור מישהו קרוב.",
+                        "תן לעצמך רגע של חמלה היום."
+                    ],
+                    'suggested_direction': 'contribution'
+                },
+                'head': {
+                    'questions': [
+                        "מצא דבר אחד חדש שלא שמת לב אליו קודם.",
+                        "ארגן רעיון אחד שמסתובב לך בראש.",
+                        "למד משהו קטן שלא ידעת.",
+                        "קבל החלטה אחת שדחית."
+                    ],
+                    'suggested_direction': 'exploration'
+                }
+            }
+            if base in base_questions:
+                questions = base_questions[base]['questions']
+                suggested_direction = base_questions[base]['suggested_direction']
         
         # Select a question (use day-based seed for consistency within a day)
         import random
@@ -5045,6 +5085,16 @@ async def get_day_summary(user_id: str):
         preferred_dept = max(hist_dept_counts, key=hist_dept_counts.get) if sum(hist_dept_counts.values()) > 0 else None
         hist_neglected = min(hist_dept_counts, key=hist_dept_counts.get) if sum(hist_dept_counts.values()) > 0 else None
 
+        # Base reflection — short observational sentence
+        base_reflection_he = ""
+        if chosen_base and most_used_dept and today_total > 0:
+            chosen_he = DEPT_LABELS_HE.get(chosen_base, '')
+            used_he = DEPT_LABELS_HE.get(most_used_dept, '')
+            if chosen_base == most_used_dept:
+                base_reflection_he = f"בחרת לפעול מה{chosen_he}, והפעולות שלך היום תאמו את הבחירה."
+            else:
+                base_reflection_he = f"בחרת לפעול מה{chosen_he}, אך רוב הפעולות היום נעו לכיוון ה{used_he}."
+
         return {
             "success": True,
             "user_id": user_id,
@@ -5067,7 +5117,8 @@ async def get_day_summary(user_id: str):
             "preferred_dept": preferred_dept,
             "preferred_dept_he": DEPT_LABELS_HE.get(preferred_dept, ''),
             "hist_neglected_dept": hist_neglected,
-            "hist_neglected_dept_he": DEPT_LABELS_HE.get(hist_neglected, '')
+            "hist_neglected_dept_he": DEPT_LABELS_HE.get(hist_neglected, ''),
+            "base_reflection_he": base_reflection_he
         }
     except Exception as e:
         logger.error(f"Get day summary error: {str(e)}")

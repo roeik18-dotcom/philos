@@ -148,6 +148,13 @@ export default function ClosingLayer({ userId }) {
             </div>
           )}
 
+          {/* Base reflection — observational sentence */}
+          {data.base_reflection_he && (
+            <p className="text-xs text-gray-500 leading-relaxed mb-4 px-1" data-testid="closing-base-reflection">
+              {data.base_reflection_he}
+            </p>
+          )}
+
           {/* Direction moved */}
           <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl" style={{ backgroundColor: `${chosenColor}08`, border: `1px solid ${chosenColor}20` }}>
             <ArrowLeft className="w-4 h-4" style={{ color: chosenColor }} />
