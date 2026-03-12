@@ -228,6 +228,13 @@ New DB Collection: `feedback`
 
 Rule-based meaning engine: `ACTION_MEANINGS` dict maps each direction to 4 Hebrew interpretation layers (personal, social, value, system).
 
+### Phase 21 — Share Human Action Record (completed 2026-03-12)
+1. **Share Button** — Added to profile page top bar. Opens a modal with a dark, elegant share card.
+2. **Share Card Design** — Dark (#1a1a2e) themed card with: alias + avatar, country, direction badge, impact/level/actions stats, 3 opposition axis sliders, highlighted recent action (if any), date, and "Philos Orientation" branding. Documentary, symbolic, not flashy.
+3. **Download Image** — Generates PNG via `html-to-image` (toPng, pixelRatio 2) and triggers browser download.
+4. **Copy Link** — Copies shareable profile URL to clipboard with visual confirmation.
+5. **No Social API** — Manual sharing only for now.
+
 ## Backlog
 
 ### P0 — Next Focus
