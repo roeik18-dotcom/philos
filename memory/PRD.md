@@ -105,7 +105,7 @@ Build "Philos Orientation" — a sophisticated single-page decision engine and d
 - `users` — User profiles + auth
 
 ### Phase 11 — Stabilization (completed 2026-03-11)
-1. **Dashboard Refactor** — Extracted 5 tab components from PhilosDashboard.js (640→267 lines): `HomeTab.js`, `InsightsTab.js`, `SystemTab.js`, `TheoryTab.js`, `HistoryTab.js` in `/app/frontend/src/pages/tabs/`.
+1. **Dashboard Refactor** — Extracted 6 tab components from PhilosDashboard.js: `HomeTab.js`, `FeedTab.js`, `CommunityTab.js`, `InsightsTab.js`, `TheoryTab.js`, `HistoryTab.js` in `/app/frontend/src/pages/tabs/`.
 2. **DecisionTreeSection SVG Fix** — Replaced fragile div-based tree connectors with proper SVG `<path>` elements using cubic bezier curves. Added layout engine for node positioning.
 
 ### Phase 12 — Globe Interaction Layer (completed 2026-03-11)
@@ -162,6 +162,29 @@ Community features (mission, feed, streaks, invites) moved to collapsible second
 
 New DB Collections: `user_globe_points`, `payment_transactions`, `subscriptions`
 
+### Phase 17 — Social Field Expansion Frontend Integration (completed 2026-03-12)
+All backend endpoints for this phase were completed in Phase 16. This phase wired up the 6 new frontend components:
+1. **Global Field Dashboard** (`GlobalFieldDashboard.js`) — Dark hero card at top of Home tab showing dominant direction, total actions today, active regions, direction distribution bars, and top regions. API: `GET /api/orientation/field-dashboard`.
+2. **Personal Compass AI** (`CompassAISection.js`) — Placed after narrative layers on Home tab. Shows dominant/weak direction, balance score bar, and suggested action in Hebrew. API: `GET /api/orientation/compass-ai/{user_id}`.
+3. **Community Tab** — New "קהילה" tab replacing the old "מערכת" (System) tab. Contains 3 sections:
+   - **Mission Engine** (`MissionsSection.js`) — Global missions with direction tags, progress bars, participant counts, and Join buttons. API: `GET/POST /api/orientation/missions`.
+   - **Circles System** (`CirclesSection.js`) — 6 value-based communities in 2-column grid. Join buttons update member counts. API: `GET/POST /api/orientation/value-circles`.
+   - **Value Leaders** (`LeadersSection.js`) — Top 7 global leaders ranked by impact score with alias, country, niche. API: `GET /api/orientation/leaders`.
+4. **Tab Restructure** — 6 tabs in order: Home (בית), Feed (פיד), Community (קהילה), Insights (תובנות), Theory (תיאוריה), History (היסטוריה). System tab removed from navigation.
+5. **Feed Algorithm** — Already upgraded in Phase 16 backend. `FeedCard.js` handles 5 card types: action, question, reflection, leader, mission.
+
+| New Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/orientation/field-dashboard` | GET | Global field state: dominant direction, actions, regions |
+| `/api/orientation/missions` | GET | List all field missions |
+| `/api/orientation/missions/join` | POST | Join a mission |
+| `/api/orientation/value-circles` | GET | List all value circles |
+| `/api/orientation/value-circles/join` | POST | Join a circle |
+| `/api/orientation/leaders` | GET | Global leaderboard |
+| `/api/orientation/compass-ai/{user_id}` | GET | Personal compass analysis |
+
+New DB Collections: `missions`, `circles`
+
 ## Backlog
 
 ### P0 — Next Focus
@@ -175,3 +198,4 @@ New DB Collections: `user_globe_points`, `payment_transactions`, `subscriptions`
 - Additional UI polish and micro-interactions
 - Private/group circles feature
 - Expanded profile page
+- Circle detail view (feed + leaderboard per circle)
