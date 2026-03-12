@@ -13,7 +13,8 @@ import {
   InviteSection,
   DecisionPathSection,
   GlobalFieldDashboard,
-  CompassAISection
+  CompassAISection,
+  FieldGlobeSection
 } from '../../components/philos/sections';
 
 export default function HomeTab({
@@ -43,6 +44,9 @@ export default function HomeTab({
 
       {/* ═══ GLOBAL FIELD STATE ═══ */}
       <GlobalFieldDashboard />
+
+      {/* ═══ 3D FIELD GLOBE ═══ */}
+      <FieldGlobeSection />
 
       {/* ═══ LAYER 1: ENTRY — "Why am I here?" ═══ */}
       <EntryLayer />
