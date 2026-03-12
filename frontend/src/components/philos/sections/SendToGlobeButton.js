@@ -41,6 +41,7 @@ export default function SendToGlobeButton({ userId, direction }) {
               color: json.point.color
             }
           }));
+          window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'field' } }));
 
           setTimeout(() => {
             setAnimating(false);

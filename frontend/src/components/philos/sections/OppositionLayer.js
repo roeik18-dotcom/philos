@@ -16,6 +16,7 @@ const oppositions = [
 
 export default function OppositionLayer({ userId }) {
   const [compass, setCompass] = useState(null);
+  const [axes, setAxes] = useState(null);
 
   const effectiveUserId = userId || localStorage.getItem('philos_user_id');
 
@@ -23,7 +24,18 @@ export default function OppositionLayer({ userId }) {
     if (!effectiveUserId) return;
     fetch(`${API_URL}/api/orientation/daily-opening/${effectiveUserId}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.success) setCompass(d.compass_state); })
+      .then(d => {
+        if (d?.success) {
+          setCompass(d.compass_state);
+          window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'opposition' } }));
+        }
+      })
+      .catch(() => {});
+
+    // Fetch real opposition axes from profile
+    fetch(`${API_URL}/api/profile/${effectiveUserId}/record`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.success) setAxes(d.opposition_axes); })
       .catch(() => {});
   }, [effectiveUserId]);
 
@@ -38,6 +50,18 @@ export default function OppositionLayer({ userId }) {
         </div>
       </div>
       <p className="text-xs text-gray-400 mb-4 mr-10">הכוחות שמושכים אותך היום</p>
+
+      {/* Personal position summary */}
+      {axes && (
+        <div className="bg-[#0a0a1a] rounded-2xl p-3 mb-4" data-testid="opposition-personal-position">
+          <p className="text-[9px] text-gray-500 mb-2">המיקום שלך בשדה הניגודים</p>
+          <div className="grid grid-cols-3 gap-2">
+            <AxisMini label="סדר ↔ כאוס" value={axes.chaos_order} leftC="#6366f1" rightC="#f59e0b" />
+            <AxisMini label="קולקטיב ↔ אגו" value={axes.ego_collective} leftC="#22c55e" rightC="#ef4444" />
+            <AxisMini label="יציבות ↔ חקירה" value={axes.exploration_stability} leftC="#3b82f6" rightC="#f59e0b" />
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         {oppositions.map((o, i) => {
@@ -72,5 +96,20 @@ export default function OppositionLayer({ userId }) {
         })}
       </div>
     </section>
+  );
+}
+
+
+function AxisMini({ label, value, leftC, rightC }) {
+  const v = value ?? 50;
+  const dominantColor = v > 55 ? leftC : v < 45 ? rightC : '#9ca3af';
+  return (
+    <div className="text-center">
+      <div className="relative h-1.5 bg-gray-700/50 rounded-full overflow-hidden mb-1">
+        <div className="absolute top-0 h-full rounded-full transition-all duration-700" style={{ left: 0, width: `${v}%`, background: `linear-gradient(90deg, ${leftC}80, ${leftC}30)` }} />
+        <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white shadow-sm transition-all duration-700" style={{ left: `calc(${v}% - 4px)` }} />
+      </div>
+      <p className="text-[8px] leading-none" style={{ color: dominantColor }}>{label}</p>
+    </div>
   );
 }

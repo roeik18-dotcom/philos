@@ -31,6 +31,7 @@ export default function QuickDecisionButton({ onSubmit }) {
       if (data?.success) {
         // Trigger globe pulse
         window.dispatchEvent(new CustomEvent('globe-field-pulse', { detail: { direction: dir.id } }));
+        window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'field' } }));
         setReward({ direction: dir, message: data.message_he });
         setPhase('reward');
         // Auto-close after 2.5s

@@ -50,6 +50,13 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
 
   useEffect(() => { fetchQuestion(); }, [fetchQuestion]);
 
+  // Dispatch 'choice' stage when question is loaded
+  useEffect(() => {
+    if (questionData && !completed) {
+      window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'choice' } }));
+    }
+  }, [questionData, completed]);
+
   const handleAnswer = async () => {
     if (!questionData?.question_id || submitting) return;
     try {
@@ -64,6 +71,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
         if (result.success) {
           setCompleted(true);
           setShowSuccess(true);
+          window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'action' } }));
           if (result.impact_message) {
             setImpactData({
               percent: result.impact_percent,

@@ -13,13 +13,23 @@ export default function EntryLayer({ userId }) {
   useEffect(() => {
     fetch(`${API_URL}/api/orientation/field-dashboard`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.success) setField(d); })
+      .then(d => {
+        if (d?.success) {
+          setField(d);
+          window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'reality' } }));
+        }
+      })
       .catch(() => {});
 
     if (effectiveUserId) {
       fetch(`${API_URL}/api/orientation/compass-ai/${effectiveUserId}`)
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d?.success) setCompass(d); })
+        .then(d => {
+          if (d?.success) {
+            setCompass(d);
+            window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'human' } }));
+          }
+        })
         .catch(() => {});
     }
   }, [effectiveUserId]);

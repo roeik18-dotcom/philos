@@ -4,6 +4,7 @@ import { ActiveUsersIndicator, OrientationShareCard } from '../components/philos
 import QuickDecisionButton from '../components/philos/QuickDecisionButton';
 import OnboardingHint from '../components/philos/OnboardingHint';
 import FeedbackButton from '../components/philos/FeedbackButton';
+import OrientationMap from '../components/philos/OrientationMap';
 import usePhilosState from '../hooks/usePhilosState';
 import HomeTab from './tabs/HomeTab';
 import FeedTab from './tabs/FeedTab';
@@ -184,6 +185,9 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             </button>
           ))}
         </div>
+
+        {/* Persistent Orientation Map — visible on all tabs */}
+        <OrientationMap />
 
         {activeTab === TABS.HOME && (
           <HomeTab
