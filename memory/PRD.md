@@ -246,6 +246,16 @@ Strengthened 6 existing loops without adding new pages/tabs:
 
 Backend fix: streak calculation added to `POST /api/orientation/daily-answer/{user_id}`. Now returns `impact_score`, `streak`, `niche_info`, `identity_link`.
 
+### Phase 23 — Orientation Map Layer (completed 2026-03-12)
+1. **Persistent Orientation Diagram** — Compact compass visible on ALL 6 tabs, showing the 6-stage loop: מציאות (Reality) → אדם (Human) → ניגוד (Opposition) → בחירה (Choice) → פעולה (Action) → שדה (Field). Active stage has larger pulsing node, past stages show indigo dots, future stages gray.
+2. **Stage Animation** — Stages transition via `orientation-stage` CustomEvent dispatched by:
+   - EntryLayer: `reality` → `human` (on field data + compass data load)
+   - OppositionLayer: `opposition` (on compass data load)
+   - DailyOrientationQuestion: `choice` (question loaded) → `action` (answer submitted)
+   - SendToGlobeButton + QuickDecisionButton: `field` (globe point sent)
+   - Auto-advance: reality → human after 2 seconds
+3. **Strengthened Opposition Layer** — Now fetches user's real opposition axes from `/api/profile/{userId}/record` and displays 3 mini axis bars (סדר↔כאוס, קולקטיב↔אגו, יציבות↔חקירה) in a dark card showing the user's personal position between forces.
+
 ## Backlog
 
 ### P0 — Next Focus
