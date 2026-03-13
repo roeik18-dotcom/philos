@@ -39,6 +39,7 @@ from routes.social import router as social_router
 from routes.profile import router as profile_router
 from routes.admin import router as admin_router
 from routes.trust import router as trust_router
+from routes.system import router as system_router
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(philos_router, prefix="/api")
@@ -49,32 +50,22 @@ app.include_router(social_router, prefix="/api")
 app.include_router(profile_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
 app.include_router(trust_router, prefix="/api")
+app.include_router(system_router, prefix="/api")
 
 # Database shutdown
 from database import client
+from services.scheduler import start_scheduler, stop_scheduler
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    stop_scheduler()
     client.close()
 
 # Demo agents background loop
 from services.demo import _demo_event_loop
 
-# Daily decay background loop
-from services.trust import run_daily_decay
-
-async def _daily_decay_loop():
-    """Run decay once per day (every 24 hours)."""
-    await asyncio.sleep(10)
-    while True:
-        try:
-            count = await run_daily_decay()
-            logger.info(f"Daily decay completed for {count} users")
-        except Exception as e:
-            logger.error(f"Daily decay error: {str(e)}")
-        await asyncio.sleep(86400)  # 24 hours
-
 @app.on_event("startup")
 async def start_background_tasks():
     asyncio.create_task(_demo_event_loop())
-    asyncio.create_task(_daily_decay_loop())
+    start_scheduler()
+    logger.info("All background tasks started")
