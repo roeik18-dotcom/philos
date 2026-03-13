@@ -75,7 +75,7 @@ async def interpret_field(dominant_he, momentum_he, secondary_he=None, region_co
         return ""
 
 
-async def interpret_profile(alias, dominant_he, total_actions, streak, invited_count=0):
+async def interpret_profile(alias, dominant_he, total_actions, streak, invited_count=0, trust_data=None):
     """Interpret a user's orientation pattern. Returns one Hebrew sentence."""
     key = _get_key()
     if not key:
@@ -93,7 +93,27 @@ async def interpret_profile(alias, dominant_he, total_actions, streak, invited_c
         if invited_count > 0:
             parts.append(f"הביא {invited_count} אנשים לשדה.")
 
-        prompt = " ".join(parts) + " כתוב משפט אחד קצר שמתאר את דפוס ההתמצאות של האדם הזה."
+        if trust_data:
+            vs = trust_data.get("value_score", 0)
+            rs = trust_data.get("risk_score", 0)
+            ts = trust_data.get("trust_score", 0)
+            state_map = {
+                "stable": "יציב",
+                "building": "בבנייה",
+                "fragile": "שביר",
+                "restricted": "מוגבל"
+            }
+            if ts <= 0:
+                state = "restricted"
+            elif ts < 5:
+                state = "fragile"
+            elif ts < 15:
+                state = "building"
+            else:
+                state = "stable"
+            parts.append(f"ערך שדה: {vs}. סיכון שדה: {rs}. מצב שדה: {state_map[state]}.")
+
+        prompt = " ".join(parts) + " כתוב משפט אחד קצר שמתאר את דפוס ההתמצאות של האדם הזה ואת מצבו בשדה."
 
         response = await chat.send_message(UserMessage(text=prompt))
         return response.strip().split('\n')[0] if response else ""

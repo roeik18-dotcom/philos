@@ -198,6 +198,8 @@ async def get_human_action_record(user_id: str):
 
         invite_credits = user.get("invite_credits", 0) if user else 0
 
+        trust = await _get_field_trust(user_id)
+
         return {
             'success': True,
             'identity': {
@@ -240,8 +242,11 @@ async def get_human_action_record(user_id: str):
                 'total_invited': len(invitee_ids),
                 'invite_credits': invite_credits
             },
-            'ai_profile_interpretation': await interpret_profile(alias, GLOBE_DIR_LABELS.get(dominant_dir, ''), total_actions, streak, len(invitee_ids)),
-            'field_trust': await _get_field_trust(user_id)
+            'ai_profile_interpretation': await interpret_profile(
+                alias, GLOBE_DIR_LABELS.get(dominant_dir, ''), total_actions, streak, len(invitee_ids),
+                trust_data=trust
+            ),
+            'field_trust': trust
         }
     except Exception as e:
         logger.error(f"Human action record error: {str(e)}")
