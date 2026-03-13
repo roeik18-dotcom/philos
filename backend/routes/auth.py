@@ -62,13 +62,23 @@ async def register_user(data: UserRegister):
                 message="כתובת האימייל כבר קיימת במערכת"  # Email already exists
             )
 
-        # Validate invite code if provided
+        # Validate invite code if provided (check both old and new collections)
         inviter_id = None
+        invite_code_collection = None
         if data.invite_code:
-            invite = await db.invites.find_one({"code": data.invite_code}, {"_id": 0})
-            if not invite:
-                return AuthResponse(success=False, message="קוד ההזמנה אינו תקף")
-            inviter_id = invite.get("inviter_id")
+            # Check new invite_codes collection first
+            new_invite = await db.invite_codes.find_one({"code": data.invite_code, "status": "active"}, {"_id": 0})
+            if new_invite:
+                inviter_id = new_invite.get("owner_user_id")
+                invite_code_collection = "new"
+            else:
+                # Fallback to legacy invites collection
+                old_invite = await db.invites.find_one({"code": data.invite_code}, {"_id": 0})
+                if old_invite:
+                    inviter_id = old_invite.get("inviter_id")
+                    invite_code_collection = "legacy"
+                else:
+                    return AuthResponse(success=False, message="קוד ההזמנה אינו תקף")
 
         # Create new user
         now = datetime.now(timezone.utc).isoformat()
@@ -87,24 +97,31 @@ async def register_user(data: UserRegister):
 
         # If invite code was used, track it
         if data.invite_code and inviter_id:
-            await db.invites.update_one(
-                {"code": data.invite_code},
-                {"$push": {"used_by": user_id}, "$inc": {"use_count": 1}}
-            )
-            # === TRUST INTEGRATION: Inviter gets value for bringing someone in ===
+            if invite_code_collection == "new":
+                await db.invite_codes.update_one(
+                    {"code": data.invite_code},
+                    {"$set": {"status": "used", "used_at": now, "used_by_user_id": user_id}},
+                )
+            else:
+                await db.invites.update_one(
+                    {"code": data.invite_code},
+                    {"$push": {"used_by": user_id}, "$inc": {"use_count": 1}}
+                )
             await on_invite_used(inviter_id)
+            await log_event(inviter_id, "invite_redeemed", {"code": data.invite_code, "redeemer_id": user_id})
+            await log_event(user_id, "invite_accepted", {"code": data.invite_code, "inviter_id": inviter_id})
 
-        # Auto-generate 5 invite codes for the new user
+        # Auto-generate 2 invite codes for the new user (new system)
         import string as _string
-        for _ in range(5):
-            code = "PH-" + ''.join(_random.choices(_string.ascii_uppercase + _string.digits, k=4))
-            await db.invites.insert_one({
+        for _ in range(2):
+            code = "PH-" + ''.join(_random.choices(_string.ascii_uppercase + _string.digits, k=5))
+            await db.invite_codes.insert_one({
                 "code": code,
-                "inviter_id": user_id,
+                "owner_user_id": user_id,
+                "status": "active",
                 "created_at": now,
-                "used_by": [],
-                "use_count": 0,
-                "opened_count": 0
+                "used_at": None,
+                "used_by_user_id": None,
             })
 
         # Create access token

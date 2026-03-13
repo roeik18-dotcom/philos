@@ -11,12 +11,22 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Pre-fill invite code from URL if present
+  // Pre-fill invite code from URL or pending invite
   useState(() => {
     const path = window.location.pathname;
     const match = path.match(/^\/invite\/([a-zA-Z0-9-]+)$/);
     if (match) {
       setInviteCode(match[1]);
+      setMode('register');
+    } else if (path === '/join') {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('invite');
+      if (code) { setInviteCode(code); setMode('register'); }
+    }
+    // Also check pending invite from InvitePage
+    const pending = localStorage.getItem('philos_pending_invite');
+    if (pending && !inviteCode) {
+      setInviteCode(pending);
       setMode('register');
     }
   });
@@ -84,6 +94,8 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
         }
         
         onAuthSuccess(data.user);
+        // Clear pending invite
+        localStorage.removeItem('philos_pending_invite');
       } else {
         setError(data.message || 'אירעה שגיאה');
       }

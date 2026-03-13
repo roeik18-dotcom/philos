@@ -20,11 +20,15 @@ function App() {
     const persistentUserId = getUserId();
     console.log('Persistent User ID:', persistentUserId);
 
-    // Check if we're on an invite page or admin page
+    // Check if we're on an invite page (both /invite/CODE and /join?invite=CODE)
     const path = window.location.pathname;
-    const match = path.match(/^\/invite\/([a-zA-Z0-9]+)$/);
+    const match = path.match(/^\/invite\/([a-zA-Z0-9-]+)$/);
     if (match) {
       setInviteCode(match[1]);
+    } else if (path === '/join') {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('invite');
+      if (code) setInviteCode(code);
     }
   }, []);
 

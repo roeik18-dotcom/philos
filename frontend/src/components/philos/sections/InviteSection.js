@@ -1,32 +1,37 @@
 import { useState, useEffect, useCallback } from 'react';
-import { UserPlus, Copy, Check, Link2, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserPlus, Copy, Check, Link2, Loader2, RefreshCw } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function InviteSection({ userId }) {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
-  const [showCodes, setShowCodes] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
-  const effectiveUserId = userId || localStorage.getItem('philos_user_id');
+  const token = localStorage.getItem('philos_auth_token');
 
-  const fetchStats = useCallback(async () => {
-    if (!effectiveUserId) return;
+  const fetchInvites = useCallback(async () => {
+    if (!token) { setLoading(false); return; }
     try {
-      const res = await fetch(`${API_URL}/api/orientation/invite-stats/${effectiveUserId}`);
+      const res = await fetch(`${API_URL}/api/invites/me`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
       if (res.ok) {
         const json = await res.json();
-        if (json.success) setStats(json);
+        if (json.success) setData(json);
       }
-    } catch (e) {}
-  }, [effectiveUserId]);
+    } catch (e) {
+      console.log('Could not fetch invites:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
-  useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => { fetchInvites(); }, [fetchInvites]);
 
   const handleCopy = async (code) => {
-    const url = `${window.location.origin}/invite/${code}`;
+    const url = `${window.location.origin}/join?invite=${code}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -38,30 +43,57 @@ export default function InviteSection({ userId }) {
       document.body.removeChild(input);
     }
     setCopiedCode(code);
+    // Track share event
+    fetch(`${API_URL}/api/invites/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ code }),
+    }).catch(() => {});
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const handleCreate = async () => {
-    if (!effectiveUserId || creating) return;
-    setCreating(true);
+  const handleGenerate = async () => {
+    if (generating) return;
+    setGenerating(true);
     try {
-      const res = await fetch(`${API_URL}/api/orientation/create-invite/${effectiveUserId}`, { method: 'POST' });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) fetchStats();
-      }
-    } catch (e) {}
-    finally { setCreating(false); }
+      const res = await fetch(`${API_URL}/api/invites/generate`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) fetchInvites();
+    } catch (e) {
+      console.log('Could not generate invite:', e);
+    } finally {
+      setGenerating(false);
+    }
   };
 
-  if (!stats) return null;
+  if (loading) {
+    return (
+      <section className="rounded-2xl border border-gray-100 bg-white p-4 animate-pulse" dir="rtl">
+        <div className="h-5 bg-gray-200 rounded w-1/3 mb-3" />
+        <div className="h-10 bg-gray-200 rounded w-full" />
+      </section>
+    );
+  }
 
-  const unusedCodes = (stats.codes || []).filter(c => !c.used);
-  const usedCodes = (stats.codes || []).filter(c => c.used);
+  if (!token) {
+    return (
+      <section className="rounded-2xl border border-dashed border-gray-200 p-4 text-center" dir="rtl" data-testid="invite-section-auth-gate">
+        <UserPlus className="w-5 h-5 text-gray-300 mx-auto mb-2" />
+        <p className="text-xs text-gray-400">התחבר כדי לקבל קודי הזמנה</p>
+      </section>
+    );
+  }
+
+  if (!data) return null;
+
+  const activeCodes = data.codes.filter(c => c.status === 'active');
+  const usedCodes = data.codes.filter(c => c.status === 'used');
 
   return (
-    <section className="philos-section bg-white border-border animate-section" dir="rtl" data-testid="invite-section">
-      {/* Header + stats row */}
+    <section className="rounded-2xl border border-gray-100 bg-white p-4" dir="rtl" data-testid="invite-section">
+      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center">
@@ -69,108 +101,79 @@ export default function InviteSection({ userId }) {
           </div>
           <div>
             <span className="text-sm font-semibold text-gray-800">הזמן לשדה</span>
-            <p className="text-[10px] text-gray-400">צור שרשרת השפעה אנושית</p>
+            <p className="text-[10px] text-gray-400">שתף קישור והזמן מישהו להצטרף</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-center" data-testid="invite-used-count">
-            <p className="text-sm font-bold text-violet-600">{stats.total_invites_used}</p>
-            <p className="text-[9px] text-gray-400">הצטרפו</p>
-          </div>
+        <div className="flex items-center gap-2">
           <div className="text-center" data-testid="invite-active-count">
-            <p className="text-sm font-bold text-emerald-600">{stats.active_invitees || 0}</p>
+            <p className="text-sm font-bold text-violet-600">{data.active_count}</p>
             <p className="text-[9px] text-gray-400">פעילים</p>
           </div>
-          <div className="text-center" data-testid="invite-credits-count">
-            <p className="text-sm font-bold text-amber-600">{stats.invite_credits || 0}</p>
-            <p className="text-[9px] text-gray-400">נקודות</p>
-          </div>
-          <div className="text-center" data-testid="invite-remaining-count">
-            <p className="text-sm font-bold text-gray-600">{stats.codes_remaining + unusedCodes.length}</p>
-            <p className="text-[9px] text-gray-400">נותרו</p>
+          <div className="text-center" data-testid="invite-used-count">
+            <p className="text-sm font-bold text-emerald-600">{data.used_count}</p>
+            <p className="text-[9px] text-gray-400">נוצלו</p>
           </div>
         </div>
       </div>
 
-      {/* Influence chain — who invited you */}
-      {stats.invited_by_alias && (
-        <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 bg-violet-50 rounded-xl" data-testid="invite-invited-by">
-          <Link2 className="w-3 h-3 text-violet-400" />
-          <span className="text-[10px] text-violet-600">הוזמנת על ידי <span className="font-semibold">{stats.invited_by_alias}</span></span>
-        </div>
-      )}
-
-      {/* Invitees — who you brought */}
-      {stats.invitees && stats.invitees.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 mb-3 px-2 py-1.5 bg-emerald-50 rounded-xl" data-testid="invite-invitees">
-          <span className="text-[10px] text-emerald-600">הבאת לשדה:</span>
-          {stats.invitees.map((i, idx) => (
-            <span key={idx} className={`text-[10px] font-medium ${i.active ? 'text-emerald-700' : 'text-gray-400'}`}>
-              {i.alias}{i.active ? '' : ' (טרם פעל)'}{idx < stats.invitees.length - 1 ? ',' : ''}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Quick copy — first unused code */}
-      {unusedCodes.length > 0 && (
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl p-2 border border-gray-100">
-            <span className="text-xs font-mono text-gray-600 flex-1" dir="ltr" data-testid="invite-code-display">{unusedCodes[0].code}</span>
-            <button
-              onClick={() => handleCopy(unusedCodes[0].code)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all flex items-center gap-1 ${
-                copiedCode === unusedCodes[0].code ? 'bg-green-100 text-green-700' : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
-              }`}
-              data-testid="invite-copy-btn"
-            >
-              {copiedCode === unusedCodes[0].code ? <><Check className="w-2.5 h-2.5" /><span>הועתק</span></> : <><Copy className="w-2.5 h-2.5" /><span>העתק קישור</span></>}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Toggle all codes */}
-      {stats.codes && stats.codes.length > 1 && (
-        <button
-          onClick={() => setShowCodes(!showCodes)}
-          className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors mb-2"
-          data-testid="invite-toggle-codes"
-        >
-          {showCodes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          {showCodes ? 'הסתר קודים' : `הצג את כל הקודים (${stats.codes.length})`}
-        </button>
-      )}
-
-      {showCodes && (
-        <div className="space-y-1.5 mb-2 animate-fadeIn">
-          {stats.codes.map((c) => (
-            <div key={c.code} className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10px] ${c.used ? 'bg-emerald-50 border border-emerald-100' : 'bg-gray-50 border border-gray-100'}`}>
-              <span className="font-mono text-gray-600" dir="ltr">{c.code}</span>
-              {c.used ? (
-                <span className="text-emerald-600 font-medium">נוצל</span>
-              ) : (
-                <button
-                  onClick={() => handleCopy(c.code)}
-                  className="text-violet-600 hover:text-violet-700 font-medium"
-                >
-                  {copiedCode === c.code ? 'הועתק' : 'העתק'}
-                </button>
-              )}
+      {/* Active codes */}
+      {activeCodes.length > 0 ? (
+        <div className="space-y-2 mb-3">
+          {activeCodes.map(c => (
+            <div key={c.code} className="flex items-center gap-2 bg-gray-50 rounded-xl p-2.5 border border-gray-100">
+              <Link2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+              <span className="text-xs font-mono text-gray-600 flex-1" dir="ltr" data-testid="invite-code-display">{c.code}</span>
+              <button
+                onClick={() => handleCopy(c.code)}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all flex items-center gap-1 ${
+                  copiedCode === c.code
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
+                }`}
+                data-testid={`invite-copy-btn-${c.code}`}
+              >
+                {copiedCode === c.code
+                  ? <><Check className="w-2.5 h-2.5" /><span>הועתק</span></>
+                  : <><Copy className="w-2.5 h-2.5" /><span>העתק קישור</span></>
+                }
+              </button>
             </div>
           ))}
         </div>
+      ) : (
+        <div className="text-center py-3 mb-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+          <p className="text-xs text-gray-400 mb-2">אין קודים פעילים</p>
+          <button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 mx-auto active:scale-[0.97]"
+            data-testid="invite-generate-btn"
+          >
+            {generating
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <><RefreshCw className="w-3 h-3" /><span>צור קודי הזמנה</span></>
+            }
+          </button>
+        </div>
       )}
 
-      {/* Create new code if under limit */}
-      {stats.codes_remaining > 0 && unusedCodes.length === 0 && (
+      {/* Used codes summary */}
+      {usedCodes.length > 0 && (
+        <div className="flex items-center gap-1.5 px-2 py-1.5 bg-emerald-50 rounded-xl">
+          <Check className="w-3 h-3 text-emerald-500" />
+          <span className="text-[10px] text-emerald-600">{usedCodes.length} הזמנות נוצלו בהצלחה</span>
+        </div>
+      )}
+
+      {/* Generate button when some codes active but below max */}
+      {data.can_generate && activeCodes.length > 0 && activeCodes.length < 2 && (
         <button
-          onClick={handleCreate}
-          disabled={creating}
-          className="w-full py-2.5 px-4 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl text-xs font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
-          data-testid="invite-create-btn"
+          onClick={handleGenerate}
+          disabled={generating}
+          className="mt-2 w-full py-2 text-[10px] text-violet-500 hover:text-violet-700 transition-colors flex items-center justify-center gap-1"
+          data-testid="invite-generate-more-btn"
         >
-          {creating ? '...' : <><UserPlus className="w-3.5 h-3.5" /><span>צור קוד הזמנה</span></>}
+          {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <><RefreshCw className="w-3 h-3" /><span>צור עוד קוד</span></>}
         </button>
       )}
     </section>
