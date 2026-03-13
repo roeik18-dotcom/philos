@@ -1,104 +1,77 @@
 # Philos Orientation - Product Requirements Document
 
 ## Original Problem Statement
-Hebrew (RTL) philosophical orientation app with daily actions, collective "human field" globe, value profiles, AI Interpretation (Claude Sonnet 4.5), Value/Risk/Trust system, Trust Ledger, and Trust Explanation UI.
+Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation" application. The project has evolved through several phases of implementation and refinement. A major milestone was translating the entire application from Hebrew to English to prepare for a public launch to an English-speaking audience.
 
-## Architecture
-```
-/app/backend/
-  server.py, database.py, auth_utils.py, constants.py, philos_ai.py
-  models/ (schemas.py, trust.py)
-  routes/ (auth.py, philos.py, memory.py, collective.py, orientation.py, social.py, profile.py, admin.py, trust.py, system.py, analytics.py, invites.py)
-  services/ (helpers.py, demo.py, trust.py, trust_integration.py, scheduler.py, analytics.py)
-```
+## Core System
+- **V+R+T Engine**: Value, Risk, and Trust scoring system
+- **Automated Daily Score Decay**: APScheduler-based background job
+- **User Invite System**: Code-based invites with tracking and rewards
+- **Lightweight Analytics**: Event tracking and funnel analysis
+- **Trust Test Page**: Public `/trust-test` page for measuring trust
+- **AI Interpretation Layer**: Claude Sonnet 4.5 powered profile insights
 
-## Implemented Features
-1-9. Core system (globe, orientation, invites, profiles, presence)
-10. AI Interpretation Layer (Claude Sonnet 4.5) — calibrated
-11. Backend Refactor (modular)
-12. Value + Risk + Trust System + daily decay
-13. Trust UI on Profile (value/risk bars + state label)
-14. Trust-Aware + Calibrated AI Interpretation
-15. Trust-to-Product Integration (daily actions, globe, missions, onboarding, invites)
-16. Trust Ledger (immutable event log)
-17. **Trust Explanation UI** — Completed 2026-03-13
-    - TrustHistorySection component on Profile page
-    - Hebrew source labels (פעולת כיוון יומית, נקודת שדה, דעיכה יומית, etc.)
-    - Deterministic summary line (top source by count)
-    - Value/risk deltas with color coding
-    - Placed between field-trust-block and direction-bar
+## Tech Stack
+- **Frontend**: React + Tailwind CSS + Shadcn/UI
+- **Backend**: FastAPI + Pydantic + MongoDB
+- **AI**: Claude Sonnet 4.5 via `emergentintegrations`
+- **Visualization**: react-globe.gl, three.js
+- **Payments**: Stripe
+- **Scheduling**: APScheduler
 
-18. **Automated Decay Scheduler** — Completed 2026-03-13
-    - APScheduler (CronTrigger 03:00 UTC daily)
-    - MongoDB lock in `scheduler_locks` — prevents duplicate concurrent runs
-    - Execution logging to `decay_log` collection
-    - Clean startup/shutdown lifecycle in server.py
-    - 23-hour minimum interval between runs
-19. **System Health Endpoint** — Completed 2026-03-13
-    - GET /api/system/status
-    - Reports on: database, trust_engine, trust_ledger, ai_layer, decay_scheduler
-    - Flat scheduler fields: scheduler_running, last_decay_run, last_decay_success, decay_runs_last_7_days, next_decay_run, lock_state
-20. **MVP Freeze** — Completed 2026-03-13
-    - POST /api/system/decay/trigger (admin-only, returns users_processed/total_value_decay/total_risk_decay)
-    - Scheduler double-start protection (idempotent start_scheduler)
-    - Manual trigger bypasses 23h interval, respects concurrency lock
-    - Internal documentation: /app/backend/TRUST_ENGINE.md
+## What's Been Implemented
 
-21. **Real Usage Loop** — Completed 2026-03-13
-    - Lightweight analytics: event logging for daily_actions, missions_joined, globe_points, trust_changes, return_sessions
-    - GET /api/analytics/summary (per-day summary, last N days)
-    - GET /api/analytics/events (raw event log)
-    - Analytics hooks in: auth (session_start), orientation (daily_action, globe_point), social (mission_joined), admin (onboarding_complete), trust_integration (trust_change)
-    - Retention nudges (RetentionNudges.js) appear after daily action: invite, join mission, globe point, return tomorrow
-    - Error monitoring: system status includes recent_errors ring buffer + total_errors_logged
-    - First-session flow: onboarding → first trust event → daily action → AI interpretation → profile trust view
+### Phase 1-4: Core System (Complete)
+- Full V+R+T reputation engine
+- User registration, login, and auth flow
+- Orientation map with daily questions
+- Decision path and identity system
+- Collective field visualization
+- Social features (circles, missions, compass)
+- Globe interaction and visualization
+- Weekly insights and drift detection
+- Invite system with rewards
 
-22. **Invite System MVP** — Completed 2026-03-13
-    - New `invite_codes` collection: code, owner_user_id, status (active/used/expired), created_at, used_at, used_by_user_id
-    - 2 active codes per user (auto-generated on registration)
-    - Endpoints: GET /api/invites/me, POST /api/invites/generate, POST /api/invites/redeem, POST /api/invites/share, GET /api/invites/lookup/{code}
-    - Invite links: /join?invite=CODE and /invite/CODE both supported
-    - Trust integration: redeem fires action_type=contribute, source_flow=invite_used (impact=8, authenticity=0.9)
-    - Analytics: invite_generated, invite_viewed, invite_shared, invite_redeemed, invite_accepted
-    - Frontend: InviteSection (codes + copy link), InvitePage (landing for invite links), AuthScreen (pre-fill invite code)
-    - Legacy invites collection backward-compatible via lookup fallback
+### Phase 5: Full English Translation (Complete - March 2026)
+- **Frontend**: 90+ React component files translated from Hebrew to English
+- **Backend Routes**: All 7 route files translated (auth, admin, collective, social, orientation, profile, memory)
+- **Backend Services**: helpers.py, constants.py translated
+- **Backend Models**: schemas.py comments updated
+- **Backend Logic**: philos_orientation/decision.py and constraints.py translated
+- **AI Prompts**: philos_ai.py updated to generate English responses
+- **CSS/Layout**: Switched from RTL to LTR layout, updated fonts for English
+- **Result**: Zero Hebrew characters in all production code
 
-23. **Core User Loop Simplification** — Completed 2026-03-13
-    - Reordered HomeTab: Entry → Base → Action → Trust Card + Invite Card → Atmosphere(collapsed) → Community(collapsed)
-    - TrustChangeCard: shows trust score + state label inline after action completion
-    - InlineInviteCard: shows invite code + copy button inline after action
-    - Atmosphere (globe, opening, opposition, closing) collapsed by default
-    - Community (missions, feed, streaks, invite) collapsed by default
-    - RetentionNudges: removed invite (shown inline), kept mission/globe/return
-    - DailyOrientationQuestion: notifies parent when already_answered_today=true
+## Key Database Collections
+- `users`, `user_state`, `trust_ledger`, `decay_log`
+- `analytics_events`, `invite_codes`, `invites`
+- `daily_questions`, `user_globe_points`, `feedback`
 
-24. **Public Trust Test Page** — Completed 2026-03-13
-    - Route: /trust-test — public SEO-accessible page
-    - Title: "What is your trust score?"
-    - Meta: description + og:title + og:description + og:type in HTML source for crawlers
-    - Loads existing trust flow (onboarding → base → question → trust card → invite)
+## Key API Endpoints
+- `POST /api/auth/register`, `/api/auth/login`, `/api/auth/logout`
+- `GET /api/orientation/field-today`, `/api/orientation/field`
+- `GET /api/decision-path/{user_id}`, `/api/orientation/identity/{user_id}`
+- `GET /api/orientation/daily-question/{user_id}`
+- `POST /api/orientation/daily-answer/{user_id}`
+- `GET /api/orientation/weekly-insight/{user_id}`
+- `GET /api/orientation/compare/{user_id}`
+- `POST /api/onboarding/first-action`
+- `GET /api/system/status`
 
-## Test Reports
-- iteration_58-64: All prior features — 100%
-- iteration_65: Trust Explanation UI — 100% (10/10 backend + all frontend elements)
-- iteration_67: Decay Scheduler + System Status — 100% (17/17 backend tests)
-- iteration_68: MVP Freeze Full Regression — 100% (35/35 backend tests)
-- iteration_69: Real Usage Loop — 100% (14/14 backend + frontend rendering)
-- iteration_70: Invite System MVP — 100% (14/14 backend + frontend rendering)
-- iteration_71: Core Loop Simplification — 85-100% (layout verified, trust+invite cards render after action)
-- iteration_72: Full UI Interaction Test — 100% (12/12 steps pass, 14/14 backend, critical bug fixed in daily-answer)
-- iteration_73: Public Tester Prep — 100% (11/11 backend, all text changes verified)
-- iteration_74: Funnel Analytics — 100% (23/23 backend, all 6 tracking points verified)
+## Prioritized Backlog
+
+### P1: Expand Trust-Aware AI
+- Extend trust context to action and field interpretation layers
+
+### P2: Define and Map Risk Signals
+- Define risk signals based on user behavior patterns
+
+### P2: ProfilePage Refactoring
+- Break down `/app/frontend/src/pages/ProfilePage.js` (809 lines) into smaller components
+
+### P3: Legacy Data Migration
+- Optional: migrate existing Hebrew daily questions in database for legacy users
 
 ## Test Credentials
-- newuser@test.com / password123 (stable trust)
-- trust_building@test.com / password123 (building)
-- trust_fragile@test.com / password123 (fragile)
-- trust_restricted@test.com / password123 (restricted)
-- trusthint_test@test.com / password123 (test user)
-
-## Backlog
-- Risk signal mapping from product behavior
-- Trust visualization dashboard
-- Further split routes/orientation.py
-- Expand Trust-Aware AI to action/field interpretation layers
+- Email: `newuser@test.com` | Password: `password123`
+- Email: `trust_fragile@test.com` | Password: `password123`
