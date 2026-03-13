@@ -1549,10 +1549,10 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
         
         # Increment mission participants if direction matches today's mission
         mission_contributed = False
+        today_str = now.strftime("%Y-%m-%d")  # Define here for use throughout function
         if request.action_taken:
             mission = await _get_or_create_mission_today()
             if mission.get("direction") == suggested_direction:
-                today_str = now.strftime("%Y-%m-%d")
                 await db.daily_missions.update_one(
                     {"date": today_str},
                     {"$inc": {"participants": 1}}
