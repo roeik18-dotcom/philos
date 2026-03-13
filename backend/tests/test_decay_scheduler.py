@@ -87,20 +87,20 @@ class TestSystemStatus:
         print(f"✓ Decay scheduler running: {scheduler_status['scheduler_running']}")
     
     def test_decay_scheduler_has_next_run(self):
-        """Decay scheduler should have next_scheduled_run in the future"""
+        """Decay scheduler should have next_decay_run in the future"""
         response = requests.get(f"{BASE_URL}/api/system/status")
         data = response.json()
         scheduler_status = data["components"]["decay_scheduler"]
         
-        assert "next_scheduled_run" in scheduler_status
-        next_run = scheduler_status["next_scheduled_run"]
-        assert next_run is not None, "next_scheduled_run should not be None"
+        assert "next_decay_run" in scheduler_status
+        next_run = scheduler_status["next_decay_run"]
+        assert next_run is not None, "next_decay_run should not be None"
         
         # Parse and verify it's in the future
         next_run_dt = datetime.fromisoformat(next_run.replace('Z', '+00:00'))
         now = datetime.now(timezone.utc)
-        assert next_run_dt > now, f"next_scheduled_run {next_run} should be in the future"
-        print(f"✓ Next scheduled run: {next_run}")
+        assert next_run_dt > now, f"next_decay_run {next_run} should be in the future"
+        print(f"✓ Next decay run: {next_run}")
     
     def test_decay_scheduler_has_lock_state(self):
         """Decay scheduler should include lock_state info"""
@@ -117,24 +117,24 @@ class TestSystemStatus:
         else:
             print("✓ Lock state is None (no decay has run yet or lock cleared)")
     
-    def test_decay_scheduler_has_recent_executions(self):
-        """Decay scheduler should include recent_executions list"""
+    def test_decay_scheduler_has_run_statistics(self):
+        """Decay scheduler should include decay run statistics"""
         response = requests.get(f"{BASE_URL}/api/system/status")
         data = response.json()
         scheduler_status = data["components"]["decay_scheduler"]
         
-        assert "recent_executions" in scheduler_status
-        recent = scheduler_status["recent_executions"]
-        assert isinstance(recent, list)
-        print(f"✓ Recent executions: {len(recent)} entries")
+        # Check flat fields that replaced recent_executions
+        assert "decay_runs_last_7_days" in scheduler_status
+        assert "last_decay_run" in scheduler_status
+        assert "last_decay_success" in scheduler_status
         
-        if recent:
-            # Verify execution log structure
-            first = recent[0]
-            assert "job" in first
-            assert "success" in first
-            assert "users_processed" in first
-            print(f"  Last execution: success={first['success']}, users_processed={first['users_processed']}")
+        runs_7d = scheduler_status["decay_runs_last_7_days"]
+        assert isinstance(runs_7d, int) or runs_7d is None
+        print(f"✓ Decay runs last 7 days: {runs_7d}")
+        
+        if scheduler_status["last_decay_run"]:
+            print(f"  Last decay run: {scheduler_status['last_decay_run']}")
+            print(f"  Last decay success: {scheduler_status['last_decay_success']}")
 
 
 class TestExistingAuthStillWorks:
@@ -226,23 +226,18 @@ class TestDecayLockMechanics:
             print("✓ No lock state yet (acceptable)")
     
     def test_execution_log_structure(self):
-        """Verify execution log entries have correct structure"""
+        """Verify execution log info available via system status flat fields"""
         response = requests.get(f"{BASE_URL}/api/system/status")
         data = response.json()
-        recent = data["components"]["decay_scheduler"]["recent_executions"]
+        scheduler_status = data["components"]["decay_scheduler"]
         
-        if recent:
-            entry = recent[0]
-            required_fields = ["job", "success", "users_processed"]
-            for field in required_fields:
-                assert field in entry, f"Execution log missing field: {field}"
-            
-            assert entry["job"] == "daily_decay"
-            assert isinstance(entry["success"], bool)
-            assert isinstance(entry["users_processed"], int)
-            print(f"✓ Execution log structure valid: {entry}")
+        # Check flat fields that provide execution log info
+        if scheduler_status.get("last_decay_run"):
+            assert "last_decay_success" in scheduler_status
+            assert isinstance(scheduler_status["last_decay_success"], bool)
+            print(f"✓ Last decay run: {scheduler_status['last_decay_run']}, success={scheduler_status['last_decay_success']}")
         else:
-            print("✓ No execution logs yet (acceptable)")
+            print("✓ No decay runs yet (acceptable)")
 
 
 class TestOverallHealthAggregation:
