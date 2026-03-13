@@ -8,8 +8,8 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
 /app/backend/
   server.py, database.py, auth_utils.py, constants.py, philos_ai.py
   models/ (schemas.py, trust.py)
-  routes/ (auth.py, philos.py, memory.py, collective.py, orientation.py, social.py, profile.py, admin.py, trust.py, system.py)
-  services/ (helpers.py, demo.py, trust.py, trust_integration.py, scheduler.py)
+  routes/ (auth.py, philos.py, memory.py, collective.py, orientation.py, social.py, profile.py, admin.py, trust.py, system.py, analytics.py)
+  services/ (helpers.py, demo.py, trust.py, trust_integration.py, scheduler.py, analytics.py)
 ```
 
 ## Implemented Features
@@ -44,11 +44,21 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
     - Manual trigger bypasses 23h interval, respects concurrency lock
     - Internal documentation: /app/backend/TRUST_ENGINE.md
 
+21. **Real Usage Loop** — Completed 2026-03-13
+    - Lightweight analytics: event logging for daily_actions, missions_joined, globe_points, trust_changes, return_sessions
+    - GET /api/analytics/summary (per-day summary, last N days)
+    - GET /api/analytics/events (raw event log)
+    - Analytics hooks in: auth (session_start), orientation (daily_action, globe_point), social (mission_joined), admin (onboarding_complete), trust_integration (trust_change)
+    - Retention nudges (RetentionNudges.js) appear after daily action: invite, join mission, globe point, return tomorrow
+    - Error monitoring: system status includes recent_errors ring buffer + total_errors_logged
+    - First-session flow: onboarding → first trust event → daily action → AI interpretation → profile trust view
+
 ## Test Reports
 - iteration_58-64: All prior features — 100%
 - iteration_65: Trust Explanation UI — 100% (10/10 backend + all frontend elements)
 - iteration_67: Decay Scheduler + System Status — 100% (17/17 backend tests)
 - iteration_68: MVP Freeze Full Regression — 100% (35/35 backend tests)
+- iteration_69: Real Usage Loop — 100% (14/14 backend + frontend rendering)
 
 ## Test Credentials
 - newuser@test.com / password123 (stable trust)
