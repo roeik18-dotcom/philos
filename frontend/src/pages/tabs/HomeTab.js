@@ -18,6 +18,8 @@ import {
   DailyBaseSelection,
   RetentionNudges
 } from '../../components/philos/sections';
+import TrustChangeCard from '../../components/philos/sections/TrustChangeCard';
+import InlineInviteCard from '../../components/philos/sections/InlineInviteCard';
 
 export default function HomeTab({
   user,
@@ -41,29 +43,17 @@ export default function HomeTab({
   const [actionCompleted, setActionCompleted] = useState(false);
   const [actionDirection, setActionDirection] = useState(null);
   const [baseSelected, setBaseSelected] = useState(false);
+  const [showAtmosphere, setShowAtmosphere] = useState(false);
 
   return (
     <div className="space-y-4">
 
-      {/* ═══ GLOBAL FIELD STATE ═══ */}
-      <GlobalFieldDashboard />
-
-      {/* ═══ 3D FIELD GLOBE ═══ */}
-      <FieldGlobeSection />
-
-      {/* ═══ LAYER 1: ENTRY — Dynamic Personal Hook ═══ */}
+      {/* ═══ BRIEF CONTEXT ═══ */}
       <EntryLayer userId={user?.id} />
 
-      {/* ═══ LAYER 2: PERSONAL ORIENTATION — "Where am I now?" ═══ */}
-      <DailyOpeningSection userId={user?.id} />
-
-      {/* ═══ LAYER 3: OPPOSITION — "Between which poles am I moving?" ═══ */}
-      <OppositionLayer userId={user?.id} />
-
-      {/* ═══ DAILY BASE — "From which center am I operating today?" ═══ */}
+      {/* ═══ CORE ACTION PATH — Base + Daily Action ═══ */}
       <DailyBaseSelection userId={user?.id} onBaseSelected={() => setBaseSelected(true)} />
 
-      {/* ═══ LAYER 4: ACTION — "What do I do now?" (requires base selection) ═══ */}
       {baseSelected ? (
         <DailyOrientationQuestion
           userId={user?.id}
@@ -79,7 +69,15 @@ export default function HomeTab({
         </div>
       )}
 
-      {/* ═══ RETENTION NUDGES — After daily action ═══ */}
+      {/* ═══ POST-ACTION: Trust Change + Invite ═══ */}
+      {actionCompleted && (
+        <div className="space-y-3 animate-fadeIn">
+          <TrustChangeCard userId={user?.id} />
+          <InlineInviteCard />
+        </div>
+      )}
+
+      {/* ═══ RETENTION NUDGES ═══ */}
       <RetentionNudges
         visible={actionCompleted}
         onNavigate={(target) => {
@@ -87,20 +85,37 @@ export default function HomeTab({
         }}
       />
 
-      {/* ═══ LAYER 5: FIELD — "How does my action affect the world?" ═══ */}
+      {/* ═══ FIELD IMPACT ═══ */}
       <FieldImpactLayer
         userId={user?.id}
         actionCompleted={actionCompleted}
         actionDirection={actionDirection}
       />
 
-      {/* ═══ LAYER 6: CLOSING — "What changed today?" ═══ */}
-      <ClosingLayer userId={user?.id} />
+      {/* ─── Atmosphere: globe, opening, opposition, closing ─── */}
+      <div className="pt-1">
+        <button
+          onClick={() => setShowAtmosphere(!showAtmosphere)}
+          className="w-full flex items-center justify-center gap-2 py-2 text-[10px] text-gray-300 hover:text-gray-500 transition-colors"
+          data-testid="toggle-atmosphere-section"
+        >
+          <span>{showAtmosphere ? 'הסתר שדה והתבוננות' : 'שדה גלובלי והתבוננות'}</span>
+          {showAtmosphere ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        </button>
+      </div>
 
-      {/* ═══ PERSONAL COMPASS AI ═══ */}
-      <CompassAISection userId={user?.id} />
+      {showAtmosphere && (
+        <div className="space-y-4 animate-fadeIn">
+          <GlobalFieldDashboard />
+          <FieldGlobeSection />
+          <DailyOpeningSection userId={user?.id} />
+          <OppositionLayer userId={user?.id} />
+          <ClosingLayer userId={user?.id} />
+          <CompassAISection userId={user?.id} />
+        </div>
+      )}
 
-      {/* ─── Divider: narrative ends, community begins ─── */}
+      {/* ─── Community ─── */}
       <div className="pt-2">
         <button
           onClick={() => setShowCommunity(!showCommunity)}
@@ -113,7 +128,6 @@ export default function HomeTab({
         </button>
       </div>
 
-      {/* ─── Community & Secondary Features ─── */}
       {showCommunity && (
         <div className="space-y-4 animate-fadeIn">
           <FieldMissionSection missionContributed={missionContributed} />

@@ -1,19 +1,9 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Target, Globe, Sun, ChevronLeft } from 'lucide-react';
+import { Target, Globe, Sun, ChevronLeft } from 'lucide-react';
 
 const RETENTION_DISMISSED_KEY = 'philos_retention_dismissed';
 
 const NUDGES = [
-  {
-    id: 'invite',
-    icon: UserPlus,
-    text: 'הזמן מישהו לשדה',
-    subtext: 'הפעולה שלך חזקה יותר כשיש עוד אנשים בשדה',
-    color: '#f59e0b',
-    bg: 'bg-amber-50',
-    border: 'border-amber-100',
-    action: 'community',
-  },
   {
     id: 'mission',
     icon: Target,
