@@ -72,6 +72,12 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
     - RetentionNudges: removed invite (shown inline), kept mission/globe/return
     - DailyOrientationQuestion: notifies parent when already_answered_today=true
 
+24. **Public Trust Test Page** — Completed 2026-03-13
+    - Route: /trust-test — public SEO-accessible page
+    - Title: "What is your trust score?"
+    - Meta: description + og:title + og:description + og:type in HTML source for crawlers
+    - Loads existing trust flow (onboarding → base → question → trust card → invite)
+
 ## Test Reports
 - iteration_58-64: All prior features — 100%
 - iteration_65: Trust Explanation UI — 100% (10/10 backend + all frontend elements)

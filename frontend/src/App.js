@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import PhilosDashboard from './pages/PhilosDashboard';
+import TrustTestPage from './pages/TrustTestPage';
 import InvitePage from './pages/InvitePage';
 import AdminPage from './pages/AdminPage';
 import ProfilePage from './pages/ProfilePage';
@@ -104,6 +105,14 @@ function App() {
   // Profile page
   if (window.location.pathname.startsWith('/profile/')) {
     return <ProfilePage />;
+  }
+
+  // Trust test public page
+  if (window.location.pathname === '/trust-test') {
+    if (showAuth) {
+      return <AuthScreen onAuthSuccess={handleAuthSuccess} onSkip={handleSkip} />;
+    }
+    return <TrustTestPage user={user} onLogout={handleLogout} onShowAuth={handleShowAuth} />;
   }
 
   // Invite page
