@@ -63,6 +63,15 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
     - Frontend: InviteSection (codes + copy link), InvitePage (landing for invite links), AuthScreen (pre-fill invite code)
     - Legacy invites collection backward-compatible via lookup fallback
 
+23. **Core User Loop Simplification** — Completed 2026-03-13
+    - Reordered HomeTab: Entry → Base → Action → Trust Card + Invite Card → Atmosphere(collapsed) → Community(collapsed)
+    - TrustChangeCard: shows trust score + state label inline after action completion
+    - InlineInviteCard: shows invite code + copy button inline after action
+    - Atmosphere (globe, opening, opposition, closing) collapsed by default
+    - Community (missions, feed, streaks, invite) collapsed by default
+    - RetentionNudges: removed invite (shown inline), kept mission/globe/return
+    - DailyOrientationQuestion: notifies parent when already_answered_today=true
+
 ## Test Reports
 - iteration_58-64: All prior features — 100%
 - iteration_65: Trust Explanation UI — 100% (10/10 backend + all frontend elements)
@@ -70,6 +79,7 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
 - iteration_68: MVP Freeze Full Regression — 100% (35/35 backend tests)
 - iteration_69: Real Usage Loop — 100% (14/14 backend + frontend rendering)
 - iteration_70: Invite System MVP — 100% (14/14 backend + frontend rendering)
+- iteration_71: Core Loop Simplification — 85-100% (layout verified, trust+invite cards render after action)
 
 ## Test Credentials
 - newuser@test.com / password123 (stable trust)

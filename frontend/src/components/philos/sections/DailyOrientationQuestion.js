@@ -26,6 +26,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [impactData, setImpactData] = useState(null);
   const sectionRef = useRef(null);
+  const notifiedRef = useRef(false);
 
   const effectiveUserId = userId || localStorage.getItem('philos_user_id');
 
@@ -55,7 +56,12 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
     if (questionData && !completed) {
       window.dispatchEvent(new CustomEvent('orientation-stage', { detail: { stage: 'choice' } }));
     }
-  }, [questionData, completed]);
+    // If already completed today, notify parent to show trust/invite cards (once)
+    if (questionData && completed && !notifiedRef.current) {
+      notifiedRef.current = true;
+      onActionRecorded?.({ direction: questionData.suggested_direction, already_completed: true });
+    }
+  }, [questionData, completed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAnswer = async () => {
     if (!questionData?.question_id || submitting) return;
