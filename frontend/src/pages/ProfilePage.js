@@ -8,6 +8,7 @@ const dirLabels = { contribution: 'תרומה', recovery: 'התאוששות', or
 
 export default function ProfilePage() {
   const [data, setData] = useState(null);
+  const [trustHistory, setTrustHistory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedAction, setExpandedAction] = useState(null);
   const [showShare, setShowShare] = useState(false);
@@ -18,11 +19,13 @@ export default function ProfilePage() {
   const profileUrl = `${window.location.origin}/profile/${userId}`;
 
   useEffect(() => {
-    fetch(`${API_URL}/api/profile/${userId}/record`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.success) setData(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch(`${API_URL}/api/profile/${userId}/record`).then(r => r.ok ? r.json() : null),
+      fetch(`${API_URL}/api/user/${userId}/trust-history?limit=10`).then(r => r.ok ? r.json() : null),
+    ]).then(([profile, history]) => {
+      if (profile?.success) setData(profile);
+      if (history?.user_id) setTrustHistory(history);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [userId]);
 
   const handleCopyLink = useCallback(() => {
@@ -144,6 +147,11 @@ export default function ProfilePage() {
 
         {/* ═══ FIELD TRUST — Quiet indicator ═══ */}
         {field_trust && <FieldTrustBlock trust={field_trust} />}
+
+        {/* ═══ TRUST HISTORY — Explainability ═══ */}
+        {trustHistory && trustHistory.ledger && trustHistory.ledger.length > 0 && (
+          <TrustHistorySection history={trustHistory} />
+        )}
 
         {/* ═══ DIRECTION DISTRIBUTION ═══ */}
         <DirectionBar distribution={direction_distribution} total={value_growth.total_actions} dominantDir={identity.dominant_direction} />
@@ -267,6 +275,117 @@ function FieldTrustBlock({ trust }) {
             {stateLabel}
           </span>
         </div>
+      </div>
+    </section>
+  );
+}
+
+
+const SOURCE_LABELS = {
+  daily_action: 'פעולת כיוון יומית',
+  globe_point: 'נקודת שדה',
+  mission_join: 'הצטרפות למשימה',
+  onboarding: 'פעולה ראשונה',
+  invite_used: 'הזמנה מומשה',
+  manual: 'עדכון ידני',
+  decay: 'דעיכה יומית',
+};
+
+const ACTION_LABELS = {
+  contribute: 'תרומה',
+  help: 'עזרה',
+  create: 'יצירה',
+  explore: 'חקירה',
+  spam: 'ספאם',
+  manipulation: 'מניפולציה',
+  aggression: 'תוקפנות',
+  deception: 'הטעיה',
+  disruption: 'שיבוש',
+  decay: 'דעיכה',
+};
+
+function buildSummaryLine(history) {
+  const { summary_by_source } = history;
+  if (!summary_by_source || Object.keys(summary_by_source).length === 0) return null;
+
+  const sources = Object.entries(summary_by_source)
+    .filter(([k]) => k !== 'decay')
+    .sort((a, b) => b[1].count - a[1].count);
+
+  if (sources.length === 0) return 'אמון השדה הושפע בעיקר מדעיכה יומית.';
+
+  const top = sources[0];
+  const label = SOURCE_LABELS[top[0]] || top[0];
+  const count = top[1].count;
+
+  const hasDecay = summary_by_source.decay?.count > 0;
+  const decayNote = hasDecay ? ' לצד דעיכה טבעית' : '';
+
+  return `${label} (${count}) היא המקור המרכזי לאמון השדה הנוכחי${decayNote}.`;
+}
+
+function formatTimestamp(ts) {
+  try {
+    const d = new Date(ts);
+    return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) +
+      ' ' + d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  } catch { return ''; }
+}
+
+function TrustHistorySection({ history }) {
+  const summary = buildSummaryLine(history);
+
+  return (
+    <section data-testid="trust-history-section">
+      <p className="text-[10px] text-gray-600 mb-2">היסטוריית שדה</p>
+
+      {summary && (
+        <p className="text-[9px] text-gray-500 leading-relaxed mb-3 bg-white/[0.02] rounded-lg p-2.5 border border-white/[0.04]" data-testid="trust-history-summary">
+          {summary}
+        </p>
+      )}
+
+      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] overflow-hidden divide-y divide-white/[0.04]">
+        {history.ledger.map((entry) => {
+          const srcLabel = SOURCE_LABELS[entry.source_flow] || entry.source_flow;
+          const actLabel = ACTION_LABELS[entry.action_type] || entry.action_type;
+          const isDecay = entry.source_flow === 'decay';
+          const isRisk = entry.computed_risk_delta > 0 && entry.computed_value_delta === 0;
+          const vd = entry.computed_value_delta;
+          const rd = entry.computed_risk_delta;
+
+          return (
+            <div key={entry.id} className="px-3.5 py-2.5 flex items-center justify-between gap-2" data-testid="trust-history-item">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] text-gray-300 truncate" data-testid="trust-history-item-source">{srcLabel}</p>
+                <p className="text-[9px] text-gray-600 mt-0.5">{actLabel} · {formatTimestamp(entry.timestamp)}</p>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0">
+                {vd !== 0 && (
+                  <span
+                    className="text-[9px] font-medium tabular-nums"
+                    style={{ color: vd > 0 ? '#22c55e' : '#ef4444' }}
+                    data-testid="trust-history-item-value-delta"
+                  >
+                    {vd > 0 ? '+' : ''}{vd.toFixed(2)}
+                  </span>
+                )}
+                {rd !== 0 && (
+                  <span
+                    className="text-[9px] font-medium tabular-nums"
+                    style={{ color: rd < 0 ? '#22c55e' : '#ef4444' }}
+                    data-testid="trust-history-item-risk-delta"
+                  >
+                    {isRisk ? '' : ''}{rd > 0 ? '+' : ''}{rd.toFixed(2)}
+                  </span>
+                )}
+                {isDecay && vd === 0 && rd === 0 && (
+                  <span className="text-[9px] text-gray-700">—</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
