@@ -104,7 +104,7 @@ export default function HistoryTab({
             className="text-xs text-red-500 hover:text-red-700 underline"
             data-testid="reset-session-btn"
           >
-            איפוס סשן
+            Reset session
           </button>
         </div>
       )}

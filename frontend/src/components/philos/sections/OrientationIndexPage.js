@@ -4,10 +4,10 @@ import { Globe, Users, Activity, ArrowLeftRight, TrendingUp } from 'lucide-react
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const directionMeta = {
-  recovery: { color: '#3b82f6', label: 'התאוששות' },
-  order: { color: '#6366f1', label: 'סדר' },
-  contribution: { color: '#22c55e', label: 'תרומה' },
-  exploration: { color: '#f59e0b', label: 'חקירה' }
+  recovery: { color: '#3b82f6', label: 'Recovery' },
+  order: { color: '#6366f1', label: 'Order' },
+  contribution: { color: '#22c55e', label: 'Contribution' },
+  exploration: { color: '#f59e0b', label: 'Exploration' }
 };
 
 export default function OrientationIndexPage() {
@@ -39,7 +39,7 @@ export default function OrientationIndexPage() {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
         <div className="h-40 bg-gray-200 rounded mb-4"></div>
         <div className="h-4 bg-gray-200 rounded w-1/3"></div>
@@ -53,18 +53,18 @@ export default function OrientationIndexPage() {
   const maxPct = Math.max(...Object.values(data.distribution || {}), 1);
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-1" dir="rtl" data-testid="orientation-index-page">
+    <section className="philos-section bg-white border-border animate-section animate-section-1" data-testid="orientation-index-page">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
             <Globe className="w-5 h-5 text-teal-600" />
           </div>
-          <span className="text-sm font-medium text-teal-700">מדד התמצאות גלובלי</span>
+          <span className="text-sm font-medium text-teal-700">Global Orientation Index</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-gray-400">
           <Activity className="w-3 h-3 animate-pulse" />
-          <span>חי</span>
+          <span>Live</span>
         </div>
       </div>
 
@@ -115,16 +115,16 @@ export default function OrientationIndexPage() {
       <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3">
         <div className="flex items-center gap-1">
           <Users className="w-3.5 h-3.5" />
-          <span>{data.total_users} משתמשים פעילים</span>
+          <span>{data.total_users} users active</span>
         </div>
-        <span>{data.total_actions_today} פעולות היום</span>
+        <span>{data.total_actions_today} actions Today</span>
       </div>
 
       {/* Direction change indicator */}
       {data.direction_change && data.direction_change !== 'same' && data.yesterday_dominant && (
         <div className="flex items-center justify-center gap-2 mt-3 text-xs text-gray-500 bg-gray-50 rounded-xl py-2" data-testid="direction-change">
           <ArrowLeftRight className="w-3.5 h-3.5" />
-          <span>שינוי מאתמול: {directionMeta[data.yesterday_dominant]?.label || data.yesterday_dominant}</span>
+          <span>Change from yesterday: {directionMeta[data.yesterday_dominant]?.label || data.yesterday_dominant}</span>
         </div>
       )}
     </section>

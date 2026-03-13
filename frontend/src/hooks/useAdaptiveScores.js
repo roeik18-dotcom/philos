@@ -124,23 +124,23 @@ export const applyReplayInsightsToScores = (baseScores, replayInsights) => {
   if (adjustments.boosted.length > 0) {
     const topBoosted = adjustments.boosted.sort((a, b) => b.boost - a.boost)[0];
     const typeLabels = {
-      contribution: 'תרומה',
-      recovery: 'התאוששות',
-      order: 'סדר'
+      contribution: 'Contribution',
+      recovery: 'Recovery',
+      order: 'Order'
     };
     adjustments.insights.push(
-      `מסלולי ${typeLabels[topBoosted.type]} קיבלו חיזוק בעקבות דפוסי הפעלה חוזרת.`
+      `${typeLabels[topBoosted.type]} paths received reinforcement following replay patterns.`
     );
   }
 
   if (adjustments.penalized.length > 0) {
     const topPenalized = adjustments.penalized[0];
     const typeLabels = {
-      harm: 'נזק',
-      avoidance: 'הימנעות'
+      harm: 'Harm',
+      avoidance: 'Avoidance'
     };
     adjustments.insights.push(
-      `מסלולי ${typeLabels[topPenalized.type]} מקבלים כעת הפחתת משקל חזקה יותר.`
+      `${typeLabels[topPenalized.type]} paths now receive stronger weight reduction.`
     );
   }
 

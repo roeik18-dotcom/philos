@@ -7,7 +7,7 @@ const directionColors = {
   contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b'
 };
 const directionLabels = {
-  recovery: 'התאוששות', order: 'סדר', contribution: 'תרומה', exploration: 'חקירה'
+  recovery: 'Recovery', order: 'Order', contribution: 'Contribution', exploration: 'Exploration'
 };
 
 export default function DaySummarySection({ userId }) {
@@ -40,7 +40,7 @@ export default function DaySummarySection({ userId }) {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-20 bg-gray-200 rounded"></div>
       </section>
@@ -52,7 +52,7 @@ export default function DaySummarySection({ userId }) {
   const maxFieldVal = Math.max(...Object.values(data.global_field_effect || {}), 1);
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-5" dir="rtl" data-testid="day-summary-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-5" data-testid="day-summary-section">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export default function DaySummarySection({ userId }) {
             <Moon className="w-5 h-5 text-violet-600" />
           </div>
           <div>
-            <span className="text-sm font-semibold text-gray-800">סיכום סוף יום</span>
+            <span className="text-sm font-semibold text-gray-800">End of Day Summary</span>
             <p className="text-[10px] text-gray-400">{data.date}</p>
           </div>
         </div>
@@ -79,19 +79,19 @@ export default function DaySummarySection({ userId }) {
             <div className="flex-1 bg-orange-50 rounded-xl p-2.5 text-center border border-orange-100" data-testid="day-summary-streak">
               <Flame className="w-4 h-4 text-orange-500 mx-auto mb-1" />
               <p className="text-lg font-bold text-orange-700">{data.streak}</p>
-              <p className="text-[10px] text-orange-500">רצף ימים</p>
+              <p className="text-[10px] text-orange-500">Streak days</p>
             </div>
             {/* Impact */}
             <div className="flex-1 bg-emerald-50 rounded-xl p-2.5 text-center border border-emerald-100" data-testid="day-summary-impact">
               <TrendingUp className="w-4 h-4 text-emerald-500 mx-auto mb-1" />
               <p className="text-lg font-bold text-emerald-700">{data.impact_on_field}%</p>
-              <p className="text-[10px] text-emerald-500">השפעה על השדה</p>
+              <p className="text-[10px] text-emerald-500">Impact on the field</p>
             </div>
             {/* Actions */}
             <div className="flex-1 bg-blue-50 rounded-xl p-2.5 text-center border border-blue-100" data-testid="day-summary-actions">
               <Globe className="w-4 h-4 text-blue-500 mx-auto mb-1" />
               <p className="text-lg font-bold text-blue-700">{data.total_actions}</p>
-              <p className="text-[10px] text-blue-500">פעולות היום</p>
+              <p className="text-[10px] text-blue-500">actions Today</p>
             </div>
           </div>
 
@@ -108,7 +108,7 @@ export default function DaySummarySection({ userId }) {
           {/* Global field effect bars */}
           <div>
             <p className="text-[10px] text-gray-400 mb-2 flex items-center gap-1">
-              <Globe className="w-3 h-3" /> השפעה על השדה הגלובלי
+              <Globe className="w-3 h-3" /> Impact on the global field
             </p>
             <div className="space-y-1.5">
               {Object.entries(data.global_field_effect || {}).map(([dir, pct], i) => (

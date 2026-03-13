@@ -4,9 +4,9 @@ import { Link, Eye, UserCheck, TrendingUp } from 'lucide-react';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const funnelSteps = [
-  { key: 'invites_sent', label: 'נשלחו', Icon: Link, color: '#6366f1' },
-  { key: 'invites_opened', label: 'נפתחו', Icon: Eye, color: '#f59e0b' },
-  { key: 'invites_accepted', label: 'התקבלו', Icon: UserCheck, color: '#22c55e' }
+  { key: 'invites_sent', label: 'Sent', Icon: Link, color: '#6366f1' },
+  { key: 'invites_opened', label: 'Opened', Icon: Eye, color: '#f59e0b' },
+  { key: 'invites_accepted', label: 'Accepted', Icon: UserCheck, color: '#22c55e' }
 ];
 
 export default function InviteTrackingSection() {
@@ -36,7 +36,7 @@ export default function InviteTrackingSection() {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-24 bg-gray-200 rounded mb-3"></div>
       </section>
@@ -48,12 +48,12 @@ export default function InviteTrackingSection() {
   const maxVal = Math.max(data.invites_sent, 1);
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-4" dir="rtl" data-testid="invite-tracking-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-4" data-testid="invite-tracking-section">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center">
           <TrendingUp className="w-5 h-5 text-violet-600" />
         </div>
-        <span className="text-sm font-medium text-violet-700">דוח המרת הזמנות</span>
+        <span className="text-sm font-medium text-violet-700">Invite Conversion Report</span>
       </div>
 
       {/* Funnel visualization */}
@@ -91,15 +91,15 @@ export default function InviteTrackingSection() {
       <div className="grid grid-cols-3 gap-2 border-t border-gray-100 pt-3">
         <div className="text-center" data-testid="open-rate">
           <span className="text-lg font-bold text-amber-600">{data.open_rate}%</span>
-          <p className="text-[10px] text-gray-500">פתיחה</p>
+          <p className="text-[10px] text-gray-500">Open rate</p>
         </div>
         <div className="text-center" data-testid="accept-rate">
           <span className="text-lg font-bold text-green-600">{data.accept_rate}%</span>
-          <p className="text-[10px] text-gray-500">קבלה</p>
+          <p className="text-[10px] text-gray-500">Accept rate</p>
         </div>
         <div className="text-center" data-testid="overall-conversion">
           <span className="text-lg font-bold text-violet-600">{data.overall_conversion}%</span>
-          <p className="text-[10px] text-gray-500">המרה כוללת</p>
+          <p className="text-[10px] text-gray-500">Total conversion</p>
         </div>
       </div>
     </section>

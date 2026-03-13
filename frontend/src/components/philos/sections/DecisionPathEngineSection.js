@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 
 // Hebrew labels for value tags
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות',
-  neutral: 'ניטרלי'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance',
+  neutral: 'Neutral'
 };
 
 // Color mapping for value tags
@@ -23,34 +23,34 @@ const valueColors = {
 const actionPathsDatabase = {
   // Recovery-focused actions
   recovery: [
-    { action: 'לנשום עמוק 5 פעמים', valueTag: 'recovery', orderDrift: 5, collectiveDrift: 0, harmPressure: -10, recoveryStability: 25 },
-    { action: 'לשתות כוס מים', valueTag: 'recovery', orderDrift: 3, collectiveDrift: 0, harmPressure: -5, recoveryStability: 15 },
-    { action: 'לצאת להליכה קצרה', valueTag: 'recovery', orderDrift: 10, collectiveDrift: 0, harmPressure: -15, recoveryStability: 30 },
-    { action: 'לעשות מתיחות', valueTag: 'recovery', orderDrift: 8, collectiveDrift: 0, harmPressure: -8, recoveryStability: 20 },
-    { action: 'להפסיק ולנוח 5 דקות', valueTag: 'recovery', orderDrift: 5, collectiveDrift: 0, harmPressure: -12, recoveryStability: 22 }
+    { action: 'Take 5 deep breaths', valueTag: 'recovery', orderDrift: 5, collectiveDrift: 0, harmPressure: -10, recoveryStability: 25 },
+    { action: 'Drink a glass of water', valueTag: 'recovery', orderDrift: 3, collectiveDrift: 0, harmPressure: -5, recoveryStability: 15 },
+    { action: 'Go for a short walk', valueTag: 'recovery', orderDrift: 10, collectiveDrift: 0, harmPressure: -15, recoveryStability: 30 },
+    { action: 'Do stretches', valueTag: 'recovery', orderDrift: 8, collectiveDrift: 0, harmPressure: -8, recoveryStability: 20 },
+    { action: 'Stop and rest for 5 minutes', valueTag: 'recovery', orderDrift: 5, collectiveDrift: 0, harmPressure: -12, recoveryStability: 22 }
   ],
   // Order-focused actions
   order: [
-    { action: 'לארגן את השולחן', valueTag: 'order', orderDrift: 20, collectiveDrift: 0, harmPressure: -5, recoveryStability: 10 },
-    { action: 'לכתוב רשימת משימות', valueTag: 'order', orderDrift: 25, collectiveDrift: 0, harmPressure: -8, recoveryStability: 15 },
-    { action: 'לסדר תיקיות במחשב', valueTag: 'order', orderDrift: 18, collectiveDrift: 0, harmPressure: -3, recoveryStability: 8 },
-    { action: 'לתכנן את שאר היום', valueTag: 'order', orderDrift: 22, collectiveDrift: 0, harmPressure: -10, recoveryStability: 12 },
-    { action: 'להתמקד במשימה אחת', valueTag: 'order', orderDrift: 15, collectiveDrift: 0, harmPressure: -7, recoveryStability: 10 }
+    { action: 'Organize the desk', valueTag: 'order', orderDrift: 20, collectiveDrift: 0, harmPressure: -5, recoveryStability: 10 },
+    { action: 'Write a task list', valueTag: 'order', orderDrift: 25, collectiveDrift: 0, harmPressure: -8, recoveryStability: 15 },
+    { action: 'Organize computer folders', valueTag: 'order', orderDrift: 18, collectiveDrift: 0, harmPressure: -3, recoveryStability: 8 },
+    { action: 'Plan the rest of the day', valueTag: 'order', orderDrift: 22, collectiveDrift: 0, harmPressure: -10, recoveryStability: 12 },
+    { action: 'Focus on one task', valueTag: 'order', orderDrift: 15, collectiveDrift: 0, harmPressure: -7, recoveryStability: 10 }
   ],
   // Contribution-focused actions
   contribution: [
-    { action: 'לשלוח הודעה חיובית לחבר', valueTag: 'contribution', orderDrift: 5, collectiveDrift: 20, harmPressure: -15, recoveryStability: 10 },
-    { action: 'לעזור למישהו קרוב', valueTag: 'contribution', orderDrift: 8, collectiveDrift: 25, harmPressure: -20, recoveryStability: 12 },
-    { action: 'להקשיב למישהו', valueTag: 'contribution', orderDrift: 3, collectiveDrift: 18, harmPressure: -12, recoveryStability: 15 },
-    { action: 'לשתף רעיון', valueTag: 'contribution', orderDrift: 10, collectiveDrift: 22, harmPressure: -8, recoveryStability: 8 },
-    { action: 'להתקשר למישהו', valueTag: 'contribution', orderDrift: 5, collectiveDrift: 15, harmPressure: -10, recoveryStability: 10 }
+    { action: 'Send a positive message to a friend', valueTag: 'contribution', orderDrift: 5, collectiveDrift: 20, harmPressure: -15, recoveryStability: 10 },
+    { action: 'Help someone close', valueTag: 'contribution', orderDrift: 8, collectiveDrift: 25, harmPressure: -20, recoveryStability: 12 },
+    { action: 'Listen to someone', valueTag: 'contribution', orderDrift: 3, collectiveDrift: 18, harmPressure: -12, recoveryStability: 15 },
+    { action: 'Share an idea', valueTag: 'contribution', orderDrift: 10, collectiveDrift: 22, harmPressure: -8, recoveryStability: 8 },
+    { action: 'Call someone', valueTag: 'contribution', orderDrift: 5, collectiveDrift: 15, harmPressure: -10, recoveryStability: 10 }
   ],
   // Risky actions (lower score)
   risky: [
-    { action: 'לשלוח הודעה כועסת', valueTag: 'harm', orderDrift: -15, collectiveDrift: -20, harmPressure: 40, recoveryStability: -25 },
-    { action: 'להתעלם מהבעיה', valueTag: 'avoidance', orderDrift: -10, collectiveDrift: -5, harmPressure: 15, recoveryStability: -10 },
-    { action: 'לגלול ברשתות חברתיות', valueTag: 'avoidance', orderDrift: -8, collectiveDrift: -3, harmPressure: 10, recoveryStability: -15 },
-    { action: 'לדחות את ההחלטה', valueTag: 'avoidance', orderDrift: -12, collectiveDrift: -5, harmPressure: 12, recoveryStability: -8 }
+    { action: 'Send an angry message', valueTag: 'harm', orderDrift: -15, collectiveDrift: -20, harmPressure: 40, recoveryStability: -25 },
+    { action: 'Ignore the problem', valueTag: 'avoidance', orderDrift: -10, collectiveDrift: -5, harmPressure: 15, recoveryStability: -10 },
+    { action: 'Scroll through social media', valueTag: 'avoidance', orderDrift: -8, collectiveDrift: -3, harmPressure: 10, recoveryStability: -15 },
+    { action: 'Postpone the decision', valueTag: 'avoidance', orderDrift: -12, collectiveDrift: -5, harmPressure: 12, recoveryStability: -8 }
   ]
 };
 
@@ -141,11 +141,11 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
   }, [state, history, adaptiveScores]);
 
   const getScoreLabel = (score) => {
-    if (score >= 50) return { label: 'מעולה', color: 'text-green-600' };
-    if (score >= 30) return { label: 'טוב', color: 'text-blue-600' };
-    if (score >= 10) return { label: 'בינוני', color: 'text-yellow-600' };
-    if (score >= 0) return { label: 'חלש', color: 'text-orange-600' };
-    return { label: 'מסוכן', color: 'text-red-600' };
+    if (score >= 50) return { label: 'Excellent', color: 'text-green-600' };
+    if (score >= 30) return { label: 'good', color: 'text-blue-600' };
+    if (score >= 10) return { label: 'Moderate', color: 'text-yellow-600' };
+    if (score >= 0) return { label: 'Weak', color: 'text-orange-600' };
+    return { label: 'Risky', color: 'text-red-600' };
   };
 
   const getMetricColor = (value, isHigherBetter = true) => {
@@ -167,12 +167,11 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
     <section 
       className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-violet-200"
       data-testid="decision-path-engine-section"
-      dir="rtl"
     >
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">מנוע מסלולי החלטה</h3>
-          <p className="text-xs text-muted-foreground">3 מסלולים מוצעים עם תחזיות</p>
+          <h3 className="text-lg font-semibold text-foreground">Decision Path Engine</h3>
+          <p className="text-xs text-muted-foreground">3 suggested paths with predictions</p>
         </div>
         <div className="w-10 h-10 rounded-full bg-violet-200 flex items-center justify-center">
           <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,14 +201,14 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
               {/* Best Badge */}
               {path.isBest && (
                 <div className="absolute -top-3 right-4 px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-md">
-                  מומלץ
+                  Recommended
                 </div>
               )}
               
               {/* Risky Badge */}
               {path.isRisky && !path.isBest && (
                 <div className="absolute -top-3 right-4 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-md">
-                  מסוכן
+                  Risky
                 </div>
               )}
 
@@ -217,7 +216,7 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-muted-foreground">פעולה מוצעת:</span>
+                    <span className="text-sm font-medium text-muted-foreground">Suggested action:</span>
                   </div>
                   <p className="text-lg font-semibold text-foreground" data-testid={`path-action-${index + 1}`}>
                     {path.action}
@@ -232,7 +231,7 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
               <div className="grid grid-cols-2 gap-3 mb-3">
                 {/* Value Tag */}
                 <div className="bg-white/50 rounded-xl p-2">
-                  <p className="text-xs text-muted-foreground mb-1">value_tag חזוי</p>
+                  <p className="text-xs text-muted-foreground mb-1">value_tag Predicted</p>
                   <p className={`text-sm font-bold ${colors.text}`}>
                     {valueLabels[path.valueTag]}
                   </p>
@@ -240,7 +239,7 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
 
                 {/* Order Drift */}
                 <div className="bg-white/50 rounded-xl p-2">
-                  <p className="text-xs text-muted-foreground mb-1">order drift חזוי</p>
+                  <p className="text-xs text-muted-foreground mb-1">order drift Predicted</p>
                   <p className={`text-sm font-bold ${getMetricColor(path.orderDrift)}`}>
                     {path.orderDrift > 0 ? '+' : ''}{path.orderDrift}
                   </p>
@@ -248,7 +247,7 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
 
                 {/* Collective Drift */}
                 <div className="bg-white/50 rounded-xl p-2">
-                  <p className="text-xs text-muted-foreground mb-1">collective drift חזוי</p>
+                  <p className="text-xs text-muted-foreground mb-1">collective drift Predicted</p>
                   <p className={`text-sm font-bold ${getMetricColor(path.collectiveDrift)}`}>
                     {path.collectiveDrift > 0 ? '+' : ''}{path.collectiveDrift}
                   </p>
@@ -256,7 +255,7 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
 
                 {/* Harm Pressure */}
                 <div className="bg-white/50 rounded-xl p-2">
-                  <p className="text-xs text-muted-foreground mb-1">harm pressure חזוי</p>
+                  <p className="text-xs text-muted-foreground mb-1">harm pressure Predicted</p>
                   <p className={`text-sm font-bold ${getMetricColor(path.harmPressure, false)}`}>
                     {path.harmPressure > 0 ? '+' : ''}{path.harmPressure}%
                   </p>
@@ -264,7 +263,7 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
 
                 {/* Recovery Stability */}
                 <div className="bg-white/50 rounded-xl p-2 col-span-2">
-                  <p className="text-xs text-muted-foreground mb-1">recovery stability חזויה</p>
+                  <p className="text-xs text-muted-foreground mb-1">Predicted recovery stability</p>
                   <p className={`text-sm font-bold ${getMetricColor(path.recoveryStability)}`}>
                     {path.recoveryStability > 0 ? '+' : ''}{path.recoveryStability}%
                   </p>
@@ -308,7 +307,7 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
                   }`}
                   data-testid={`select-path-${index + 1}`}
                 >
-                  בחר מסלול זה
+                  Choose this path
                 </button>
               )}
             </div>
@@ -318,15 +317,15 @@ export default function DecisionPathEngineSection({ state, history, onSelectActi
 
       {/* Legend */}
       <div className="mt-4 p-3 bg-white/50 rounded-xl">
-        <p className="text-xs font-medium text-muted-foreground mb-2">מקרא:</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Legend:</p>
         <div className="flex flex-wrap gap-3 text-xs">
           <span className="flex items-center gap-1">
             <span className="w-3 h-3 rounded-full bg-green-500"></span>
-            <span className="text-muted-foreground">משפר סדר/התאוששות/תרומה</span>
+            <span className="text-muted-foreground">Improves order/recovery/contribution</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="w-3 h-3 rounded-full bg-red-500"></span>
-            <span className="text-muted-foreground">מעלה נזק/הימנעות</span>
+            <span className="text-muted-foreground">Increases harm/avoidance</span>
           </span>
         </div>
       </div>

@@ -36,7 +36,7 @@ export default function DirectionExplanationsSection() {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="space-y-3">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-gray-200 rounded-xl"></div>)}
@@ -48,14 +48,14 @@ export default function DirectionExplanationsSection() {
   if (!directions) return null;
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-4" dir="rtl" data-testid="direction-explanations-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-4" data-testid="direction-explanations-section">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center">
           <BookOpen className="w-5 h-5 text-slate-600" />
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-800">ארבעת הכיוונים</span>
-          <p className="text-[10px] text-gray-400">משמעות סמלית, התנהגות אנושית, השפעה על השדה</p>
+          <span className="text-sm font-semibold text-gray-800">The Four Directions</span>
+          <p className="text-[10px] text-gray-400">Symbolic meaning, human behavior, impact on the field</p>
         </div>
       </div>
 
@@ -92,19 +92,19 @@ export default function DirectionExplanationsSection() {
                 <div className="px-3 pb-3 space-y-2.5 animate-fadeIn">
                   {/* Symbolic Meaning */}
                   <div className="bg-white/60 rounded-xl p-2.5">
-                    <p className="text-[10px] font-semibold opacity-60 mb-1">משמעות סמלית</p>
+                    <p className="text-[10px] font-semibold opacity-60 mb-1">Symbolic Meaning</p>
                     <p className="text-xs leading-relaxed">{dir.symbolic_meaning_he || dir.explanation_he}</p>
                   </div>
 
                   {/* Human Behavior Example */}
                   <div className="bg-white/60 rounded-xl p-2.5">
-                    <p className="text-[10px] font-semibold opacity-60 mb-1">דוגמה להתנהגות</p>
+                    <p className="text-[10px] font-semibold opacity-60 mb-1">Behavior Example</p>
                     <p className="text-xs leading-relaxed">{dir.behavior_example_he || dir.meaning_he}</p>
                   </div>
 
                   {/* Field Effect */}
                   <div className="bg-white/60 rounded-xl p-2.5">
-                    <p className="text-[10px] font-semibold opacity-60 mb-1">השפעה על השדה הקולקטיבי</p>
+                    <p className="text-[10px] font-semibold opacity-60 mb-1">Impact on the collective field</p>
                     <p className="text-xs leading-relaxed">{dir.field_effect_he || ''}</p>
                   </div>
                 </div>

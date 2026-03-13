@@ -4,33 +4,33 @@ import { useMemo } from 'react';
 const directions = [
   {
     id: 'recovery',
-    name: 'התאוששות',
+    name: 'Recovery',
     nameEn: 'Recovery',
-    description: 'חזרה לאיזון לאחר לחץ או נזק',
+    description: 'Restoring balance after pressure or harm',
     color: 'bg-blue-100 text-blue-700 border-blue-300',
     position: { x: 25, y: 75 } // Lower-left
   },
   {
     id: 'order',
-    name: 'סדר',
+    name: 'Order',
     nameEn: 'Order',
-    description: 'יצירת מבנה, ארגון ובהירות',
+    description: 'Creating structure, organization, and clarity',
     color: 'bg-indigo-100 text-indigo-700 border-indigo-300',
     position: { x: 25, y: 25 } // Upper-left/center
   },
   {
     id: 'contribution',
-    name: 'תרומה',
+    name: 'Contribution',
     nameEn: 'Contribution',
-    description: 'פעולה לטובת אחרים והקולקטיב',
+    description: 'Action for the benefit of others and the collective',
     color: 'bg-green-100 text-green-700 border-green-300',
     position: { x: 75, y: 25 } // Upper-right
   },
   {
     id: 'exploration',
-    name: 'חקירה',
+    name: 'Exploration',
     nameEn: 'Exploration',
-    description: 'פתיחות, גמישות ותנועה קדימה',
+    description: 'Openness, flexibility, and forward movement',
     color: 'bg-amber-100 text-amber-700 border-amber-300',
     position: { x: 75, y: 75 } // Right side
   }
@@ -41,16 +41,16 @@ const tensions = [
   {
     id: 'chaos-order',
     axis: 'vertical',
-    poles: ['כאוס', 'סדר'],
+    poles: ['Chaos', 'Order'],
     polesEn: ['Chaos', 'Order'],
-    description: 'הציר בין ספונטניות לבין מבנה'
+    description: 'The axis between spontaneity and structure'
   },
   {
     id: 'ego-collective',
     axis: 'horizontal',
-    poles: ['אגו', 'קולקטיב'],
+    poles: ['Ego', 'Collective'],
     polesEn: ['Ego', 'Collective'],
-    description: 'הציר בין מיקוד עצמי לבין מיקוד באחרים'
+    description: 'The axis between self-focus and focus on others'
   }
 ];
 
@@ -58,48 +58,48 @@ const tensions = [
 const pathRelationships = [
   {
     from: 'harm',
-    fromLabel: 'נזק',
+    fromLabel: 'Harm',
     to: 'recovery',
-    toLabel: 'התאוששות',
-    explanation: 'פעולות נזק דורשות איזון דרך התאוששות'
+    toLabel: 'Recovery',
+    explanation: 'actions Harm requires balance through recovery'
   },
   {
     from: 'avoidance',
-    fromLabel: 'הימנעות',
+    fromLabel: 'Avoidance',
     to: 'order',
-    toLabel: 'סדר',
-    explanation: 'הימנעות מאוזנת על ידי יצירת סדר ומבנה'
+    toLabel: 'Order',
+    explanation: 'Avoidance balanced by creating order and structure'
   },
   {
     from: 'isolation',
-    fromLabel: 'בידוד / מיקוד עצמי',
+    fromLabel: 'Isolation / self-focus',
     to: 'contribution',
-    toLabel: 'תרומה',
-    explanation: 'מיקוד עצמי מאוזן על ידי תרומה לאחרים'
+    toLabel: 'Contribution',
+    explanation: 'Self-focus balanced by contribution others'
   },
   {
     from: 'rigidity',
-    fromLabel: 'נוקשות / קיפאון',
+    fromLabel: 'rigidity / stagnation',
     to: 'exploration',
-    toLabel: 'חקירה',
-    explanation: 'קיפאון מאוזן על ידי פתיחות וחקירה'
+    toLabel: 'Exploration',
+    explanation: 'Stagnation balanced by openness and exploration'
   }
 ];
 
 export default function TheorySection() {
   return (
-    <div className="space-y-6" dir="rtl" data-testid="theory-section">
+    <div className="space-y-6" data-testid="theory-section">
       {/* Header */}
       <section className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-3xl p-6 shadow-sm border border-slate-200">
-        <h2 className="text-xl font-bold text-foreground mb-3">המודל התיאורטי</h2>
+        <h2 className="text-xl font-bold text-foreground mb-3">The Descriptive Model</h2>
         <p className="text-muted-foreground leading-relaxed">
-          פילוס אוריינטציה היא מערכת שמזהה את הכיוון של הפעולות שלך, לומדת את הדפוסים שלך, ומציעה כיוון מאזן להמשך.
+          Philos Orientation is a system that identifies the direction of your actions, learns your patterns, and suggests a balancing direction to continue.
         </p>
       </section>
 
       {/* Four Directions */}
       <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
-        <h3 className="text-lg font-semibold text-foreground mb-4">ארבעת הכיוונים</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">The Four Directions</h3>
         <div className="grid grid-cols-2 gap-4">
           {directions.map((dir) => (
             <div
@@ -119,7 +119,7 @@ export default function TheorySection() {
 
       {/* Two Tensions */}
       <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
-        <h3 className="text-lg font-semibold text-foreground mb-4">שני צירי המתח</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Two Tension Axes</h3>
         <div className="space-y-4">
           {tensions.map((tension) => (
             <div
@@ -145,28 +145,28 @@ export default function TheorySection() {
 
       {/* Decision Logic */}
       <section className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl p-6 shadow-sm border border-emerald-200">
-        <h3 className="text-lg font-semibold text-foreground mb-4">לוגיקת ההחלטה</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Decision Logic</h3>
         <div className="space-y-3">
           <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl">
             <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-700 font-bold">1</div>
-            <p className="text-sm text-gray-700">פעולות יוצרות כיוון</p>
+            <p className="text-sm text-gray-700">Actions create direction</p>
           </div>
           <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl">
             <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-700 font-bold">2</div>
-            <p className="text-sm text-gray-700">כיוונים חוזרים יוצרים דפוסים</p>
+            <p className="text-sm text-gray-700">Recurring directions create patterns</p>
           </div>
           <div className="flex items-center gap-3 p-3 bg-white/60 rounded-xl">
             <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-700 font-bold">3</div>
-            <p className="text-sm text-gray-700">דפוסים מעצבים את ההתמצאות</p>
+            <p className="text-sm text-gray-700">Patterns shape orientation</p>
           </div>
         </div>
       </section>
 
       {/* Path Relationships - Balancing Logic */}
       <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
-        <h3 className="text-lg font-semibold text-foreground mb-2">מסלולי איזון</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Paths of Balance</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          כאשר הכיוון הנוכחי שלילי, המערכת מציעה כיוון מאזן:
+          When the current direction is negative, the system suggests a balancing direction:
         </p>
         <div className="space-y-3">
           {pathRelationships.map((path, idx) => (
@@ -188,53 +188,53 @@ export default function TheorySection() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-          💡 אם הכיוון הנוכחי כבר חיובי, המערכת תציע לחזק אותו או לאזן אותו במקום להפוך אותו.
+          💡 If the current direction is already positive, the system will suggest strengthening or balancing it instead of reversing it.
         </p>
       </section>
 
       {/* Example */}
       <section className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-6 shadow-sm border border-amber-200">
-        <h3 className="text-lg font-semibold text-foreground mb-3">דוגמה</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-3">Example</h3>
         <div className="space-y-3 text-sm text-gray-700">
           <p className="p-3 bg-white/60 rounded-xl">
-            • אם פעולה נובעת מ<span className="font-bold text-red-600">הימנעות</span>, הכיוון המומלץ עשוי להיות <span className="font-bold text-indigo-600">סדר</span>.
+            • If an action stems from <span className="font-bold text-red-600">Avoidance</span>, the recommended direction may be <span className="font-bold text-indigo-600">Order</span>.
           </p>
           <p className="p-3 bg-white/60 rounded-xl">
-            • אם פעולה נובעת מ<span className="font-bold text-red-600">נזק</span>, הכיוון המומלץ עשוי להיות <span className="font-bold text-blue-600">התאוששות</span>.
+            • If an action stems from <span className="font-bold text-red-600">Harm</span>, the recommended direction may be <span className="font-bold text-blue-600">Recovery</span>.
           </p>
         </div>
       </section>
 
       {/* Visual Quadrant Preview */}
       <section className="bg-white rounded-3xl p-6 shadow-sm border border-border">
-        <h3 className="text-lg font-semibold text-foreground mb-4">מפת הכיוונים</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Direction Map</h3>
         <div className="relative w-full aspect-square max-w-sm mx-auto bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
           {/* Axes */}
           <div className="absolute top-1/2 left-0 right-0 h-px bg-gray-300"></div>
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300"></div>
           
           {/* Axis Labels */}
-          <span className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-gray-500 font-medium">סדר</span>
-          <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-gray-500 font-medium">כאוס</span>
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">קולקטיב</span>
-          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">אגו</span>
+          <span className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-gray-500 font-medium">Order</span>
+          <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-gray-500 font-medium">Chaos</span>
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">Collective</span>
+          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">Ego</span>
           
           {/* Direction Labels in Quadrants */}
           <div className="absolute top-[20%] left-[20%] text-center">
-            <span className="px-2 py-1 rounded bg-indigo-100 text-indigo-700 text-xs font-medium">סדר</span>
+            <span className="px-2 py-1 rounded bg-indigo-100 text-indigo-700 text-xs font-medium">Order</span>
           </div>
           <div className="absolute top-[20%] right-[20%] text-center">
-            <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-medium">תרומה</span>
+            <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-medium">Contribution</span>
           </div>
           <div className="absolute bottom-[20%] left-[20%] text-center">
-            <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs font-medium">התאוששות</span>
+            <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs font-medium">Recovery</span>
           </div>
           <div className="absolute bottom-[20%] right-[20%] text-center">
-            <span className="px-2 py-1 rounded bg-amber-100 text-amber-700 text-xs font-medium">חקירה</span>
+            <span className="px-2 py-1 rounded bg-amber-100 text-amber-700 text-xs font-medium">Exploration</span>
           </div>
         </div>
         <p className="text-xs text-muted-foreground text-center mt-3">
-          מפה ויזואלית של ארבעת הכיוונים על צירי המתח
+          A visual map of the four directions on the tension axes
         </p>
       </section>
     </div>

@@ -71,7 +71,7 @@ Language:   Hebrew RTL UI
 
 ## Deployment
 
-**Preview URL:** https://trust-ledger-11.preview.emergentagent.com
+**Preview URL:** https://philos-launch.preview.emergentagent.com
 
 ---
 

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 
 const STAGES = [
-  { id: 'reality', label: 'מציאות', desc: 'מה קורה עכשיו' },
-  { id: 'human', label: 'אדם', desc: 'מי אני היום' },
-  { id: 'opposition', label: 'ניגוד', desc: 'בין אילו כוחות' },
-  { id: 'choice', label: 'בחירה', desc: 'לאן לפנות' },
-  { id: 'action', label: 'פעולה', desc: 'מה עשיתי' },
-  { id: 'field', label: 'שדה', desc: 'מה השתנה' }
+  { id: 'reality', label: 'Reality', desc: "What's happening now" },
+  { id: 'human', label: 'Person', desc: 'Who am I today' },
+  { id: 'opposition', label: 'Opposition', desc: 'Between which forces' },
+  { id: 'choice', label: 'Choice', desc: 'Where to turn' },
+  { id: 'action', label: 'Action', desc: 'What I did' },
+  { id: 'field', label: 'Field', desc: 'What changed' }
 ];
 
 export default function OrientationMap() {
@@ -37,7 +37,7 @@ export default function OrientationMap() {
   }, []);
 
   return (
-    <div className="flex items-center gap-0 py-2 px-1 overflow-x-auto" dir="rtl" data-testid="orientation-map">
+    <div className="flex items-center gap-0 py-2 px-1 overflow-x-auto" data-testid="orientation-map">
       {STAGES.map((s, i) => {
         const isActive = i === stage;
         const isPast = i < stage;

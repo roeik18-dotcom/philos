@@ -40,7 +40,7 @@ export default function DailyOpeningSection({ userId }) {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-20 bg-gray-200 rounded"></div>
       </section>
@@ -54,7 +54,7 @@ export default function DailyOpeningSection({ userId }) {
   const compassDirs = ['contribution', 'recovery', 'order', 'exploration'];
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-1" dir="rtl" data-testid="daily-opening-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-1" data-testid="daily-opening-section">
       {/* Header with greeting */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -63,11 +63,11 @@ export default function DailyOpeningSection({ userId }) {
           </div>
           <div>
             <span className="text-sm font-semibold text-gray-800">{data.greeting_he}</span>
-            <p className="text-[10px] text-gray-400">פתיחת יום</p>
+            <p className="text-[10px] text-gray-400">Daily Opening</p>
           </div>
         </div>
         {data.total_actions > 0 && (
-          <span className="text-xs text-gray-400">{data.total_actions} פעולות</span>
+          <span className="text-xs text-gray-400">{data.total_actions} actions</span>
         )}
       </div>
 
@@ -112,7 +112,7 @@ export default function DailyOpeningSection({ userId }) {
       {/* Dominant force */}
       {data.dominant_force_he && (
         <div className="text-center mb-3">
-          <span className="text-[10px] text-gray-400">הכוח הדומיננטי שלך</span>
+          <span className="text-[10px] text-gray-400">Your dominant force</span>
           <p className="text-sm font-semibold text-gray-700">{data.dominant_force_he}</p>
         </div>
       )}
@@ -122,7 +122,7 @@ export default function DailyOpeningSection({ userId }) {
         <div className="flex items-center gap-2 mb-1">
           <ArrowLeft className={`w-4 h-4 ${colors.text}`} />
           <span className={`text-sm font-semibold ${colors.text}`}>
-            הכיוון המוצע להיום: {data.suggested_direction_he}
+            Suggested direction for today: {data.suggested_direction_he}
           </span>
         </div>
         {data.theory?.explanation_he && (

@@ -4,10 +4,10 @@ import { CollectiveSkeleton } from '../LoadingSkeletons';
 
 // Hebrew labels for metrics
 const metricLabels = {
-  recovery: 'התאוששות',
-  harm_pressure: 'לחץ נזק',
-  order_drift: 'מגמת סדר',
-  contribution: 'תרומה'
+  recovery: 'Recovery',
+  harm_pressure: 'Harm Pressure',
+  order_drift: 'Order Trend',
+  contribution: 'Contribution'
 };
 
 // Metric colors for SVG
@@ -125,13 +125,13 @@ const generateTrajectoryInsights = (trajectories, userWeekly) => {
     if (t.direction === 'converging' && t.change > 5) {
       insights.push({
         type: 'positive',
-        text: 'אתה מתקרב בהדרגה למגמת ההתאוששות הקולקטיבית',
+        text: 'You are gradually converging with the collective recovery trend',
         metric: 'recovery'
       });
     } else if (t.direction === 'diverging' && t.isAbove && t.change > 5) {
       insights.push({
         type: 'positive',
-        text: 'ההתאוששות שלך נעה מעל הממוצע הקולקטיבי לאורך זמן',
+        text: 'Your recovery moves above the collective average over time',
         metric: 'recovery'
       });
     }
@@ -143,13 +143,13 @@ const generateTrajectoryInsights = (trajectories, userWeekly) => {
     if (t.direction === 'diverging' && !t.isAbove && t.change > 5) {
       insights.push({
         type: 'warning',
-        text: 'נראה ריחוק גובר ממגמת הסדר הקולקטיבית',
+        text: 'There appears to be growing divergence from the collective order trend',
         metric: 'order_drift'
       });
     } else if (t.direction === 'converging' && t.change > 5) {
       insights.push({
         type: 'positive',
-        text: 'מגמת הסדר שלך מתקרבת לממוצע הקולקטיבי',
+        text: 'Your order trend is converging with the collective average',
         metric: 'order_drift'
       });
     }
@@ -161,13 +161,13 @@ const generateTrajectoryInsights = (trajectories, userWeekly) => {
     if (t.isAbove && t.trend > 0) {
       insights.push({
         type: 'positive',
-        text: 'תרומתך נעה מעל הממוצע הקולקטיבי לאורך זמן',
+        text: 'Your contribution moves above the collective average over time',
         metric: 'contribution'
       });
     } else if (t.direction === 'converging') {
       insights.push({
         type: 'neutral',
-        text: 'רמת התרומה שלך מתקרבת לממוצע הקולקטיבי',
+        text: 'Your contribution level is converging with the collective average',
         metric: 'contribution'
       });
     }
@@ -179,13 +179,13 @@ const generateTrajectoryInsights = (trajectories, userWeekly) => {
     if (!t.isAbove && t.trend < 0) {
       insights.push({
         type: 'positive',
-        text: 'לחץ הנזק שלך יורד מתחת לממוצע הקולקטיבי',
+        text: 'Your harm pressure is dropping below the collective average',
         metric: 'harm_pressure'
       });
     } else if (t.isAbove && t.direction === 'diverging') {
       insights.push({
         type: 'warning',
-        text: 'לחץ הנזק שלך מתרחק מעלה מהממוצע הקולקטיבי',
+        text: 'Your harm pressure is diverging above the collective average',
         metric: 'harm_pressure'
       });
     }
@@ -195,7 +195,7 @@ const generateTrajectoryInsights = (trajectories, userWeekly) => {
   if (insights.length === 0) {
     insights.push({
       type: 'neutral',
-      text: 'המגמות שלך יציבות ביחס לשדה הקולקטיבי',
+      text: 'Your trends are stable relative to the collective field',
       metric: null
     });
   }
@@ -218,11 +218,11 @@ export default function CollectiveTrajectorySection({ history }) {
           setCollectiveData(data);
           setError(null);
         } else {
-          setError(data.error || 'שגיאה בטעינת נתונים');
+          setError(data.error || 'Error loading data');
         }
       } catch (err) {
         console.error('Failed to fetch collective data:', err);
-        setError('שגיאה בחיבור לשרת');
+        setError('Error connecting to server');
       } finally {
         setLoading(false);
       }
@@ -271,10 +271,9 @@ export default function CollectiveTrajectorySection({ history }) {
     return (
       <section 
         className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-indigo-200"
-        dir="rtl"
         data-testid="collective-trajectory-section"
       >
-        <h3 className="text-lg font-semibold text-foreground mb-2">מסלול קולקטיבי</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Collective Trajectory</h3>
         <p className="text-sm text-red-500">{error}</p>
       </section>
     );
@@ -296,7 +295,6 @@ export default function CollectiveTrajectorySection({ history }) {
   return (
     <section 
       className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-3xl p-5 shadow-sm border border-teal-200"
-      dir="rtl"
       data-testid="collective-trajectory-section"
     >
       {/* Header */}
@@ -307,9 +305,9 @@ export default function CollectiveTrajectorySection({ history }) {
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">מסלול קולקטיבי</h3>
+          <h3 className="text-lg font-semibold text-foreground">Collective Trajectory</h3>
           <p className="text-xs text-muted-foreground">
-            תנועת הדפוסים שלך ביחס לשדה הקולקטיבי לאורך זמן
+            Your pattern movement relative to the collective field over time
           </p>
         </div>
       </div>
@@ -318,7 +316,7 @@ export default function CollectiveTrajectorySection({ history }) {
       <div className="bg-white/60 rounded-xl p-4 mb-4">
         {hasMultipleWeeks ? (
           <>
-            <p className="text-xs text-muted-foreground mb-3">מגמה לאורך {userWeekly.length} שבועות</p>
+            <p className="text-xs text-muted-foreground mb-3">Trend over {userWeekly.length} weeks</p>
             
             <svg 
               width="100%" 
@@ -400,7 +398,7 @@ export default function CollectiveTrajectorySection({ history }) {
             const weekNum = userWeekly.length - idx;
             return (
               <text key={idx} x={x} y="130" textAnchor="middle" fontSize="9" fill="#666">
-                {weekNum === 1 ? 'עכשיו' : `לפני ${weekNum - 1}ש'`}
+                {weekNum === 1 ? 'Now' : `ago ${weekNum - 1}w`}
               </text>
             );
           })}
@@ -416,7 +414,7 @@ export default function CollectiveTrajectorySection({ history }) {
           </>
         ) : (
           <div className="text-center py-4" data-testid="trajectory-chart">
-            <p className="text-sm text-muted-foreground mb-3">נתוני השבוע הנוכחי ביחס לקולקטיב</p>
+            <p className="text-sm text-muted-foreground mb-3">This week's data relative to the collective</p>
             <div className="flex justify-center gap-4">
               {metrics.map(metric => {
                 const currentValue = userWeekly[0]?.[metric] || 0;
@@ -437,7 +435,7 @@ export default function CollectiveTrajectorySection({ history }) {
                 );
               })}
             </div>
-            <p className="text-xs text-muted-foreground mt-4">המשך להוסיף החלטות כדי לראות מגמות לאורך זמן</p>
+            <p className="text-xs text-muted-foreground mt-4">Keep adding decisions to see trends over time</p>
           </div>
         )}
       </div>
@@ -478,9 +476,9 @@ export default function CollectiveTrajectorySection({ history }) {
                   )}
                 </div>
                 <p className={`text-xs ${isPositive ? 'text-emerald-700' : 'text-amber-700'}`}>
-                  {t.direction === 'converging' ? 'מתקרב לממוצע' : 
-                   t.direction === 'diverging' ? (t.isAbove ? 'מעל ומתרחק' : 'מתחת ומתרחק') : 
-                   'יציב'}
+                  {t.direction === 'converging' ? 'Converging to average' : 
+                   t.direction === 'diverging' ? (t.isAbove ? 'Above and diverging' : 'Below and diverging') : 
+                   'Stable'}
                 </p>
               </div>
             );
@@ -490,7 +488,7 @@ export default function CollectiveTrajectorySection({ history }) {
 
       {/* Insights */}
       <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">תובנות מגמה</p>
+        <p className="text-xs text-muted-foreground">Trend insights</p>
         {insights.map((insight, idx) => (
           <div 
             key={idx}

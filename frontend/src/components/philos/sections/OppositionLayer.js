@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const tensions = [
-  { left: 'סדר', right: 'כאוס', axisKey: 'chaos_order', leftColor: '#6366f1', rightColor: '#f59e0b',
-    interpret: (v) => v > 60 ? 'אתה נוטה לסדר — מבנה וביטחון מובילים אותך' : v < 40 ? 'הכאוס מושך אותך — חופש וגילוי בראש' : 'אתה בין סדר לכאוס — בשני העולמות' },
-  { left: 'קולקטיב', right: 'אגו', axisKey: 'ego_collective', leftColor: '#22c55e', rightColor: '#ef4444',
-    interpret: (v) => v > 60 ? 'הנתינה דומיננטית — אתה פועל עבור אחרים' : v < 40 ? 'אתה מתמקד בעצמך — שיקום פנימי קודם' : 'מתח בין פנים לחוץ — שניהם חיים בך' },
-  { left: 'יציבות', right: 'חקירה', axisKey: 'exploration_stability', leftColor: '#3b82f6', rightColor: '#f59e0b',
-    interpret: (v) => v > 60 ? 'אתה מחפש בסיס יציב — שורשים לפני תנועה' : v < 40 ? 'החקירה מושכת אותך — לגלות דברים חדשים' : 'בין השורשים למסע — שני הכוחות שווים' }
+  { left: 'Order', right: 'Chaos', axisKey: 'chaos_order', leftColor: '#6366f1', rightColor: '#f59e0b',
+    interpret: (v) => v > 60 ? 'You lean towards order — structure and security lead you' : v < 40 ? 'Chaos attracts you — freedom and discovery at the forefront' : 'You are between order and chaos — in both worlds' },
+  { left: 'Collective', right: 'Ego', axisKey: 'ego_collective', leftColor: '#22c55e', rightColor: '#ef4444',
+    interpret: (v) => v > 60 ? 'Giving is dominant — you act for others' : v < 40 ? 'You are focusing on yourself — internal recovery first' : 'Tension between inside and outside — both live in you' },
+  { left: 'stability', right: 'Exploration', axisKey: 'exploration_stability', leftColor: '#3b82f6', rightColor: '#f59e0b',
+    interpret: (v) => v > 60 ? 'You seek a stable base — root before movement' : v < 40 ? 'Exploration attracts you — discover new things' : 'Between roots and journey — both forces are equal' }
 ];
 
 export default function OppositionLayer({ userId }) {
@@ -36,7 +36,7 @@ export default function OppositionLayer({ userId }) {
   }, { dist: -1 }) : null;
 
   return (
-    <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] text-white p-5" dir="rtl" data-testid="opposition-layer">
+    <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] text-white p-5" data-testid="opposition-layer">
       {/* Ambient glow from dominant tension */}
       {activeTension?.dist > 0 && (
         <div className="absolute inset-0 pointer-events-none" style={{
@@ -45,7 +45,7 @@ export default function OppositionLayer({ userId }) {
       )}
 
       <div className="relative z-10">
-        <p className="text-xs text-gray-500 mb-5">בין אילו קטבים אתה נע</p>
+        <p className="text-xs text-gray-500 mb-5">Between which poles you move</p>
 
         <div className="space-y-6">
           {tensions.map((t) => {

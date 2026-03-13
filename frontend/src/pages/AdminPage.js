@@ -113,7 +113,7 @@ export default function AdminPage() {
                     <span className="text-gray-400">{f.page || 'general'}</span>
                     <span className="text-gray-300 mr-auto">{new Date(f.created_at).toLocaleString()}</span>
                   </div>
-                  <p className="text-gray-700" dir="rtl">{f.text}</p>
+                  <p className="text-gray-700">{f.text}</p>
                 </div>
               ))}
             </div>

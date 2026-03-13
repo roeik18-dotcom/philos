@@ -7,14 +7,14 @@ const directionColors = {
   recovery: '#3b82f6', order: '#6366f1', contribution: '#22c55e', exploration: '#f59e0b'
 };
 const directionLabels = {
-  recovery: 'התאוששות', order: 'סדר', contribution: 'תרומה', exploration: 'חקירה'
+  recovery: 'Recovery', order: 'Order', contribution: 'Contribution', exploration: 'Exploration'
 };
 const forceLabels = {
-  cognitive: 'קוגניטיבי', emotional: 'רגשי', physical: 'פיזי',
-  personal: 'אישי', social: 'חברתי', drives: 'דחפים'
+  cognitive: 'Cognitive', emotional: 'Emotional', physical: 'Physical',
+  personal: 'Personal', social: 'Social', drives: 'Drives'
 };
 const vectorLabels = {
-  internal: 'פנימי', external: 'חיצוני', collective: 'קולקטיבי'
+  internal: 'Internal', external: 'External', collective: 'Collective'
 };
 
 export default function DailySummarySection({ userId }) {
@@ -47,7 +47,7 @@ export default function DailySummarySection({ userId }) {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-16 bg-gray-200 rounded"></div>
       </section>
@@ -60,13 +60,13 @@ export default function DailySummarySection({ userId }) {
   const maxVec = Math.max(...Object.values(data.vectors), 0.01);
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-2" dir="rtl" data-testid="daily-summary-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-2" data-testid="daily-summary-section">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
             <Sun className="w-5 h-5 text-amber-600" />
           </div>
-          <span className="text-sm font-medium text-amber-700">סיכום יומי</span>
+          <span className="text-sm font-medium text-amber-700">Daily Summary</span>
         </div>
         <span className="text-xs text-gray-400">{data.date}</span>
       </div>
@@ -89,7 +89,7 @@ export default function DailySummarySection({ userId }) {
 
           {/* Forces mini-bars */}
           <div className="mb-3">
-            <p className="text-[10px] text-gray-500 mb-1.5">פרופיל כוחות</p>
+            <p className="text-[10px] text-gray-500 mb-1.5">Forces Profile</p>
             <div className="grid grid-cols-3 gap-x-3 gap-y-1">
               {Object.entries(data.forces).map(([f, v], i) => (
                 <div key={f} className="flex items-center gap-1.5">
@@ -105,7 +105,7 @@ export default function DailySummarySection({ userId }) {
 
           {/* Value vectors */}
           <div className="mb-3">
-            <p className="text-[10px] text-gray-500 mb-1.5">וקטורי ערך</p>
+            <p className="text-[10px] text-gray-500 mb-1.5">Value Vectors</p>
             <div className="flex gap-3">
               {Object.entries(data.vectors).map(([v, val]) => (
                 <div key={v} className="flex-1 text-center bg-gray-50 rounded-xl py-2">
@@ -120,7 +120,7 @@ export default function DailySummarySection({ userId }) {
           {data.field_impact > 0 && (
             <div className="flex items-center gap-1.5 text-xs text-gray-500">
               <FileText className="w-3 h-3" />
-              <span>השפעת שדה: {data.field_impact}%</span>
+              <span>Field Impact: {data.field_impact}%</span>
             </div>
           )}
         </>

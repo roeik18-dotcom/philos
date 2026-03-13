@@ -25,7 +25,7 @@ export default function Timer({ request, onFinish, onMount }) {
             if (!hasShownAlertRef.current) {
               hasShownAlertRef.current = true;
               setTimeout(() => {
-                alert('הזמן הסתיים! 🎉');
+                alert('Invite completed! 🎉');
               }, 100);
             }
             return 0;
@@ -64,7 +64,7 @@ export default function Timer({ request, onFinish, onMount }) {
     >
       <div className="text-center">
         <h3 className="text-xl font-medium text-foreground mb-2">
-          עוזר ל{request.name}
+          Helping {request.name}
         </h3>
         <p className="text-base text-muted-foreground">{request.need}</p>
       </div>
@@ -106,7 +106,7 @@ export default function Timer({ request, onFinish, onMount }) {
         className="mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-14 px-10 shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-3 text-lg font-medium tracking-wide"
       >
         <Check className="w-5 h-5" />
-        <span>סיום</span>
+        <span>Finish</span>
       </button>
     </div>
   );

@@ -13,10 +13,10 @@ const directionColors = {
 };
 
 const directionLabels = {
-  recovery: 'התאוששות',
-  order: 'סדר',
-  contribution: 'תרומה',
-  exploration: 'חקירה'
+  recovery: 'Recovery',
+  order: 'Order',
+  contribution: 'Contribution',
+  exploration: 'Exploration'
 };
 
 export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
@@ -108,7 +108,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
 
   if (loading && !questionData) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/4 mb-3"></div>
         <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
         <div className="h-10 bg-gray-200 rounded w-1/3"></div>
@@ -130,7 +130,6 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 animate-completion'
           : `bg-gradient-to-br ${colors.gradient} ${colors.border}`
       }`}
-      dir="rtl"
       data-testid="daily-orientation-question"
     >
       {/* Header with streak */}
@@ -139,7 +138,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors duration-300 ${completed ? 'bg-green-100' : colors.bg}`}>
             {completed ? <Check className="w-5 h-5 text-green-600" /> : <Sun className={`w-5 h-5 ${colors.text}`} />}
           </div>
-          <span className={`text-sm font-medium transition-colors duration-300 ${completed ? 'text-green-700' : colors.text}`}>התמצאות יומית</span>
+          <span className={`text-sm font-medium transition-colors duration-300 ${completed ? 'text-green-700' : colors.text}`}>Daily Orientation</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -160,11 +159,11 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
       {/* Streak detail row */}
       {streak > 0 && (
         <div className="flex items-center gap-3 mb-3 text-xs text-gray-500" data-testid="streak-detail">
-          <span>{streak} ימים רצופים</span>
+          <span>{streak} day streak</span>
           {longestStreak > streak && (
             <span className="flex items-center gap-1">
               <TrendingUp className="w-3 h-3" />
-              שיא: {longestStreak}
+              Best: {longestStreak}
             </span>
           )}
         </div>
@@ -191,9 +190,9 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           data-testid="daily-answer-button"
         >
           {submitting ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /><span>מעדכן...</span></>
+            <><Loader2 className="w-4 h-4 animate-spin" /><span>Updating...</span></>
           ) : (
-            <><Check className="w-5 h-5" /><span>עשיתי את זה</span></>
+            <><Check className="w-5 h-5" /><span>I did it</span></>
           )}
         </button>
       ) : (
@@ -201,12 +200,12 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           {showSuccess ? (
             <div className="flex items-center justify-center gap-2 text-green-600 animate-glow-in">
               <Check className="w-5 h-5" />
-              <span className="font-medium">מצוין! הפעולה נרשמה</span>
+              <span className="font-medium">Great! Action recorded</span>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2 text-green-600">
               <Check className="w-5 h-5" />
-              <span className="text-sm">הושלם היום</span>
+              <span className="text-sm">Completed today</span>
             </div>
           )}
 
@@ -217,10 +216,10 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
               {/* Animated +impact score */}
               <div className="flex items-center justify-center gap-3 py-1">
                 <span className="text-lg font-black text-green-600 animate-glow-in" data-testid="impact-score-reward">+{impactData.score}</span>
-                <span className="text-[10px] text-green-500">השפעה</span>
+                <span className="text-[10px] text-green-500">Impact</span>
                 {impactData.streak > 0 && (
                   <span className="flex items-center gap-0.5 text-orange-500 text-xs font-bold">
-                    <Flame className="w-3 h-3" />{impactData.streak} רצף
+                    <Flame className="w-3 h-3" />{impactData.streak} streak
                   </span>
                 )}
               </div>
@@ -232,7 +231,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
                   <div className="flex-1">
                     <div className="flex justify-between text-[10px] mb-0.5">
                       <span className="text-purple-600 font-medium">{impactData.niche_info.niche_he}</span>
-                      <span className="text-purple-400">עוד {impactData.niche_info.remaining}</span>
+                      <span className="text-purple-400">{impactData.niche_info.remaining} more</span>
                     </div>
                     <div className="h-1 bg-purple-100 rounded-full overflow-hidden">
                       <div className="h-full bg-purple-400 rounded-full transition-all duration-700" style={{ width: `${impactData.niche_info.progress}%` }} />
@@ -260,7 +259,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
               {impactData.identity_link && (
                 <a href={impactData.identity_link} className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 hover:text-indigo-500 transition-colors pt-1" data-testid="identity-growth-link">
                   <User className="w-3 h-3" />
-                  <span>צפה ברשומת הפעולות שלך</span>
+                  <span>View your action record</span>
                 </a>
               )}
             </div>
@@ -274,7 +273,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
       )}
 
       {!completed && (
-        <p className="text-xs text-center text-gray-500 mt-3">צעד קטן אחד יכול לשנות את הכיוון</p>
+        <p className="text-xs text-center text-gray-500 mt-3">One small step can change your direction</p>
       )}
     </section>
   );

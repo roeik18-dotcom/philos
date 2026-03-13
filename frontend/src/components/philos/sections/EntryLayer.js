@@ -34,11 +34,11 @@ export default function EntryLayer({ userId }) {
     }
   }, [effectiveUserId]);
 
-  const worldDir = field?.dominant_direction_he || 'חקירה';
+  const worldDir = field?.dominant_direction_he || 'Exploration';
   const worldColor = dirColors[field?.dominant_direction] || '#6366f1';
   const userForce = compass?.dominant_direction_he || null;
   const userColor = dirColors[compass?.dominant_direction] || '#6366f1';
-  const suggested = compass?.suggested_action_he || 'בחר כיוון ופעל';
+  const suggested = compass?.suggested_action_he || 'Choose a direction and act';
 
   const scrollToAction = () => {
     const el = document.querySelector('[data-testid="daily-orientation-question"]');
@@ -46,7 +46,7 @@ export default function EntryLayer({ userId }) {
   };
 
   return (
-    <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] text-white p-5 pb-6" dir="rtl" data-testid="entry-layer">
+    <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] text-white p-5 pb-6" data-testid="entry-layer">
       <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 50% 80%, ${worldColor}12 0%, transparent 60%)` }} />
 
       <div className="relative z-10">
@@ -65,7 +65,7 @@ export default function EntryLayer({ userId }) {
         {/* User's dominant force */}
         {userForce && (
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-[10px] text-gray-400">הכוח הדומיננטי שלך</span>
+            <span className="text-[10px] text-gray-400">Your dominant force</span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: `${userColor}20`, color: userColor }} data-testid="entry-user-force">
               {userForce}
             </span>
@@ -85,12 +85,12 @@ export default function EntryLayer({ userId }) {
           data-testid="entry-cta"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>התחל פעולה</span>
+          <span>Start Action</span>
         </button>
 
         <div className="flex items-center gap-2 pt-3 mt-3 border-t border-white/10">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-          <span className="text-xs text-gray-500">בחר כיוון. פעל. השפע.</span>
+          <span className="text-xs text-gray-500">Choose a direction. Act. Impact.</span>
         </div>
       </div>
     </section>

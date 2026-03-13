@@ -10,14 +10,14 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
   const recoveryStabilityLongTerm = globalStats.recovery / total;
   
   // Determine indicators
-  const orderDriftLabel = globalOrderDrift > 2 ? 'חיובי' : globalOrderDrift < -2 ? 'שלילי' : 'מאוזן';
-  const collectiveDriftLabel = globalCollectiveDrift > 2 ? 'חיובי' : globalCollectiveDrift < -2 ? 'שלילי' : 'מאוזן';
-  const harmPressureLabel = harmPressureLongTerm > 0.25 ? 'גבוה' : harmPressureLongTerm > 0.1 ? 'בינוני' : 'נמוך';
-  const recoveryStabilityLabel = recoveryStabilityLongTerm > 0.3 ? 'גבוה' : recoveryStabilityLongTerm > 0.15 ? 'בינוני' : 'נמוך';
+  const orderDriftLabel = globalOrderDrift > 2 ? 'Positive' : globalOrderDrift < -2 ? 'Negative' : 'Balanced';
+  const collectiveDriftLabel = globalCollectiveDrift > 2 ? 'Positive' : globalCollectiveDrift < -2 ? 'Negative' : 'Balanced';
+  const harmPressureLabel = harmPressureLongTerm > 0.25 ? 'High' : harmPressureLongTerm > 0.1 ? 'Moderate' : 'Low';
+  const recoveryStabilityLabel = recoveryStabilityLongTerm > 0.3 ? 'High' : recoveryStabilityLongTerm > 0.15 ? 'Moderate' : 'Low';
   
   const getColor = (label, isPositiveGood = true) => {
-    const positiveLabels = ['חיובי', 'גבוה'];
-    const negativeLabels = ['שלילי', 'נמוך'];
+    const positiveLabels = ['Positive', 'High'];
+    const negativeLabels = ['Negative', 'Low'];
     if (positiveLabels.includes(label)) {
       return isPositiveGood ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
     }
@@ -38,11 +38,11 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
   const dominantValue = Object.entries(valueCounts).sort((a, b) => b[1] - a[1])[0];
   
   const valueLabels = {
-    contribution: 'תרומה',
-    recovery: 'התאוששות',
-    order: 'סדר',
-    harm: 'נזק',
-    avoidance: 'הימנעות'
+    contribution: 'Contribution',
+    recovery: 'Recovery',
+    order: 'Order',
+    harm: 'Harm',
+    avoidance: 'Avoidance'
   };
   
   const valueColors = {
@@ -56,20 +56,20 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
   return (
     <section className="bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-3xl p-5 shadow-sm border border-violet-200" data-testid="global-value-field">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-foreground">שדה ערכים גלובלי</h3>
+        <h3 className="text-lg font-semibold text-foreground">Global Value Field</h3>
         <button
           onClick={resetGlobalStats}
           className="px-3 py-1 text-xs bg-violet-100 hover:bg-violet-200 text-violet-700 rounded-lg transition-all"
           data-testid="reset-global-stats-btn"
         >
-          איפוס
+          Reset
         </button>
       </div>
-      <p className="text-xs text-muted-foreground mb-4">ניתוח ארוך טווח מכל הסשנים</p>
+      <p className="text-xs text-muted-foreground mb-4">Long-term analysis from all sessions</p>
       
       {/* Total Stats Overview */}
       <div className="bg-white/70 rounded-xl p-4 mb-4 text-center">
-        <p className="text-xs text-muted-foreground mb-2">סה״כ החלטות (כל הסשנים)</p>
+        <p className="text-xs text-muted-foreground mb-2">Total decisions (all sessions)</p>
         <p className="text-3xl font-bold text-violet-600" data-testid="global-total-decisions">{globalStats.totalDecisions}</p>
       </div>
       
@@ -77,8 +77,8 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
       <div className="grid grid-cols-2 gap-3 mb-4">
         {/* Global Order Drift */}
         <div className="bg-white/70 rounded-xl p-3" data-testid="global-order-drift">
-          <p className="text-xs text-muted-foreground mb-1">סחף סדר גלובלי</p>
-          <p className="text-xs text-muted-foreground/70 mb-2">(סדר + התאוששות) - (נזק + הימנעות)</p>
+          <p className="text-xs text-muted-foreground mb-1">Global order drift</p>
+          <p className="text-xs text-muted-foreground/70 mb-2">(Order + Recovery) - (Harm + Avoidance)</p>
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-foreground">{globalOrderDrift > 0 ? '+' : ''}{globalOrderDrift}</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(orderDriftLabel, true)}`}>
@@ -89,8 +89,8 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
         
         {/* Global Collective Drift */}
         <div className="bg-white/70 rounded-xl p-3" data-testid="global-collective-drift">
-          <p className="text-xs text-muted-foreground mb-1">סחף חברתי גלובלי</p>
-          <p className="text-xs text-muted-foreground/70 mb-2">תרומה - נזק</p>
+          <p className="text-xs text-muted-foreground mb-1">Global social drift</p>
+          <p className="text-xs text-muted-foreground/70 mb-2">Contribution - Harm</p>
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-foreground">{globalCollectiveDrift > 0 ? '+' : ''}{globalCollectiveDrift}</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(collectiveDriftLabel, true)}`}>
@@ -101,8 +101,8 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
         
         {/* Harm Pressure Long Term */}
         <div className="bg-white/70 rounded-xl p-3" data-testid="harm-pressure-long-term">
-          <p className="text-xs text-muted-foreground mb-1">לחץ נזק ארוך טווח</p>
-          <p className="text-xs text-muted-foreground/70 mb-2">נזק / סה״כ</p>
+          <p className="text-xs text-muted-foreground mb-1">Long-term Harm Pressure</p>
+          <p className="text-xs text-muted-foreground/70 mb-2">Harm / Total</p>
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-foreground">{Math.round(harmPressureLongTerm * 100)}%</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(harmPressureLabel, false)}`}>
@@ -113,8 +113,8 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
         
         {/* Recovery Stability Long Term */}
         <div className="bg-white/70 rounded-xl p-3" data-testid="recovery-stability-long-term">
-          <p className="text-xs text-muted-foreground mb-1">יציבות התאוששות ארוך טווח</p>
-          <p className="text-xs text-muted-foreground/70 mb-2">התאוששות / סה״כ</p>
+          <p className="text-xs text-muted-foreground mb-1">Long-term Recovery Stability</p>
+          <p className="text-xs text-muted-foreground/70 mb-2">Recovery / Total</p>
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-foreground">{Math.round(recoveryStabilityLongTerm * 100)}%</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColor(recoveryStabilityLabel, true)}`}>
@@ -126,7 +126,7 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
       
       {/* Dominant Global Value */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-xs text-muted-foreground mb-3">אשכול ערכים דומיננטי</p>
+        <p className="text-xs text-muted-foreground mb-3">Dominant value cluster</p>
         <div className="flex items-center justify-center gap-3">
           <div 
             className={`${valueColors[dominantValue[0]]} w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg`}
@@ -137,7 +137,7 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
           <div className="text-right">
             <p className="text-lg font-bold text-foreground">{valueLabels[dominantValue[0]]}</p>
             <p className="text-xs text-muted-foreground">
-              {Math.round((dominantValue[1] / total) * 100)}% מכלל ההחלטות
+              {Math.round((dominantValue[1] / total) * 100)}% of all decisions
             </p>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function GlobalValueFieldSection({ globalStats, resetGlobalStats 
       
       {/* Global Value Distribution */}
       <div className="bg-white/70 rounded-xl p-4">
-        <p className="text-xs text-muted-foreground mb-3">התפלגות ערכים גלובלית</p>
+        <p className="text-xs text-muted-foreground mb-3">Global value distribution</p>
         <div className="flex justify-center items-end gap-2 h-20">
           {Object.entries(valueCounts).map(([tag, count]) => {
             const maxCount = Math.max(...Object.values(valueCounts), 1);

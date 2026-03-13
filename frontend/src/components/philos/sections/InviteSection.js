@@ -70,7 +70,7 @@ export default function InviteSection({ userId }) {
 
   if (loading) {
     return (
-      <section className="rounded-2xl border border-gray-100 bg-white p-4 animate-pulse" dir="rtl">
+      <section className="rounded-2xl border border-gray-100 bg-white p-4 animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-3" />
         <div className="h-10 bg-gray-200 rounded w-full" />
       </section>
@@ -79,9 +79,9 @@ export default function InviteSection({ userId }) {
 
   if (!token) {
     return (
-      <section className="rounded-2xl border border-dashed border-gray-200 p-4 text-center" dir="rtl" data-testid="invite-section-auth-gate">
+      <section className="rounded-2xl border border-dashed border-gray-200 p-4 text-center" data-testid="invite-section-auth-gate">
         <UserPlus className="w-5 h-5 text-gray-300 mx-auto mb-2" />
-        <p className="text-xs text-gray-400">התחבר כדי לקבל קודי הזמנה</p>
+        <p className="text-xs text-gray-400">Sign In to get invite codes</p>
       </section>
     );
   }
@@ -92,7 +92,7 @@ export default function InviteSection({ userId }) {
   const usedCodes = data.codes.filter(c => c.status === 'used');
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-4" dir="rtl" data-testid="invite-section">
+    <section className="rounded-2xl border border-gray-100 bg-white p-4" data-testid="invite-section">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -100,18 +100,18 @@ export default function InviteSection({ userId }) {
             <UserPlus className="w-4 h-4 text-violet-600" />
           </div>
           <div>
-            <span className="text-sm font-semibold text-gray-800">הזמן לשדה</span>
-            <p className="text-[10px] text-gray-400">שתף קישור והזמן מישהו להצטרף</p>
+            <span className="text-sm font-semibold text-gray-800">Invite to Field</span>
+            <p className="text-[10px] text-gray-400">Share a link and invite someone to join</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-center" data-testid="invite-active-count">
             <p className="text-sm font-bold text-violet-600">{data.active_count}</p>
-            <p className="text-[9px] text-gray-400">פעילים</p>
+            <p className="text-[9px] text-gray-400">active</p>
           </div>
           <div className="text-center" data-testid="invite-used-count">
             <p className="text-sm font-bold text-emerald-600">{data.used_count}</p>
-            <p className="text-[9px] text-gray-400">נוצלו</p>
+            <p className="text-[9px] text-gray-400">Redeemed</p>
           </div>
         </div>
       </div>
@@ -133,8 +133,8 @@ export default function InviteSection({ userId }) {
                 data-testid={`invite-copy-btn-${c.code}`}
               >
                 {copiedCode === c.code
-                  ? <><Check className="w-2.5 h-2.5" /><span>הועתק</span></>
-                  : <><Copy className="w-2.5 h-2.5" /><span>העתק קישור</span></>
+                  ? <><Check className="w-2.5 h-2.5" /><span>Copied</span></>
+                  : <><Copy className="w-2.5 h-2.5" /><span>Copy Link</span></>
                 }
               </button>
             </div>
@@ -142,7 +142,7 @@ export default function InviteSection({ userId }) {
         </div>
       ) : (
         <div className="text-center py-3 mb-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-          <p className="text-xs text-gray-400 mb-2">אין קודים פעילים</p>
+          <p className="text-xs text-gray-400 mb-2">No active codes</p>
           <button
             onClick={handleGenerate}
             disabled={generating}
@@ -151,7 +151,7 @@ export default function InviteSection({ userId }) {
           >
             {generating
               ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : <><RefreshCw className="w-3 h-3" /><span>צור קודי הזמנה</span></>
+              : <><RefreshCw className="w-3 h-3" /><span>Generate invite codes</span></>
             }
           </button>
         </div>
@@ -161,7 +161,7 @@ export default function InviteSection({ userId }) {
       {usedCodes.length > 0 && (
         <div className="flex items-center gap-1.5 px-2 py-1.5 bg-emerald-50 rounded-xl">
           <Check className="w-3 h-3 text-emerald-500" />
-          <span className="text-[10px] text-emerald-600">{usedCodes.length} הזמנות נוצלו בהצלחה</span>
+          <span className="text-[10px] text-emerald-600">{usedCodes.length} Invites redeemed successfully</span>
         </div>
       )}
 
@@ -173,7 +173,7 @@ export default function InviteSection({ userId }) {
           className="mt-2 w-full py-2 text-[10px] text-violet-500 hover:text-violet-700 transition-colors flex items-center justify-center gap-1"
           data-testid="invite-generate-more-btn"
         >
-          {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <><RefreshCw className="w-3 h-3" /><span>צור עוד קוד</span></>}
+          {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <><RefreshCw className="w-3 h-3" /><span>Generate another code</span></>}
         </button>
       )}
     </section>

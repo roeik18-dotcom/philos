@@ -1,10 +1,10 @@
 // Hebrew value tag labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Value colors for visual indicators
@@ -39,7 +39,6 @@ export default function ReplayAdaptiveEffectSection({
   return (
     <section 
       className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-5 shadow-sm border border-emerald-200"
-      dir="rtl"
       data-testid="replay-adaptive-effect-section"
     >
       {/* Header */}
@@ -51,10 +50,10 @@ export default function ReplayAdaptiveEffectSection({
         </div>
         <div>
           <h3 className="text-lg font-semibold text-foreground">
-            השפעת הפעלה חוזרת על מסלולים
+            Impact of replays on paths
           </h3>
           <p className="text-xs text-muted-foreground">
-            התאמות אוטומטיות בהתבסס על {replayInsights?.total_replays || 0} הפעלות חוזרות
+            Automatic adjustments based on {replayInsights?.total_replays || 0} repeat activations
           </p>
         </div>
       </div>
@@ -67,7 +66,7 @@ export default function ReplayAdaptiveEffectSection({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
-              כיוונים מחוזקים
+              Boosted directions
             </h4>
             <div className="space-y-2">
               {adjustments.boosted.map((item, idx) => (
@@ -101,7 +100,7 @@ export default function ReplayAdaptiveEffectSection({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
-              כיוונים מוחלשים
+              Weakened directions
             </h4>
             <div className="space-y-2">
               {adjustments.penalized.map((item, idx) => (
@@ -138,7 +137,7 @@ export default function ReplayAdaptiveEffectSection({
                 </svg>
               </div>
               <div className="space-y-2">
-                <h5 className="text-sm font-semibold text-emerald-800">תובנות התאמה</h5>
+                <h5 className="text-sm font-semibold text-emerald-800">Match Insights</h5>
                 {adjustments.insights.map((insight, idx) => (
                   <p 
                     key={idx} 

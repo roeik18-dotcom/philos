@@ -64,8 +64,8 @@ export default function HomeTab({
           }}
         />
       ) : (
-        <div className="rounded-2xl border border-dashed border-gray-200 p-4 text-center" dir="rtl" data-testid="base-gate">
-          <p className="text-xs text-gray-400">בחר בסיס יומי כדי להמשיך לפעולה</p>
+        <div className="rounded-2xl border border-dashed border-gray-200 p-4 text-center" data-testid="base-gate">
+          <p className="text-xs text-gray-400">Select a daily base to continue</p>
         </div>
       )}
 
@@ -99,7 +99,7 @@ export default function HomeTab({
           className="w-full flex items-center justify-center gap-2 py-2 text-[10px] text-gray-300 hover:text-gray-500 transition-colors"
           data-testid="toggle-atmosphere-section"
         >
-          <span>{showAtmosphere ? 'הסתר שדה והתבוננות' : 'שדה גלובלי והתבוננות'}</span>
+          <span>{showAtmosphere ? 'Hide field & observation' : 'Global field & observation'}</span>
           {showAtmosphere ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </button>
       </div>
@@ -123,7 +123,7 @@ export default function HomeTab({
           data-testid="toggle-community-section"
         >
           <Users className="w-3.5 h-3.5" />
-          <span>{showCommunity ? 'הסתר קהילה' : 'קהילה ושדה משותף'}</span>
+          <span>{showCommunity ? 'Hide community' : 'Community & shared field'}</span>
           {showCommunity ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
       </div>
@@ -138,11 +138,10 @@ export default function HomeTab({
           <button
             onClick={() => setShowShareCard(true)}
             className="w-full py-3 px-4 bg-white rounded-2xl shadow-sm border border-border flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:shadow-md active:scale-[0.98] transition-all duration-300"
-            dir="rtl"
             data-testid="open-share-card-btn"
           >
             <Share2 className="w-4 h-4" />
-            <span>שתף את ההתמצאות שלך</span>
+            <span>Share your orientation</span>
           </button>
 
           <DecisionPathSection

@@ -32,7 +32,7 @@ export default function TaskCard({ task, onStart }) {
       
       <div className="flex items-center gap-2 text-muted-foreground">
         <Clock className="w-5 h-5" />
-        <span className="text-lg">{task.minutes} דקות</span>
+        <span className="text-lg">{task.minutes} minutes</span>
       </div>
 
       <button
@@ -45,7 +45,7 @@ export default function TaskCard({ task, onStart }) {
         }}
       >
         <Play className="w-5 h-5" />
-        <span>התחל</span>
+        <span>Start</span>
       </button>
     </div>
   );

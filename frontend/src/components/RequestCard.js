@@ -43,7 +43,7 @@ export default function RequestCard({ request, onAccept }) {
       
       <div className="flex items-center justify-center gap-2 text-muted-foreground">
         <Clock className="w-5 h-5" />
-        <span className="text-lg">{request.minutes} דקות</span>
+        <span className="text-lg">{request.minutes} minutes</span>
       </div>
 
       <button
@@ -55,7 +55,7 @@ export default function RequestCard({ request, onAccept }) {
           color: colors.text 
         }}
       >
-        <span>אקבל</span>
+        <span>Accept</span>
       </button>
     </div>
   );

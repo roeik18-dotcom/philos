@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 
 // Hebrew value tag labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Value tag colors
@@ -29,13 +29,13 @@ const formatRelativeTime = (timestamp) => {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
   
-  if (diffMins < 1) return 'לפני רגע';
-  if (diffMins < 60) return `לפני ${diffMins} דקות`;
-  if (diffHours < 24) return `לפני ${diffHours} שעות`;
-  if (diffDays === 1) return 'אתמול';
-  if (diffDays < 7) return `לפני ${diffDays} ימים`;
-  if (diffDays < 30) return `לפני ${Math.floor(diffDays / 7)} שבועות`;
-  return `לפני ${Math.floor(diffDays / 30)} חודשים`;
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `ago ${diffMins} minutes`;
+  if (diffHours < 24) return `ago ${diffHours} hours`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `ago ${diffDays} days`;
+  if (diffDays < 30) return `ago ${Math.floor(diffDays / 7)} weeks`;
+  return `ago ${Math.floor(diffDays / 30)} months`;
 };
 
 // Calculate dominant pattern from history
@@ -112,7 +112,6 @@ export default function ContinuePreviousSessionSection({ history, onContinue }) 
   return (
     <section 
       className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-5 shadow-sm border border-amber-200 mb-4"
-      dir="rtl"
       data-testid="continue-session-section"
     >
       {/* Header with welcome back message */}
@@ -125,10 +124,10 @@ export default function ContinuePreviousSessionSection({ history, onContinue }) 
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">
-              המשך מהמפגש הקודם
+              Continue from previous session
             </h3>
             <p className="text-sm text-amber-700">
-              המערכת זיהתה שכבר התחלת תהליך קודם
+              The system detected that you already started a previous process
             </p>
           </div>
         </div>
@@ -137,12 +136,12 @@ export default function ContinuePreviousSessionSection({ history, onContinue }) 
         <div className="flex gap-2">
           <div className="bg-white/70 rounded-lg px-3 py-1.5 text-center border border-amber-200">
             <div className="text-lg font-bold text-amber-700">{sessionData.totalDecisions}</div>
-            <div className="text-xs text-muted-foreground">החלטות</div>
+            <div className="text-xs text-muted-foreground">decisions</div>
           </div>
           {sessionData.todayDecisions > 0 && (
             <div className="bg-white/70 rounded-lg px-3 py-1.5 text-center border border-amber-200">
               <div className="text-lg font-bold text-amber-600">{sessionData.todayDecisions}</div>
-              <div className="text-xs text-muted-foreground">היום</div>
+              <div className="text-xs text-muted-foreground">Today</div>
             </div>
           )}
         </div>
@@ -154,7 +153,7 @@ export default function ContinuePreviousSessionSection({ history, onContinue }) 
           <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          <span className="text-sm font-medium text-foreground">ההחלטה האחרונה שלך הייתה:</span>
+          <span className="text-sm font-medium text-foreground">Your last decision was:</span>
           <span className="text-xs text-muted-foreground mr-auto">
             {formatRelativeTime(sessionData.lastTimestamp)}
           </span>
@@ -179,7 +178,7 @@ export default function ContinuePreviousSessionSection({ history, onContinue }) 
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
-              דפוס שולט: 
+              Dominant pattern: 
               <span className="font-medium">{valueLabels[sessionData.dominantPattern]}</span>
             </span>
           )}
@@ -189,7 +188,7 @@ export default function ContinuePreviousSessionSection({ history, onContinue }) 
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
-              יש שרשראות החלטות
+              There is chains decisions
             </span>
           )}
         </div>
@@ -198,7 +197,7 @@ export default function ContinuePreviousSessionSection({ history, onContinue }) 
       {/* Continue message and button */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-amber-700">
-          ניתן להמשיך מאותה נקודה בדיוק
+          You can continue from that exact point
         </p>
         
         <button
@@ -206,7 +205,7 @@ export default function ContinuePreviousSessionSection({ history, onContinue }) 
           className="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm"
           data-testid="continue-session-btn"
         >
-          <span>המשך מכאן</span>
+          <span>Continue from here</span>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>

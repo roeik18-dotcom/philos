@@ -87,7 +87,7 @@ export async function createRequest(formData) {
       category: formData.category,
       description: formData.need,
       minutes: parseInt(formData.minutes),
-      distance: formData.distance || 'לא צוין',
+      distance: formData.distance || 'Not noted',
       status: 'waiting'
     }])
     .select()

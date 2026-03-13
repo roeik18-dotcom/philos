@@ -11,10 +11,10 @@ const directionColors = {
 };
 
 const directionLabels = {
-  recovery: 'התאוששות',
-  order: 'סדר',
-  contribution: 'תרומה',
-  exploration: 'חקירה'
+  recovery: 'Recovery',
+  order: 'Order',
+  contribution: 'Contribution',
+  exploration: 'Exploration'
 };
 
 // Identity icons
@@ -82,10 +82,10 @@ const IdentityIcon = ({ identityType, isWarning }) => {
 // Momentum indicator
 const MomentumBadge = ({ momentum }) => {
   const momentumConfig = {
-    stabilizing: { label: 'מתייצב', color: 'bg-green-100 text-green-700' },
-    drifting: { label: 'נסחף', color: 'bg-amber-100 text-amber-700' },
-    shifting: { label: 'משתנה', color: 'bg-violet-100 text-violet-700' },
-    stable: { label: 'יציב', color: 'bg-gray-100 text-gray-600' }
+    stabilizing: { label: 'stabilizing', color: 'bg-green-100 text-green-700' },
+    drifting: { label: 'drifting', color: 'bg-amber-100 text-amber-700' },
+    shifting: { label: 'changing', color: 'bg-violet-100 text-violet-700' },
+    stable: { label: 'Stable', color: 'bg-gray-100 text-gray-600' }
   };
   
   const config = momentumConfig[momentum] || momentumConfig.stable;
@@ -132,7 +132,7 @@ export default function OrientationIdentitySection({ userId }) {
 
   if (loading && !identityData) {
     return (
-      <section className="bg-white rounded-3xl p-5 shadow-sm border border-border animate-pulse" dir="rtl">
+      <section className="bg-white rounded-3xl p-5 shadow-sm border border-border animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-1/3 mb-3"></div>
         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
       </section>
@@ -153,7 +153,6 @@ export default function OrientationIdentitySection({ userId }) {
           ? 'bg-gradient-to-br from-red-50 to-orange-50 border-red-200' 
           : `bg-gradient-to-br from-white to-gray-50 border-gray-200`
       }`}
-      dir="rtl"
       data-testid="orientation-identity-section"
     >
       {/* Header */}
@@ -203,9 +202,9 @@ export default function OrientationIdentitySection({ userId }) {
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
           <div>
-            <p className="text-sm text-red-800 font-medium">זה בסדר להרגיש ככה</p>
+            <p className="text-sm text-red-800 font-medium">It's okay to feel this way</p>
             <p className="text-xs text-red-700 mt-1">
-              הימנעות היא תגובה טבעית. הצעד הראשון הוא להכיר בזה. הצעד הבא - ליצור מבנה קטן אחד.
+              Avoidance is a natural response. The first step is to recognize it. The next step — create one small structure.
             </p>
           </div>
         </div>
@@ -222,7 +221,7 @@ export default function OrientationIdentitySection({ userId }) {
                 style={{ backgroundColor: dominantColor.fill }}
               />
               <span className="text-xs text-gray-600">
-                כיוון מוביל: <span className="font-medium">{directionLabels[identityData.dominant_direction]}</span>
+                Leading direction: <span className="font-medium">{directionLabels[identityData.dominant_direction]}</span>
               </span>
             </div>
           )}
@@ -234,7 +233,7 @@ export default function OrientationIdentitySection({ userId }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="text-xs text-gray-600">
-                {identityData.time_in_direction} ימים
+                {identityData.time_in_direction} days
               </span>
             </div>
           )}
@@ -245,7 +244,7 @@ export default function OrientationIdentitySection({ userId }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             <span className="text-xs text-gray-600">
-              {identityData.total_actions} פעולות
+              {identityData.total_actions} actions
             </span>
           </div>
         </div>
@@ -274,13 +273,13 @@ export default function OrientationIdentitySection({ userId }) {
               setExpanded(!expanded);
             }}
           >
-            {expanded ? 'הסתר פירוט' : 'הצג פירוט'}
+            {expanded ? 'Hide details' : 'Show details'}
           </summary>
           
           {expanded && (
             <div className="mt-3 space-y-2" data-testid="identity-details">
               {/* Direction Distribution */}
-              <div className="text-[10px] text-gray-500 mb-2">התפלגות הפעולות שלך:</div>
+              <div className="text-[10px] text-gray-500 mb-2">Your actions distribution:</div>
               <div className="flex gap-1 h-3 rounded-full overflow-hidden bg-gray-100">
                 {Object.entries(identityData.direction_counts)
                   .filter(([dir, count]) => count > 0 && ['recovery', 'order', 'contribution', 'exploration'].includes(dir))
@@ -323,7 +322,7 @@ export default function OrientationIdentitySection({ userId }) {
               {/* Avoidance Warning */}
               {identityData.avoidance_ratio > 20 && (
                 <div className="mt-2 text-[10px] text-amber-600">
-                  יחס הימנעות: {identityData.avoidance_ratio}%
+                  Avoidance ratio: {identityData.avoidance_ratio}%
                 </div>
               )}
             </div>

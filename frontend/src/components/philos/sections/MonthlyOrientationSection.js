@@ -9,13 +9,13 @@ import {
 
 // Pattern descriptions in Hebrew
 const patternDescriptions = {
-  contribution: 'מומנטום חיובי של תרומה',
-  recovery: 'איזון של התאוששות',
-  order: 'מיקוד בסדר וארגון',
-  harm: 'לחץ ונזק',
-  avoidance: 'הימנעות',
-  balanced: 'מערכת מאוזנת',
-  none: 'אין נתונים'
+  contribution: 'Positive contribution momentum',
+  recovery: 'Recovery balance',
+  order: 'Focus on order and organization',
+  harm: 'Pressure and Harm',
+  avoidance: 'Avoidance',
+  balanced: 'Balanced system',
+  none: 'No data'
 };
 
 // Direction colors (from analyticsService but extended)
@@ -29,8 +29,8 @@ const directionColors = {
 
 // Hebrew month names
 const hebrewMonths = [
-  'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
-  'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
 // LocalStorage key for monthly orientation
@@ -107,7 +107,7 @@ const calculateMonthlyRecommendation = (analysis) => {
     return {
       direction: 'recovery',
       reason: 'negative_balance',
-      insight: 'נראה לחץ בחודש שעבר. החודש מומלץ לחזק כיוון של התאוששות.'
+      insight: 'Pressure appears from last month. This month, consider strengthening the direction of recovery.'
     };
   }
 
@@ -115,7 +115,7 @@ const calculateMonthlyRecommendation = (analysis) => {
     return {
       direction: 'order',
       reason: 'negative_balance',
-      insight: 'נראה דפוס הימנעות בחודש שעבר. החודש מומלץ לחזק כיוון של סדר.'
+      insight: 'An avoidance pattern appears from last month. This month, consider strengthening the direction of order.'
     };
   }
 
@@ -133,7 +133,7 @@ const calculateMonthlyRecommendation = (analysis) => {
     return {
       direction: weakestPositive.direction,
       reason: 'gap',
-      insight: `נראה פער מתמשך בכיוון ${valueLabels[weakestPositive.direction]} — זה הכיוון המומלץ לחודש הקרוב.`
+      insight: `A persistent gap in direction appears ${valueLabels[weakestPositive.direction]} — This is the recommended direction for the coming month.`
     };
   }
 
@@ -142,7 +142,7 @@ const calculateMonthlyRecommendation = (analysis) => {
     return {
       direction: strongestPositive.tag,
       reason: 'momentum',
-      insight: `חודש שעבר בלט דפוס של ${valueLabels[strongestPositive.tag]}. החודש מומלץ להמשיך במומנטום.`
+      insight: `Last month showed a pattern of ${valueLabels[strongestPositive.tag]}. This month it is recommended to continue the momentum.`
     };
   }
 
@@ -150,7 +150,7 @@ const calculateMonthlyRecommendation = (analysis) => {
   return {
     direction: 'contribution',
     reason: 'default',
-    insight: 'החודש מומלץ לחזק כיוון של תרומה.'
+    insight: 'This month it is recommended to strengthen a contribution direction.'
   };
 };
 
@@ -247,7 +247,6 @@ export default function MonthlyOrientationSection({ history, onStartMonth }) {
   return (
     <section 
       className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-3xl p-5 shadow-sm border border-teal-200"
-      dir="rtl"
       data-testid="monthly-orientation-section"
     >
       {/* Header */}
@@ -258,8 +257,8 @@ export default function MonthlyOrientationSection({ history, onStartMonth }) {
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">התמצאות חודשית</h3>
-          <p className="text-xs text-teal-700">החודש החדש מתחיל מתוך הדפוס של החודש שעבר.</p>
+          <h3 className="text-lg font-semibold text-foreground">Monthly Orientation</h3>
+          <p className="text-xs text-teal-700">The new month starts from last month's pattern.</p>
         </div>
       </div>
 
@@ -269,13 +268,13 @@ export default function MonthlyOrientationSection({ history, onStartMonth }) {
         
         {totalDecisions === 0 ? (
           <p className="text-base text-foreground" data-testid="last-month-pattern">
-            לא הייתה פעילות בחודש שעבר.
+            There was no activity last month.
           </p>
         ) : (
           <div className="space-y-2">
             {/* Dominant Pattern */}
             <p className="text-base font-medium text-foreground" data-testid="last-month-pattern">
-              בלט דפוס של {patternDescriptions[dominantPattern]}.
+              A pattern stood out of {patternDescriptions[dominantPattern]}.
             </p>
             
             {/* Strongest Positive */}
@@ -285,7 +284,7 @@ export default function MonthlyOrientationSection({ history, onStartMonth }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
                 <span className="text-sm text-green-700" data-testid="monthly-strongest-positive">
-                  חיובי: {valueLabels[strongestPositive.tag]} ({strongestPositive.count})
+                  Positive: {valueLabels[strongestPositive.tag]} ({strongestPositive.count})
                 </span>
               </div>
             )}
@@ -297,13 +296,13 @@ export default function MonthlyOrientationSection({ history, onStartMonth }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
                 <span className="text-sm text-red-700" data-testid="monthly-strongest-negative">
-                  שלילי: {valueLabels[strongestNegative.tag]} ({strongestNegative.count})
+                  Negative: {valueLabels[strongestNegative.tag]} ({strongestNegative.count})
                 </span>
               </div>
             )}
 
             <p className="text-xs text-muted-foreground mt-1">
-              {totalDecisions} החלטות בחודש שעבר
+              {totalDecisions} decisions last month
             </p>
           </div>
         )}
@@ -311,7 +310,7 @@ export default function MonthlyOrientationSection({ history, onStartMonth }) {
 
       {/* This Month's Recommendation */}
       <div className={`${colors.bg} rounded-xl p-4 mb-4 border ${colors.border}`}>
-        <h4 className="text-sm font-medium text-muted-foreground mb-2">החודש</h4>
+        <h4 className="text-sm font-medium text-muted-foreground mb-2">This month</h4>
         <div className="flex items-center gap-2 mb-2">
           <span className={`text-xs px-2 py-1 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
             {valueLabels[monthlyRecommendation.direction]}
@@ -332,12 +331,12 @@ export default function MonthlyOrientationSection({ history, onStartMonth }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span>התחל את החודש</span>
+        <span>Start the month</span>
       </button>
 
       {/* Footer */}
       <p className="text-xs text-muted-foreground mt-3 text-center">
-        ההתמצאות החודשית עוזרת לבנות כיוון התנהגותי ארוך טווח
+        Monthly orientation helps build long-term behavioral direction
       </p>
     </section>
   );

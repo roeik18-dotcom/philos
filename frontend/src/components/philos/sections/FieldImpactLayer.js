@@ -4,7 +4,7 @@ import { Globe, ArrowDown, Activity } from 'lucide-react';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const directionLabels = {
-  contribution: 'תרומה', recovery: 'התאוששות', order: 'סדר', exploration: 'חקירה'
+  contribution: 'Contribution', recovery: 'Recovery', order: 'Order', exploration: 'Exploration'
 };
 const directionColors = {
   contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b'
@@ -30,17 +30,17 @@ export default function FieldImpactLayer({ userId, actionCompleted, actionDirect
   const maxCount = useMemo(() => Math.max(...Object.values(dirCounts), 1), [dirCounts]);
 
   return (
-    <section className="philos-section bg-[#0a0a1a] text-white border-gray-800 animate-section animate-section-5" dir="rtl" data-testid="field-impact-layer">
+    <section className="philos-section bg-[#0a0a1a] text-white border-gray-800 animate-section animate-section-5" data-testid="field-impact-layer">
       {/* Narrative header */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <Globe className="w-5 h-5 text-purple-400" />
-          <span className="text-sm font-semibold">איך הפעולה שלך משפיעה על העולם?</span>
+          <span className="text-sm font-semibold">How does your action impact the world?</span>
         </div>
         <p className="text-xs text-gray-400 leading-relaxed">
-          כל פעולה שאתה עושה נוספת לשדה האנושי הגלובלי.
+          Every action you take is added to the global human field.
           <br />
-          השדה הוא הסכום של כל הבחירות — שלך ושל אחרים.
+          The field is the sum of all choices — yours and others.
         </p>
       </div>
 
@@ -49,10 +49,10 @@ export default function FieldImpactLayer({ userId, actionCompleted, actionDirect
         <div className="flex flex-col items-center gap-1 mb-4 animate-fadeIn" data-testid="field-action-connection">
           <span className="text-xs px-3 py-1 rounded-full border border-white/20"
             style={{ color: directionColors[actionDirection], borderColor: `${directionColors[actionDirection]}40` }}>
-            הפעולה שלך: {directionLabels[actionDirection] || actionDirection}
+            Your action: {directionLabels[actionDirection] || actionDirection}
           </span>
           <ArrowDown className="w-4 h-4 text-gray-500" />
-          <span className="text-[10px] text-gray-500">נוספת לשדה</span>
+          <span className="text-[10px] text-gray-500">Added to the field</span>
         </div>
       )}
 
@@ -62,14 +62,14 @@ export default function FieldImpactLayer({ userId, actionCompleted, actionDirect
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-purple-400" />
-              <span className="text-xs text-gray-300">{totalToday} פעולות בשדה היום</span>
+              <span className="text-xs text-gray-300">{totalToday} actions in the field today</span>
             </div>
             {dominantHe && (
               <span className="text-xs px-2 py-0.5 rounded-full" style={{
                 color: directionColors[dominant],
                 backgroundColor: `${directionColors[dominant]}15`
               }}>
-                {dominantHe} מוביל
+                {dominantHe} Leading
               </span>
             )}
           </div>
@@ -94,14 +94,14 @@ export default function FieldImpactLayer({ userId, actionCompleted, actionDirect
           </div>
 
           <p className="text-[10px] text-gray-500 mt-3 text-center">
-            עבור למערכת כדי לראות את הגלובוס המלא
+            Go to the system to see the full globe
           </p>
         </div>
       )}
 
       {!totalToday && (
         <div className="text-center py-4 text-xs text-gray-500">
-          השדה מחכה לפעולה הראשונה של היום
+          The field awaits your first action of today
         </div>
       )}
     </section>

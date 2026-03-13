@@ -216,7 +216,7 @@ class TestSubscriptionCheckout:
             json={
                 'plan_id': 'plus',
                 'user_id': 'test-user-checkout',
-                'origin_url': 'https://trust-ledger-11.preview.emergentagent.com'
+                'origin_url': 'https://philos-launch.preview.emergentagent.com'
             }
         )
         assert response.status_code == 200
@@ -248,7 +248,7 @@ class TestSubscriptionCheckout:
             json={
                 'plan_id': 'free',
                 'user_id': 'test-user-checkout',
-                'origin_url': 'https://trust-ledger-11.preview.emergentagent.com'
+                'origin_url': 'https://philos-launch.preview.emergentagent.com'
             }
         )
         assert response.status_code == 400

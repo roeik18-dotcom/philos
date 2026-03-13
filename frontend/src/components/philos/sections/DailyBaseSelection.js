@@ -17,7 +17,7 @@ const baseConfig = {
   },
   head: {
     key: 'head',
-    label: 'ראש',
+    label: 'Mind',
     color: '#6366f1',
     bgColor: '#6366f110',
     icon: (
@@ -29,7 +29,7 @@ const baseConfig = {
   },
   body: {
     key: 'body',
-    label: 'גוף',
+    label: 'Body',
     color: '#f59e0b',
     bgColor: '#f59e0b10',
     icon: (
@@ -110,11 +110,11 @@ export default function DailyBaseSelection({ userId, onBaseSelected }) {
   if (confirmed && selectedBase) {
     const allocations = data.allocations_he || BASE_DEFINITIONS_FE[selectedBase] || [];
     return (
-      <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] p-4" dir="rtl" data-testid="daily-base-confirmed">
+      <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] p-4" data-testid="daily-base-confirmed">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">המרכז שלך היום</span>
+              <span className="text-xs text-gray-500">Your center today</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.color }} />
@@ -135,13 +135,13 @@ export default function DailyBaseSelection({ userId, onBaseSelected }) {
 
   // Full selection view
   return (
-    <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] p-5" dir="rtl" data-testid="daily-base-selection">
+    <section className="relative rounded-3xl overflow-hidden bg-[#0a0a1a] p-5" data-testid="daily-base-selection">
       {/* Ambient glow */}
       {cfg && <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 50% 80%, ${cfg.color}08 0%, transparent 60%)` }} />}
 
       <div className="relative z-10">
-        <p className="text-sm text-gray-300 font-medium mb-1">מאיזה מרכז אתה פועל היום?</p>
-        <p className="text-[10px] text-gray-600 mb-5">בחר את הבסיס שממנו תפעל — Connection, ראש או גוף</p>
+        <p className="text-sm text-gray-300 font-medium mb-1">What center are you operating from today?</p>
+        <p className="text-[10px] text-gray-600 mb-5">Choose the base you'll act from — Connection, Mind, or Body</p>
 
         {/* Three base options */}
         <div className="grid grid-cols-3 gap-2.5 mb-4">
@@ -172,7 +172,7 @@ export default function DailyBaseSelection({ userId, onBaseSelected }) {
         {/* Potential allocations for selected base */}
         {selectedBase && !confirmed && (
           <div className="mb-4 animate-fadeIn">
-            <p className="text-[10px] text-gray-500 mb-2">הקצאות אפשריות היום:</p>
+            <p className="text-[10px] text-gray-500 mb-2">Possible allocations today:</p>
             <div className="flex flex-wrap gap-1.5">
               {(BASE_DEFINITIONS_FE[selectedBase] || []).map((a, i) => (
                 <span key={i} className="text-[10px] px-2.5 py-1 rounded-full text-gray-300" style={{ backgroundColor: `${cfg.color}12`, border: `1px solid ${cfg.color}20` }}>
@@ -192,7 +192,7 @@ export default function DailyBaseSelection({ userId, onBaseSelected }) {
             style={{ backgroundColor: `${cfg.color}20`, color: cfg.color }}
             data-testid="base-confirm-btn"
           >
-            {saving ? '...' : 'אישור'}
+            {saving ? '...' : 'Confirm'}
           </button>
         )}
       </div>
@@ -201,7 +201,7 @@ export default function DailyBaseSelection({ userId, onBaseSelected }) {
 }
 
 const BASE_DEFINITIONS_FE = {
-  heart: ['קשרים ומערכות יחסים', 'אמפתיה והקשבה', 'תרומה ונתינה', 'תיקון רגשי'],
-  head: ['סדר ותכנון', 'למידה וחקירה', 'קבלת החלטות', 'חשיבה אסטרטגית'],
-  body: ['תנועה ובריאות', 'פעולה מעשית', 'משמעת ומחויבות', 'סדר פיזי']
+  heart: ['Relationships & Connections', 'Empathy & Listening', 'Giving & Contributing', 'Emotional Healing'],
+  head: ['Order & Planning', 'Learning & Inquiry', 'Decision Making', 'Strategic Thinking'],
+  body: ['Movement & Health', 'Practical Action', 'Discipline & Commitment', 'Physical Order']
 };

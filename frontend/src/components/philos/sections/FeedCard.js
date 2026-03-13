@@ -17,7 +17,7 @@ function ActionCard({ card, onShowOnGlobe }) {
   const color = dirColors[card.direction] || '#6366f1';
   const profileUrl = card.user_id ? `/profile/${card.user_id}` : null;
   return (
-    <div className="bg-white rounded-2xl p-4 border border-border shadow-sm" dir="rtl" data-testid={`feed-card-action`}>
+    <div className="bg-white rounded-2xl p-4 border border-border shadow-sm" data-testid={`feed-card-action`}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           {profileUrl ? (
@@ -57,7 +57,7 @@ function ActionCard({ card, onShowOnGlobe }) {
           data-testid="feed-show-on-globe"
         >
           <Globe className="w-3 h-3" />
-          <span>ראה על הגלובוס</span>
+          <span>View on globe</span>
         </button>
       </div>
     </div>
@@ -67,10 +67,10 @@ function ActionCard({ card, onShowOnGlobe }) {
 function QuestionCard({ card }) {
   const color = dirColors[card.direction] || '#6366f1';
   return (
-    <div className="rounded-2xl p-4 border shadow-sm" dir="rtl" data-testid="feed-card-question" style={{ backgroundColor: `${color}08`, borderColor: `${color}20` }}>
+    <div className="rounded-2xl p-4 border shadow-sm" data-testid="feed-card-question" style={{ backgroundColor: `${color}08`, borderColor: `${color}20` }}>
       <div className="flex items-center gap-2 mb-2">
         <MessageCircle className="w-4 h-4" style={{ color }} />
-        <span className="text-xs font-semibold" style={{ color }}>שאלה להתמצאות</span>
+        <span className="text-xs font-semibold" style={{ color }}>Orientation Question</span>
       </div>
       <p className="text-sm font-medium text-gray-800">{card.question_he}</p>
     </div>
@@ -79,10 +79,10 @@ function QuestionCard({ card }) {
 
 function ReflectionCard({ card }) {
   return (
-    <div className="bg-violet-50 rounded-2xl p-4 border border-violet-100 shadow-sm" dir="rtl" data-testid="feed-card-reflection">
+    <div className="bg-violet-50 rounded-2xl p-4 border border-violet-100 shadow-sm" data-testid="feed-card-reflection">
       <div className="flex items-center gap-2 mb-2">
         <Zap className="w-4 h-4 text-violet-500" />
-        <span className="text-xs font-semibold text-violet-600">תובנה מהשדה</span>
+        <span className="text-xs font-semibold text-violet-600">Field Insight</span>
       </div>
       <p className="text-sm text-violet-800 leading-relaxed">{card.reflection_he}</p>
     </div>
@@ -92,10 +92,10 @@ function ReflectionCard({ card }) {
 function LeaderCard({ card }) {
   const profileUrl = card.user_id ? `/profile/${card.user_id}` : null;
   return (
-    <div className="bg-gradient-to-l from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200 shadow-sm" dir="rtl" data-testid="feed-card-leader">
+    <div className="bg-gradient-to-l from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200 shadow-sm" data-testid="feed-card-leader">
       <div className="flex items-center gap-2 mb-2">
         <Star className="w-4 h-4 text-amber-500" />
-        <span className="text-xs font-semibold text-amber-700">מוביל שדה</span>
+        <span className="text-xs font-semibold text-amber-700">Field Leader</span>
       </div>
       <div className="flex items-center gap-3">
         {profileUrl ? (
@@ -109,7 +109,7 @@ function LeaderCard({ card }) {
           ) : (
             <p className="text-sm font-semibold text-gray-800">{card.alias} · {card.country}</p>
           )}
-          <p className="text-[10px] text-gray-500">{card.niche_tag} · ערך: {card.total_value}</p>
+          <p className="text-[10px] text-gray-500">{card.niche_tag} · Value: {card.total_value}</p>
         </div>
       </div>
     </div>
@@ -120,10 +120,10 @@ function MissionCard({ card }) {
   const color = dirColors[card.mission_direction] || '#6366f1';
   const progress = card.target > 0 ? Math.min(100, (card.participants / card.target) * 100) : 0;
   return (
-    <div className="rounded-2xl p-4 border shadow-sm bg-[#0a0a1a] text-white" dir="rtl" data-testid="feed-card-mission">
+    <div className="rounded-2xl p-4 border shadow-sm bg-[#0a0a1a] text-white" data-testid="feed-card-mission">
       <div className="flex items-center gap-2 mb-2">
         <Target className="w-4 h-4" style={{ color }} />
-        <span className="text-xs font-semibold">משימת שדה</span>
+        <span className="text-xs font-semibold">Field Mission</span>
         <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: `${color}30`, color }}>{card.mission_direction_he}</span>
       </div>
       <div className="flex items-center gap-2 mt-2">

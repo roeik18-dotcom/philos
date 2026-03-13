@@ -7,8 +7,8 @@ const NUDGES = [
   {
     id: 'mission',
     icon: Target,
-    text: 'הצטרף למשימה היומית',
-    subtext: 'פעולה קולקטיבית מחזקת את השדה כולו',
+    text: 'Join the daily mission',
+    subtext: 'Collective action strengthens the entire field',
     color: '#6366f1',
     bg: 'bg-indigo-50',
     border: 'border-indigo-100',
@@ -17,8 +17,8 @@ const NUDGES = [
   {
     id: 'globe',
     icon: Globe,
-    text: 'שלח נקודה לגלובוס',
-    subtext: 'סמן את הנוכחות שלך על המפה הגלובלית',
+    text: 'Send a point to the globe',
+    subtext: 'Mark your presence on the global map',
     color: '#22c55e',
     bg: 'bg-green-50',
     border: 'border-green-100',
@@ -27,8 +27,8 @@ const NUDGES = [
   {
     id: 'return',
     icon: Sun,
-    text: 'חזור מחר להתמצאות הבאה',
-    subtext: 'רצף יומי מעמיק את הנוכחות שלך בשדה',
+    text: 'Come back tomorrow for your next orientation',
+    subtext: 'A daily streak deepens your presence in the field',
     color: '#3b82f6',
     bg: 'bg-blue-50',
     border: 'border-blue-100',
@@ -77,8 +77,8 @@ export default function RetentionNudges({ visible, onNavigate }) {
   if (active.length === 0) return null;
 
   return (
-    <div className="space-y-2 animate-fadeIn" dir="rtl" data-testid="retention-nudges">
-      <p className="text-[10px] text-gray-400 text-center mb-1">מה עכשיו?</p>
+    <div className="space-y-2 animate-fadeIn" data-testid="retention-nudges">
+      <p className="text-[10px] text-gray-400 text-center mb-1">What's next?</p>
       {active.slice(0, 3).map((nudge) => {
         const Icon = nudge.icon;
         return (

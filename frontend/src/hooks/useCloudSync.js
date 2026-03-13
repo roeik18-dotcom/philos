@@ -167,7 +167,7 @@ export function useCloudSync({
     const hydrateFromCloud = async () => {
       if (!user || hasHydratedFromCloud.current) return;
       
-      setSyncStatus(prev => ({ ...prev, syncing: true, syncMessage: 'טוען נתונים מהענן...' }));
+      setSyncStatus(prev => ({ ...prev, syncing: true, syncMessage: 'Loading data from cloud...' }));
       
       try {
         const fullData = await getFullUserData(user.id);
@@ -220,13 +220,13 @@ export function useCloudSync({
             syncing: false, 
             deviceSynced: true,
             lastSynced: fullData.lastSynced,
-            syncMessage: 'מסונכרן בין מכשירים'
+            syncMessage: 'Synced across devices'
           }));
         } else {
           setSyncStatus(prev => ({ 
             ...prev, 
             syncing: false, 
-            syncMessage: 'שגיאה בטעינת נתונים'
+            syncMessage: 'Error loading data'
           }));
         }
       } catch (error) {
@@ -234,7 +234,7 @@ export function useCloudSync({
         setSyncStatus(prev => ({ 
           ...prev, 
           syncing: false, 
-          syncMessage: 'שגיאה בסנכרון'
+          syncMessage: 'Error syncing'
         }));
       }
     };

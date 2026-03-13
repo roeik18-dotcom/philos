@@ -26,7 +26,7 @@ export default function CommunityStreakSection() {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-3"></div>
         <div className="h-10 bg-gray-200 rounded w-2/3"></div>
       </section>
@@ -36,24 +36,24 @@ export default function CommunityStreakSection() {
   if (!data) return null;
 
   return (
-    <section className="philos-section animate-section animate-section-7 bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200" dir="rtl" data-testid="community-streak-section">
+    <section className="philos-section animate-section animate-section-7 bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200" data-testid="community-streak-section">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center">
           <Flame className="w-5 h-5 text-orange-600" />
         </div>
-        <span className="text-sm font-medium text-orange-700">רצף קהילתי</span>
+        <span className="text-sm font-medium text-orange-700">Community Streak</span>
       </div>
 
       <div className="flex items-center justify-between">
         <div>
           <p className="text-base font-bold text-gray-800" data-testid="streak-users-message">
-            {data.users_on_streak.toLocaleString('he-IL')} אנשים נמצאים ברצף היום
+            {data.users_on_streak.toLocaleString('en-US')} people are on a streak today
           </p>
           {data.longest_streak_today > 0 && (
             <div className="flex items-center gap-1.5 mt-1.5">
               <Trophy className="w-3.5 h-3.5 text-amber-500" />
               <span className="text-xs text-gray-500" data-testid="longest-streak-value">
-                רצף הארוך ביותר: {data.longest_streak_today} ימים
+                Longest streak: {data.longest_streak_today} days
               </span>
             </div>
           )}

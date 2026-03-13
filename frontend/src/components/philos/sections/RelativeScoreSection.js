@@ -4,10 +4,10 @@ import { Award } from 'lucide-react';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const directionLabels = {
-  recovery: 'התאוששות',
-  order: 'סדר',
-  contribution: 'תרומה',
-  exploration: 'חקירה'
+  recovery: 'Recovery',
+  order: 'Order',
+  contribution: 'Contribution',
+  exploration: 'Exploration'
 };
 
 const directionColors = {
@@ -47,17 +47,17 @@ export default function RelativeScoreSection({ userId }) {
   const color = directionColors[data.direction] || '#8b5cf6';
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-3" dir="rtl" data-testid="relative-score-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-3" data-testid="relative-score-section">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${color}15` }}>
           <Award className="w-6 h-6" style={{ color }} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-gray-800" data-testid="relative-score-message">
-            אתה פעיל יותר מ-{data.percentile}% מהמשתמשים היום
+            You are more active than {data.percentile}% of users today
           </p>
           <p className="text-xs text-gray-500 mt-0.5">
-            כיוון מוביל: {directionLabels[data.direction] || data.direction}
+            Leading direction: {directionLabels[data.direction] || data.direction}
           </p>
         </div>
         <div className="text-2xl font-black animate-glow-in" style={{ color }} data-testid="relative-score-percentile">

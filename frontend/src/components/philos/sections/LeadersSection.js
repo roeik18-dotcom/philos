@@ -16,14 +16,14 @@ export default function LeadersSection() {
   if (!data) return null;
 
   return (
-    <section className="philos-section bg-white border-border" dir="rtl" data-testid="leaders-section">
+    <section className="philos-section bg-white border-border" data-testid="leaders-section">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
           <Crown className="w-5 h-5 text-amber-600" />
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-800">מובילי שדה</span>
-          <p className="text-[10px] text-gray-400">המשפיעים הגדולים ביותר</p>
+          <span className="text-sm font-semibold text-gray-800">Field Leaders</span>
+          <p className="text-[10px] text-gray-400">The biggest influencers</p>
         </div>
       </div>
 
@@ -47,7 +47,7 @@ export default function LeadersSection() {
             </div>
             <div className="text-left">
               <p className="text-xs font-bold text-gray-800">{Math.round(l.impact_score)}</p>
-              <p className="text-[8px] text-gray-400">{l.actions} פעולות</p>
+              <p className="text-[8px] text-gray-400">{l.actions} actions</p>
             </div>
           </a>
         ))}

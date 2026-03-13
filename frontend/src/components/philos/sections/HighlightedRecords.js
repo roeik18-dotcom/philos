@@ -17,8 +17,8 @@ export default function HighlightedRecords() {
   if (!records.length) return null;
 
   return (
-    <section className="mb-2" dir="rtl" data-testid="highlighted-records">
-      <p className="text-[10px] text-gray-400 mb-2.5">אנשים בשדה</p>
+    <section className="mb-2" data-testid="highlighted-records">
+      <p className="text-[10px] text-gray-400 mb-2.5">People in the field</p>
 
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
         {records.map((r) => {
@@ -57,7 +57,7 @@ export default function HighlightedRecords() {
               <div className="flex items-center gap-2.5">
                 <div>
                   <p className="text-xs font-bold text-white tabular-nums">{r.impact_score}</p>
-                  <p className="text-[8px] text-gray-600">השפעה</p>
+                  <p className="text-[8px] text-gray-600">Impact</p>
                 </div>
                 {r.invite_count > 0 && (
                   <div className="flex items-center gap-0.5">

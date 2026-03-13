@@ -2,22 +2,22 @@ import { useState, useEffect, useMemo } from 'react';
 
 // Hebrew labels for value tags
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Pattern descriptions in Hebrew
 const patternDescriptions = {
-  contribution: 'מומנטום חיובי של תרומה',
-  recovery: 'איזון של התאוששות',
-  order: 'מיקוד בסדר וארגון',
-  harm: 'לחץ ונזק',
-  avoidance: 'הימנעות',
-  balanced: 'מערכת מאוזנת',
-  none: 'אין נתונים'
+  contribution: 'Positive contribution momentum',
+  recovery: 'Recovery balance',
+  order: 'Focus on order and organization',
+  harm: 'Pressure and Harm',
+  avoidance: 'Avoidance',
+  balanced: 'Balanced system',
+  none: 'No data'
 };
 
 // Direction colors
@@ -151,7 +151,7 @@ const calculateWeeklyRecommendation = (analysis) => {
     return {
       direction: 'recovery',
       reason: 'negative_balance',
-      insight: 'נראה לחץ בשבוע שעבר. השבוע מומלץ לחזק כיוון של התאוששות.'
+      insight: 'Pressure appears from last week. This week, consider strengthening the direction of recovery.'
     };
   }
 
@@ -159,7 +159,7 @@ const calculateWeeklyRecommendation = (analysis) => {
     return {
       direction: 'order',
       reason: 'negative_balance',
-      insight: 'נראה דפוס הימנעות בשבוע שעבר. השבוע מומלץ לחזק כיוון של סדר.'
+      insight: 'An avoidance pattern appears from last week. This week, consider strengthening the direction of order.'
     };
   }
 
@@ -177,7 +177,7 @@ const calculateWeeklyRecommendation = (analysis) => {
     return {
       direction: weakestPositive.direction,
       reason: 'gap',
-      insight: `נראה פער מתמשך בכיוון ${valueLabels[weakestPositive.direction]} — זה הכיוון המומלץ לשבוע הקרוב.`
+      insight: `A persistent gap in direction appears ${valueLabels[weakestPositive.direction]} — This is the recommended direction for the coming week.`
     };
   }
 
@@ -186,7 +186,7 @@ const calculateWeeklyRecommendation = (analysis) => {
     return {
       direction: strongestPositive.tag,
       reason: 'momentum',
-      insight: `שבוע שעבר בלט דפוס של ${valueLabels[strongestPositive.tag]}. השבוע מומלץ להמשיך במומנטום.`
+      insight: `Last week showed a pattern of ${valueLabels[strongestPositive.tag]}. This week it is recommended to continue the momentum.`
     };
   }
 
@@ -194,7 +194,7 @@ const calculateWeeklyRecommendation = (analysis) => {
   return {
     direction: 'contribution',
     reason: 'default',
-    insight: 'השבוע מומלץ לחזק כיוון של תרומה.'
+    insight: 'This week it is recommended to strengthen a contribution direction.'
   };
 };
 
@@ -288,7 +288,6 @@ export default function WeeklyOrientationSummarySection({ history, onStartWeek }
   return (
     <section 
       className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-3xl p-5 shadow-sm border border-purple-200"
-      dir="rtl"
       data-testid="weekly-orientation-summary-section"
     >
       {/* Header */}
@@ -299,24 +298,24 @@ export default function WeeklyOrientationSummarySection({ history, onStartWeek }
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">סיכום שבועי</h3>
-          <p className="text-xs text-purple-700">השבוע החדש מתחיל מתוך הדפוס של השבוע שעבר.</p>
+          <h3 className="text-lg font-semibold text-foreground">Weekly Summary</h3>
+          <p className="text-xs text-purple-700">The new week starts from last week's pattern.</p>
         </div>
       </div>
 
       {/* Last Week Summary */}
       <div className="bg-white/60 rounded-xl p-4 mb-3">
-        <h4 className="text-sm font-medium text-muted-foreground mb-3">שבוע שעבר</h4>
+        <h4 className="text-sm font-medium text-muted-foreground mb-3">Last week</h4>
         
         {totalDecisions === 0 ? (
           <p className="text-base text-foreground" data-testid="last-week-pattern">
-            לא הייתה פעילות בשבוע שעבר.
+            There was no activity last week.
           </p>
         ) : (
           <div className="space-y-2">
             {/* Dominant Pattern */}
             <p className="text-base font-medium text-foreground" data-testid="last-week-pattern">
-              בלט דפוס של {patternDescriptions[dominantPattern]}.
+              A pattern stood out of {patternDescriptions[dominantPattern]}.
             </p>
             
             {/* Strongest Positive */}
@@ -326,7 +325,7 @@ export default function WeeklyOrientationSummarySection({ history, onStartWeek }
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
                 <span className="text-sm text-green-700" data-testid="strongest-positive">
-                  חיובי: {valueLabels[strongestPositive.tag]} ({strongestPositive.count})
+                  Positive: {valueLabels[strongestPositive.tag]} ({strongestPositive.count})
                 </span>
               </div>
             )}
@@ -338,13 +337,13 @@ export default function WeeklyOrientationSummarySection({ history, onStartWeek }
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
                 <span className="text-sm text-red-700" data-testid="strongest-negative">
-                  שלילי: {valueLabels[strongestNegative.tag]} ({strongestNegative.count})
+                  Negative: {valueLabels[strongestNegative.tag]} ({strongestNegative.count})
                 </span>
               </div>
             )}
 
             <p className="text-xs text-muted-foreground mt-1">
-              {totalDecisions} החלטות בשבוע שעבר
+              {totalDecisions} decisions last week
             </p>
           </div>
         )}
@@ -352,7 +351,7 @@ export default function WeeklyOrientationSummarySection({ history, onStartWeek }
 
       {/* This Week's Recommendation */}
       <div className={`${colors.bg} rounded-xl p-4 mb-4 border ${colors.border}`}>
-        <h4 className="text-sm font-medium text-muted-foreground mb-2">השבוע</h4>
+        <h4 className="text-sm font-medium text-muted-foreground mb-2">This week</h4>
         <div className="flex items-center gap-2 mb-2">
           <span className={`text-xs px-2 py-1 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
             {valueLabels[weeklyRecommendation.direction]}
@@ -373,12 +372,12 @@ export default function WeeklyOrientationSummarySection({ history, onStartWeek }
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span>התחל את השבוע</span>
+        <span>Start the week</span>
       </button>
 
       {/* Footer */}
       <p className="text-xs text-muted-foreground mt-3 text-center">
-        הסיכום השבועי עוזר לבנות כיוון התנהגותי ארוך טווח
+        The weekly summary helps build long-term behavioral direction
       </p>
     </section>
   );

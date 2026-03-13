@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 
 // Hebrew value labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Value categories
@@ -122,8 +122,8 @@ export default function ChainInsightsSection({ history }) {
       if (startsNegative && endsPositive) {
         generatedInsights.push({
           type: 'recovery_chain',
-          title: 'מסלול התאוששות',
-          text: `השרשרת הזו מראה תיקון כיוון מ${valueLabels[firstValue]} ל${valueLabels[lastValue]}`,
+          title: 'Recovery Path',
+          text: `This chain shows direction correction from ${valueLabels[firstValue]} to ${valueLabels[lastValue]}`,
           chain: chain.map(n => n.action?.slice(0, 15)).join(' → '),
           priority: 1
         });
@@ -133,8 +133,8 @@ export default function ChainInsightsSection({ history }) {
       if (startsPositive && endsNegative) {
         generatedInsights.push({
           type: 'harm_chain',
-          title: 'מסלול סיכון',
-          text: `שרשרת זו מראה ירידה מ${valueLabels[firstValue]} ל${valueLabels[lastValue]}`,
+          title: 'Risk Path',
+          text: `This chain shows decline from ${valueLabels[firstValue]} to ${valueLabels[lastValue]}`,
           chain: chain.map(n => n.action?.slice(0, 15)).join(' → '),
           priority: 2
         });
@@ -145,8 +145,8 @@ export default function ChainInsightsSection({ history }) {
         if (negativeValues.includes(values[i]) && positiveValues.includes(values[i + 1])) {
           generatedInsights.push({
             type: 'correction',
-            title: 'תיקון באמצע המסלול',
-            text: `נמצא תיקון: מ${valueLabels[values[i]]} ל${valueLabels[values[i + 1]]}`,
+            title: 'Mid-path Correction',
+            text: `Correction found: from ${valueLabels[values[i]]} to ${valueLabels[values[i + 1]]}`,
             chain: chain.slice(i, i + 2).map(n => n.action?.slice(0, 15)).join(' → '),
             priority: 3
           });
@@ -159,8 +159,8 @@ export default function ChainInsightsSection({ history }) {
       if (allPositive && chain.length >= 2) {
         generatedInsights.push({
           type: 'growth',
-          title: 'מסלול צמיחה',
-          text: 'שרשרת עקבית של החלטות חיוביות',
+          title: 'Growth Path',
+          text: 'Consistent chain of positive decisions',
           chain: chain.map(n => n.action?.slice(0, 15)).join(' → '),
           priority: 4
         });
@@ -171,8 +171,8 @@ export default function ChainInsightsSection({ history }) {
       if (allNegative && chain.length >= 2) {
         generatedInsights.push({
           type: 'warning',
-          title: 'התראה',
-          text: 'שרשרת של החלטות בעייתיות - שקול לשנות כיוון',
+          title: 'Warning',
+          text: 'Chain of problematic decisions — consider changing direction',
           chain: chain.map(n => n.action?.slice(0, 15)).join(' → '),
           priority: 1
         });
@@ -192,8 +192,8 @@ export default function ChainInsightsSection({ history }) {
           const patternLabels = pattern.split('→').map(v => valueLabels[v] || v).join(' → ');
           generatedInsights.push({
             type: 'pattern',
-            title: 'דפוס חוזר',
-            text: `יש דפוס חוזר (${count} פעמים): ${patternLabels}`,
+            title: 'Repeating Pattern',
+            text: `Repeating pattern (${count} times): ${patternLabels}`,
             chain: patternLabels,
             priority: 2
           });
@@ -216,8 +216,8 @@ export default function ChainInsightsSection({ history }) {
     if (emotionalCorrections.length >= 2) {
       generatedInsights.push({
         type: 'pattern',
-        title: 'דפוס תיקון רגשי',
-        text: `יש דפוס חוזר של תגובה שלילית ואחריה תיקון (${emotionalCorrections.length} פעמים)`,
+        title: 'Emotional Correction Pattern',
+        text: `Repeating pattern of negative reaction followed by correction (${emotionalCorrections.length} times)`,
         chain: '',
         priority: 2
       });
@@ -241,12 +241,11 @@ export default function ChainInsightsSection({ history }) {
   return (
     <section 
       className="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-3xl p-5 shadow-sm border border-cyan-200"
-      dir="rtl"
       data-testid="chain-insights-section"
     >
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground">תובנות שרשרת</h3>
-        <p className="text-xs text-muted-foreground">ניתוח דפוסים התנהגותיים מהמסלולים שלך</p>
+        <h3 className="text-lg font-semibold text-foreground">Chain Insights</h3>
+        <p className="text-xs text-muted-foreground">Analyzing behavioral patterns from your paths</p>
       </div>
 
       {/* Insights list */}
@@ -285,19 +284,19 @@ export default function ChainInsightsSection({ history }) {
         <div className="flex flex-wrap gap-4 text-xs">
           <div className="flex items-center gap-1.5">
             <span className="text-green-500">●</span>
-            <span>מסלולי התאוששות: {insights.filter(i => i.type === 'recovery_chain' || i.type === 'growth').length}</span>
+            <span>Recovery paths: {insights.filter(i => i.type === 'recovery_chain' || i.type === 'growth').length}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-red-500">●</span>
-            <span>התראות: {insights.filter(i => i.type === 'harm_chain' || i.type === 'warning').length}</span>
+            <span>Warnings: {insights.filter(i => i.type === 'harm_chain' || i.type === 'warning').length}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-blue-500">●</span>
-            <span>תיקונים: {insights.filter(i => i.type === 'correction').length}</span>
+            <span>Corrections: {insights.filter(i => i.type === 'correction').length}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-purple-500">●</span>
-            <span>דפוסים: {insights.filter(i => i.type === 'pattern').length}</span>
+            <span>Patterns: {insights.filter(i => i.type === 'pattern').length}</span>
           </div>
         </div>
       </div>

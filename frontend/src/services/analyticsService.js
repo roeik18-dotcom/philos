@@ -3,11 +3,11 @@
 
 // Hebrew value tag labels
 export const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Value tag colors
@@ -369,18 +369,18 @@ export const analyzeFollowThrough = (history) => {
  */
 export const generatePatternSummary = (pattern) => {
   if (!pattern || pattern.total === 0) {
-    return 'אין מספיק נתונים לניתוח.';
+    return 'Not enough data for analysis.';
   }
 
   const { dominantTag, patternType, dominantPattern } = pattern;
 
   if (patternType === 'positive') {
-    return `נראה דפוס חיובי עם דגש על ${valueLabels[dominantTag?.tag] || 'איזון'}.`;
+    return `A positive pattern appears with emphasis on ${valueLabels[dominantTag?.tag] || 'Balance'}.`;
   } else if (patternType === 'negative') {
-    const negativeLabel = dominantPattern === 'harm' ? 'נזק' : 'הימנעות';
-    return `זוהה דפוס של ${negativeLabel}. מומלץ לשקול פעולות התאוששות.`;
+    const negativeLabel = dominantPattern === 'harm' ? 'Harm' : 'Avoidance';
+    return `A pattern was detected of ${negativeLabel}. Consider recovery actions.`;
   } else {
-    return 'המערכת מאוזנת. המשך לעקוב אחר הדפוסים.';
+    return 'The system is balanced. Continue monitoring the patterns.';
   }
 };
 

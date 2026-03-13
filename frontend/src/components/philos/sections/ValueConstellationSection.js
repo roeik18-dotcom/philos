@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
 const valueLabels = {
-  order: 'סדר',
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  avoidance: 'הימנעות',
-  harm: 'נזק'
+  order: 'Order',
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  avoidance: 'Avoidance',
+  harm: 'Harm'
 };
 
 const valueColors = {
@@ -93,8 +93,8 @@ export default function ValueConstellationSection({ history }) {
   
   return (
     <section className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-3xl p-5 shadow-sm border border-purple-200" data-testid="value-constellation-section">
-      <h3 className="text-lg font-semibold text-foreground mb-2">מפת קונסטלציית ערכים</h3>
-      <p className="text-xs text-muted-foreground mb-4">מבנה מרחבי של החלטות לפי ערכים</p>
+      <h3 className="text-lg font-semibold text-foreground mb-2">Value Constellation Map</h3>
+      <p className="text-xs text-muted-foreground mb-4">Spatial structure of decisions by values</p>
       
       {/* Constellation SVG */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
@@ -245,7 +245,7 @@ export default function ValueConstellationSection({ history }) {
                       fontSize="10"
                       fill="#6b7280"
                     >
-                      {count} החלטות ({percentage}%)
+                      {count} decisions ({percentage}%)
                     </text>
                   </g>
                 )}
@@ -259,7 +259,7 @@ export default function ValueConstellationSection({ history }) {
       <div className="grid grid-cols-2 gap-3">
         {/* Dominant Value */}
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-2">ערך דומיננטי</p>
+          <p className="text-xs text-muted-foreground mb-2">Dominant value</p>
           {dominantValue && dominantValue[1] > 0 ? (
             <div className="flex items-center gap-2">
               <div 
@@ -274,21 +274,21 @@ export default function ValueConstellationSection({ history }) {
               </span>
             </div>
           ) : (
-            <span className="text-sm text-muted-foreground">אין נתונים</span>
+            <span className="text-sm text-muted-foreground">No data</span>
           )}
         </div>
         
         {/* Transitions Count */}
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-2">מעברים</p>
+          <p className="text-xs text-muted-foreground mb-2">Transitions</p>
           <p className="text-lg font-bold text-foreground">{transitions.length}</p>
-          <p className="text-xs text-muted-foreground">קשרים בין ערכים</p>
+          <p className="text-xs text-muted-foreground">Links between values</p>
         </div>
       </div>
       
       {/* Value Distribution Bar */}
       <div className="bg-white/70 rounded-xl p-3 mt-3">
-        <p className="text-xs text-muted-foreground mb-2">התפלגות ערכים</p>
+        <p className="text-xs text-muted-foreground mb-2">Value Distribution</p>
         <div className="flex h-3 rounded-full overflow-hidden bg-gray-100">
           {Object.entries(valueCounts)
             .filter(([_, count]) => count > 0)

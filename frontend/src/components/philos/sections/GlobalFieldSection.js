@@ -4,11 +4,11 @@ import { SectionSkeleton } from '../LoadingSkeletons';
 
 // Hebrew labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Colors for values
@@ -70,7 +70,7 @@ const FieldVisualization = ({ data }) => {
     return (
       <svg width={width} height={height} className="opacity-30">
         <rect x="0" y="0" width={width} height={height} fill="#f0f9ff" rx="16" />
-        <text x={centerX} y={centerY} textAnchor="middle" fill="#94a3b8" fontSize="14">טוען...</text>
+        <text x={centerX} y={centerY} textAnchor="middle" fill="#94a3b8" fontSize="14">Loading...</text>
       </svg>
     );
   }
@@ -198,19 +198,19 @@ const FieldVisualization = ({ data }) => {
       </circle>
 
       {/* Axis labels */}
-      <text x={width - 25} y={centerY - 8} textAnchor="end" fill="#6366f1" fontSize="10" fontWeight="bold">סדר</text>
-      <text x="25" y={centerY - 8} textAnchor="start" fill="#6b7280" fontSize="10" fontWeight="bold">כאוס</text>
-      <text x={centerX} y="22" textAnchor="middle" fill="#10b981" fontSize="10" fontWeight="bold">קולקטיב</text>
-      <text x={centerX} y={height - 12} textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">אגו</text>
+      <text x={width - 25} y={centerY - 8} textAnchor="end" fill="#6366f1" fontSize="10" fontWeight="bold">Order</text>
+      <text x="25" y={centerY - 8} textAnchor="start" fill="#6b7280" fontSize="10" fontWeight="bold">Chaos</text>
+      <text x={centerX} y="22" textAnchor="middle" fill="#10b981" fontSize="10" fontWeight="bold">Collective</text>
+      <text x={centerX} y={height - 12} textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">Ego</text>
 
       {/* Legend indicators */}
       <g transform={`translate(${width - 45}, ${height - 45})`}>
         <circle cx="0" cy="0" r="6" fill="#3b82f6" opacity="0.5" />
-        <text x="10" y="4" fill="#64748b" fontSize="8">התאוששות</text>
+        <text x="10" y="4" fill="#64748b" fontSize="8">Recovery</text>
       </g>
       <g transform="translate(25, 235)">
         <circle cx="0" cy="0" r="6" fill="#ef4444" opacity="0.5" />
-        <text x="10" y="4" fill="#64748b" fontSize="8">נזק</text>
+        <text x="10" y="4" fill="#64748b" fontSize="8">Harm</text>
       </g>
     </svg>
   );
@@ -229,11 +229,11 @@ export default function GlobalFieldSection() {
           setFieldData(data);
           setError(null);
         } else {
-          setError(data.error || 'שגיאה בטעינת נתונים');
+          setError(data.error || 'Error loading data');
         }
       } catch (err) {
         console.error('Global field error:', err);
-        setError('שגיאה בחיבור לשרת');
+        setError('Error connecting to server');
       } finally {
         setLoading(false);
       }
@@ -254,22 +254,22 @@ export default function GlobalFieldSection() {
 
     // Direction insight
     if (dominant_direction === 'order') {
-      insights.push('השדה העולמי נוטה לכיוון סדר ומבנה.');
+      insights.push('The global field leans towards order and structure.');
     } else if (dominant_direction === 'collective') {
-      insights.push('השדה העולמי נוטה לכיוון קולקטיבי.');
+      insights.push('The global field leans towards the collective.');
     } else if (dominant_direction === 'balanced') {
-      insights.push('השדה העולמי מאוזן יחסית.');
+      insights.push('The global field is relatively balanced.');
     }
 
     // Harm/Recovery insight
     if (avg_harm_pressure < -5) {
-      insights.push('אזור הנזק חלש - מצב בריא.');
+      insights.push('Harm zone is weak — a healthy state.');
     } else if (avg_harm_pressure > 10) {
-      insights.push('יש לחץ נזק גבוה בשדה.');
+      insights.push('There is high harm pressure in the field.');
     }
 
     if (avg_recovery_stability > 15) {
-      insights.push('אזור ההתאוששות חזק.');
+      insights.push('The recovery zone is strong.');
     }
 
     return insights.join(' ');
@@ -277,20 +277,20 @@ export default function GlobalFieldSection() {
 
   // Determine field state description
   const fieldState = useMemo(() => {
-    if (!fieldData) return { label: 'טוען...', color: 'text-gray-500' };
+    if (!fieldData) return { label: 'Loading...', color: 'text-gray-500' };
 
     const { avg_harm_pressure, avg_recovery_stability, avg_order_drift } = fieldData;
 
     if (avg_harm_pressure > 10) {
-      return { label: 'מצב מתוח', color: 'text-red-600' };
+      return { label: 'Tense state', color: 'text-red-600' };
     }
     if (avg_recovery_stability > 15 && avg_harm_pressure < 0) {
-      return { label: 'מצב בריא', color: 'text-green-600' };
+      return { label: 'Healthy state', color: 'text-green-600' };
     }
     if (avg_order_drift > 10) {
-      return { label: 'מצב מאורגן', color: 'text-indigo-600' };
+      return { label: 'Organized state', color: 'text-indigo-600' };
     }
-    return { label: 'מצב מאוזן', color: 'text-blue-600' };
+    return { label: 'Balanced state', color: 'text-blue-600' };
   }, [fieldData]);
 
   if (loading) {
@@ -302,10 +302,9 @@ export default function GlobalFieldSection() {
       <section 
         className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-3xl p-5 shadow-sm border border-slate-200"
         data-testid="global-field-section"
-        dir="rtl"
       >
-        <h3 className="text-lg font-semibold text-foreground mb-2">שדה עולמי</h3>
-        <p className="text-sm text-muted-foreground">שגיאה בטעינת נתונים</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Global Field</h3>
+        <p className="text-sm text-muted-foreground">Error loading data</p>
       </section>
     );
   }
@@ -314,13 +313,12 @@ export default function GlobalFieldSection() {
     <section 
       className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-3xl p-5 shadow-sm border border-slate-200"
       data-testid="global-field-section"
-      dir="rtl"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">שדה עולמי</h3>
-          <p className="text-xs text-muted-foreground">מפת הערכים הקולקטיבית החיה</p>
+          <h3 className="text-lg font-semibold text-foreground">Global Field</h3>
+          <p className="text-xs text-muted-foreground">Live collective value map</p>
         </div>
         <div className="flex items-center gap-2">
           <span className={`text-sm font-bold ${fieldState.color}`}>
@@ -343,25 +341,25 @@ export default function GlobalFieldSection() {
       {fieldData && (
         <div className="grid grid-cols-4 gap-2 mb-4">
           <div className="bg-white/70 rounded-xl p-2 text-center">
-            <p className="text-xs text-muted-foreground">סחף סדר</p>
+            <p className="text-xs text-muted-foreground">Order Drift</p>
             <p className={`text-sm font-bold ${fieldData.avg_order_drift > 0 ? 'text-indigo-600' : 'text-gray-600'}`}>
               {fieldData.avg_order_drift > 0 ? '+' : ''}{fieldData.avg_order_drift}
             </p>
           </div>
           <div className="bg-white/70 rounded-xl p-2 text-center">
-            <p className="text-xs text-muted-foreground">סחף קולקטיבי</p>
+            <p className="text-xs text-muted-foreground">Collective Drift</p>
             <p className={`text-sm font-bold ${fieldData.avg_collective_drift > 0 ? 'text-green-600' : 'text-gray-600'}`}>
               {fieldData.avg_collective_drift > 0 ? '+' : ''}{fieldData.avg_collective_drift}
             </p>
           </div>
           <div className="bg-white/70 rounded-xl p-2 text-center">
-            <p className="text-xs text-muted-foreground">לחץ נזק</p>
+            <p className="text-xs text-muted-foreground">Harm Pressure</p>
             <p className={`text-sm font-bold ${fieldData.avg_harm_pressure < 0 ? 'text-green-600' : 'text-red-600'}`}>
               {fieldData.avg_harm_pressure}%
             </p>
           </div>
           <div className="bg-white/70 rounded-xl p-2 text-center">
-            <p className="text-xs text-muted-foreground">התאוששות</p>
+            <p className="text-xs text-muted-foreground">Recovery</p>
             <p className={`text-sm font-bold ${fieldData.avg_recovery_stability > 0 ? 'text-blue-600' : 'text-yellow-600'}`}>
               +{fieldData.avg_recovery_stability}%
             </p>
@@ -378,7 +376,7 @@ export default function GlobalFieldSection() {
 
       {/* Anonymous notice */}
       <p className="text-xs text-center text-muted-foreground mt-3">
-        כל הנתונים מוצגים באופן אנונימי
+        All data is displayed anonymously
       </p>
     </section>
   );

@@ -38,29 +38,29 @@ export default function GlobalTrendSection({ trendHistory }) {
   // Generate insights
   const insights = [];
   if (trends.orderDrift === 'increasing') {
-    insights.push('סחף סדר עולה - אתה מתקדם לכיוון יציבות.');
+    insights.push('Order Drift rising — you are advancing towards stability.');
   } else if (trends.orderDrift === 'decreasing') {
-    insights.push('סחף סדר יורד - שים לב לאיזון.');
+    insights.push('Order Drift falling — pay attention to balance.');
   }
   
   if (trends.harmPressure === 'decreasing') {
-    insights.push('לחץ נזק יורד - שיפור חיובי!');
+    insights.push('Harm Pressure falling - positive improvement!');
   } else if (trends.harmPressure === 'increasing') {
-    insights.push('לחץ נזק עולה - כדאי להתמקד בהתאוששות.');
+    insights.push('Harm Pressure rising - consider focusing on recovery.');
   }
   
   if (trends.recoveryStability === 'increasing') {
-    insights.push('יציבות התאוששות מתחזקת.');
+    insights.push('Recovery Stability strengthening.');
   } else if (trends.recoveryStability === 'decreasing') {
-    insights.push('יציבות התאוששות נחלשת - הוסף פעולות התאוששות.');
+    insights.push('Recovery Stability weakening — add recovery actions.');
   }
   
   if (trends.collectiveDrift === 'increasing') {
-    insights.push('מגמה חיובית לכיוון תרומה חברתית.');
+    insights.push('Positive trend towards social contribution.');
   }
   
   if (insights.length === 0) {
-    insights.push('המגמות יציבות - המשך במסלול הנוכחי.');
+    insights.push('Trends are stable — continue on the current path.');
   }
   
   const getTrendIcon = (trend) => {
@@ -79,17 +79,17 @@ export default function GlobalTrendSection({ trendHistory }) {
   
   return (
     <section className="bg-gradient-to-br from-rose-50 to-amber-50 rounded-3xl p-5 shadow-sm border border-rose-200" data-testid="global-trend-section">
-      <h3 className="text-lg font-semibold text-foreground mb-2">מגמות לאורך זמן</h3>
-      <p className="text-xs text-muted-foreground mb-4">{recentSessions.length} סשנים אחרונים</p>
+      <h3 className="text-lg font-semibold text-foreground mb-2">Trends Over Time</h3>
+      <p className="text-xs text-muted-foreground mb-4">{recentSessions.length} recent sessions</p>
       
       {/* Sparkline Charts */}
       <div className="bg-white/70 rounded-xl p-4 mb-4 space-y-4">
-        <p className="text-xs text-muted-foreground mb-3">גרף מגמות</p>
+        <p className="text-xs text-muted-foreground mb-3">Trend chart</p>
         
         {/* Order Drift Sparkline */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-indigo-600 font-medium">סחף סדר</span>
+            <span className="text-xs text-indigo-600 font-medium">Order Drift</span>
             <span className="text-xs text-muted-foreground">{dataPoints[dataPoints.length - 1]?.orderDrift || 0}</span>
           </div>
           <div className="flex items-end gap-1 h-8">
@@ -114,7 +114,7 @@ export default function GlobalTrendSection({ trendHistory }) {
         {/* Collective Drift Sparkline */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-green-600 font-medium">סחף חברתי</span>
+            <span className="text-xs text-green-600 font-medium">Social drift</span>
             <span className="text-xs text-muted-foreground">{dataPoints[dataPoints.length - 1]?.collectiveDrift || 0}</span>
           </div>
           <div className="flex items-end gap-1 h-8">
@@ -139,7 +139,7 @@ export default function GlobalTrendSection({ trendHistory }) {
         {/* Harm Pressure Sparkline */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-red-600 font-medium">לחץ נזק</span>
+            <span className="text-xs text-red-600 font-medium">Harm Pressure</span>
             <span className="text-xs text-muted-foreground">{dataPoints[dataPoints.length - 1]?.harmPressure || 0}%</span>
           </div>
           <div className="flex items-end gap-1 h-8">
@@ -164,7 +164,7 @@ export default function GlobalTrendSection({ trendHistory }) {
         {/* Recovery Stability Sparkline */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-blue-600 font-medium">יציבות התאוששות</span>
+            <span className="text-xs text-blue-600 font-medium">Recovery Stability</span>
             <span className="text-xs text-muted-foreground">{dataPoints[dataPoints.length - 1]?.recoveryStability || 0}%</span>
           </div>
           <div className="flex items-end gap-1 h-8">
@@ -188,57 +188,57 @@ export default function GlobalTrendSection({ trendHistory }) {
         
         {/* Timeline Labels */}
         <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t border-gray-100">
-          <span>ישן</span>
-          <span>חדש</span>
+          <span>None</span>
+          <span>new</span>
         </div>
       </div>
       
       {/* Trend Indicators */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-1">סחף סדר</p>
+          <p className="text-xs text-muted-foreground mb-1">Order Drift</p>
           <div className="flex items-center justify-between">
             <span className={`text-lg font-bold ${getTrendColor(trends.orderDrift, true)}`}>
               {getTrendIcon(trends.orderDrift)}
             </span>
             <span className="text-xs text-muted-foreground">
-              {trends.orderDrift === 'increasing' ? 'עולה' : trends.orderDrift === 'decreasing' ? 'יורד' : 'יציב'}
+              {trends.orderDrift === 'increasing' ? 'rising' : trends.orderDrift === 'decreasing' ? 'falling' : 'Stable'}
             </span>
           </div>
         </div>
         
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-1">סחף חברתי</p>
+          <p className="text-xs text-muted-foreground mb-1">Social drift</p>
           <div className="flex items-center justify-between">
             <span className={`text-lg font-bold ${getTrendColor(trends.collectiveDrift, true)}`}>
               {getTrendIcon(trends.collectiveDrift)}
             </span>
             <span className="text-xs text-muted-foreground">
-              {trends.collectiveDrift === 'increasing' ? 'עולה' : trends.collectiveDrift === 'decreasing' ? 'יורד' : 'יציב'}
+              {trends.collectiveDrift === 'increasing' ? 'rising' : trends.collectiveDrift === 'decreasing' ? 'falling' : 'Stable'}
             </span>
           </div>
         </div>
         
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-1">לחץ נזק</p>
+          <p className="text-xs text-muted-foreground mb-1">Harm Pressure</p>
           <div className="flex items-center justify-between">
             <span className={`text-lg font-bold ${getTrendColor(trends.harmPressure, false)}`}>
               {getTrendIcon(trends.harmPressure)}
             </span>
             <span className="text-xs text-muted-foreground">
-              {trends.harmPressure === 'increasing' ? 'עולה' : trends.harmPressure === 'decreasing' ? 'יורד' : 'יציב'}
+              {trends.harmPressure === 'increasing' ? 'rising' : trends.harmPressure === 'decreasing' ? 'falling' : 'Stable'}
             </span>
           </div>
         </div>
         
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-1">יציבות התאוששות</p>
+          <p className="text-xs text-muted-foreground mb-1">Recovery Stability</p>
           <div className="flex items-center justify-between">
             <span className={`text-lg font-bold ${getTrendColor(trends.recoveryStability, true)}`}>
               {getTrendIcon(trends.recoveryStability)}
             </span>
             <span className="text-xs text-muted-foreground">
-              {trends.recoveryStability === 'increasing' ? 'עולה' : trends.recoveryStability === 'decreasing' ? 'יורד' : 'יציב'}
+              {trends.recoveryStability === 'increasing' ? 'rising' : trends.recoveryStability === 'decreasing' ? 'falling' : 'Stable'}
             </span>
           </div>
         </div>
@@ -246,7 +246,7 @@ export default function GlobalTrendSection({ trendHistory }) {
       
       {/* Trend Insight */}
       <div className="bg-rose-100/50 border border-rose-200 rounded-xl p-4">
-        <p className="text-sm font-semibold text-rose-800 mb-2">תובנות מגמה</p>
+        <p className="text-sm font-semibold text-rose-800 mb-2">Trend insights</p>
         <div className="space-y-1">
           {insights.slice(0, 3).map((insight, idx) => (
             <p key={idx} className="text-sm text-rose-700">• {insight}</p>

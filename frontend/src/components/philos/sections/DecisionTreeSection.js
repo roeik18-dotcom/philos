@@ -2,11 +2,11 @@ import { useMemo, useRef, useEffect, useState } from 'react';
 
 // Hebrew labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Node colors
@@ -153,12 +153,11 @@ export default function DecisionTreeSection({ history }) {
   return (
     <section
       className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-violet-200"
-      dir="rtl"
       data-testid="decision-tree-section"
     >
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground">עץ החלטות</h3>
-        <p className="text-xs text-muted-foreground">מסלולי ההחלטות שלך כמבנה מסועף</p>
+        <h3 className="text-lg font-semibold text-foreground">Decision Tree</h3>
+        <p className="text-xs text-muted-foreground">Your decision paths as a branching structure</p>
       </div>
 
       {/* Legend */}
@@ -236,15 +235,15 @@ export default function DecisionTreeSection({ history }) {
       {/* Stats */}
       <div className="mt-3 pt-3 border-t border-violet-200 grid grid-cols-3 gap-2 text-xs text-center">
         <div>
-          <p className="text-muted-foreground">שורשים</p>
+          <p className="text-muted-foreground">Roots</p>
           <p className="font-semibold">{roots.length}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">צמתים</p>
+          <p className="text-muted-foreground">Nodes</p>
           <p className="font-semibold">{flatNodes.length}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">קשרים</p>
+          <p className="text-muted-foreground">Links</p>
           <p className="font-semibold">{totalEdges}</p>
         </div>
       </div>

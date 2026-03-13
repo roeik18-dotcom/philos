@@ -64,7 +64,7 @@ DELETE /api/philos/sessions/{user_id}/{id}    # Delete session
 
 ## Preview URL
 
-https://trust-ledger-11.preview.emergentagent.com
+https://philos-launch.preview.emergentagent.com
 
 ---
 

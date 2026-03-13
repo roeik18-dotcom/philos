@@ -2,11 +2,11 @@ import { useState, useMemo } from 'react';
 
 // Hebrew value tag labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Value tag colors
@@ -29,45 +29,45 @@ const generateAlternativePaths = (originalDecision, adaptiveScores = {}) => {
   // Path templates with Hebrew descriptions
   const pathTemplates = {
     contribution: {
-      action: 'לעזור למישהו',
-      hebrewName: 'מסלול תרומה',
-      description: 'פעולה שמכוונת לתת ולתרום לאחרים',
+      action: 'Help someone',
+      hebrewName: 'Contribution Path',
+      description: 'Action aimed at giving and contributing to others',
       orderDrift: 5,
       collectiveDrift: 15,
       harmPressure: -15,
       recoveryStability: 10
     },
     recovery: {
-      action: 'לקחת הפסקה קצרה',
-      hebrewName: 'מסלול התאוששות',
-      description: 'פעולה שמאפשרת התאוששות ומנוחה',
+      action: 'Take a short break',
+      hebrewName: 'Recovery Path',
+      description: 'Action that allows recovery and rest',
       orderDrift: -5,
       collectiveDrift: 0,
       harmPressure: -20,
       recoveryStability: 20
     },
     order: {
-      action: 'לארגן משהו קטן',
-      hebrewName: 'מסלול סדר',
-      description: 'פעולה שמגבירה סדר ומבנה',
+      action: 'Organize something small',
+      hebrewName: 'Order Path',
+      description: 'Action that increases order and structure',
       orderDrift: 15,
       collectiveDrift: 0,
       harmPressure: -10,
       recoveryStability: 5
     },
     harm: {
-      action: 'להגיב באגרסיביות',
-      hebrewName: 'מסלול נזק',
-      description: 'פעולה שעלולה לגרום נזק',
+      action: 'React aggressively',
+      hebrewName: 'Harm Path',
+      description: 'Action that may cause harm',
       orderDrift: -10,
       collectiveDrift: -15,
       harmPressure: 20,
       recoveryStability: -15
     },
     avoidance: {
-      action: 'להתעלם מהסיטואציה',
-      hebrewName: 'מסלול הימנעות',
-      description: 'פעולה של הימנעות או דחייה',
+      action: 'Ignore the situation',
+      hebrewName: 'Avoidance Path',
+      description: 'Action of avoidance or postponement',
       orderDrift: -5,
       collectiveDrift: -5,
       harmPressure: 5,
@@ -124,31 +124,31 @@ const generateInsightText = (originalDecision, alternativePath) => {
   
   // Balance comparison
   if (metrics.balanceDiff > 10) {
-    insights.push(`המסלול החלופי היה עשוי להוביל לאיזון גבוה יותר (+${metrics.balanceDiff} נקודות).`);
+    insights.push(`The alternative path could have led to higher balance (+${metrics.balanceDiff} points).`);
   } else if (metrics.balanceDiff < -10) {
-    insights.push(`המסלול שבחרת הוביל לאיזון טוב יותר מהחלופה.`);
+    insights.push(`The path you chose led to better balance than the alternative.`);
   }
   
   // Harm pressure comparison
   if (altType === 'recovery' && metrics.harmPressure < 0) {
-    insights.push(`אם היית בוחר במסלול התאוששות, לחץ הנזק היה נמוך יותר.`);
+    insights.push(`If you had chosen the recovery path, harm pressure would have been lower.`);
   }
   
   // Order/contribution insights
   if (altType === 'order' && metrics.orderDrift > 10) {
-    insights.push(`המסלול החלופי היה עשוי להוביל ליותר סדר ופחות הימנעות.`);
+    insights.push(`The alternative path could have led to more order and less avoidance.`);
   }
   
   if (altType === 'contribution' && metrics.collectiveDrift > 10) {
-    insights.push(`מסלול תרומה היה מחזק את הכיוון הקולקטיבי.`);
+    insights.push(`A contribution path would have strengthened the collective direction.`);
   }
   
   // Default insight if none generated
   if (insights.length === 0) {
     if (metrics.balanceDiff >= 0) {
-      insights.push(`שני המסלולים היו מובילים לתוצאות דומות.`);
+      insights.push(`Both paths would have led to similar results.`);
     } else {
-      insights.push(`הבחירה שלך הייתה מתאימה למצב.`);
+      insights.push(`Your choice was appropriate for the situation.`);
     }
   }
   
@@ -195,7 +195,6 @@ export default function DecisionReplaySection({
   return (
     <section 
       className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl p-5 shadow-sm border border-purple-200"
-      dir="rtl"
       data-testid="decision-replay-section"
     >
       {/* Header */}
@@ -205,9 +204,9 @@ export default function DecisionReplaySection({
             <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            הפעלה חוזרת של החלטה
+            Decision Replay
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">בדוק מה היה קורה אם היית בוחר אחרת</p>
+          <p className="text-xs text-muted-foreground mt-1">See what would have happened if you chose differently</p>
         </div>
         <button
           onClick={onClose}
@@ -224,7 +223,7 @@ export default function DecisionReplaySection({
       <div className="bg-white/70 rounded-xl p-4 mb-4 border-2 border-purple-300">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-            ההחלטה המקורית
+            The original decision
           </span>
           <span className="text-xs text-muted-foreground">{replayDecision.time}</span>
         </div>
@@ -234,13 +233,13 @@ export default function DecisionReplaySection({
             {valueLabels[replayDecision.value_tag] || replayDecision.value_tag}
           </span>
           <span className="text-muted-foreground">
-            איזון: <span className="font-medium">{replayDecision.balance_score}</span>
+            Balance: <span className="font-medium">{replayDecision.balance_score}</span>
           </span>
           <span className="text-muted-foreground">
-            סדר: <span className="font-medium">{replayDecision.chaos_order}</span>
+            Order: <span className="font-medium">{replayDecision.chaos_order}</span>
           </span>
           <span className="text-muted-foreground">
-            קולקטיב: <span className="font-medium">{replayDecision.ego_collective}</span>
+            Collective: <span className="font-medium">{replayDecision.ego_collective}</span>
           </span>
         </div>
       </div>
@@ -251,7 +250,7 @@ export default function DecisionReplaySection({
           <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
           </svg>
-          מסלולים חלופיים אפשריים
+          Possible alternative paths
         </h4>
         
         <div className="space-y-3">
@@ -274,12 +273,12 @@ export default function DecisionReplaySection({
                 </div>
                 {path.metrics.balanceDiff > 0 && (
                   <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                    +{path.metrics.balanceDiff} איזון
+                    +{path.metrics.balanceDiff} Balance
                   </span>
                 )}
                 {path.metrics.balanceDiff < 0 && (
                   <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full">
-                    {path.metrics.balanceDiff} איזון
+                    {path.metrics.balanceDiff} Balance
                   </span>
                 )}
               </div>
@@ -290,25 +289,25 @@ export default function DecisionReplaySection({
               {/* Predicted Metrics */}
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="flex items-center gap-1">
-                  <span className="text-muted-foreground">סדר צפוי:</span>
+                  <span className="text-muted-foreground">Expected order:</span>
                   <span className={`font-medium ${path.metrics.orderDrift > 0 ? 'text-indigo-600' : path.metrics.orderDrift < 0 ? 'text-orange-600' : ''}`}>
                     {path.metrics.predictedOrder}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-muted-foreground">קולקטיב צפוי:</span>
+                  <span className="text-muted-foreground">Expected collective:</span>
                   <span className={`font-medium ${path.metrics.collectiveDrift > 0 ? 'text-green-600' : path.metrics.collectiveDrift < 0 ? 'text-red-600' : ''}`}>
                     {path.metrics.predictedCollective}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-muted-foreground">לחץ נזק:</span>
+                  <span className="text-muted-foreground">Harm Pressure:</span>
                   <span className={`font-medium ${path.metrics.harmPressure < 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {path.metrics.harmPressure > 0 ? '+' : ''}{Math.round(path.metrics.harmPressure)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-muted-foreground">יציבות:</span>
+                  <span className="text-muted-foreground">stability:</span>
                   <span className={`font-medium ${path.metrics.recoveryStability > 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                     {path.metrics.recoveryStability > 0 ? '+' : ''}{Math.round(path.metrics.recoveryStability)}
                   </span>
@@ -329,7 +328,7 @@ export default function DecisionReplaySection({
               </svg>
             </div>
             <div>
-              <h5 className="text-sm font-semibold text-purple-800 mb-1">תובנה</h5>
+              <h5 className="text-sm font-semibold text-purple-800 mb-1">Insight</h5>
               <p className="text-sm text-purple-700">
                 {generateInsightText(replayDecision, selectedAltPath)}
               </p>
@@ -341,7 +340,7 @@ export default function DecisionReplaySection({
       {/* Help text */}
       {!selectedAltPath && (
         <div className="text-center text-xs text-muted-foreground py-2">
-          לחץ על מסלול חלופי כדי לראות את התובנה
+          Click on an alternative path to see the insight
         </div>
       )}
     </section>

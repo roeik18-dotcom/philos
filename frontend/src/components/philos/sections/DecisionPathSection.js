@@ -11,10 +11,10 @@ const directionColors = {
 };
 
 const directionLabels = {
-  recovery: 'התאוששות',
-  order: 'סדר',
-  contribution: 'תרומה',
-  exploration: 'חקירה'
+  recovery: 'Recovery',
+  order: 'Order',
+  contribution: 'Contribution',
+  exploration: 'Exploration'
 };
 
 // Icons for each drift type
@@ -158,7 +158,7 @@ export default function DecisionPathSection({ userId, onActionFollowed }) {
 
   if (loading && !pathData) {
     return (
-      <section className="bg-white rounded-3xl p-6 shadow-sm border border-border animate-pulse" dir="rtl">
+      <section className="bg-white rounded-3xl p-6 shadow-sm border border-border animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
         <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -180,7 +180,6 @@ export default function DecisionPathSection({ userId, onActionFollowed }) {
           ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200' 
           : `bg-gradient-to-br ${colors.bg} ${colors.border}`
       }`}
-      dir="rtl"
       data-testid="decision-path-section"
     >
       {/* Header */}
@@ -224,7 +223,7 @@ export default function DecisionPathSection({ userId, onActionFollowed }) {
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              בוצע
+              Done
             </span>
           )}
         </div>
@@ -245,17 +244,17 @@ export default function DecisionPathSection({ userId, onActionFollowed }) {
             }`}
             data-testid="complete-action-btn"
           >
-            עשיתי את זה ✓
+            I did it ✓
           </button>
         ) : (
           <div className="mt-3 text-center">
-            <p className="text-sm text-green-600 mb-2">מעולה! המשך הלאה.</p>
+            <p className="text-sm text-green-600 mb-2">Excellent! Keep going.</p>
             <button
               onClick={handleRefresh}
               className="text-xs text-gray-500 hover:text-gray-700 underline"
               data-testid="refresh-action-btn"
             >
-              קבל המלצה חדשה
+              Get new recommendation
             </button>
           </div>
         )}
@@ -265,7 +264,7 @@ export default function DecisionPathSection({ userId, onActionFollowed }) {
       {pathData.theory_basis && (
         <details className="mt-3">
           <summary className={`text-xs cursor-pointer ${isDrift ? 'text-amber-600' : 'text-gray-500'} hover:underline`}>
-            למה זה מומלץ?
+            Why is this recommended?
           </summary>
           <p className={`text-xs mt-2 p-2 rounded-lg ${isDrift ? 'bg-amber-100/50 text-amber-700' : 'bg-white/50 text-gray-600'}`} data-testid="theory-basis">
             {pathData.theory_basis}

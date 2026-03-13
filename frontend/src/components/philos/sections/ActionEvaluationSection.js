@@ -18,7 +18,6 @@ export default function ActionEvaluationSection({
       {recommendationMetadata && (
         <div 
           className="mb-4 p-3 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between"
-          dir="rtl"
           data-testid="recommendation-indicator"
         >
           <div className="flex items-center gap-2">
@@ -26,20 +25,20 @@ export default function ActionEvaluationSection({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
             <span className="text-sm text-sky-700">
-              הפעולה הזו נובעת מהכיוון המומלץ
+              This action follows the recommended direction
             </span>
             <span className="text-xs bg-sky-200 text-sky-700 px-2 py-0.5 rounded-full">
-              {recommendationMetadata.recommendation_direction === 'contribution' && 'תרומה'}
-              {recommendationMetadata.recommendation_direction === 'recovery' && 'התאוששות'}
-              {recommendationMetadata.recommendation_direction === 'order' && 'סדר'}
-              {recommendationMetadata.recommendation_direction === 'harm' && 'נזק'}
-              {recommendationMetadata.recommendation_direction === 'avoidance' && 'הימנעות'}
+              {recommendationMetadata.recommendation_direction === 'contribution' && 'Contribution'}
+              {recommendationMetadata.recommendation_direction === 'recovery' && 'Recovery'}
+              {recommendationMetadata.recommendation_direction === 'order' && 'Order'}
+              {recommendationMetadata.recommendation_direction === 'harm' && 'Harm'}
+              {recommendationMetadata.recommendation_direction === 'avoidance' && 'Avoidance'}
             </span>
           </div>
           <button
             onClick={onClearRecommendation}
             className="text-sky-600 hover:text-sky-800 p-1"
-            title="בטל קישור להמלצה"
+            title="Unlink from recommendation"
             data-testid="clear-recommendation-btn"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,20 +52,19 @@ export default function ActionEvaluationSection({
       {parentDecision && (
         <div 
           className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between"
-          dir="rtl"
         >
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
             <span className="text-sm text-amber-700">
-              המשך ל: <span className="font-medium">{parentDecision.action.slice(0, 40)}{parentDecision.action.length > 40 ? '...' : ''}</span>
+              Continue to: <span className="font-medium">{parentDecision.action.slice(0, 40)}{parentDecision.action.length > 40 ? '...' : ''}</span>
             </span>
           </div>
           <button
             onClick={onClearParent}
             className="text-amber-600 hover:text-amber-800 p-1"
-            title="בטל קישור"
+            title="Unlink"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

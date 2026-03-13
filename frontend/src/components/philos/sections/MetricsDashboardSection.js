@@ -4,12 +4,12 @@ import { BarChart3, Users, CheckCircle, UserPlus, Flame, Target, Lock, Link } fr
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const metrics = [
-  { key: 'active_users_today', label: 'משתמשים פעילים', Icon: Users, color: '#0d9488', format: v => v.toLocaleString('he-IL') },
-  { key: 'daily_question_completion_rate', label: 'השלמת שאלה יומית', Icon: CheckCircle, color: '#22c55e', format: v => `${v}%` },
-  { key: 'day2_retention', label: 'שימור יום 2', Icon: UserPlus, color: '#6366f1', format: v => `${v}%` },
-  { key: 'mission_participation_rate', label: 'השתתפות במשימה', Icon: Target, color: '#f59e0b', format: v => `${v}%` },
-  { key: 'avg_streak', label: 'רצף ממוצע', Icon: Flame, color: '#ef4444', format: v => v.toFixed(1) },
-  { key: 'invite_conversions', label: 'המרת הזמנות', Icon: Link, color: '#8b5cf6', format: v => `${v}%` }
+  { key: 'active_users_today', label: 'users active', Icon: Users, color: '#0d9488', format: v => v.toLocaleString('en-US') },
+  { key: 'daily_question_completion_rate', label: 'Daily question completion', Icon: CheckCircle, color: '#22c55e', format: v => `${v}%` },
+  { key: 'day2_retention', label: 'Day 2 retention', Icon: UserPlus, color: '#6366f1', format: v => `${v}%` },
+  { key: 'mission_participation_rate', label: 'Mission participation', Icon: Target, color: '#f59e0b', format: v => `${v}%` },
+  { key: 'avg_streak', label: 'Streak Average', Icon: Flame, color: '#ef4444', format: v => v.toFixed(1) },
+  { key: 'invite_conversions', label: 'Invite Conversions', Icon: Link, color: '#8b5cf6', format: v => `${v}%` }
 ];
 
 export default function MetricsDashboardSection() {
@@ -39,7 +39,7 @@ export default function MetricsDashboardSection() {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-gray-100 rounded-2xl"></div>)}
@@ -51,12 +51,12 @@ export default function MetricsDashboardSection() {
   if (!data) return null;
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-2" dir="rtl" data-testid="metrics-dashboard-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-2" data-testid="metrics-dashboard-section">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">
           <BarChart3 className="w-5 h-5 text-gray-600" />
         </div>
-        <span className="text-sm font-medium text-gray-700">סקירת שימור</span>
+        <span className="text-sm font-medium text-gray-700">Retention Overview</span>
         <Lock className="w-3 h-3 text-gray-400 mr-auto" />
       </div>
 

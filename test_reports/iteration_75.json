@@ -1,0 +1,126 @@
+{
+  "summary": "Frontend Translation Testing - Hebrew to English. Most UI elements successfully translated to English. However, Hebrew text remains in API responses from backend. The frontend components correctly display data but the backend returns Hebrew values in `_he` suffixed fields (dominant_direction_he, field_narrative_he, action_he, etc.). User-generated content in database remains in Hebrew. RTL text direction issues found with question marks appearing at beginning of sentences.",
+  "backend_issues": {
+    "critical": [
+      {
+        "file": "/app/backend/constants.py",
+        "issue": "GLOBE_DIR_LABELS contains Hebrew text: {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}. Should be English labels.",
+        "priority": "HIGH"
+      },
+      {
+        "endpoint": "/api/orientation/field-dashboard",
+        "issue": "Returns Hebrew fields: dominant_direction_he, field_narrative_he, momentum_he, ai_field_interpretation",
+        "priority": "HIGH"
+      },
+      {
+        "endpoint": "/api/orientation/compass-ai/{userId}",
+        "issue": "Returns Hebrew fields: dominant_direction_he, suggested_action_he",
+        "priority": "HIGH"
+      },
+      {
+        "endpoint": "/api/orientation/globe-activity",
+        "issue": "Returns Hebrew field: dominant_direction_he used in FieldImpactLayer",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "EntryLayer.js",
+        "issue": "Uses field.field_narrative_he and compass.dominant_direction_he - displays Hebrew from API",
+        "selector": "[data-testid='entry-world-direction']",
+        "priority": "HIGH"
+      },
+      {
+        "component": "FieldImpactLayer.js",
+        "issue": "Displays dominantHe + ' Leading' - shows Hebrew direction from API",
+        "selector": "[data-testid='field-impact-layer']",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Dashboard field stats",
+        "issue": "Hebrew text 'התאוששות Leading' displayed from API response",
+        "affected_selectors": ["[data-testid='field-impact-layer']"]
+      },
+      {
+        "flow": "Profile page action records",
+        "issue": "Action descriptions (action_he, direction_he, meanings) stored and displayed in Hebrew from database",
+        "affected_selectors": ["[data-testid='profile-action-record']"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Dashboard / DailyBaseSelection",
+        "issues": ["Question mark at beginning of sentences (RTL residue): '?What center are you operating from today' and '?How does your action impact the world'"]
+      }
+    ]
+  },
+  "verified_english_ui": {
+    "auth_screen": ["Philos Orientation", "Mental navigation system", "Sign In", "Sign Up", "Email", "Password", "Continue without account", "© 2026 Philos Orientation"],
+    "onboarding_modal": ["Measure your trust.", "Answer one question. See your trust state.", "Start the trust test", "Choose your first direction", "Contribution", "Recovery", "Order", "Exploration", "Send your first point", "Send to Globe", "Sent!"],
+    "dashboard_tabs": ["History", "Theory", "Insights", "Community", "Feed", "Home"],
+    "daily_base_selection": ["Body", "Mind", "Connection", "What center are you operating from today", "Select a daily base to continue", "Confirm"],
+    "field_impact": ["How does your action impact the world", "Every action you take is added to the global human field", "The field is the sum of all choices — yours and others", "Go to the system to see the full globe", "Contribution", "Recovery", "Order", "Exploration"],
+    "profile_stats": ["Impact", "Actions", "Streak", "Field Contribution"],
+    "profile_trust": ["Field Trust", "Field Value", "Field Risk", "Trust Status", "Stable/Fragile/Building/Restricted"],
+    "profile_other": ["Human Action Record", "Direction Distribution", "Opposition Axes", "Influence Chain", "Action Record", "Field History"],
+    "bottom_nav": ["Home", "My Requests", "History", "Profile"]
+  },
+  "hebrew_text_found": {
+    "dashboard": {
+      "location": "FieldImpactLayer - field stats section",
+      "text": "התאוששות Leading",
+      "should_be": "Recovery Leading",
+      "source": "API /api/orientation/globe-activity returns dominant_direction_he"
+    },
+    "profile_page": {
+      "locations": [
+        "User country: ישראל (should be Israel)",
+        "Direction badge: תרומה (should be Contribution)",
+        "AI interpretation: Hebrew paragraph",
+        "Action record titles: חקירה, תרומה, סדר",
+        "Action descriptions: כתבתי רשימת יעדים, ארגנתי את סביבת העבודה, etc."
+      ],
+      "source": "Database stores user actions and AI interpretations in Hebrew"
+    }
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_75.json"
+  ],
+  "action_items": [
+    "CRITICAL: Update /app/backend/constants.py - Change GLOBE_DIR_LABELS to English: {'recovery': 'Recovery', 'order': 'Order', 'contribution': 'Contribution', 'exploration': 'Exploration'}",
+    "Fix RTL text direction - Question marks should be at end of sentences, not beginning",
+    "Review all _he suffix fields in backend routes and either: (a) create English equivalents or (b) update frontend to use English direction keys with client-side mapping",
+    "Consider: Profile action records and AI interpretations may need translation migration for existing Hebrew data"
+  ],
+  "critical_code_review_comments": [
+    "EntryLayer.js lines 37-41: Uses _he fields from API - should use English versions",
+    "FieldImpactLayer.js line 72: Displays dominantHe directly - should use directionLabels[dominant] instead",
+    "/app/backend/constants.py: GLOBE_DIR_LABELS has Hebrew values that propagate through all APIs",
+    "Profile action records contain Hebrew from database - historical data migration may be needed"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "frontend_static_ui": "95% - All static UI text translated to English",
+    "frontend_dynamic_data": "50% - API data still returns Hebrew in _he fields",
+    "profile_page": "60% - Static labels in English, dynamic data in Hebrew"
+  },
+  "test_credentials": {
+    "test_user": {
+      "email": "newuser@test.com",
+      "password": "password123",
+      "user_id": "05d47b99-88f1-44b3-a879-6c995634eaa0"
+    }
+  },
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Hebrew-to-English translation partially complete. Static UI text is in English. Hebrew remains in: (1) GLOBE_DIR_LABELS in constants.py returning Hebrew direction labels, (2) field_narrative_he and other _he fields from APIs, (3) user action records stored in Hebrew in database. The frontend components EntryLayer.js and FieldImpactLayer.js use these _he fields directly. Fix needed in backend constants.py and frontend components to use English direction mapping. RTL question mark positioning issue exists in DailyBaseSelection and FieldImpactLayer.",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "note": "All APIs use real database operations"
+  }
+}

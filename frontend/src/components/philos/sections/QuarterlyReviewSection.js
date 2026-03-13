@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 
 // Hebrew value labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Value categories
@@ -24,15 +24,15 @@ const categoryColors = {
 
 // Category labels
 const categoryLabels = {
-  recovery: 'התאוששות',
-  harm: 'נזק',
-  correction: 'תיקון',
-  growth: 'צמיחה',
-  warning: 'אזהרה'
+  recovery: 'Recovery',
+  harm: 'Harm',
+  correction: 'Correction',
+  growth: 'Growth',
+  warning: 'Warning'
 };
 
 // Month names in Hebrew
-const hebrewMonths = ['חודש 1', 'חודש 2', 'חודש 3'];
+const hebrewMonths = ['Month 1', 'Month 2', 'Month 3'];
 
 export default function QuarterlyReviewSection({ history }) {
   // Calculate quarterly report with monthly breakdown
@@ -204,28 +204,28 @@ export default function QuarterlyReviewSection({ history }) {
 
     // Recovery stability
     if (recoveryStability === 'stable') {
-      insights.push('ברבעון האחרון נבנתה יציבות התאוששות עקבית');
+      insights.push('Last quarter saw consistent recovery stability built');
     } else if (recoveryStability === 'improving') {
-      insights.push('דפוסי התאוששות הולכים ומתחזקים');
+      insights.push('Recovery patterns are getting stronger');
     }
 
     // Harm trend
     const harmTrend = monthlyStats[2].harm - monthlyStats[0].harm;
     if (harmTrend < 0) {
-      insights.push('ניכרת ירידה מתמשכת בדפוסי נזק');
+      insights.push('A continued decrease in harm patterns is observed');
     } else if (harmTrend > 0) {
-      insights.push('יש עלייה בדפוסי נזק לאורך הרבעון - נקודה לתשומת לב');
+      insights.push('There is an increase in harm patterns over the quarter — a point of attention');
     }
 
     // Correction consistency
     if (correctionConsistency >= 2) {
-      insights.push('דפוסי תיקון הפכו לחלק יציב מההתנהגות');
+      insights.push('Correction patterns have become a stable part of behavior');
     }
 
     // Growth pattern
     const growthTrend = monthlyStats[2].growth - monthlyStats[0].growth;
     if (growthTrend > 0) {
-      insights.push('רצפי צמיחה הפכו תכופים יותר');
+      insights.push('Growth streaks have become more frequent');
     }
 
     // Overall assessment
@@ -233,9 +233,9 @@ export default function QuarterlyReviewSection({ history }) {
     const negativeTotal = quarterlyTotals.harm + quarterlyTotals.warning;
 
     if (positiveTotal > negativeTotal * 2) {
-      insights.push('הרבעון מסתיים במגמה חיובית ברורה 🌟');
+      insights.push('The quarter ends with a clear positive trend');
     } else if (negativeTotal > positiveTotal) {
-      insights.push('יש מקום לשיפור - הרבעון הבא יכול להיות טוב יותר');
+      insights.push('There is room for improvement — the next quarter can be better');
     }
 
     // Consistency trend
@@ -282,37 +282,36 @@ export default function QuarterlyReviewSection({ history }) {
   return (
     <section 
       className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-3xl p-5 shadow-sm border border-indigo-200"
-      dir="rtl"
       data-testid="quarterly-review-section"
     >
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground">סקירה רבעונית</h3>
-        <p className="text-xs text-muted-foreground">מגמות התנהגותיות מ-3 החודשים האחרונים</p>
+        <h3 className="text-lg font-semibold text-foreground">Quarterly Review</h3>
+        <p className="text-xs text-muted-foreground">Behavioral trends from the last 3 months</p>
       </div>
 
       {/* Summary stats */}
       <div className="grid grid-cols-4 gap-2 mb-4">
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-lg font-bold text-indigo-600">{totalDecisions}</p>
-          <p className="text-[10px] text-muted-foreground">החלטות</p>
+          <p className="text-[10px] text-muted-foreground">decisions</p>
         </div>
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-lg font-bold text-indigo-600">{totalChains}</p>
-          <p className="text-[10px] text-muted-foreground">שרשראות</p>
+          <p className="text-[10px] text-muted-foreground">chains</p>
         </div>
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-lg font-bold text-indigo-600">3</p>
-          <p className="text-[10px] text-muted-foreground">חודשים</p>
+          <p className="text-[10px] text-muted-foreground">months</p>
         </div>
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-lg font-bold text-indigo-600">{avgConsistency}%</p>
-          <p className="text-[10px] text-muted-foreground">עקביות</p>
+          <p className="text-[10px] text-muted-foreground">Consistency</p>
         </div>
       </div>
 
       {/* Monthly trend visualization - Line chart style */}
       <div className="bg-white/60 rounded-xl p-4 mb-4">
-        <p className="text-xs text-muted-foreground mb-3">מגמה חודשית</p>
+        <p className="text-xs text-muted-foreground mb-3">Monthly trend</p>
         
         <svg width="100%" height="160" className="block" style={{ direction: 'ltr' }}>
           {/* Grid */}
@@ -408,7 +407,7 @@ export default function QuarterlyReviewSection({ history }) {
           ))}
 
           {/* Y-axis label */}
-          <text x="20" y="80" fontSize="9" fill="#999" transform="rotate(-90, 20, 80)">שרשראות</text>
+          <text x="20" y="80" fontSize="9" fill="#999" transform="rotate(-90, 20, 80)">chains</text>
         </svg>
 
         {/* Legend */}
@@ -455,7 +454,7 @@ export default function QuarterlyReviewSection({ history }) {
               {dominantCategory === 'warning' && '🔻'}
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">דפוס דומיננטי</p>
+              <p className="text-xs text-muted-foreground">Dominant pattern</p>
               <p className="font-semibold text-sm">{categoryLabels[dominantCategory]}</p>
             </div>
           </div>
@@ -473,11 +472,11 @@ export default function QuarterlyReviewSection({ history }) {
               {recoveryStability === 'unstable' && '~'}
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">יציבות התאוששות</p>
+              <p className="text-xs text-muted-foreground">Recovery Stability</p>
               <p className="font-semibold text-sm">
-                {recoveryStability === 'stable' && 'יציבה'}
-                {recoveryStability === 'improving' && 'משתפרת'}
-                {recoveryStability === 'unstable' && 'לא יציבה'}
+                {recoveryStability === 'stable' && 'Stable'}
+                {recoveryStability === 'improving' && 'Improving'}
+                {recoveryStability === 'unstable' && 'Not stable'}
               </p>
             </div>
           </div>
@@ -489,20 +488,20 @@ export default function QuarterlyReviewSection({ history }) {
         <div className="grid grid-cols-2 gap-3 mb-4">
           {consistentImprovement && (
             <div className="bg-green-50 rounded-xl p-3 border border-green-200">
-              <p className="text-xs text-green-600 font-medium mb-1">שיפור עקבי</p>
+              <p className="text-xs text-green-600 font-medium mb-1">Consistent improvement</p>
               <p className="text-sm font-semibold text-green-700">
                 {categoryLabels[consistentImprovement]}
               </p>
-              <p className="text-xs text-green-600">עלייה קבועה לאורך הרבעון</p>
+              <p className="text-xs text-green-600">Consistent increase over the quarter</p>
             </div>
           )}
           {consistentRisk && (
             <div className="bg-red-50 rounded-xl p-3 border border-red-200">
-              <p className="text-xs text-red-600 font-medium mb-1">נקודת סיכון</p>
+              <p className="text-xs text-red-600 font-medium mb-1">Risk point</p>
               <p className="text-sm font-semibold text-red-700">
                 {categoryLabels[consistentRisk]}
               </p>
-              <p className="text-xs text-red-600">עלייה קבועה - מומלץ להתייחס</p>
+              <p className="text-xs text-red-600">Consistent increase — recommended to address</p>
             </div>
           )}
         </div>
@@ -511,8 +510,8 @@ export default function QuarterlyReviewSection({ history }) {
       {/* Correction consistency indicator */}
       <div className="bg-white/60 rounded-xl p-3 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-muted-foreground">עקביות תיקון</span>
-          <span className="text-xs font-medium">{correctionConsistency}/3 חודשים</span>
+          <span className="text-xs text-muted-foreground">Correction consistency</span>
+          <span className="text-xs font-medium">{correctionConsistency}/3 months</span>
         </div>
         <div className="flex gap-1">
           {[0, 1, 2].map(i => (
@@ -529,7 +528,7 @@ export default function QuarterlyReviewSection({ history }) {
       {/* Insights */}
       {insights.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">תובנות רבעוניות</p>
+          <p className="text-xs text-muted-foreground">Quarterly insights</p>
           {insights.map((insight, idx) => (
             <div 
               key={idx}
@@ -545,8 +544,8 @@ export default function QuarterlyReviewSection({ history }) {
       {/* Overall progress indicator */}
       <div className="mt-4 pt-3 border-t border-indigo-200">
         <div className="flex justify-between text-xs text-muted-foreground mb-2">
-          <span>מגמה רבעונית כללית</span>
-          <span>{avgConsistency}% חיובי</span>
+          <span>Overall quarterly trend</span>
+          <span>{avgConsistency}% Positive</span>
         </div>
         <div className="h-4 bg-gray-200 rounded-full overflow-hidden flex">
           <div 

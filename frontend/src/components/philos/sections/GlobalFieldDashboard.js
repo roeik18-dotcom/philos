@@ -21,7 +21,7 @@ export default function GlobalFieldDashboard() {
   const aiField = data.ai_field_interpretation || '';
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#0a0a1a] border border-gray-800/60 px-4 py-3" dir="rtl" data-testid="global-field-dashboard">
+    <div className="relative overflow-hidden rounded-2xl bg-[#0a0a1a] border border-gray-800/60 px-4 py-3" data-testid="global-field-dashboard">
       {/* Subtle ambient glow */}
       <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 30% 50%, ${domColor}08 0%, transparent 70%)` }} />
 

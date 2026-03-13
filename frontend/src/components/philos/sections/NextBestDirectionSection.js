@@ -48,7 +48,6 @@ export default function NextBestDirectionSection({ history, onFollowRecommendati
   return (
     <section 
       className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-3xl p-5 shadow-sm border border-sky-200"
-      dir="rtl"
       data-testid="next-best-direction-section"
     >
       {/* Header */}
@@ -59,9 +58,9 @@ export default function NextBestDirectionSection({ history, onFollowRecommendati
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">כיוון מומלץ</h3>
+          <h3 className="text-lg font-semibold text-foreground">Recommended direction</h3>
           <p className="text-xs text-muted-foreground">
-            ניווט התנהגותי מבוסס דפוסים
+            Behavioral navigation based on patterns
           </p>
         </div>
       </div>
@@ -102,7 +101,7 @@ export default function NextBestDirectionSection({ history, onFollowRecommendati
                 {valueLabels[direction]}
               </span>
               <div className="flex items-center gap-1 mt-1">
-                <span className="text-xs text-muted-foreground">עוצמה:</span>
+                <span className="text-xs text-muted-foreground">Strength:</span>
                 <div className="w-16 h-1.5 bg-white/50 rounded-full overflow-hidden">
                   <div 
                     className="h-full rounded-full transition-all duration-500"
@@ -118,7 +117,7 @@ export default function NextBestDirectionSection({ history, onFollowRecommendati
         {/* Action suggestion */}
         <div className="bg-white/60 rounded-lg px-4 py-3" data-testid="action-suggestion">
           <p className={`text-sm font-medium ${colors.text}`}>
-            כיוון מומלץ להיום: {actionSuggestion}
+            Recommended direction for today: {actionSuggestion}
           </p>
         </div>
       </div>
@@ -135,14 +134,14 @@ export default function NextBestDirectionSection({ history, onFollowRecommendati
             <p className="text-sm text-sky-800">{insight}</p>
             {theoryPath && (
               <p className="text-xs text-sky-600 mt-1 font-medium">
-                מסלול תיאורטי: {theoryPath}
+                Descriptive path: {theoryPath}
               </p>
             )}
             <p className="text-xs text-muted-foreground mt-2">
-              {reason === 'theory_balancing' && 'מבוסס על מסלול האיזון התיאורטי'}
-              {reason === 'theory_reinforcement' && 'מבוסס על חיזוק כיוון חיובי'}
-              {reason === 'no_history' && 'המלצה ראשונית'}
-              {reason === 'default' && 'המלצה כללית'}
+              {reason === 'theory_balancing' && 'Based on theoretical balance path'}
+              {reason === 'theory_reinforcement' && 'Based on positive direction reinforcement'}
+              {reason === 'no_history' && 'Initial recommendation'}
+              {reason === 'default' && 'General recommendation'}
             </p>
           </div>
         </div>
@@ -157,7 +156,7 @@ export default function NextBestDirectionSection({ history, onFollowRecommendati
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
-        <span>פעל לפי ההמלצה</span>
+        <span>Act on the recommendation</span>
       </button>
     </section>
   );

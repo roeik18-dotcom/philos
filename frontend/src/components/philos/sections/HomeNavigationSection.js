@@ -42,12 +42,11 @@ export default function HomeNavigationSection({
   return (
     <section 
       className="bg-white rounded-3xl p-6 shadow-sm border border-border"
-      dir="rtl"
       data-testid="home-navigation-section"
     >
-      {/* Current State - מצב נוכחי */}
+      {/* Current State - Current state */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-muted-foreground mb-2">מצב היום</h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-2">Today's Status</h3>
         <div className={`p-4 rounded-xl ${
           currentState.patternType === 'negative' ? 'bg-amber-50 border border-amber-200' :
           currentState.patternType === 'positive' ? 'bg-green-50 border border-green-200' :
@@ -62,15 +61,15 @@ export default function HomeNavigationSection({
           </p>
           {currentState.hasData && (
             <p className="text-sm text-muted-foreground mt-1">
-              {currentState.todayCount} החלטות היום • {currentState.totalCount} סה״כ
+              {currentState.todayCount} decisions Today • {currentState.totalCount} Total
             </p>
           )}
         </div>
       </div>
 
-      {/* Next Best Direction - כיוון מומלץ */}
+      {/* Next Best Direction - Recommended direction */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-muted-foreground mb-2">כיוון מומלץ</h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-2">Recommended direction</h3>
         <div className={`p-4 rounded-xl ${colors.bg} border ${colors.border}`}>
           <div className="flex items-center gap-2 mb-2">
             <span className={`text-xs px-2 py-1 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
@@ -96,7 +95,7 @@ export default function HomeNavigationSection({
             <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
-            <span className="text-sm text-sky-700">הפעולה נובעת מהכיוון המומלץ</span>
+            <span className="text-sm text-sky-700">The action follows the recommended direction</span>
           </div>
           <button
             onClick={onClearRecommendation}
@@ -116,7 +115,7 @@ export default function HomeNavigationSection({
           type="text"
           value={actionText}
           onChange={(e) => setActionText(e.target.value)}
-          placeholder="הזן פעולה לבדיקה..."
+          placeholder="Enter an action to check..."
           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           data-testid="home-action-input"
           onKeyDown={(e) => {
@@ -128,7 +127,7 @@ export default function HomeNavigationSection({
         {/* Helper text for new users */}
         {!currentState.hasData && (
           <p className="text-xs text-muted-foreground mt-2 text-right">
-            💡 תאר את הפעולה שעשית או שאתה מתכנן לעשות. לדוגמה: "יצאתי להליכה קצרה"
+            💡 Describe the action you did or plan to do. For example: "I went for a short walk"
           </p>
         )}
       </div>
@@ -144,7 +143,7 @@ export default function HomeNavigationSection({
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
-          <span>פעל לפי ההמלצה</span>
+          <span>Act on the recommendation</span>
         </button>
 
         {/* Evaluate Custom Action */}
@@ -154,7 +153,7 @@ export default function HomeNavigationSection({
             className="px-4 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-all"
             data-testid="home-evaluate-btn"
           >
-            בדוק
+            Check
           </button>
         )}
       </div>

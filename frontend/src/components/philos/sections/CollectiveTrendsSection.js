@@ -3,10 +3,10 @@ import { fetchCollectiveTrends } from '../../../services/dataService';
 
 // Hebrew labels
 const metricLabels = {
-  order_drift: 'סחף סדר',
-  collective_drift: 'סחף קולקטיבי',
-  harm_pressure: 'לחץ נזק',
-  recovery_stability: 'יציבות התאוששות'
+  order_drift: 'Order Drift',
+  collective_drift: 'Collective Drift',
+  harm_pressure: 'Harm Pressure',
+  recovery_stability: 'Recovery Stability'
 };
 
 // Simple SVG Sparkline component
@@ -61,7 +61,7 @@ const Sparkline = ({ data, color = '#10b981', height = 40, width = 120 }) => {
 // Bar chart component for value distribution
 const ValueBars = ({ current, previous }) => {
   const values = ['contribution', 'recovery', 'order'];
-  const labels = { contribution: 'תרומה', recovery: 'התאוששות', order: 'סדר' };
+  const labels = { contribution: 'Contribution', recovery: 'Recovery', order: 'Order' };
   const colors = { contribution: '#10b981', recovery: '#3b82f6', order: '#6366f1' };
   
   const maxVal = Math.max(
@@ -84,13 +84,13 @@ const ValueBars = ({ current, previous }) => {
               <div 
                 className="w-4 bg-gray-300 rounded-t transition-all"
                 style={{ height: `${prevHeight}px` }}
-                title={`תקופה קודמת: ${prevVal}`}
+                title={`Previous period: ${prevVal}`}
               />
               {/* Current bar */}
               <div 
                 className="w-4 rounded-t transition-all"
                 style={{ height: `${currHeight}px`, backgroundColor: colors[value] }}
-                title={`תקופה נוכחית: ${currVal}`}
+                title={`Current period: ${currVal}`}
               />
             </div>
             <span className="text-xs text-muted-foreground mt-1">{labels[value]}</span>
@@ -114,11 +114,11 @@ export default function CollectiveTrendsSection() {
           setTrendsData(data);
           setError(null);
         } else {
-          setError(data.error || 'שגיאה בטעינת נתונים');
+          setError(data.error || 'Error loading data');
         }
       } catch (err) {
         console.error('Collective trends error:', err);
-        setError('שגיאה בחיבור לשרת');
+        setError('Error connecting to server');
       } finally {
         setLoading(false);
       }
@@ -150,7 +150,6 @@ export default function CollectiveTrendsSection() {
     return (
       <section 
         className="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-3xl p-5 shadow-sm border border-sky-200"
-        dir="rtl"
       >
         <div className="animate-pulse">
           <div className="h-6 bg-sky-200 rounded w-1/3 mb-4"></div>
@@ -166,10 +165,9 @@ export default function CollectiveTrendsSection() {
       <section 
         className="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-3xl p-5 shadow-sm border border-sky-200"
         data-testid="collective-trends-section"
-        dir="rtl"
       >
-        <h3 className="text-lg font-semibold text-foreground mb-2">מגמות קולקטיביות</h3>
-        <p className="text-sm text-muted-foreground">טוען נתוני מגמות...</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Collective Trends</h3>
+        <p className="text-sm text-muted-foreground">Loading trend data...</p>
       </section>
     );
   }
@@ -188,13 +186,12 @@ export default function CollectiveTrendsSection() {
     <section 
       className="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-3xl p-5 shadow-sm border border-sky-200"
       data-testid="collective-trends-section"
-      dir="rtl"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">מגמות קולקטיביות</h3>
-          <p className="text-xs text-muted-foreground">השוואת 7 ימים אחרונים מול תקופה קודמת</p>
+          <h3 className="text-lg font-semibold text-foreground">Collective Trends</h3>
+          <p className="text-xs text-muted-foreground">Comparing last 7 days vs. previous period</p>
         </div>
         <div className="w-10 h-10 rounded-full bg-sky-200 flex items-center justify-center">
           <svg className="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,7 +202,7 @@ export default function CollectiveTrendsSection() {
 
       {/* Trend Lines Grid */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-sm font-medium text-muted-foreground mb-3">מגמות 7 ימים אחרונים</p>
+        <p className="text-sm font-medium text-muted-foreground mb-3">Last 7 days trends</p>
         
         <div className="grid grid-cols-2 gap-4">
           {/* Order Drift Trend */}
@@ -276,18 +273,18 @@ export default function CollectiveTrendsSection() {
 
       {/* Period Comparison */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-sm font-medium text-muted-foreground mb-3">השוואת תקופות</p>
+        <p className="text-sm font-medium text-muted-foreground mb-3">Period comparison</p>
         
         {/* Value Distribution Bars */}
         <div className="mb-4">
           <div className="flex justify-center gap-4 text-xs text-muted-foreground mb-2">
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 bg-gray-300 rounded"></span>
-              תקופה קודמת
+              Previous period
             </span>
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 bg-emerald-500 rounded"></span>
-              תקופה נוכחית
+              Current period
             </span>
           </div>
           <ValueBars 
@@ -300,7 +297,7 @@ export default function CollectiveTrendsSection() {
         <div className="grid grid-cols-2 gap-3 mt-4">
           {/* Order Drift Change */}
           <div className={`p-2 rounded-lg ${getChangeIndicator(changes.order_drift_change).bg}`}>
-            <p className="text-xs text-muted-foreground">שינוי סחף סדר</p>
+            <p className="text-xs text-muted-foreground">Order drift change</p>
             <div className="flex items-center gap-1">
               <span className={`text-lg ${getChangeIndicator(changes.order_drift_change).color}`}>
                 {getChangeIndicator(changes.order_drift_change).icon}
@@ -313,7 +310,7 @@ export default function CollectiveTrendsSection() {
 
           {/* Collective Drift Change */}
           <div className={`p-2 rounded-lg ${getChangeIndicator(changes.collective_drift_change).bg}`}>
-            <p className="text-xs text-muted-foreground">שינוי סחף קולקטיבי</p>
+            <p className="text-xs text-muted-foreground">Collective drift change</p>
             <div className="flex items-center gap-1">
               <span className={`text-lg ${getChangeIndicator(changes.collective_drift_change).color}`}>
                 {getChangeIndicator(changes.collective_drift_change).icon}
@@ -326,7 +323,7 @@ export default function CollectiveTrendsSection() {
 
           {/* Harm Pressure Change */}
           <div className={`p-2 rounded-lg ${getChangeIndicator(-changes.harm_pressure_change).bg}`}>
-            <p className="text-xs text-muted-foreground">שינוי לחץ נזק</p>
+            <p className="text-xs text-muted-foreground">Harm pressure change</p>
             <div className="flex items-center gap-1">
               <span className={`text-lg ${getChangeIndicator(-changes.harm_pressure_change).color}`}>
                 {getChangeIndicator(-changes.harm_pressure_change).icon}
@@ -339,7 +336,7 @@ export default function CollectiveTrendsSection() {
 
           {/* Recovery Stability Change */}
           <div className={`p-2 rounded-lg ${getChangeIndicator(changes.recovery_stability_change).bg}`}>
-            <p className="text-xs text-muted-foreground">שינוי יציבות</p>
+            <p className="text-xs text-muted-foreground">Stability change</p>
             <div className="flex items-center gap-1">
               <span className={`text-lg ${getChangeIndicator(changes.recovery_stability_change).color}`}>
                 {getChangeIndicator(changes.recovery_stability_change).icon}
@@ -353,7 +350,7 @@ export default function CollectiveTrendsSection() {
 
         {/* Activity Change */}
         <div className="mt-3 text-center">
-          <span className="text-xs text-muted-foreground">שינוי בפעילות: </span>
+          <span className="text-xs text-muted-foreground">Activity change: </span>
           <span className={`text-sm font-bold ${changes.decisions_percent > 0 ? 'text-green-600' : changes.decisions_percent < 0 ? 'text-red-600' : 'text-gray-600'}`}>
             {changes.decisions_percent > 0 ? '+' : ''}{changes.decisions_percent}%
           </span>
@@ -363,7 +360,7 @@ export default function CollectiveTrendsSection() {
       {/* Insights */}
       {insights && insights.length > 0 && (
         <div className="bg-sky-100/50 border border-sky-200 rounded-xl p-4">
-          <p className="text-sm font-semibold text-sky-800 mb-2">תובנות מגמתיות:</p>
+          <p className="text-sm font-semibold text-sky-800 mb-2">Trend insights:</p>
           <div className="space-y-1">
             {insights.map((insight, idx) => (
               <p key={idx} className="text-sm text-sky-700">• {insight}</p>
@@ -374,7 +371,7 @@ export default function CollectiveTrendsSection() {
 
       {/* Anonymous Notice */}
       <p className="text-xs text-center text-muted-foreground mt-4">
-        כל הנתונים מוצגים באופן אנונימי ומצטבר
+        All data is displayed anonymously and in aggregate
       </p>
     </section>
   );

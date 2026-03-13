@@ -11,7 +11,7 @@ const pulseClass = "animate-pulse bg-gray-200 rounded";
  */
 export function SectionSkeleton({ lines = 3, showHeader = true }) {
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border border-border" dir="rtl">
+    <div className="bg-white rounded-3xl p-6 shadow-sm border border-border">
       {showHeader && (
         <div className={`h-5 w-32 ${pulseClass} mb-4`}></div>
       )}
@@ -29,7 +29,7 @@ export function SectionSkeleton({ lines = 3, showHeader = true }) {
  */
 export function CardSkeleton({ showBadge = false }) {
   return (
-    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200" dir="rtl">
+    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
       {showBadge && (
         <div className={`h-6 w-20 ${pulseClass} mb-3`}></div>
       )}
@@ -44,7 +44,7 @@ export function CardSkeleton({ showBadge = false }) {
  */
 export function StatsSkeleton({ count = 3 }) {
   return (
-    <div className="grid grid-cols-3 gap-4" dir="rtl">
+    <div className="grid grid-cols-3 gap-4">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="text-center p-3">
           <div className={`h-8 w-12 ${pulseClass} mx-auto mb-2`}></div>
@@ -63,7 +63,6 @@ export function ChartSkeleton({ height = 120 }) {
     <div 
       className={`${pulseClass} w-full`} 
       style={{ height: `${height}px` }}
-      dir="rtl"
     >
       <div className="flex items-end justify-around h-full p-4">
         {[40, 65, 50, 80, 55, 70, 45].map((h, i) => (
@@ -83,7 +82,7 @@ export function ChartSkeleton({ height = 120 }) {
  */
 export function ListSkeleton({ items = 3 }) {
   return (
-    <div className="space-y-3" dir="rtl">
+    <div className="space-y-3">
       {Array.from({ length: items }).map((_, i) => (
         <div key={i} className="flex items-center gap-3">
           <div className={`h-3 w-3 rounded-full ${pulseClass}`}></div>
@@ -106,7 +105,7 @@ export function InlineLoader({ width = "w-24" }) {
  */
 export function CollectiveSkeleton() {
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border border-border" dir="rtl">
+    <div className="bg-white rounded-3xl p-6 shadow-sm border border-border">
       <div className={`h-5 w-40 ${pulseClass} mb-4`}></div>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="p-4 rounded-xl bg-gray-50">
@@ -128,7 +127,7 @@ export function CollectiveSkeleton() {
  */
 export function ReplaySkeleton() {
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border border-border" dir="rtl">
+    <div className="bg-white rounded-3xl p-6 shadow-sm border border-border">
       <div className={`h-5 w-36 ${pulseClass} mb-4`}></div>
       <StatsSkeleton count={3} />
       <div className="mt-4 pt-4 border-t">

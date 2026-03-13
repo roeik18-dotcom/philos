@@ -3,11 +3,11 @@ import { fetchCollectiveLayer } from '../../../services/dataService';
 
 // Hebrew labels for value tags
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Colors for value tags
@@ -32,11 +32,11 @@ export default function CollectiveLayerSection() {
           setCollectiveData(data);
           setError(null);
         } else {
-          setError(data.error || 'שגיאה בטעינת נתונים');
+          setError(data.error || 'Error loading data');
         }
       } catch (err) {
         console.error('Collective layer error:', err);
-        setError('שגיאה בחיבור לשרת');
+        setError('Error connecting to server');
       } finally {
         setLoading(false);
       }
@@ -52,7 +52,6 @@ export default function CollectiveLayerSection() {
     return (
       <section 
         className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-5 shadow-sm border border-emerald-200"
-        dir="rtl"
       >
         <div className="animate-pulse">
           <div className="h-6 bg-emerald-200 rounded w-1/3 mb-4"></div>
@@ -68,10 +67,9 @@ export default function CollectiveLayerSection() {
       <section 
         className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-5 shadow-sm border border-emerald-200"
         data-testid="collective-layer-section"
-        dir="rtl"
       >
-        <h3 className="text-lg font-semibold text-foreground mb-2">שדה קולקטיבי</h3>
-        <p className="text-sm text-muted-foreground">טוען נתונים קולקטיביים...</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Collective Field</h3>
+        <p className="text-sm text-muted-foreground">Loading collective data...</p>
       </section>
     );
   }
@@ -97,27 +95,26 @@ export default function CollectiveLayerSection() {
     <section 
       className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-5 shadow-sm border border-emerald-200"
       data-testid="collective-layer-section"
-      dir="rtl"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">שדה קולקטיבי</h3>
-          <p className="text-xs text-muted-foreground">נתונים אנונימיים מכלל המשתמשים</p>
+          <h3 className="text-lg font-semibold text-foreground">Collective Field</h3>
+          <p className="text-xs text-muted-foreground">Anonymous data from all users</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
-            {total_users} משתמשים
+            {total_users} users
           </span>
           <span className="text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
-            {total_decisions} החלטות
+            {total_decisions} decisions
           </span>
         </div>
       </div>
 
       {/* Value Distribution Visualization - Clustered Circles */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-sm font-medium text-muted-foreground mb-3">התפלגות ערכים קולקטיבית</p>
+        <p className="text-sm font-medium text-muted-foreground mb-3">Collective Value Distribution</p>
         
         {/* Circles Visualization */}
         <div className="flex items-end justify-center gap-4 h-40">
@@ -172,7 +169,7 @@ export default function CollectiveLayerSection() {
       <div className="grid grid-cols-2 gap-3 mb-4">
         {/* Order Drift */}
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-1">סחף סדר ממוצע</p>
+          <p className="text-xs text-muted-foreground mb-1">Average Order Drift</p>
           <div className="flex items-center gap-2">
             <span className={`text-lg font-bold ${avg_order_drift > 0 ? 'text-green-600' : avg_order_drift < 0 ? 'text-red-600' : 'text-gray-600'}`}>
               {avg_order_drift > 0 ? '+' : ''}{avg_order_drift}
@@ -188,7 +185,7 @@ export default function CollectiveLayerSection() {
 
         {/* Collective Drift */}
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-1">סחף קולקטיבי ממוצע</p>
+          <p className="text-xs text-muted-foreground mb-1">Average Collective Drift</p>
           <div className="flex items-center gap-2">
             <span className={`text-lg font-bold ${avg_collective_drift > 0 ? 'text-green-600' : avg_collective_drift < 0 ? 'text-red-600' : 'text-gray-600'}`}>
               {avg_collective_drift > 0 ? '+' : ''}{avg_collective_drift}
@@ -204,7 +201,7 @@ export default function CollectiveLayerSection() {
 
         {/* Harm Pressure */}
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-1">לחץ נזק ממוצע</p>
+          <p className="text-xs text-muted-foreground mb-1">Average Harm Pressure</p>
           <div className="flex items-center gap-2">
             <span className={`text-lg font-bold ${avg_harm_pressure < 0 ? 'text-green-600' : avg_harm_pressure > 10 ? 'text-red-600' : 'text-yellow-600'}`}>
               {avg_harm_pressure > 0 ? '+' : ''}{avg_harm_pressure}%
@@ -220,7 +217,7 @@ export default function CollectiveLayerSection() {
 
         {/* Recovery Stability */}
         <div className="bg-white/70 rounded-xl p-3">
-          <p className="text-xs text-muted-foreground mb-1">יציבות התאוששות</p>
+          <p className="text-xs text-muted-foreground mb-1">Recovery Stability</p>
           <div className="flex items-center gap-2">
             <span className={`text-lg font-bold ${avg_recovery_stability > 10 ? 'text-green-600' : avg_recovery_stability > 0 ? 'text-blue-600' : 'text-yellow-600'}`}>
               {avg_recovery_stability > 0 ? '+' : ''}{avg_recovery_stability}%
@@ -239,17 +236,17 @@ export default function CollectiveLayerSection() {
       <div className="flex flex-wrap gap-2 mb-4">
         {dominant_value && (
           <div className={`px-3 py-1.5 rounded-full text-sm font-medium ${valueColors[dominant_value]?.light} ${valueColors[dominant_value]?.text}`}>
-            ערך דומיננטי: {valueLabels[dominant_value]}
+            Dominant value: {valueLabels[dominant_value]}
           </div>
         )}
         {dominant_direction && dominant_direction !== 'balanced' && (
           <div className="px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700">
-            כיוון: {dominant_direction === 'order' ? 'סדר' : dominant_direction === 'collective' ? 'קולקטיבי' : dominant_direction === 'ego' ? 'אגו' : 'כאוס'}
+            Direction: {dominant_direction === 'order' ? 'Order' : dominant_direction === 'collective' ? 'Collective' : dominant_direction === 'ego' ? 'Ego' : 'Chaos'}
           </div>
         )}
         {dominant_direction === 'balanced' && (
           <div className="px-3 py-1.5 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700">
-            כיוון: מאוזן
+            Direction: Balanced
           </div>
         )}
       </div>
@@ -257,7 +254,7 @@ export default function CollectiveLayerSection() {
       {/* Insights */}
       {insights && insights.length > 0 && (
         <div className="bg-emerald-100/50 border border-emerald-200 rounded-xl p-4">
-          <p className="text-sm font-semibold text-emerald-800 mb-2">תובנות קולקטיביות:</p>
+          <p className="text-sm font-semibold text-emerald-800 mb-2">Collective insights:</p>
           <div className="space-y-1">
             {insights.map((insight, idx) => (
               <p key={idx} className="text-sm text-emerald-700">• {insight}</p>
@@ -268,7 +265,7 @@ export default function CollectiveLayerSection() {
 
       {/* Anonymous Notice */}
       <p className="text-xs text-center text-muted-foreground mt-4">
-        כל הנתונים מוצגים באופן אנונימי ומצטבר
+        All data is displayed anonymously and in aggregate
       </p>
     </section>
   );

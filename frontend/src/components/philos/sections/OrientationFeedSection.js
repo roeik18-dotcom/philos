@@ -18,10 +18,10 @@ const directionColors = {
 };
 
 const directionLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  exploration: 'חקירה'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  exploration: 'Exploration'
 };
 
 const countryFlags = {
@@ -58,7 +58,7 @@ export default function OrientationFeedSection() {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-3"></div>
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-8 bg-gray-100 rounded-xl"></div>)}
@@ -68,17 +68,17 @@ export default function OrientationFeedSection() {
   }
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-4" dir="rtl" data-testid="orientation-feed-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-4" data-testid="orientation-feed-section">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-cyan-50 flex items-center justify-center">
             <Radio className="w-5 h-5 text-cyan-600" />
           </div>
-          <span className="text-sm font-medium text-cyan-700">פעילות השדה</span>
+          <span className="text-sm font-medium text-cyan-700">Field Activity</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-          <span className="text-[10px] text-gray-400">חי</span>
+          <span className="text-[10px] text-gray-400">Live</span>
         </div>
       </div>
 
@@ -117,7 +117,7 @@ export default function OrientationFeedSection() {
       ) : (
         <div className="text-center py-6 text-gray-400">
           <Radio className="w-6 h-6 mx-auto mb-2 opacity-30" />
-          <p className="text-xs">אין פעילות אחרונה</p>
+          <p className="text-xs">No recent activity</p>
         </div>
       )}
     </section>

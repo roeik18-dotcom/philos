@@ -4,10 +4,10 @@ import { Heart, Shield, Lightbulb, Compass } from 'lucide-react';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const directions = [
-  { key: 'contribution', label: 'תרומה', color: '#22c55e', bg: 'bg-green-50', Icon: Heart },
-  { key: 'recovery', label: 'התאוששות', color: '#3b82f6', bg: 'bg-blue-50', Icon: Shield },
-  { key: 'order', label: 'סדר', color: '#6366f1', bg: 'bg-indigo-50', Icon: Compass },
-  { key: 'exploration', label: 'חקירה', color: '#f59e0b', bg: 'bg-amber-50', Icon: Lightbulb }
+  { key: 'contribution', label: 'Contribution', color: '#22c55e', bg: 'bg-green-50', Icon: Heart },
+  { key: 'recovery', label: 'Recovery', color: '#3b82f6', bg: 'bg-blue-50', Icon: Shield },
+  { key: 'order', label: 'Order', color: '#6366f1', bg: 'bg-indigo-50', Icon: Compass },
+  { key: 'exploration', label: 'Exploration', color: '#f59e0b', bg: 'bg-amber-50', Icon: Lightbulb }
 ];
 
 export default function OrientationCirclesSection() {
@@ -37,7 +37,7 @@ export default function OrientationCirclesSection() {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-gray-100 rounded-2xl"></div>)}
@@ -51,12 +51,12 @@ export default function OrientationCirclesSection() {
   const total = directions.reduce((sum, d) => sum + (data[d.key] || 0), 0) || 1;
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-6" dir="rtl" data-testid="orientation-circles-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-6" data-testid="orientation-circles-section">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-pink-50 flex items-center justify-center">
           <Heart className="w-5 h-5 text-pink-500" />
         </div>
-        <span className="text-sm font-medium text-pink-700">מעגלי התמצאות</span>
+        <span className="text-sm font-medium text-pink-700">Orientation Circles</span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -76,7 +76,7 @@ export default function OrientationCirclesSection() {
             >
               <Icon className="w-6 h-6" style={{ color }} />
               <span className="text-xl font-black" style={{ color }}>
-                {count.toLocaleString('he-IL')}
+                {count.toLocaleString('en-US')}
               </span>
               <span className="text-xs text-gray-600">{label}</span>
               <span className="text-[10px] text-gray-400">{pct}%</span>

@@ -6,10 +6,10 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const ONBOARDING_KEY = 'philos_onboarding_complete';
 
 const DIRECTIONS = [
-  { id: 'contribution', label: 'תרומה', desc: 'לתת, לעזור, לחזק אחרים', color: '#22c55e', bg: '#f0fdf4' },
-  { id: 'recovery', label: 'התאוששות', desc: 'להיטען, לשקם, לנוח', color: '#3b82f6', bg: '#eff6ff' },
-  { id: 'order', label: 'סדר', desc: 'לארגן, לתכנן, לייצב', color: '#6366f1', bg: '#eef2ff' },
-  { id: 'exploration', label: 'חקירה', desc: 'לגלות, ללמוד, לנסות חדש', color: '#f59e0b', bg: '#fffbeb' }
+  { id: 'contribution', label: 'Contribution', desc: 'Give, help, strengthen others', color: '#22c55e', bg: '#f0fdf4' },
+  { id: 'recovery', label: 'Recovery', desc: 'Recharge, restore, rest', color: '#3b82f6', bg: '#eff6ff' },
+  { id: 'order', label: 'Order', desc: 'Organize, plan, stabilize', color: '#6366f1', bg: '#eef2ff' },
+  { id: 'exploration', label: 'Exploration', desc: 'Discover, learn, try new things', color: '#f59e0b', bg: '#fffbeb' }
 ];
 
 export default function OnboardingHint({ onComplete }) {
@@ -67,7 +67,7 @@ export default function OnboardingHint({ onComplete }) {
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 transition-opacity duration-300 ${exiting ? 'opacity-0' : 'opacity-100'}`}
       data-testid="onboarding-overlay"
     >
-      <div className="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full" dir="rtl" data-testid="onboarding-modal">
+      <div className="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full" data-testid="onboarding-modal">
         {/* Progress */}
         <div className="flex justify-center gap-2 mb-5">
           {[0, 1, 2].map(i => (
@@ -97,8 +97,8 @@ export default function OnboardingHint({ onComplete }) {
               <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 flex items-center justify-center mb-3">
                 <Zap className="w-7 h-7 text-amber-500" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900 mb-1" data-testid="onboarding-title">בחר את הכיוון הראשון שלך</h2>
-              <p className="text-xs text-gray-500">מה הכי מושך אותך עכשיו?</p>
+              <h2 className="text-lg font-bold text-gray-900 mb-1" data-testid="onboarding-title">Choose your first direction</h2>
+              <p className="text-xs text-gray-500">What attracts you most right now?</p>
             </div>
             <div className="space-y-2 mb-4">
               {DIRECTIONS.map(d => (
@@ -129,7 +129,7 @@ export default function OnboardingHint({ onComplete }) {
               className="w-full py-3 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-[0.97]"
               data-testid="onboarding-next"
             >
-              הבא
+              Next
             </button>
           </div>
         )}
@@ -142,19 +142,19 @@ export default function OnboardingHint({ onComplete }) {
             </div>
             {sent ? (
               <>
-                <h2 className="text-xl font-bold text-green-600 mb-2" data-testid="onboarding-title">נשלח!</h2>
-                <p className="text-sm text-gray-500 mb-4">הנקודה הראשונה שלך נוספה לשדה הגלובלי</p>
+                <h2 className="text-xl font-bold text-green-600 mb-2" data-testid="onboarding-title">Sent!</h2>
+                <p className="text-sm text-gray-500 mb-4">Your first point was added to the global field</p>
               </>
             ) : (
               <>
-                <h2 className="text-lg font-bold text-gray-900 mb-2" data-testid="onboarding-title">שלח את הנקודה הראשונה שלך</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-2" data-testid="onboarding-title">Send your first point</h2>
                 <p className="text-sm text-gray-500 mb-2">
-                  בחרת <span className="font-bold" style={{ color: DIRECTIONS.find(d => d.id === selectedDirection)?.color }}>
+                  You chose <span className="font-bold" style={{ color: DIRECTIONS.find(d => d.id === selectedDirection)?.color }}>
                     {DIRECTIONS.find(d => d.id === selectedDirection)?.label}
                   </span>
                 </p>
                 <p className="text-xs text-gray-400 mb-6">
-                  לחץ כדי לשלוח את הפעולה הראשונה שלך לגלובוס ולהצטרף לשדה האנושי.
+                  Click to send your first action to the globe and join the human field.
                 </p>
                 <button
                   onClick={handleSendToGlobe}
@@ -162,7 +162,7 @@ export default function OnboardingHint({ onComplete }) {
                   className="w-full py-3 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 disabled:opacity-60 transition-all active:scale-[0.97] flex items-center justify-center gap-2"
                   data-testid="onboarding-send-to-globe"
                 >
-                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Globe className="w-4 h-4" /> שלח לגלובוס</>}
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Globe className="w-4 h-4" /> Send to Globe</>}
                 </button>
               </>
             )}

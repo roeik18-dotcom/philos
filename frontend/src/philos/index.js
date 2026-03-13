@@ -58,17 +58,17 @@ export class PhilosEngine {
 
     // Moral floor
     if (evaluation.action_harm > 0) {
-      reasons.push('רצפה מוסרית: נזק גבוה מדי');
+      reasons.push('Moral floor: Harm too high');
     }
 
     // Energy floor
     if (state.physical_capacity < 20) {
-      reasons.push('קריסת אנרגיה: capacity נמוך מדי');
+      reasons.push('Energy collapse: capacity too low');
     }
 
     // Exploitation
     if (evaluation.personal_gain > evaluation.collective_gain * 2) {
-      reasons.push('ניצול: רווח אישי גבוה מדי ביחס לקולקטיבי');
+      reasons.push('Exploitation: Personal gain too high relative to Collective');
     }
 
     return { pass: reasons.length === 0, reasons };
@@ -79,15 +79,15 @@ export class PhilosEngine {
     let recommended_action;
 
     if (pass) {
-      recommended_action = 'אפשר להמשיך לפעולה מדודה';
+      recommended_action = 'Allow continuing with measured action';
     } else {
       // Priority: harm > energy > exploitation
-      if (reasons.some(r => r.includes('מוסרית'))) {
-        recommended_action = 'עצור ובדוק פעולה עם פחות נזק';
-      } else if (reasons.some(r => r.includes('אנרגיה'))) {
-        recommended_action = 'צמצם היקף וחזור כשיש יותר capacity';
+      if (reasons.some(r => r.includes('moral'))) {
+        recommended_action = 'Stop and check action with less harm';
+      } else if (reasons.some(r => r.includes('energy'))) {
+        recommended_action = 'Reduce scope and return when there is more capacity';
       } else {
-        recommended_action = 'שנה את הפעולה כך שתועיל יותר לקולקטיב';
+        recommended_action = 'Change the action so it benefits the collective more';
       }
     }
 
@@ -105,29 +105,29 @@ export class PhilosEngine {
 
     const paths = {
       energy: {
-        path_name: 'מסלול גוף',
-        explanation: 'הפער דורש החזרת קיבולת דרך פעולה גופנית',
-        first_action: 'בצע פעולה גופנית קצרה שמחזירה capacity'
+        path_name: 'Path Body',
+        explanation: 'The gap requires restoring capacity through physical action',
+        first_action: 'Perform a short physical action that restores capacity'
       },
       clarity: {
-        path_name: 'מסלול מחשבה',
-        explanation: 'הפער דורש בהירות והגדרה מדויקת',
-        first_action: 'כתוב את הבעיה במשפט אחד ברור'
+        path_name: 'Path Mind',
+        explanation: 'The gap requires clarity and precise definition',
+        first_action: 'Write the problem in one clear sentence'
       },
       order: {
-        path_name: 'מסלול סדר',
-        explanation: 'הפער דורש ארגון של מרכיב קיים במציאות',
-        first_action: 'סדר מרכיב אחד קטן במציאות'
+        path_name: 'Order Path',
+        explanation: 'The gap requires organizing an existing component in reality',
+        first_action: 'Organize one small component in reality'
       },
       relation: {
-        path_name: 'מסלול קשר',
-        explanation: 'הפער דורש מגע ישיר עם גורם אנושי רלוונטי',
-        first_action: 'צור קשר ישיר עם אדם אחד רלוונטי'
+        path_name: 'Connection Path',
+        explanation: 'The gap requires direct contact with a relevant person',
+        first_action: 'Reach out directly to one relevant person'
       },
       collective_value: {
-        path_name: 'מסלול תרומה',
-        explanation: 'הפער דורש פעולה שיוצרת ערך ליותר מאדם אחד',
-        first_action: 'בצע פעולה אחת שמועילה ליותר מאדם אחד'
+        path_name: 'Contribution Path',
+        explanation: 'The gap requires action that creates value for more than one person',
+        first_action: 'Perform one action that benefits more than one person'
       }
     };
 

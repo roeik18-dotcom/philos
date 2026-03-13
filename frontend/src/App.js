@@ -91,7 +91,7 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin h-10 w-10 border-4 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">טוען...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );

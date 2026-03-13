@@ -142,7 +142,7 @@ export function useSessionManagement({ history, state, setHistory, setState, set
 
   // Load session from library
   const loadSessionFromLibrary = useCallback((sessionHistory) => {
-    if (window.confirm('טעינת סשן תחליף את הנתונים הנוכחיים. להמשיך?')) {
+    if (window.confirm('Loading a session will replace current data. Continue?')) {
       setHistory(sessionHistory);
       
       if (sessionHistory.length > 0) {

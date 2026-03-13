@@ -12,19 +12,19 @@ const directionColors = {
 
 // Hebrew labels
 const directionLabels = {
-  recovery: 'התאוששות',
-  order: 'סדר',
-  contribution: 'תרומה',
-  exploration: 'חקירה',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  recovery: 'Recovery',
+  order: 'Order',
+  contribution: 'Contribution',
+  exploration: 'Exploration',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Timeframe options
 const timeframes = [
-  { id: 'today', label: 'היום', days: 1 },
-  { id: 'week', label: '7 ימים', days: 7 },
-  { id: 'all', label: 'הכל', days: 9999 }
+  { id: 'today', label: 'Today', days: 1 },
+  { id: 'week', label: '7 days', days: 7 },
+  { id: 'all', label: 'All', days: 9999 }
 ];
 
 // Pattern detection functions
@@ -48,7 +48,7 @@ const detectPatterns = (movements) => {
     if (count >= 3) {
       patterns.push({
         type: 'tendency',
-        text: `אתה נוטה לנוע לכיוון ${directionLabels[dominant] || dominant}.`,
+        text: `You tend to move towards ${directionLabels[dominant] || dominant}.`,
         priority: 'info'
       });
     }
@@ -70,7 +70,7 @@ const detectPatterns = (movements) => {
     const [from, to] = transition.split('→');
     patterns.push({
       type: 'transition',
-      text: `יש חזרתיות ב${directionLabels[from] || from} ולאחריה ${directionLabels[to] || to}.`,
+      text: `There is recurrence in ${directionLabels[from] || from} followed by ${directionLabels[to] || to}.`,
       priority: 'warning'
     });
   }
@@ -84,7 +84,7 @@ const detectPatterns = (movements) => {
   if (recentPositive >= 4) {
     patterns.push({
       type: 'momentum',
-      text: 'נראה מעבר מתמשך לכיוון חיובי.',
+      text: 'A consistent shift towards a positive direction is observed.',
       priority: 'positive'
     });
   }
@@ -98,7 +98,7 @@ const detectPatterns = (movements) => {
   if (recentNegative >= 3) {
     patterns.push({
       type: 'drift',
-      text: 'זוהה דפוס של נטייה שלילית. מומלץ לשקול כיוון מאזן.',
+      text: 'A negative tendency pattern was detected. Consider a balancing direction.',
       priority: 'warning'
     });
   }
@@ -186,13 +186,12 @@ export default function DirectionHistorySection({ history }) {
   return (
     <section 
       className="bg-white rounded-3xl p-6 shadow-sm border border-border"
-      dir="rtl"
       data-testid="direction-history-section"
     >
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">היסטוריית כיוונים</h3>
-          <p className="text-xs text-muted-foreground">תנועה בין כיוונים לאורך זמן</p>
+          <h3 className="text-lg font-semibold text-foreground">Direction History</h3>
+          <p className="text-xs text-muted-foreground">Movement between directions over time</p>
         </div>
         
         {/* Timeframe Selector */}
@@ -250,10 +249,10 @@ export default function DirectionHistorySection({ history }) {
           </svg>
           
           {/* Quadrant Labels */}
-          <span className="absolute top-[10%] left-[10%] text-[8px] text-gray-400">סדר</span>
-          <span className="absolute top-[10%] right-[10%] text-[8px] text-gray-400">תרומה</span>
-          <span className="absolute bottom-[10%] left-[10%] text-[8px] text-gray-400">התאוששות</span>
-          <span className="absolute bottom-[10%] right-[10%] text-[8px] text-gray-400">חקירה</span>
+          <span className="absolute top-[10%] left-[10%] text-[8px] text-gray-400">Order</span>
+          <span className="absolute top-[10%] right-[10%] text-[8px] text-gray-400">Contribution</span>
+          <span className="absolute bottom-[10%] left-[10%] text-[8px] text-gray-400">Recovery</span>
+          <span className="absolute bottom-[10%] right-[10%] text-[8px] text-gray-400">Exploration</span>
         </div>
       )}
 
@@ -281,7 +280,7 @@ export default function DirectionHistorySection({ history }) {
       {/* Distribution */}
       {distribution.length > 0 && (
         <div className="mb-4">
-          <p className="text-xs text-muted-foreground mb-2">התפלגות כיוונים</p>
+          <p className="text-xs text-muted-foreground mb-2">Direction Distribution</p>
           <div className="space-y-2">
             {distribution.slice(0, 4).map(({ direction, count, percentage }) => (
               <div key={direction} className="flex items-center gap-2">
@@ -309,7 +308,7 @@ export default function DirectionHistorySection({ history }) {
       {/* Movement Timeline */}
       {movements.length > 0 && (
         <div>
-          <p className="text-xs text-muted-foreground mb-2">מעברים אחרונים</p>
+          <p className="text-xs text-muted-foreground mb-2">Recent transitions</p>
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {movements.slice(0, 8).map((movement, idx) => (
               <div 
@@ -338,8 +337,8 @@ export default function DirectionHistorySection({ history }) {
       {/* Empty State */}
       {filteredHistory.length < 2 && (
         <div className="text-center py-6">
-          <p className="text-sm text-muted-foreground">אין מספיק נתונים להצגת היסטוריה.</p>
-          <p className="text-xs text-muted-foreground mt-1">בצע מספר פעולות כדי לראות דפוסים.</p>
+          <p className="text-sm text-muted-foreground">Not enough data to display history.</p>
+          <p className="text-xs text-muted-foreground mt-1">Perform several actions to see patterns.</p>
         </div>
       )}
     </section>

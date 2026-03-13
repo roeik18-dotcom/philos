@@ -3,18 +3,18 @@ import { RefreshCw, X, MapPin } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const dirLabels = { contribution: 'תרומה', recovery: 'התאוששות', order: 'סדר', exploration: 'חקירה' };
+const dirLabels = { contribution: 'Contribution', recovery: 'Recovery', order: 'Order', exploration: 'Exploration' };
 const dirColors = { contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b' };
 
 const HOTSPOT_COORDS = [
-  { lat: 31.5, lng: 34.8, name: 'ישראל' },
-  { lat: 48.8, lng: 2.3, name: 'צרפת' },
-  { lat: 40.7, lng: -74.0, name: 'ארה"ב' },
-  { lat: 51.5, lng: -0.1, name: 'בריטניה' },
-  { lat: 35.7, lng: 139.7, name: 'יפן' },
-  { lat: 52.5, lng: 13.4, name: 'גרמניה' },
-  { lat: -33.9, lng: 18.4, name: 'דרום אפריקה' },
-  { lat: -23.5, lng: -46.6, name: 'ברזיל' }
+  { lat: 31.5, lng: 34.8, name: 'Israel' },
+  { lat: 48.8, lng: 2.3, name: 'France' },
+  { lat: 40.7, lng: -74.0, name: 'USA' },
+  { lat: 51.5, lng: -0.1, name: 'UK' },
+  { lat: 35.7, lng: 139.7, name: 'Japan' },
+  { lat: 52.5, lng: 13.4, name: 'Germany' },
+  { lat: -33.9, lng: 18.4, name: 'South Africa' },
+  { lat: -23.5, lng: -46.6, name: 'Brazil' }
 ];
 
 export default function FieldGlobeSection() {
@@ -173,14 +173,14 @@ export default function FieldGlobeSection() {
   const heartbeatDuration = Math.max(2.5, 6 - ((fieldData?.total_actions_today || 0) / 60));
 
   return (
-    <section className="bg-[#0a0a1a] rounded-3xl overflow-hidden border border-gray-800/60" dir="rtl" data-testid="field-globe-section">
+    <section className="bg-[#0a0a1a] rounded-3xl overflow-hidden border border-gray-800/60" data-testid="field-globe-section">
 
       {/* ═══ WORLD STATE HEADER — Calm, symbolic ═══ */}
       <div className="p-4 pb-2" data-testid="world-state-header">
         {/* Title + refresh */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 tracking-wide">מצב השדה</span>
+            <span className="text-xs text-gray-500 tracking-wide">Field Status</span>
             <span className="relative flex items-center">
               <span className="absolute w-1.5 h-1.5 rounded-full animate-ping opacity-30" style={{ backgroundColor: dominantColor }} />
               <span className="relative w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dominantColor }} />
@@ -257,10 +257,10 @@ export default function FieldGlobeSection() {
             {loading ? (
               <div className="flex flex-col items-center gap-2">
                 <div className="w-5 h-5 border-2 border-indigo-400/40 border-t-indigo-400 rounded-full animate-spin" />
-                <span className="text-[10px] text-gray-600">טוען שדה...</span>
+                <span className="text-[10px] text-gray-600">Loading Field...</span>
               </div>
             ) : (
-              <span className="text-[10px] text-gray-700">אין נתונים זמינים</span>
+              <span className="text-[10px] text-gray-700">No data available</span>
             )}
           </div>
         )}
@@ -276,7 +276,7 @@ export default function FieldGlobeSection() {
               <button onClick={() => setRegionPopup(null)} className="text-gray-500 hover:text-white transition-colors"><X className="w-3 h-3" /></button>
             </div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-xs text-gray-400">{regionPopup.total_actions} פעולות</span>
+              <span className="text-xs text-gray-400">{regionPopup.total_actions} actions</span>
               <span className="text-xs font-medium" style={{ color: cm[regionPopup.dominant_direction] || '#fff' }}>{regionPopup.dominant_direction_he || '—'}</span>
               <span className="text-xs text-gray-500">{regionPopup.trend_he}</span>
             </div>

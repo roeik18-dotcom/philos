@@ -2,10 +2,10 @@ import { Home, Calendar, User, FileText } from 'lucide-react';
 
 export default function BottomNav({ currentPage, onNavigate }) {
   const navItems = [
-    { id: 'home', label: 'בית', icon: Home },
-    { id: 'my-requests', label: 'הבקשות שלי', icon: FileText },
-    { id: 'history', label: 'היסטוריה', icon: Calendar },
-    { id: 'profile', label: 'פרופיל', icon: User },
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'my-requests', label: 'My Requests', icon: FileText },
+    { id: 'history', label: 'History', icon: Calendar },
+    { id: 'profile', label: 'Profile', icon: User },
   ];
 
   return (

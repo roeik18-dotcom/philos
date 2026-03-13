@@ -4,10 +4,10 @@ import { CalendarDays, TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const directionColors = {
-  recovery: { color: '#3b82f6', label: 'התאוששות' },
-  order: { color: '#6366f1', label: 'סדר' },
-  contribution: { color: '#22c55e', label: 'תרומה' },
-  exploration: { color: '#f59e0b', label: 'חקירה' }
+  recovery: { color: '#3b82f6', label: 'Recovery' },
+  order: { color: '#6366f1', label: 'Order' },
+  contribution: { color: '#22c55e', label: 'Contribution' },
+  exploration: { color: '#f59e0b', label: 'Exploration' }
 };
 
 const trendIcons = {
@@ -46,7 +46,7 @@ export default function WeeklyInsightSection({ userId }) {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-3"></div>
         <div className="h-16 bg-gray-200 rounded mb-3"></div>
         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -59,19 +59,19 @@ export default function WeeklyInsightSection({ userId }) {
   const maxPercent = Math.max(...Object.values(data.distribution_percent || {}), 1);
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-1" dir="rtl" data-testid="weekly-insight-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-1" data-testid="weekly-insight-section">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center">
             <CalendarDays className="w-5 h-5 text-violet-600" />
           </div>
-          <span className="text-sm font-medium text-violet-700">תובנה שבועית</span>
+          <span className="text-sm font-medium text-violet-700">Weekly Insight</span>
         </div>
         <div className="flex items-center gap-1">
           {trendIcons[data.trend] || trendIcons.stable}
           <span className="text-xs text-gray-500">
-            {data.trend === 'improving' ? 'מגמת שיפור' : data.trend === 'declining' ? 'מגמת ירידה' : 'יציב'}
+            {data.trend === 'improving' ? 'Improving trend' : data.trend === 'declining' ? 'Declining trend' : 'Stable'}
           </span>
         </div>
       </div>
@@ -117,9 +117,9 @@ export default function WeeklyInsightSection({ userId }) {
 
       {/* Meta */}
       <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
-        <span>{data.total_actions} פעולות ב-7 ימים</span>
+        <span>{data.total_actions} actions in 7 days</span>
         {data.dominant_direction && (
-          <span>מוביל: {directionColors[data.dominant_direction]?.label || data.dominant_direction}</span>
+          <span>Leading: {directionColors[data.dominant_direction]?.label || data.dominant_direction}</span>
         )}
       </div>
     </section>

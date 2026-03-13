@@ -62,13 +62,13 @@ export default function MyRequestsPage() {
   const getStatusLabel = (status) => {
     switch (status) {
       case 'completed':
-        return 'הושלמה';
+        return 'Completed';
       case 'in_progress':
-        return 'בדרך';
+        return 'In Progress';
       case 'accepted':
-        return 'התקבלה';
+        return 'Accepted';
       default:
-        return 'ממתינה';
+        return 'Waiting';
     }
   };
 
@@ -87,9 +87,9 @@ export default function MyRequestsPage() {
 
   const getCategoryLabel = (category) => {
     const labels = {
-      body: 'גוף',
-      emotion: 'רגש',
-      mind: 'מחשבה'
+      body: 'Body',
+      emotion: 'Emotion',
+      mind: 'Mind'
     };
     return labels[category] || category;
   };
@@ -112,8 +112,8 @@ export default function MyRequestsPage() {
     return (
       <div className="flex-1 px-6 py-8 pb-24 flex flex-col items-center justify-center gap-4">
         <AlertCircle className="w-16 h-16 text-muted-foreground" />
-        <p className="text-lg text-muted-foreground text-center">עדיין לא יצרת בקשות</p>
-        <p className="text-base text-muted-foreground/70 text-center">לחץ על "צריך עזרה?" כדי ליצור בקשה</p>
+        <p className="text-lg text-muted-foreground text-center">You haven't created any requests yet</p>
+        <p className="text-base text-muted-foreground/70 text-center">Click "Need help?" to create a request</p>
       </div>
     );
   }
@@ -122,7 +122,7 @@ export default function MyRequestsPage() {
     <div data-testid="my-requests-page" className="flex-1 px-6 py-8 pb-24 flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-          הבקשות שלי
+          My Requests
         </h1>
         <button
           onClick={() => loadMyRequests()}
@@ -130,7 +130,7 @@ export default function MyRequestsPage() {
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>רענן</span>
+          <span>Refresh</span>
         </button>
       </div>
 
@@ -159,7 +159,7 @@ export default function MyRequestsPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{request.minutes} דקות</span>
+                <span>{request.minutes} min</span>
                 <span>{request.distance}</span>
               </div>
               <span 

@@ -23,14 +23,14 @@ const TABS = {
   HISTORY: 'history'
 };
 
-// Tab labels in Hebrew
+// Tab labels
 const TAB_LABELS = {
-  [TABS.HOME]: 'בית',
-  [TABS.FEED]: 'פיד',
-  [TABS.COMMUNITY]: 'קהילה',
-  [TABS.INSIGHTS]: 'תובנות',
-  [TABS.THEORY]: 'תיאוריה',
-  [TABS.HISTORY]: 'היסטוריה'
+  [TABS.HOME]: 'Home',
+  [TABS.FEED]: 'Feed',
+  [TABS.COMMUNITY]: 'Community',
+  [TABS.INSIGHTS]: 'Insights',
+  [TABS.THEORY]: 'Theory',
+  [TABS.HISTORY]: 'History'
 };
 
 export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
@@ -127,7 +127,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         
         {/* Compact Header */}
         <div className="text-center mb-2">
-          <div className="flex items-center justify-between mb-2" dir="rtl">
+          <div className="flex items-center justify-between mb-2">
             {/* Auth Status */}
             <div className="flex items-center gap-2">
               {user ? (
@@ -148,7 +148,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
                   className="text-xs text-amber-600 hover:text-amber-700"
                   data-testid="show-auth-btn"
                 >
-                  התחבר
+                  Sign In
                 </button>
               )}
             </div>
@@ -157,7 +157,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
             <div className="flex items-center gap-1">
               <span className={`w-2 h-2 rounded-full ${syncStatus.cloudAvailable ? 'bg-green-500' : 'bg-gray-400'}`}></span>
               <span className="text-xs text-muted-foreground">
-                {syncStatus.cloudAvailable ? 'מסונכרן' : 'לא מקוון'}
+                {syncStatus.cloudAvailable ? 'Synced' : 'Offline'}
               </span>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function PhilosDashboard({ user, onLogout, onShowAuth }) {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex justify-center gap-1 p-1 bg-gray-100/80 rounded-2xl backdrop-blur-sm" dir="rtl" data-testid="tab-navigation">
+        <div className="flex justify-center gap-1 p-1 bg-gray-100/80 rounded-2xl backdrop-blur-sm" data-testid="tab-navigation">
           {Object.values(TABS).map(tab => (
             <button
               key={tab}

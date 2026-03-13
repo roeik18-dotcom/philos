@@ -2,7 +2,7 @@ export default function DecisionMap({ state, decisionState, gapType, history = [
   if (!state) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        הגדר ערכי מצב כדי לראות מיקום במפת ההחלטה
+        Set state values to see position in the decision map
       </div>
     );
   }

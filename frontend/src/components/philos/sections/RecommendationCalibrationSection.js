@@ -31,7 +31,6 @@ export default function RecommendationCalibrationSection({ history }) {
   return (
     <section 
       className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-5 shadow-sm border border-amber-200"
-      dir="rtl"
       data-testid="recommendation-calibration-section"
     >
       {/* Header */}
@@ -42,16 +41,16 @@ export default function RecommendationCalibrationSection({ history }) {
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">כיול המלצות</h3>
+          <h3 className="text-lg font-semibold text-foreground">Recommendation Calibration</h3>
           <p className="text-xs text-muted-foreground">
-            התאמת משקלים בהתבסס על תוצאות בפועל
+            Adjusting weights based on actual results
           </p>
         </div>
       </div>
 
       {/* Calibrated Weights Visualization */}
       <div className="bg-white/60 rounded-xl p-4 mb-4">
-        <h4 className="text-sm font-medium text-foreground mb-3">משקלים מכוילים</h4>
+        <h4 className="text-sm font-medium text-foreground mb-3">Calibrated Weights</h4>
         <svg width="100%" height="100" viewBox="0 0 300 100" data-testid="calibration-chart">
           {weightEntries.map(([direction, weight], index) => {
             const y = index * 32 + 10;
@@ -100,13 +99,13 @@ export default function RecommendationCalibrationSection({ history }) {
           {/* Legend */}
           <g transform="translate(0, 90)">
             <text x="90" y="0" className="text-xs fill-current" style={{ fontSize: '9px', fill: '#9ca3af' }}>
-              ← החלשה
+              ← Weakened
             </text>
             <text x="150" y="0" textAnchor="middle" className="text-xs fill-current" style={{ fontSize: '9px', fill: '#9ca3af' }}>
-              בסיס
+              Baseline
             </text>
             <text x="210" y="0" textAnchor="end" className="text-xs fill-current" style={{ fontSize: '9px', fill: '#9ca3af' }}>
-              חיזוק →
+              reinforcement →
             </text>
           </g>
         </svg>
@@ -122,13 +121,13 @@ export default function RecommendationCalibrationSection({ history }) {
                 <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
-                <span className="text-xs font-medium text-green-700">הכי מחוזק</span>
+                <span className="text-xs font-medium text-green-700">Most boosted</span>
               </div>
               <div className={`font-bold ${directionColors[strongestDir]?.text || 'text-green-700'}`}>
                 {directionLabels[strongestDir]}
               </div>
               <div className="text-xs text-muted-foreground">
-                +{weights[strongestDir]} משקל
+                +{weights[strongestDir]} Weight
               </div>
             </div>
           )}
@@ -140,13 +139,13 @@ export default function RecommendationCalibrationSection({ history }) {
                 <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
-                <span className="text-xs font-medium text-amber-700">מופחת</span>
+                <span className="text-xs font-medium text-amber-700">Reduced</span>
               </div>
               <div className="font-bold text-amber-700">
                 {directionLabels[weakestDir]}
               </div>
               <div className="text-xs text-muted-foreground">
-                {weights[weakestDir]} משקל
+                {weights[weakestDir]} Weight
               </div>
             </div>
           )}
@@ -199,7 +198,7 @@ export default function RecommendationCalibrationSection({ history }) {
 
       {/* Footer */}
       <p className="text-xs text-muted-foreground mt-4 text-center">
-        הכיול מתבצע אוטומטית בהתבסס על ביצועי ההמלצות
+        Calibration is performed automatically based on recommendation performance
       </p>
     </section>
   );

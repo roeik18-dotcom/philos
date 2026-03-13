@@ -4,7 +4,7 @@ import { MapPin, ChevronDown, ChevronUp, Loader2, Flame, Share2, Download, Link2
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const dirColors = { contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b' };
-const dirLabels = { contribution: 'תרומה', recovery: 'התאוששות', order: 'סדר', exploration: 'חקירה' };
+const dirLabels = { contribution: 'Contribution', recovery: 'Recovery', order: 'Order', exploration: 'Exploration' };
 
 export default function ProfilePage() {
   const [data, setData] = useState(null);
@@ -52,8 +52,8 @@ export default function ProfilePage() {
   if (!data) {
     return (
       <div className="min-h-screen bg-[#0a0a12] flex flex-col items-center justify-center gap-3 px-4">
-        <p className="text-sm text-gray-500">רשומה לא נמצאה</p>
-        <a href="/" className="text-xs text-gray-400 hover:text-white transition-colors">חזרה ל-Philos</a>
+        <p className="text-sm text-gray-500">Record not found</p>
+        <a href="/" className="text-xs text-gray-400 hover:text-white transition-colors">Back to Philos</a>
       </div>
     );
   }
@@ -62,7 +62,7 @@ export default function ProfilePage() {
   const dc = dirColors[identity.dominant_direction] || '#6366f1';
 
   return (
-    <div className="min-h-screen bg-[#0a0a12] text-white" dir="rtl" data-testid="profile-page">
+    <div className="min-h-screen bg-[#0a0a12] text-white" data-testid="profile-page">
 
       {/* ═══ TOP BAR ═══ */}
       <div className="sticky top-0 z-10 bg-[#0a0a12]/90 backdrop-blur-md border-b border-white/[0.04] px-4 py-2.5 flex items-center justify-between">
@@ -86,7 +86,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 mb-3">
             <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{identity.country}</span>
             <span className="text-gray-700">·</span>
-            <span>{new Date(identity.member_since).toLocaleDateString('he-IL', { month: 'short', year: 'numeric' })}</span>
+            <span>{new Date(identity.member_since).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
           </div>
 
           {/* Identity markers */}
@@ -106,7 +106,7 @@ export default function ProfilePage() {
           {/* Invited by — lineage */}
           {identity.invited_by_alias && (
             <p className="text-[10px] text-gray-600 mb-4" data-testid="profile-invited-by">
-              הוזמן על ידי <span className="text-gray-400">{identity.invited_by_alias}</span>
+              Invited by <span className="text-gray-400">{identity.invited_by_alias}</span>
             </p>
           )}
 
@@ -125,24 +125,24 @@ export default function ProfilePage() {
               style={{ backgroundColor: `${dc}12`, color: dc, border: `1px solid ${dc}20` }}
               data-testid="profile-share-btn"
             >
-              <Share2 className="w-3 h-3" />שתף רשומה
+              <Share2 className="w-3 h-3" />Share Record
             </button>
             <button
               onClick={handleCopyLink}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-medium bg-white/[0.04] text-gray-400 border border-white/[0.06] transition-all hover:bg-white/[0.08]"
               data-testid="profile-copy-link-btn"
             >
-              {linkCopied ? <><Check className="w-3 h-3 text-emerald-400" /><span className="text-emerald-400">הועתק</span></> : <><Copy className="w-3 h-3" />העתק קישור</>}
+              {linkCopied ? <><Check className="w-3 h-3 text-emerald-400" /><span className="text-emerald-400">Copied</span></> : <><Copy className="w-3 h-3" />Copy Link</>}
             </button>
           </div>
         </section>
 
         {/* ═══ STATS STRIP — Documentary metrics ═══ */}
         <section className="grid grid-cols-4 gap-px bg-white/[0.04] rounded-2xl overflow-hidden" data-testid="profile-stats-strip">
-          <StatCell label="השפעה" value={value_growth.impact_score} color={dc} testId="profile-impact" />
-          <StatCell label="פעולות" value={value_growth.total_actions} color="#9ca3af" testId="profile-actions" />
-          <StatCell label="רצף" value={value_growth.streak} suffix=" ימים" color="#f59e0b" testId="profile-streak" />
-          <StatCell label="תרומה לשדה" value={`${field_contribution?.field_percentage || 0}%`} color="#22c55e" testId="profile-field-contribution" />
+          <StatCell label="Impact" value={value_growth.impact_score} color={dc} testId="profile-impact" />
+          <StatCell label="Actions" value={value_growth.total_actions} color="#9ca3af" testId="profile-actions" />
+          <StatCell label="Streak" value={value_growth.streak} suffix=" days" color="#f59e0b" testId="profile-streak" />
+          <StatCell label="Field Contribution" value={`${field_contribution?.field_percentage || 0}%`} color="#22c55e" testId="profile-field-contribution" />
         </section>
 
         {/* ═══ FIELD TRUST — Quiet indicator ═══ */}
@@ -207,19 +207,19 @@ function FieldTrustBlock({ trust }) {
 
   let stateLabel, stateColor;
   if (trust_score <= 0) {
-    stateLabel = 'מוגבל'; stateColor = '#ef4444';
+    stateLabel = 'Restricted'; stateColor = '#ef4444';
   } else if (trust_score < 5) {
-    stateLabel = 'שביר'; stateColor = '#f59e0b';
+    stateLabel = 'Fragile'; stateColor = '#f59e0b';
   } else if (trust_score < 15) {
-    stateLabel = 'בבנייה'; stateColor = '#3b82f6';
+    stateLabel = 'Building'; stateColor = '#3b82f6';
   } else {
-    stateLabel = 'יציב'; stateColor = '#22c55e';
+    stateLabel = 'Stable'; stateColor = '#22c55e';
   }
 
   return (
     <section data-testid="field-trust-block">
       <div className="flex items-center gap-1.5 mb-3">
-        <p className="text-[10px] text-gray-600">אמון שדה</p>
+        <p className="text-[10px] text-gray-600">Field Trust</p>
         <button
           onClick={() => setShowTooltip(!showTooltip)}
           className="text-gray-700 hover:text-gray-500 transition-colors"
@@ -231,7 +231,7 @@ function FieldTrustBlock({ trust }) {
 
       {showTooltip && (
         <p className="text-[9px] text-gray-500 leading-relaxed mb-3 bg-white/[0.02] rounded-lg p-2.5 border border-white/[0.04]" data-testid="field-trust-tooltip">
-          אמון שדה משקף את הערך שנצבר ביחס לדפוסי הסיכון לאורך זמן.
+          Field trust reflects the value accumulated relative to risk patterns over time.
         </p>
       )}
 
@@ -239,7 +239,7 @@ function FieldTrustBlock({ trust }) {
         {/* Value bar */}
         <div data-testid="field-trust-value">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] text-gray-500">ערך שדה</span>
+            <span className="text-[10px] text-gray-500">Field Value</span>
             <span className="text-[10px] font-medium text-emerald-500 tabular-nums">{value_score}</span>
           </div>
           <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
@@ -253,7 +253,7 @@ function FieldTrustBlock({ trust }) {
         {/* Risk bar */}
         <div data-testid="field-trust-risk">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] text-gray-500">סיכון שדה</span>
+            <span className="text-[10px] text-gray-500">Field Risk</span>
             <span className="text-[10px] font-medium text-red-400 tabular-nums">{risk_score}</span>
           </div>
           <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
@@ -266,7 +266,7 @@ function FieldTrustBlock({ trust }) {
 
         {/* Trust state */}
         <div className="pt-2.5 border-t border-white/[0.04] flex items-center justify-between" data-testid="field-trust-state">
-          <span className="text-[10px] text-gray-500">מצב אמון</span>
+          <span className="text-[10px] text-gray-500">Trust Status</span>
           <span
             className="text-[10px] font-medium px-2.5 py-0.5 rounded-full"
             style={{ color: stateColor, backgroundColor: `${stateColor}12`, border: `1px solid ${stateColor}20` }}
@@ -282,26 +282,26 @@ function FieldTrustBlock({ trust }) {
 
 
 const SOURCE_LABELS = {
-  daily_action: 'פעולת כיוון יומית',
-  globe_point: 'נקודת שדה',
-  mission_join: 'הצטרפות למשימה',
-  onboarding: 'פעולה ראשונה',
-  invite_used: 'הזמנה מומשה',
-  manual: 'עדכון ידני',
-  decay: 'דעיכה יומית',
+  daily_action: 'Daily Direction Action',
+  globe_point: 'Field Point',
+  mission_join: 'Mission Join',
+  onboarding: 'First Action',
+  invite_used: 'Invite Redeemed',
+  manual: 'Manual Update',
+  decay: 'Daily Decay',
 };
 
 const ACTION_LABELS = {
-  contribute: 'תרומה',
-  help: 'עזרה',
-  create: 'יצירה',
-  explore: 'חקירה',
-  spam: 'ספאם',
-  manipulation: 'מניפולציה',
-  aggression: 'תוקפנות',
-  deception: 'הטעיה',
-  disruption: 'שיבוש',
-  decay: 'דעיכה',
+  contribute: 'Contribution',
+  help: 'Help',
+  create: 'Creation',
+  explore: 'Exploration',
+  spam: 'Spam',
+  manipulation: 'Manipulation',
+  aggression: 'Aggression',
+  deception: 'Deception',
+  disruption: 'Disruption',
+  decay: 'Decay',
 };
 
 function buildSummaryLine(history) {
@@ -349,9 +349,9 @@ function buildSummaryLine(history) {
   // Case 1: Decay dominates recently
   if (recentlyDecayDominant && recentActionCount <= 1) {
     if (state === 'stable' || state === 'building') {
-      return 'השינוי האחרון באמון נובע בעיקר מדעיכה טבעית, אך הבסיס שנבנה עדיין מחזיק.';
+      return 'Recent trust changes are mainly from natural decay, but the foundation built still holds.';
     }
-    return 'הדעיכה היומית משפיעה על האמון — פעולות חדשות יחזקו את המצב.';
+    return 'Daily decay is affecting trust — new actions will strengthen your standing.';
   }
 
   // Case 2: Risk materially shapes trust
@@ -359,26 +359,26 @@ function buildSummaryLine(history) {
     const topRisk = riskSources[0];
     const topRiskKey = topRisk[0];
     if (state === 'restricted') {
-      return 'הסיכון שנצבר עולה על הערך, והנוכחות בשדה מוגבלת כרגע.';
+      return 'Accumulated risk exceeds value, and field presence is currently restricted.';
     }
     if (state === 'fragile') {
-      return 'דפוסי הסיכון מצמצמים חלק מהערך שנבנה — המצב בשדה עדיין שביר.';
+      return 'Risk patterns are reducing some of the value built — field status is still fragile.';
     }
     const topPos = positiveSources.length > 0 ? positiveSources[0] : null;
     if (topPos && topPos[0] !== topRiskKey) {
       const posLabel = SOURCE_LABELS[topPos[0]] || topPos[0];
       const riskLabel = SOURCE_LABELS[topRiskKey] || topRiskKey;
-      return `הערך נבנה בעיקר מ${posLabel}, אך ${riskLabel} מפחית חלק ממנו.`;
+      return `Value is built mainly from ${posLabel}, but ${riskLabel} reduces some of it.`;
     }
-    return 'הערך שנצבר מאוזן בחלקו על ידי דפוסי סיכון — מצב שדורש המשך בנייה.';
+    return 'Accumulated value is partially offset by risk patterns — continued building is needed.';
   }
 
   // Case 3: Mostly shallow (onboarding/manual)
   if (mostlyShallow && positiveSources.length > 0) {
     if (state === 'building' || state === 'stable') {
-      return 'הערך הנוכחי מבוסס בעיקר על פעולות חד-פעמיות — פעולות יומיות יחזקו את הבסיס.';
+      return 'Current value is mainly based on one-time actions — daily actions will strengthen the foundation.';
     }
-    return 'הערך שנצבר עדיין לא מגובה בפעילות מתמשכת בשדה.';
+    return 'Accumulated value is not yet backed by consistent field activity.';
   }
 
   // Case 4: Clear dominant positive source
@@ -388,30 +388,30 @@ function buildSummaryLine(history) {
     const topPct = totalPositiveValue > 0 ? Math.round((top[1].total_value_delta / totalPositiveValue) * 100) : 0;
 
     const decayNote = decayValueLoss > totalPositiveValue * 0.3
-      ? ', עם דעיכה טבעית שמאזנת חלק מהערך'
+      ? ', with natural decay offsetting some of the value'
       : '';
 
     if (topPct >= 70) {
-      return `${topLabel} היא המקור המרכזי לערך בשדה${decayNote}.`;
+      return `${topLabel} is the main source of field value${decayNote}.`;
     }
 
     if (positiveSources.length >= 2) {
       const secondLabel = SOURCE_LABELS[positiveSources[1][0]] || positiveSources[1][0];
-      return `הערך בשדה נבנה בעיקר מ${topLabel} ומ${secondLabel}${decayNote}.`;
+      return `Field value is built mainly from ${topLabel} and ${secondLabel}${decayNote}.`;
     }
 
-    return `${topLabel} בונה את הערך בשדה${decayNote}.`;
+    return `${topLabel} builds field value${decayNote}.`;
   }
 
   // Case 5: Only decay, no positive sources
-  return 'אין עדיין פעולות שמשפיעות על האמון — הדעיכה היומית פועלת ברקע.';
+  return 'No actions affecting trust yet — daily decay is running in the background.';
 }
 
 function formatTimestamp(ts) {
   try {
     const d = new Date(ts);
-    return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) +
-      ' ' + d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) +
+      ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   } catch { return ''; }
 }
 
@@ -420,7 +420,7 @@ function TrustHistorySection({ history }) {
 
   return (
     <section data-testid="trust-history-section">
-      <p className="text-[10px] text-gray-600 mb-2">היסטוריית שדה</p>
+      <p className="text-[10px] text-gray-600 mb-2">Field History</p>
 
       {summary && (
         <p className="text-[9px] text-gray-500 leading-relaxed mb-3 bg-white/[0.02] rounded-lg p-2.5 border border-white/[0.04]" data-testid="trust-history-summary">
@@ -480,7 +480,7 @@ function DirectionBar({ distribution, total, dominantDir }) {
   const dirs = ['contribution', 'recovery', 'order', 'exploration'];
   return (
     <section data-testid="profile-direction-bar">
-      <p className="text-[10px] text-gray-600 mb-2">התפלגות כיוונים</p>
+      <p className="text-[10px] text-gray-600 mb-2">Direction Distribution</p>
       <div className="flex h-[3px] rounded-full overflow-hidden bg-white/[0.04] mb-2">
         {dirs.map(d => {
           const pct = ((distribution[d] || 0) / total) * 100;
@@ -508,14 +508,14 @@ function DirectionBar({ distribution, total, dominantDir }) {
 
 function OppositionAxes({ axes }) {
   const axisData = [
-    { key: 'chaos_order', left: 'כאוס', right: 'סדר', leftC: '#f59e0b', rightC: '#6366f1' },
-    { key: 'ego_collective', left: 'אגו', right: 'קולקטיב', leftC: '#ef4444', rightC: '#22c55e' },
-    { key: 'exploration_stability', left: 'חקירה', right: 'יציבות', leftC: '#f59e0b', rightC: '#3b82f6' }
+    { key: 'chaos_order', left: 'Chaos', right: 'Order', leftC: '#f59e0b', rightC: '#6366f1' },
+    { key: 'ego_collective', left: 'Ego', right: 'Collective', leftC: '#ef4444', rightC: '#22c55e' },
+    { key: 'exploration_stability', left: 'Exploration', right: 'Stability', leftC: '#f59e0b', rightC: '#3b82f6' }
   ];
 
   return (
     <section data-testid="profile-opposition-axes">
-      <p className="text-[10px] text-gray-600 mb-3">ציר הניגודים</p>
+      <p className="text-[10px] text-gray-600 mb-3">Opposition Axes</p>
       <div className="space-y-4">
         {axisData.map(a => {
           const val = axes[a.key] ?? 50;
@@ -549,14 +549,14 @@ function InfluenceSection({ chain }) {
 
   return (
     <section data-testid="profile-influence-chain">
-      <p className="text-[10px] text-gray-600 mb-3">שרשרת השפעה</p>
+      <p className="text-[10px] text-gray-600 mb-3">Influence Chain</p>
       <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-4 space-y-3">
         {chain.invited_by_alias && (
           <div className="flex items-center gap-2.5">
             <span className="w-6 h-6 rounded-lg bg-violet-500/10 flex items-center justify-center text-[10px] font-bold text-violet-400">
               {chain.invited_by_alias.charAt(0)}
             </span>
-            <span className="text-xs text-gray-400">הוזמן על ידי <span className="text-violet-400 font-medium">{chain.invited_by_alias}</span></span>
+            <span className="text-xs text-gray-400">Invited by <span className="text-violet-400 font-medium">{chain.invited_by_alias}</span></span>
           </div>
         )}
 
@@ -566,7 +566,7 @@ function InfluenceSection({ chain }) {
               {chain.total_invited}
             </span>
             <div className="flex-1">
-              <span className="text-xs text-gray-400">הביא לשדה {chain.total_invited} אנשים</span>
+              <span className="text-xs text-gray-400">Brought {chain.total_invited} people to the field</span>
               {chain.invitees && chain.invitees.length > 0 && (
                 <p className="text-[10px] text-gray-600 mt-0.5">{chain.invitees.join(', ')}</p>
               )}
@@ -578,12 +578,12 @@ function InfluenceSection({ chain }) {
         <div className="flex gap-4 pt-2 border-t border-white/[0.04]">
           {chain.active_invitees > 0 && (
             <span className="text-[10px] text-emerald-500" data-testid="profile-active-invitees">
-              {chain.active_invitees} פעילים
+              {chain.active_invitees} active
             </span>
           )}
           {chain.invite_credits > 0 && (
             <span className="text-[10px] text-amber-500" data-testid="profile-invite-credits">
-              {chain.invite_credits} נקודות ערך
+              {chain.invite_credits} value points
             </span>
           )}
         </div>
@@ -597,7 +597,7 @@ function ActionRecord({ actions, expandedAction, setExpandedAction }) {
   if (!actions?.length) {
     return (
       <section className="text-center py-8">
-        <p className="text-[10px] text-gray-600">אין פעולות מתועדות עדיין</p>
+        <p className="text-[10px] text-gray-600">No recorded actions yet</p>
       </section>
     );
   }
@@ -605,14 +605,14 @@ function ActionRecord({ actions, expandedAction, setExpandedAction }) {
   return (
     <section data-testid="profile-action-record">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[10px] text-gray-600">רשומת פעולות</p>
+        <p className="text-[10px] text-gray-600">Action Record</p>
         <span className="text-[9px] text-gray-700">{actions.length}</span>
       </div>
       <div className="space-y-2">
         {actions.map((a, i) => {
           const color = dirColors[a.direction] || '#6366f1';
           const isExpanded = expandedAction === i;
-          const dateStr = a.date ? new Date(a.date).toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) : '';
+          const dateStr = a.date ? new Date(a.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '';
           return (
             <div key={i} className="rounded-xl border border-white/[0.04] overflow-hidden bg-white/[0.02] transition-all" data-testid={`action-record-${i}`}>
               <button className="w-full flex items-center gap-2.5 p-3 text-right" onClick={() => setExpandedAction(isExpanded ? null : i)}>
@@ -629,12 +629,12 @@ function ActionRecord({ actions, expandedAction, setExpandedAction }) {
               </button>
               {isExpanded && a.meanings && (
                 <div className="px-3 pb-3 pt-0 border-t border-white/[0.04]" data-testid={`action-meanings-${i}`}>
-                  <p className="text-[9px] text-gray-700 mb-2 mt-2">פרשנות</p>
+                  <p className="text-[9px] text-gray-700 mb-2 mt-2">Interpretation</p>
                   <div className="grid grid-cols-2 gap-1.5">
-                    <MeaningCard label="אישי" text={a.meanings.personal_he} color="#6366f1" />
-                    <MeaningCard label="חברתי" text={a.meanings.social_he} color="#22c55e" />
-                    <MeaningCard label="ערכי" text={a.meanings.value_he} color="#f59e0b" />
-                    <MeaningCard label="מערכתי" text={a.meanings.system_he} color="#3b82f6" />
+                    <MeaningCard label="Personal" text={a.meanings.personal_he} color="#6366f1" />
+                    <MeaningCard label="Social" text={a.meanings.social_he} color="#22c55e" />
+                    <MeaningCard label="Value" text={a.meanings.value_he} color="#f59e0b" />
+                    <MeaningCard label="Systemic" text={a.meanings.system_he} color="#3b82f6" />
                   </div>
                 </div>
               )}
@@ -666,9 +666,9 @@ function ShareCardModal({ data, dominantColor, profileUrl, onClose }) {
   const dc = dominantColor;
 
   const axisData = [
-    { key: 'chaos_order', left: 'כאוס', right: 'סדר', leftC: '#f59e0b', rightC: '#6366f1' },
-    { key: 'ego_collective', left: 'אגו', right: 'קולקטיב', leftC: '#ef4444', rightC: '#22c55e' },
-    { key: 'exploration_stability', left: 'חקירה', right: 'יציבות', leftC: '#f59e0b', rightC: '#3b82f6' }
+    { key: 'chaos_order', left: 'Chaos', right: 'Order', leftC: '#f59e0b', rightC: '#6366f1' },
+    { key: 'ego_collective', left: 'Ego', right: 'Collective', leftC: '#ef4444', rightC: '#22c55e' },
+    { key: 'exploration_stability', left: 'Exploration', right: 'Stability', leftC: '#f59e0b', rightC: '#3b82f6' }
   ];
 
   const handleDownload = useCallback(async () => {
@@ -697,7 +697,7 @@ function ShareCardModal({ data, dominantColor, profileUrl, onClose }) {
 
         {/* ═══ SHARE CARD ═══ */}
         <div ref={cardRef} className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#0a0a12' }} data-testid="share-card">
-          <div className="p-6" dir="rtl">
+          <div className="p-6" data-testid="share-card-inner">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <span className="text-[8px] tracking-[0.3em] uppercase text-gray-600 font-medium">Human Action Record</span>
@@ -724,19 +724,19 @@ function ShareCardModal({ data, dominantColor, profileUrl, onClose }) {
             <div className="grid grid-cols-4 gap-px bg-white/[0.04] rounded-xl overflow-hidden mb-5">
               <div className="bg-[#0e0e1a] p-2.5 text-center">
                 <p className="text-base font-bold" style={{ color: dc }}>{value_growth.impact_score}</p>
-                <p className="text-[7px] text-gray-600">השפעה</p>
+                <p className="text-[7px] text-gray-600">Impact</p>
               </div>
               <div className="bg-[#0e0e1a] p-2.5 text-center">
                 <p className="text-base font-bold text-white">{value_growth.total_actions}</p>
-                <p className="text-[7px] text-gray-600">פעולות</p>
+                <p className="text-[7px] text-gray-600">Actions</p>
               </div>
               <div className="bg-[#0e0e1a] p-2.5 text-center">
                 <p className="text-base font-bold text-amber-400">{value_growth.streak}</p>
-                <p className="text-[7px] text-gray-600">רצף</p>
+                <p className="text-[7px] text-gray-600">Streak</p>
               </div>
               <div className="bg-[#0e0e1a] p-2.5 text-center">
                 <p className="text-base font-bold text-emerald-400">{field_contribution?.field_percentage || 0}%</p>
-                <p className="text-[7px] text-gray-600">תרומה לשדה</p>
+                <p className="text-[7px] text-gray-600">Field Contribution</p>
               </div>
             </div>
 
@@ -763,20 +763,20 @@ function ShareCardModal({ data, dominantColor, profileUrl, onClose }) {
             {(influence_chain?.total_invited > 0 || influence_chain?.invite_credits > 0) && (
               <div className="flex items-center gap-4 mb-5 py-2 border-t border-b border-white/[0.04]">
                 {influence_chain.total_invited > 0 && (
-                  <span className="text-[9px] text-emerald-500">הביא {influence_chain.total_invited} אנשים לשדה</span>
+                  <span className="text-[9px] text-emerald-500">Brought {influence_chain.total_invited} people to the field</span>
                 )}
                 {influence_chain.active_invitees > 0 && (
-                  <span className="text-[9px] text-emerald-400">{influence_chain.active_invitees} פעילים</span>
+                  <span className="text-[9px] text-emerald-400">{influence_chain.active_invitees} active</span>
                 )}
                 {influence_chain.invite_credits > 0 && (
-                  <span className="text-[9px] text-amber-500">{influence_chain.invite_credits} נקודות</span>
+                  <span className="text-[9px] text-amber-500">{influence_chain.invite_credits} points</span>
                 )}
               </div>
             )}
 
             {/* Footer with URL */}
             <div className="flex items-center justify-between">
-              <span className="text-[8px] text-gray-600">{new Date().toLocaleDateString('he-IL')}</span>
+              <span className="text-[8px] text-gray-600">{new Date().toLocaleDateString('en-US')}</span>
               <span className="text-[8px] text-gray-700 font-mono" dir="ltr">philos-orientation/profile</span>
             </div>
           </div>
@@ -790,18 +790,18 @@ function ShareCardModal({ data, dominantColor, profileUrl, onClose }) {
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white text-gray-900 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
             data-testid="share-download-btn"
           >
-            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Download className="w-3.5 h-3.5" />הורד תמונה</>}
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Download className="w-3.5 h-3.5" />Download Image</>}
           </button>
           <button
             onClick={handleCopy}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white/10 text-white rounded-xl text-xs font-medium hover:bg-white/20 transition-colors"
             data-testid="share-copy-link-btn"
           >
-            {copied ? <><Check className="w-3.5 h-3.5 text-emerald-400" /><span className="text-emerald-400">הועתק</span></> : <><Link2 className="w-3.5 h-3.5" />העתק קישור</>}
+            {copied ? <><Check className="w-3.5 h-3.5 text-emerald-400" /><span className="text-emerald-400">Copied</span></> : <><Link2 className="w-3.5 h-3.5" />Copy Link</>}
           </button>
         </div>
 
-        <p className="text-center text-[10px] text-gray-600 mt-2 cursor-pointer" onClick={onClose}>לחץ בחוץ לסגירה</p>
+        <p className="text-center text-[10px] text-gray-600 mt-2 cursor-pointer" onClick={onClose}>Click outside to close</p>
       </div>
     </div>
   );

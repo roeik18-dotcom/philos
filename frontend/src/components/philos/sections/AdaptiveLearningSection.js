@@ -5,11 +5,11 @@ import { useMemo } from 'react';
 
 // Hebrew labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 const valueColors = {
@@ -70,7 +70,7 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
         const topBoosted = boostedTypes[0][0];
         results.push({
           type: 'boost',
-          text: `מסלולי ${valueLabels[topBoosted]} מקבלים כעת עדיפות גבוהה יותר`,
+          text: `${valueLabels[topBoosted]} paths now receive higher priority`,
           pathType: topBoosted
         });
       }
@@ -84,7 +84,7 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
         const topPenalized = penalizedTypes[0][0];
         results.push({
           type: 'penalty',
-          text: `מסלולים עם נטיית ${valueLabels[topPenalized]} מקבלים הפחתת משקל`,
+          text: `Paths with ${valueLabels[topPenalized]} tendency receive reduced weight`,
           pathType: topPenalized
         });
       }
@@ -98,13 +98,13 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
     if (matchRate >= 60) {
       results.push({
         type: 'accuracy',
-        text: 'דיוק התחזיות גבוה - המערכת לומדת היטב',
+        text: 'Prediction accuracy is high — the system is learning well',
         pathType: null
       });
     } else if (matchRate < 40) {
       results.push({
         type: 'accuracy',
-        text: 'דיוק התחזיות בינוני - המערכת מתכווננת',
+        text: 'Prediction accuracy is moderate — the system is adjusting',
         pathType: null
       });
     }
@@ -123,12 +123,11 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
       <section 
         className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-5 shadow-sm border border-purple-200"
         data-testid="adaptive-learning-section"
-        dir="rtl"
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-foreground">למידה אדפטיבית</h3>
-            <p className="text-xs text-muted-foreground">התאמת דירוג מסלולים לפי ביצועים</p>
+            <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
+            <p className="text-xs text-muted-foreground">Adjusting path ranking by performance</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-purple-200 flex items-center justify-center">
             <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,8 +136,8 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
           </div>
         </div>
         <div className="text-center py-6 bg-white/50 rounded-xl">
-          <p className="text-muted-foreground">צריך לפחות 2 החלטות עם בחירת מסלול כדי להתחיל ללמוד</p>
-          <p className="text-xs text-muted-foreground mt-1">בחר מסלולים והערך אותם כדי לבנות היסטוריית למידה</p>
+          <p className="text-muted-foreground">Need at least 2 decisions with path selection to start learning</p>
+          <p className="text-xs text-muted-foreground mt-1">Select paths and evaluate them to build learning history</p>
         </div>
       </section>
     );
@@ -148,15 +147,14 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
     <section 
       className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-5 shadow-sm border border-purple-200"
       data-testid="adaptive-learning-section"
-      dir="rtl"
     >
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">למידה אדפטיבית</h3>
-          <p className="text-xs text-muted-foreground">התאמת דירוג מסלולים לפי ביצועים</p>
+          <h3 className="text-lg font-semibold text-foreground">Adaptive Learning</h3>
+          <p className="text-xs text-muted-foreground">Adjusting path ranking by performance</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{insights.totalLearnings} למידות</span>
+          <span className="text-xs text-muted-foreground">{insights.totalLearnings} learnings</span>
           <div className="w-10 h-10 rounded-full bg-purple-200 flex items-center justify-center">
             <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -168,7 +166,7 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
       {/* Adaptive Scores Display */}
       {adaptiveScores && (
         <div className="bg-white/70 rounded-xl p-4 mb-4">
-          <p className="text-sm font-semibold text-foreground mb-3">התאמות דירוג נוכחיות</p>
+          <p className="text-sm font-semibold text-foreground mb-3">Current ranking adjustments</p>
           <div className="grid grid-cols-3 gap-2">
             {['recovery', 'order', 'contribution'].map(type => {
               const score = adaptiveScores[type] || 0;
@@ -202,7 +200,7 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
 
       {/* Trust Level Bars */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-sm font-semibold text-foreground mb-3">רמת אמון לפי סוג מסלול</p>
+        <p className="text-sm font-semibold text-foreground mb-3">Trust level by path type</p>
         <div className="space-y-3">
           {['recovery', 'order', 'contribution'].map(type => {
             const score = adaptiveScores?.[type] || 0;
@@ -230,7 +228,7 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
       {/* Match Accuracy */}
       <div className="bg-white/70 rounded-xl p-3 mb-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">דיוק התחזיות הכללי</span>
+          <span className="text-sm text-muted-foreground">Overall prediction accuracy</span>
           <span className={`text-sm font-bold ${
             insights.matchRate >= 60 ? 'text-green-600' : 
             insights.matchRate >= 40 ? 'text-yellow-600' : 'text-red-600'
@@ -252,7 +250,7 @@ export default function AdaptiveLearningSection({ learningHistory, adaptiveScore
       {/* Insights */}
       {insights.insights.length > 0 && (
         <div className="bg-purple-100/50 border border-purple-200 rounded-xl p-4">
-          <p className="text-sm font-semibold text-purple-800 mb-2">תובנות אדפטיביות:</p>
+          <p className="text-sm font-semibold text-purple-800 mb-2">Adaptive insights:</p>
           <div className="space-y-2">
             {insights.insights.map((insight, idx) => (
               <div key={idx} className="flex items-start gap-2">

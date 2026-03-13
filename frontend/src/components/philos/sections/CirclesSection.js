@@ -36,14 +36,14 @@ export default function CirclesSection({ userId, onViewCircle }) {
   if (loading) return null;
 
   return (
-    <section className="philos-section bg-white border-border" dir="rtl" data-testid="circles-section">
+    <section className="philos-section bg-white border-border" data-testid="circles-section">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-pink-50 flex items-center justify-center">
           <Users className="w-5 h-5 text-pink-600" />
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-800">מעגלי ערך</span>
-          <p className="text-[10px] text-gray-400">קהילות לפי כיוון ונישה</p>
+          <span className="text-sm font-semibold text-gray-800">Value Circles</span>
+          <p className="text-[10px] text-gray-400">Communities by direction and niche</p>
         </div>
       </div>
 
@@ -62,9 +62,9 @@ export default function CirclesSection({ userId, onViewCircle }) {
             <p className="text-xs font-bold text-gray-800 mb-0.5">{c.label_he}</p>
             <p className="text-[9px] text-gray-400 mb-2 leading-relaxed line-clamp-2">{c.description_he}</p>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-gray-400">{c.member_count.toLocaleString()} חברים</span>
+              <span className="text-[10px] text-gray-400">{c.member_count.toLocaleString()} members</span>
               <button onClick={(e) => { e.stopPropagation(); handleJoin(c.id); }} disabled={!!joining} className="text-[10px] font-medium flex items-center gap-0.5 transition-opacity hover:opacity-80" style={{ color: c.color }} data-testid={`join-circle-${c.id}`}>
-                {joining === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><ChevronLeft className="w-3 h-3" />הצטרף</>}
+                {joining === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><ChevronLeft className="w-3 h-3" />Join</>}
               </button>
             </div>
           </div>

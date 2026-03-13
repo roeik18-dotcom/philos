@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 
 // Hebrew labels
 const directionLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Direction colors
@@ -20,15 +20,15 @@ const directionColors = {
 
 // Reason labels in Hebrew
 const reasonLabels = {
-  negative_harm_drift: 'נסחף נזק שלילי',
-  negative_avoidance_drift: 'דפוס הימנעות',
-  collective_gap: 'פער קולקטיבי',
-  replay_blind_spot: 'נקודה עיוורת',
-  positive_contribution_momentum: 'מומנטום תרומה',
-  replay_preference: 'העדפת הפעלה חוזרת',
-  balance_deficit: 'חוסר איזון',
-  general_balance: 'איזון כללי',
-  default: 'ברירת מחדל'
+  negative_harm_drift: 'drifting Harm Negative',
+  negative_avoidance_drift: 'Avoidance pattern',
+  collective_gap: 'Collective gap',
+  replay_blind_spot: 'Blind spot',
+  positive_contribution_momentum: 'Contribution momentum',
+  replay_preference: 'Replay preference',
+  balance_deficit: 'Balance deficit',
+  general_balance: 'General Balance',
+  default: 'Default'
 };
 
 // Calculate analytics from history
@@ -154,7 +154,7 @@ const generateInsights = (analytics) => {
   if (mostFollowed) {
     insights.push({
       type: 'most_followed',
-      text: `מסלולי ${directionLabels[mostFollowed[0]]} זוכים לשיעור המעקב הגבוה ביותר (${mostFollowed[1]} פעמים)`,
+      text: `Paths of ${directionLabels[mostFollowed[0]]} have the highest follow-through rate (${mostFollowed[1]} times)`,
       direction: mostFollowed[0],
       priority: 'high'
     });
@@ -164,13 +164,13 @@ const generateInsights = (analytics) => {
   if (overallAlignmentRate > 60) {
     insights.push({
       type: 'strong_alignment',
-      text: `ההמלצות מובילות לתוצאות תואמות ב-${Math.round(overallAlignmentRate)}% מהמקרים`,
+      text: `Recommendations lead to matching results in ${Math.round(overallAlignmentRate)}% of cases`,
       priority: 'positive'
     });
   } else if (overallAlignmentRate < 40 && analytics.followedCount >= 3) {
     insights.push({
       type: 'weak_alignment',
-      text: `יש פער משמעותי בין ההמלצות לתוצאות בפועל (${Math.round(overallAlignmentRate)}% התאמה)`,
+      text: `There is a significant gap between recommendations and actual results (${Math.round(overallAlignmentRate)}% match)`,
       priority: 'warning'
     });
   }
@@ -179,7 +179,7 @@ const generateInsights = (analytics) => {
   if (strongestPattern && strongestPattern.alignmentRate > 70) {
     insights.push({
       type: 'strongest_pattern',
-      text: `ההמלצות בכיוון ${directionLabels[strongestPattern.direction]} הובילו בפועל לתוצאות תואמות ברוב המקרים (${Math.round(strongestPattern.alignmentRate)}%)`,
+      text: `Recommendations for ${directionLabels[strongestPattern.direction]} actually led to matching results in most cases (${Math.round(strongestPattern.alignmentRate)}%)`,
       direction: strongestPattern.direction,
       priority: 'positive'
     });
@@ -189,7 +189,7 @@ const generateInsights = (analytics) => {
   if (weakestPattern && weakestPattern.alignmentRate < 40 && leastFollowed) {
     insights.push({
       type: 'gap',
-      text: `יש פער בין המלצות ${directionLabels[weakestPattern.direction]} לבין הפעולות בפועל`,
+      text: `There is a gap between recommendations for ${directionLabels[weakestPattern.direction]} and the actual actions`,
       direction: weakestPattern.direction,
       priority: 'warning'
     });
@@ -233,7 +233,6 @@ export default function RecommendationFollowThroughSection({ history }) {
   return (
     <section 
       className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-violet-200"
-      dir="rtl"
       data-testid="recommendation-follow-through-section"
     >
       {/* Header */}
@@ -244,9 +243,9 @@ export default function RecommendationFollowThroughSection({ history }) {
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">מעקב אחר המלצות</h3>
+          <h3 className="text-lg font-semibold text-foreground">Recommendation Follow-Through</h3>
           <p className="text-xs text-muted-foreground">
-            ניתוח יעילות מנוע ההמלצות
+            Analysis of recommendation engine effectiveness
           </p>
         </div>
       </div>
@@ -256,7 +255,7 @@ export default function RecommendationFollowThroughSection({ history }) {
         {/* Follow Rate */}
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <div className="text-2xl font-bold text-violet-700">{Math.round(followRate)}%</div>
-          <div className="text-xs text-muted-foreground">שיעור מעקב</div>
+          <div className="text-xs text-muted-foreground">Follow-through rate</div>
           <div className="text-xs text-violet-600">{followedCount}/{totalDecisions}</div>
         </div>
 
@@ -265,8 +264,8 @@ export default function RecommendationFollowThroughSection({ history }) {
           <div className={`text-2xl font-bold ${overallAlignmentRate > 50 ? 'text-green-600' : 'text-amber-600'}`}>
             {Math.round(overallAlignmentRate)}%
           </div>
-          <div className="text-xs text-muted-foreground">התאמת תוצאות</div>
-          <div className="text-xs text-violet-600">המלצה ↔ פועל</div>
+          <div className="text-xs text-muted-foreground">Result alignment</div>
+          <div className="text-xs text-violet-600">Recommendation ↔ Action</div>
         </div>
 
         {/* Most Followed */}
@@ -276,18 +275,18 @@ export default function RecommendationFollowThroughSection({ history }) {
               <div className={`text-lg font-bold ${directionColors[mostFollowed[0]]?.text || 'text-violet-700'}`}>
                 {directionLabels[mostFollowed[0]]}
               </div>
-              <div className="text-xs text-muted-foreground">הכי נעקב</div>
-              <div className="text-xs text-violet-600">{mostFollowed[1]} פעמים</div>
+              <div className="text-xs text-muted-foreground">Most followed</div>
+              <div className="text-xs text-violet-600">{mostFollowed[1]} times</div>
             </>
           ) : (
-            <div className="text-sm text-muted-foreground">אין נתונים</div>
+            <div className="text-sm text-muted-foreground">No data</div>
           )}
         </div>
       </div>
 
       {/* SVG Visual Summary - Direction Distribution */}
       <div className="bg-white/60 rounded-xl p-4 mb-4">
-        <h4 className="text-sm font-medium text-foreground mb-3">התפלגות מעקב לפי כיוון</h4>
+        <h4 className="text-sm font-medium text-foreground mb-3">Follow-through distribution by direction</h4>
         <svg width="100%" height="120" viewBox="0 0 300 120" data-testid="follow-through-chart">
           {Object.entries(directionCounts).map(([direction, count], index) => {
             const barWidth = (count / maxCount) * 180;
@@ -337,13 +336,13 @@ export default function RecommendationFollowThroughSection({ history }) {
                 <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-xs font-medium text-green-700">הכי אפקטיבי</span>
+                <span className="text-xs font-medium text-green-700">Most effective</span>
               </div>
               <div className={`font-bold ${directionColors[strongestPattern.direction]?.text || 'text-green-700'}`}>
                 {directionLabels[strongestPattern.direction]}
               </div>
               <div className="text-xs text-muted-foreground">
-                {Math.round(strongestPattern.alignmentRate)}% התאמה
+                {Math.round(strongestPattern.alignmentRate)}% match
               </div>
             </div>
           )}
@@ -355,13 +354,13 @@ export default function RecommendationFollowThroughSection({ history }) {
                 <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span className="text-xs font-medium text-amber-700">דורש שיפור</span>
+                <span className="text-xs font-medium text-amber-700">Needs improvement</span>
               </div>
               <div className="font-bold text-amber-700">
                 {directionLabels[weakestPattern.direction]}
               </div>
               <div className="text-xs text-muted-foreground">
-                {Math.round(weakestPattern.alignmentRate)}% התאמה
+                {Math.round(weakestPattern.alignmentRate)}% match
               </div>
             </div>
           )}
@@ -414,7 +413,7 @@ export default function RecommendationFollowThroughSection({ history }) {
 
       {/* Footer */}
       <p className="text-xs text-muted-foreground mt-4 text-center">
-        מבוסס על {followedCount} החלטות שנבעו מהמלצות
+        Based on {followedCount} decisions that stemmed from recommendations
       </p>
     </section>
   );

@@ -70,12 +70,12 @@ export default function SendToGlobeButton({ userId, direction }) {
               <Check className="w-4 h-4 text-green-600" />
               <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ backgroundColor: color }} />
             </div>
-            <span className="text-sm font-medium text-green-700">הפעולה שלך נוספה לשדה האנושי</span>
+            <span className="text-sm font-medium text-green-700">Your action was added to the human field</span>
           </div>
         ) : (
           <div className="flex items-center justify-center gap-2 py-2 text-xs text-gray-400">
             <Globe className="w-3.5 h-3.5" />
-            <span>הנקודה שלך בגלובוס</span>
+            <span>Your point on the globe</span>
           </div>
         )}
       </div>
@@ -101,12 +101,12 @@ export default function SendToGlobeButton({ userId, direction }) {
                 style={{ backgroundColor: color }}
               />
             </div>
-            <span className="text-sm">שולח לגלובוס...</span>
+            <span className="text-sm">Sending to globe...</span>
           </>
         ) : (
           <>
             <Globe className="w-5 h-5" />
-            <span className="text-sm">שלח נקודה לגלובוס</span>
+            <span className="text-sm">Send Point to Globe</span>
           </>
         )}
       </button>

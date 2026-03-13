@@ -60,12 +60,12 @@ export default function InlineInviteCard() {
   if (loading || !token || !code) return null;
 
   return (
-    <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-3.5 flex items-center gap-3" dir="rtl" data-testid="inline-invite-card">
+    <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-3.5 flex items-center gap-3" data-testid="inline-invite-card">
       <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
         <UserPlus className="w-5 h-5 text-violet-600" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-gray-700">הזמן מישהו לשדה</p>
+        <p className="text-xs font-medium text-gray-700">Invite someone to the field</p>
         <p className="text-[10px] text-gray-400 truncate font-mono" dir="ltr">{code}</p>
       </div>
       <button
@@ -75,7 +75,7 @@ export default function InlineInviteCard() {
         }`}
         data-testid="inline-invite-copy-btn"
       >
-        {copied ? <><Check className="w-3 h-3" /><span>הועתק</span></> : <><Copy className="w-3 h-3" /><span>העתק</span></>}
+        {copied ? <><Check className="w-3 h-3" /><span>Copied</span></> : <><Copy className="w-3 h-3" /><span>Copy</span></>}
       </button>
     </div>
   );

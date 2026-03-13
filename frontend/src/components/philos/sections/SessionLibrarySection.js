@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { listSavedSessions, getSessionById, deleteSession, saveSessionToLibrary } from '../../../services/cloudSync';
 
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות',
-  neutral: 'ניטרלי'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance',
+  neutral: 'Neutral'
 };
 
 const valueColors = {
@@ -48,7 +48,7 @@ export default function SessionLibrarySection({
 
   const handleSaveCurrentSession = async () => {
     if (!currentHistory || currentHistory.length < 3) {
-      alert('צריך לפחות 3 החלטות כדי לשמור סשן');
+      alert('Need at least 3 decisions to save a session');
       return;
     }
     
@@ -56,9 +56,9 @@ export default function SessionLibrarySection({
     const result = await saveSessionToLibrary(currentHistory);
     if (result.success) {
       await loadSessions();
-      alert('הסשן נשמר בהצלחה!');
+      alert('Session saved successfully!');
     } else {
-      alert('שגיאה בשמירת הסשן');
+      alert('Error saving session');
     }
     setSaving(false);
   };
@@ -70,20 +70,20 @@ export default function SessionLibrarySection({
       onLoadSession(result.session.history);
       setExpanded(false);
     } else {
-      alert('שגיאה בטעינת הסשן');
+      alert('Error loading session');
     }
     setLoading(false);
   };
 
   const handleDeleteSession = async (sessionId) => {
-    if (!window.confirm('למחוק את הסשן הזה?')) return;
+    if (!window.confirm('Delete this session?')) return;
     
     setDeleting(sessionId);
     const result = await deleteSession(sessionId);
     if (result.success) {
       setSessions(prev => prev.filter(s => s.session_id !== sessionId));
     } else {
-      alert('שגיאה במחיקת הסשן');
+      alert('Error loading session');
     }
     setDeleting(null);
   };
@@ -91,7 +91,7 @@ export default function SessionLibrarySection({
   const formatDate = (dateStr) => {
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString('he-IL', { 
+      return date.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'short', 
         day: 'numeric' 
@@ -112,9 +112,9 @@ export default function SessionLibrarySection({
         onClick={() => setExpanded(!expanded)}
       >
         <div>
-          <h3 className="text-lg font-semibold text-foreground">ספריית סשנים</h3>
+          <h3 className="text-lg font-semibold text-foreground">Session Library</h3>
           <p className="text-xs text-muted-foreground">
-            {sessions.length > 0 ? `${sessions.length} סשנים שמורים` : 'טען סשנים קודמים'}
+            {sessions.length > 0 ? `${sessions.length} saved sessions` : 'Load previous sessions'}
           </p>
         </div>
         <button className="text-2xl text-sky-600 transition-transform" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}>
@@ -132,30 +132,30 @@ export default function SessionLibrarySection({
             data-testid="save-session-btn"
           >
             {saving ? (
-              <span className="animate-pulse">שומר...</span>
+              <span className="animate-pulse">Saving...</span>
             ) : (
               <>
                 <span>💾</span>
-                <span>שמור סשן נוכחי</span>
+                <span>Save current session</span>
               </>
             )}
           </button>
           
           {currentHistory && currentHistory.length < 3 && (
             <p className="text-xs text-center text-muted-foreground">
-              צריך לפחות 3 החלטות כדי לשמור
+              Need at least 3 decisions to save
             </p>
           )}
           
           {/* Session List */}
           {loading ? (
             <div className="text-center py-8">
-              <span className="text-muted-foreground animate-pulse">טוען סשנים...</span>
+              <span className="text-muted-foreground animate-pulse">Loading sessions...</span>
             </div>
           ) : sessions.length === 0 ? (
             <div className="text-center py-8 bg-white/50 rounded-xl">
-              <p className="text-muted-foreground">אין סשנים שמורים</p>
-              <p className="text-xs text-muted-foreground mt-1">שמור את הסשן הנוכחי כדי להתחיל</p>
+              <p className="text-muted-foreground">No saved sessions</p>
+              <p className="text-xs text-muted-foreground mt-1">Save the current session to get started</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -172,7 +172,7 @@ export default function SessionLibrarySection({
                         {formatDate(session.date)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {session.total_decisions} החלטות
+                        {session.total_decisions} decisions
                       </p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${valueColors[session.dominant_value] || valueColors.neutral}`}>
@@ -183,13 +183,13 @@ export default function SessionLibrarySection({
                   {/* Session Metrics */}
                   <div className="grid grid-cols-2 gap-2 mb-3">
                     <div className="bg-sky-50 rounded-lg p-2 text-center">
-                      <p className="text-xs text-muted-foreground">סחף סדר</p>
+                      <p className="text-xs text-muted-foreground">Order Drift</p>
                       <p className={`text-sm font-bold ${session.order_drift > 0 ? 'text-green-600' : session.order_drift < 0 ? 'text-red-600' : 'text-gray-500'}`}>
                         {session.order_drift > 0 ? '+' : ''}{session.order_drift}
                       </p>
                     </div>
                     <div className="bg-sky-50 rounded-lg p-2 text-center">
-                      <p className="text-xs text-muted-foreground">סחף חברתי</p>
+                      <p className="text-xs text-muted-foreground">Social drift</p>
                       <p className={`text-sm font-bold ${session.collective_drift > 0 ? 'text-green-600' : session.collective_drift < 0 ? 'text-red-600' : 'text-gray-500'}`}>
                         {session.collective_drift > 0 ? '+' : ''}{session.collective_drift}
                       </p>
@@ -204,7 +204,7 @@ export default function SessionLibrarySection({
                       className="flex-1 px-3 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 rounded-lg text-sm font-medium transition-all"
                       data-testid={`load-session-${session.session_id}`}
                     >
-                      פתח סשן
+                      Open session
                     </button>
                     <button
                       onClick={() => handleDeleteSession(session.session_id)}
@@ -227,7 +227,7 @@ export default function SessionLibrarySection({
               disabled={loading}
               className="w-full px-3 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 rounded-lg text-sm transition-all"
             >
-              {loading ? 'טוען...' : 'רענן רשימה'}
+              {loading ? 'Loading...' : 'Refresh list'}
             </button>
           )}
         </div>

@@ -7,11 +7,11 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Hebrew labels for metrics
 const metricLabels = {
-  recovery: 'התאוששות',
-  harm_pressure: 'לחץ נזק',
-  order_drift: 'מגמת סדר',
-  contribution: 'תרומה קולקטיבית',
-  replay_exploration: 'חקירת מסלולים'
+  recovery: 'Recovery',
+  harm_pressure: 'Harm Pressure',
+  order_drift: 'Order Trend',
+  contribution: 'Collective Contribution',
+  replay_exploration: 'Path Exploration'
 };
 
 // Metric colors for SVG
@@ -103,13 +103,13 @@ const generateInsights = (userMetrics, collectiveMetrics) => {
   if (recoveryDiff > 10) {
     insights.push({
       type: 'positive',
-      text: 'התאוששות אצלך גבוהה מהממוצע הקולקטיבי',
+      text: 'Your recovery is above the collective average',
       metric: 'recovery'
     });
   } else if (recoveryDiff < -10) {
     insights.push({
       type: 'neutral',
-      text: 'מסלולי התאוששות נבחרים פחות מהממוצע',
+      text: 'Recovery paths are chosen less than average',
       metric: 'recovery'
     });
   }
@@ -119,13 +119,13 @@ const generateInsights = (userMetrics, collectiveMetrics) => {
   if (harmDiff < -5) {
     insights.push({
       type: 'positive',
-      text: 'לחץ הנזק אצלך השבוע נמוך מהממוצע',
+      text: 'Your harm pressure this week is below average',
       metric: 'harm_pressure'
     });
   } else if (harmDiff > 10) {
     insights.push({
       type: 'warning',
-      text: 'לחץ הנזק אצלך גבוה מהממוצע הקולקטיבי',
+      text: 'Your harm pressure is above the collective average',
       metric: 'harm_pressure'
     });
   }
@@ -135,13 +135,13 @@ const generateInsights = (userMetrics, collectiveMetrics) => {
   if (orderDiff > 10) {
     insights.push({
       type: 'positive',
-      text: 'מגמת הסדר אצלך חזקה מהממוצע',
+      text: 'Your order trend is stronger than average',
       metric: 'order_drift'
     });
   } else if (orderDiff < -10) {
     insights.push({
       type: 'neutral',
-      text: 'מסלולי סדר נבחרים פחות מהממוצע',
+      text: 'Order paths are chosen less than average',
       metric: 'order_drift'
     });
   }
@@ -151,7 +151,7 @@ const generateInsights = (userMetrics, collectiveMetrics) => {
   if (contribDiff > 10) {
     insights.push({
       type: 'positive',
-      text: 'התרומה הקולקטיבית שלך גבוהה מהממוצע',
+      text: 'Your collective contribution is above average',
       metric: 'contribution'
     });
   }
@@ -161,7 +161,7 @@ const generateInsights = (userMetrics, collectiveMetrics) => {
   if (replayDiff > 15) {
     insights.push({
       type: 'positive',
-      text: 'אתה חוקר יותר מסלולים חלופיים מהממוצע',
+      text: 'You explore more alternative paths than average',
       metric: 'replay_exploration'
     });
   }
@@ -170,7 +170,7 @@ const generateInsights = (userMetrics, collectiveMetrics) => {
   if (insights.length === 0) {
     insights.push({
       type: 'neutral',
-      text: 'הדפוסים שלך דומים לממוצע הקולקטיבי',
+      text: 'Your patterns are similar to the collective average',
       metric: null
     });
   }
@@ -193,11 +193,11 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
         if (data.success) {
           setCollectiveData(data);
         } else {
-          setError('שגיאה בטעינת נתונים קולקטיביים');
+          setError('Error loading collective data');
         }
       } catch (err) {
         console.error('Failed to fetch collective data:', err);
-        setError('שגיאה בחיבור לשרת');
+        setError('Error connecting to server');
       } finally {
         setLoading(false);
       }
@@ -245,10 +245,9 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
     return (
       <section 
         className="bg-gradient-to-br from-cyan-50 to-sky-50 rounded-3xl p-5 shadow-sm border border-cyan-200"
-        dir="rtl"
         data-testid="collective-mirror-section"
       >
-        <h3 className="text-lg font-semibold text-foreground mb-2">מראה קולקטיבית</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Collective Mirror</h3>
         <p className="text-sm text-red-500">{error}</p>
       </section>
     );
@@ -271,7 +270,6 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
   return (
     <section 
       className="bg-gradient-to-br from-cyan-50 to-sky-50 rounded-3xl p-5 shadow-sm border border-cyan-200"
-      dir="rtl"
       data-testid="collective-mirror-section"
     >
       {/* Header */}
@@ -283,9 +281,9 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">מראה קולקטיבית</h3>
+            <h3 className="text-lg font-semibold text-foreground">Collective Mirror</h3>
             <p className="text-xs text-muted-foreground">
-              השוואת הדפוסים שלך לשדה הקולקטיבי
+              Comparing your patterns to the collective field
             </p>
           </div>
         </div>
@@ -294,11 +292,11 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
         <div className="flex gap-2 text-xs">
           <div className="bg-white/70 rounded-lg px-3 py-1.5 border border-cyan-200">
             <span className="text-cyan-700 font-medium">{userMetrics.totalDecisions}</span>
-            <span className="text-muted-foreground mr-1">ההחלטות שלך</span>
+            <span className="text-muted-foreground mr-1">Your decisions</span>
           </div>
           <div className="bg-white/70 rounded-lg px-3 py-1.5 border border-cyan-200">
             <span className="text-cyan-700 font-medium">{collectiveData?.total_users || 0}</span>
-            <span className="text-muted-foreground mr-1">משתמשים</span>
+            <span className="text-muted-foreground mr-1">users</span>
           </div>
         </div>
       </div>
@@ -308,11 +306,11 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
         <div className="flex items-center gap-4 mb-4 text-xs">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-cyan-500 rounded"></div>
-            <span>אתה</span>
+            <span>You</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-gray-300 rounded"></div>
-            <span>ממוצע קולקטיבי</span>
+            <span>Collective average</span>
           </div>
         </div>
 
@@ -393,7 +391,7 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
 
       {/* Insights */}
       <div className="space-y-2">
-        <p className="text-xs text-muted-foreground mb-2">תובנות השוואה</p>
+        <p className="text-xs text-muted-foreground mb-2">Comparison insights</p>
         {insights.map((insight, idx) => (
           <div 
             key={idx}
@@ -442,7 +440,7 @@ export default function CollectiveMirrorSection({ history, learningHistory, repl
 
       {/* Footer note */}
       <p className="text-xs text-muted-foreground mt-4 text-center">
-        הנתונים מבוססים על {collectiveData?.total_decisions || 0} החלטות מ-{collectiveData?.total_users || 0} משתמשים
+        Data is based on {collectiveData?.total_decisions || 0} decisions from {collectiveData?.total_users || 0} users
       </p>
     </section>
   );

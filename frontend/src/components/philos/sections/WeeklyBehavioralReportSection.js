@@ -4,11 +4,11 @@ import { fetchReplayInsights } from '../../../services/dataService';
 
 // Hebrew value labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Value categories
@@ -219,46 +219,46 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
 
     // Dominant pattern insight
     const categoryLabels = {
-      recovery: 'שרשראות התאוששות',
-      harm: 'שרשראות נזק',
-      correction: 'שרשראות תיקון',
-      growth: 'שרשראות צמיחה',
-      warning: 'שרשראות אזהרה',
-      pattern: 'דפוסים חוזרים'
+      recovery: 'chains Recovery',
+      harm: 'chains Harm',
+      correction: 'chains Correction',
+      growth: 'chains Growth',
+      warning: 'chains Warning',
+      pattern: 'Repeating patterns'
     };
 
     if (dominantCount > 0) {
-      insights.push(`השבוע בלטו יותר ${categoryLabels[dominantCategory]} (${dominantCount})`);
+      insights.push(`This week stood out more ${categoryLabels[dominantCategory]} (${dominantCount})`);
     }
 
     // Positive trend
     if (stats.recovery > stats.harm) {
-      insights.push('יש עלייה בדפוסי התאוששות');
+      insights.push('There is an increase in recovery patterns');
     }
 
     // Negative trend
     if (stats.harm > stats.recovery) {
-      insights.push('יש עלייה בדפוסי נזק - שים לב');
+      insights.push('There is an increase in harm patterns — pay attention');
     }
 
     // Correction frequency
     if (stats.correction >= 2) {
-      insights.push(`נמצאו ${stats.correction} תיקונים באמצע מסלולים`);
+      insights.push(`Found ${stats.correction} corrections in the middle of paths`);
     }
 
     // Pattern detection
     if (stats.pattern > 0) {
-      insights.push('נראה דפוס חוזר של תגובה ואחריה תיקון');
+      insights.push('Repeating pattern of reaction followed by correction appears');
     }
 
     // Growth streak
     if (stats.growth >= 2) {
-      insights.push('יש רצף של החלטות חיוביות - המשך כך!');
+      insights.push('There is a streak of positive decisions — keep going!');
     }
 
     // Warning
     if (stats.warning >= 2) {
-      insights.push('נמצאו שרשראות בעייתיות - שקול לשנות כיוון');
+      insights.push('Problematic chains found — consider changing direction');
     }
 
     return {
@@ -341,25 +341,25 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
 
     if (mostExploredAlt && mostExploredCount >= 2) {
       replayInsightTexts.push(
-        `השבוע נבדקו שוב ושוב מסלולי ${valueLabels[mostExploredAlt]} שלא נבחרו בזמן אמת`
+        `This week repeatedly checked paths of ${valueLabels[mostExploredAlt]} that were not chosen in real time`
       );
     }
 
     if (gapAnalysis) {
       if (gapAnalysis.direction === 'replay_higher') {
         replayInsightTexts.push(
-          `מסלולי ${valueLabels[gapAnalysis.type]} בלטו יותר בהפעלות חוזרות מאשר בהחלטות בפועל`
+          `Paths of ${valueLabels[gapAnalysis.type]} stood out more in replays than in actual decisions`
         );
       } else {
         replayInsightTexts.push(
-          `נראה פער עקבי בין הבחירות בפועל לבין העדפות הבדיקה החוזרת`
+          `A consistent gap appears between actual choices and replay preferences`
         );
       }
     }
 
     if (missedPositive && missedPositive.count >= 2) {
       replayInsightTexts.push(
-        `${missedPositive.count} פעמים בדקת מעבר מ${valueLabels[missedPositive.from]} ל${valueLabels[missedPositive.to]}`
+        `${missedPositive.count} times you checked a shift from ${valueLabels[missedPositive.from]} to ${valueLabels[missedPositive.to]}`
       );
     }
 
@@ -417,11 +417,11 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
 
   // Bar data for visualization
   const barData = [
-    { key: 'recovery', label: 'התאוששות', count: stats.recovery, color: categoryColors.recovery },
-    { key: 'harm', label: 'נזק', count: stats.harm, color: categoryColors.harm },
-    { key: 'correction', label: 'תיקון', count: stats.correction, color: categoryColors.correction },
-    { key: 'growth', label: 'צמיחה', count: stats.growth, color: categoryColors.growth },
-    { key: 'warning', label: 'אזהרה', count: stats.warning, color: categoryColors.warning }
+    { key: 'recovery', label: 'Recovery', count: stats.recovery, color: categoryColors.recovery },
+    { key: 'harm', label: 'Harm', count: stats.harm, color: categoryColors.harm },
+    { key: 'correction', label: 'Correction', count: stats.correction, color: categoryColors.correction },
+    { key: 'growth', label: 'Growth', count: stats.growth, color: categoryColors.growth },
+    { key: 'warning', label: 'Warning', count: stats.warning, color: categoryColors.warning }
   ].filter(d => d.count > 0);
 
   const maxCount = Math.max(...barData.map(d => d.count), 1);
@@ -429,29 +429,28 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
   return (
     <section 
       className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-5 shadow-sm border border-amber-200"
-      dir="rtl"
       data-testid="weekly-behavioral-report-section"
     >
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground">דוח התנהגותי שבועי</h3>
-        <p className="text-xs text-muted-foreground">סיכום מגמות מ-7 הימים האחרונים</p>
+        <h3 className="text-lg font-semibold text-foreground">Weekly Behavioral Report</h3>
+        <p className="text-xs text-muted-foreground">Trend summary from the last 7 days</p>
       </div>
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-amber-600">{totalDecisions}</p>
-          <p className="text-xs text-muted-foreground">החלטות</p>
+          <p className="text-xs text-muted-foreground">decisions</p>
         </div>
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-amber-600">{totalChains}</p>
-          <p className="text-xs text-muted-foreground">שרשראות</p>
+          <p className="text-xs text-muted-foreground">chains</p>
         </div>
       </div>
 
       {/* Visual distribution - SVG bars */}
       <div className="bg-white/60 rounded-xl p-4 mb-4">
-        <p className="text-xs text-muted-foreground mb-3">התפלגות סוגי שרשראות</p>
+        <p className="text-xs text-muted-foreground mb-3">Chain type distribution</p>
         
         <svg width="100%" height={barData.length * 36 + 10} className="block">
           {barData.map((item, idx) => {
@@ -506,7 +505,7 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
 
         {barData.length === 0 && (
           <p className="text-center text-sm text-muted-foreground py-4">
-            אין מספיק נתונים להצגה
+            Not enough data to display
           </p>
         )}
       </div>
@@ -526,14 +525,14 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
             {dominantCategory === 'pattern' && '🔁'}
           </div>
           <div>
-            <p className="font-semibold text-sm">דפוס דומיננטי השבוע</p>
+            <p className="font-semibold text-sm">Dominant pattern this week</p>
             <p className="text-xs text-muted-foreground">
-              {dominantCategory === 'recovery' && 'התאוששות - מעבר מהימנעות להתאוששות'}
-              {dominantCategory === 'harm' && 'נזק - מעבר לכיוון שלילי'}
-              {dominantCategory === 'correction' && 'תיקון - זיהוי ותיקון באמצע המסלול'}
-              {dominantCategory === 'growth' && 'צמיחה - רצף של החלטות חיוביות'}
-              {dominantCategory === 'warning' && 'אזהרה - רצף של החלטות בעייתיות'}
-              {dominantCategory === 'pattern' && 'דפוס חוזר'}
+              {dominantCategory === 'recovery' && 'Recovery — shift from avoidance to recovery'}
+              {dominantCategory === 'harm' && 'Harm — shift to negative direction'}
+              {dominantCategory === 'correction' && 'Correction — detection and mid-path correction'}
+              {dominantCategory === 'growth' && 'Growth — a streak of positive decisions'}
+              {dominantCategory === 'warning' && 'Warning — a streak of problematic decisions'}
+              {dominantCategory === 'pattern' && 'Repeating Pattern'}
             </p>
           </div>
         </div>
@@ -544,7 +543,7 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
         <div className="grid grid-cols-2 gap-3 mb-4">
           {strongestPositive && (
             <div className="bg-green-50 rounded-xl p-3 border border-green-200">
-              <p className="text-xs text-green-600 font-medium mb-1">תנועה חיובית חזקה</p>
+              <p className="text-xs text-green-600 font-medium mb-1">Strong positive movement</p>
               <p className="text-sm">
                 {valueLabels[strongestPositive.from]} → {valueLabels[strongestPositive.to]}
               </p>
@@ -552,7 +551,7 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
           )}
           {strongestNegative && (
             <div className="bg-red-50 rounded-xl p-3 border border-red-200">
-              <p className="text-xs text-red-600 font-medium mb-1">תנועה שלילית חזקה</p>
+              <p className="text-xs text-red-600 font-medium mb-1">Strong negative movement</p>
               <p className="text-sm">
                 {valueLabels[strongestNegative.from]} → {valueLabels[strongestNegative.to]}
               </p>
@@ -564,7 +563,7 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
       {/* Insights */}
       {insights.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">תובנות שבועיות</p>
+          <p className="text-xs text-muted-foreground">Weekly Insights</p>
           {insights.map((insight, idx) => (
             <div 
               key={idx}
@@ -579,7 +578,7 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
 
       {/* Stacked distribution bar */}
       <div className="mt-4 pt-3 border-t border-amber-200">
-        <p className="text-xs text-muted-foreground mb-2">התפלגות יחסית</p>
+        <p className="text-xs text-muted-foreground mb-2">Relative distribution</p>
         <div className="h-6 rounded-full overflow-hidden flex" style={{ direction: 'ltr' }}>
           {barData.map((item, idx) => {
             const width = (item.count / total) * 100;
@@ -615,9 +614,9 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             <div>
-              <h4 className="text-sm font-semibold text-foreground">השוואה להפעלות חוזרות</h4>
+              <h4 className="text-sm font-semibold text-foreground">Comparison to replays</h4>
               <p className="text-xs text-muted-foreground">
-                {replayComparison.replayCount} הפעלות חוזרות | {replayComparison.recentReplayCount} השבוע
+                {replayComparison.replayCount} replays | {replayComparison.recentReplayCount} This week
               </p>
             </div>
           </div>
@@ -625,11 +624,11 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
           {/* Visual Comparison SVG */}
           {reportData?.actualValueDistribution && (
             <div className="bg-white/60 rounded-xl p-4 mb-3" data-testid="actual-vs-replay-comparison">
-              <p className="text-xs text-muted-foreground mb-3">בחירות בפועל vs הפעלות חוזרות</p>
+              <p className="text-xs text-muted-foreground mb-3">Actual choices vs replays</p>
               
               <svg width="100%" height="140" className="block">
                 {/* Actual choices bars */}
-                <text x="10" y="15" fontSize="10" fill="#666" fontWeight="600">בפועל</text>
+                <text x="10" y="15" fontSize="10" fill="#666" fontWeight="600">Actual</text>
                 {positiveValues.map((type, idx) => {
                   const actual = reportData.actualValueDistribution[type] || 0;
                   const barWidth = Math.min(actual * 2, 100);
@@ -648,7 +647,7 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
                 })}
 
                 {/* Replay preferences bars */}
-                <text x="10" y="100" fontSize="10" fill="#666" fontWeight="600">הפעלה חוזרת</text>
+                <text x="10" y="100" fontSize="10" fill="#666" fontWeight="600">Replay</text>
                 {(() => {
                   const totalReplay = Object.values(replayComparison.altCounts).reduce((a, b) => a + b, 0) || 1;
                   return positiveValues.map((type, idx) => {
@@ -674,7 +673,7 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
                 {replayComparison.gapAnalysis && (
                   <g>
                     <line x1="230" y1="25" x2="230" y2="130" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="4 2" />
-                    <text x="235" y="80" fontSize="8" fill="#8b5cf6" transform="rotate(90, 235, 80)">פער</text>
+                    <text x="235" y="80" fontSize="8" fill="#8b5cf6" transform="rotate(90, 235, 80)">Gap</text>
                   </g>
                 )}
               </svg>
@@ -686,24 +685,24 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
             {replayComparison.mostExploredAlt && (
               <div className="bg-purple-50 rounded-lg p-2 text-center border border-purple-200" data-testid="most-explored-stat">
                 <p className="text-lg font-bold text-purple-600">{valueLabels[replayComparison.mostExploredAlt]}</p>
-                <p className="text-xs text-muted-foreground">הכי נבדק</p>
+                <p className="text-xs text-muted-foreground">Most checked</p>
               </div>
             )}
             {replayComparison.missedPositive && (
               <div className="bg-green-50 rounded-lg p-2 text-center border border-green-200" data-testid="missed-positive-stat">
                 <p className="text-lg font-bold text-green-600">{valueLabels[replayComparison.missedPositive.to]}</p>
-                <p className="text-xs text-muted-foreground">הוחמץ</p>
+                <p className="text-xs text-muted-foreground">Missed</p>
               </div>
             )}
             {replayComparison.avoidedRisky ? (
               <div className="bg-red-50 rounded-lg p-2 text-center border border-red-200" data-testid="avoided-risky-stat">
                 <p className="text-lg font-bold text-red-600">{valueLabels[replayComparison.avoidedRisky.to]}</p>
-                <p className="text-xs text-muted-foreground">נמנע</p>
+                <p className="text-xs text-muted-foreground">Avoided</p>
               </div>
             ) : (
               <div className="bg-emerald-50 rounded-lg p-2 text-center border border-emerald-200">
                 <p className="text-lg font-bold text-emerald-600">0</p>
-                <p className="text-xs text-muted-foreground">מסלולי סיכון</p>
+                <p className="text-xs text-muted-foreground">Risk paths</p>
               </div>
             )}
           </div>
@@ -716,11 +715,11 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
                 <div>
-                  <p className="text-sm font-medium text-purple-800">פער זוהה</p>
+                  <p className="text-sm font-medium text-purple-800">Gap detected</p>
                   <p className="text-xs text-purple-600">
                     {replayComparison.gapAnalysis.direction === 'replay_higher' 
-                      ? `${valueLabels[replayComparison.gapAnalysis.type]} נבדק יותר (+${replayComparison.gapAnalysis.gap}%) מאשר נבחר בפועל`
-                      : `${valueLabels[replayComparison.gapAnalysis.type]} נבחר יותר בפועל מאשר נבדק בהפעלות חוזרות`
+                      ? `${valueLabels[replayComparison.gapAnalysis.type]} checked more (+${replayComparison.gapAnalysis.gap}%) than actually chosen`
+                      : `${valueLabels[replayComparison.gapAnalysis.type]} actually chosen more than checked in replays`
                     }
                   </p>
                 </div>
@@ -731,7 +730,7 @@ export default function WeeklyBehavioralReportSection({ history, user }) {
           {/* Replay Insights */}
           {replayComparison.replayInsightTexts.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">תובנות הפעלה חוזרת</p>
+              <p className="text-xs text-muted-foreground">Replay insights</p>
               {replayComparison.replayInsightTexts.map((insight, idx) => (
                 <div 
                   key={idx}

@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 
 // Hebrew value labels
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance'
 };
 
 // Value categories
@@ -24,11 +24,11 @@ const categoryColors = {
 
 // Category labels
 const categoryLabels = {
-  recovery: 'התאוששות',
-  harm: 'נזק',
-  correction: 'תיקון',
-  growth: 'צמיחה',
-  warning: 'אזהרה'
+  recovery: 'Recovery',
+  harm: 'Harm',
+  correction: 'Correction',
+  growth: 'Growth',
+  warning: 'Warning'
 };
 
 export default function MonthlyProgressReportSection({ history }) {
@@ -183,33 +183,33 @@ export default function MonthlyProgressReportSection({ history }) {
 
     // Recovery trend
     if (trends.recovery > 0) {
-      insights.push(`בחודש האחרון ניכרת עלייה בשרשראות התאוששות (+${trends.recovery})`);
+      insights.push(`Last month showed an increase in recovery chains (+${trends.recovery})`);
     } else if (trends.recovery < 0) {
-      insights.push(`נרשמה ירידה בשרשראות התאוששות (${trends.recovery})`);
+      insights.push(`A decrease in recovery chains was recorded (${trends.recovery})`);
     }
 
     // Harm trend
     if (trends.harm < 0) {
-      insights.push(`נראה ירידה עקבית בדפוסי נזק (${trends.harm})`);
+      insights.push(`A consistent decrease in harm patterns appears (${trends.harm})`);
     } else if (trends.harm > 0) {
-      insights.push(`יש עלייה בדפוסי נזק - שים לב (+${trends.harm})`);
+      insights.push(`There is an increase in harm patterns — pay attention (+${trends.harm})`);
     }
 
     // Correction trend
     if (trends.correction > 0) {
-      insights.push(`דפוסי תיקון נעשו תכופים יותר לאורך החודש (+${trends.correction})`);
+      insights.push(`Correction patterns became more frequent over the month (+${trends.correction})`);
     }
 
     // Growth trend
     if (trends.growth > 0) {
-      insights.push(`יש עלייה ברצפי צמיחה חיוביים (+${trends.growth})`);
+      insights.push(`There is an increase in positive growth streaks (+${trends.growth})`);
     }
 
     // Warning trend
     if (trends.warning > 0) {
-      insights.push(`יש יותר שרשראות אזהרה - מומלץ להתייחס (+${trends.warning})`);
+      insights.push(`There are more warning chains — recommended to address (+${trends.warning})`);
     } else if (trends.warning < 0) {
-      insights.push(`פחות שרשראות אזהרה מאשר בתחילת החודש - התקדמות!`);
+      insights.push(`Fewer warning chains than at the start of the month — progress!`);
     }
 
     // Overall assessment
@@ -217,9 +217,9 @@ export default function MonthlyProgressReportSection({ history }) {
     const negativeTotal = trends.harm + trends.warning;
 
     if (positiveTotal > negativeTotal && positiveTotal > 0) {
-      insights.push('מגמה כללית חיובית החודש 📈');
+      insights.push('Overall positive trend this month');
     } else if (negativeTotal > positiveTotal && negativeTotal > 0) {
-      insights.push('מגמה שלילית החודש - הזדמנות לשינוי');
+      insights.push('Negative trend this month — opportunity for change');
     }
 
     return {
@@ -255,33 +255,32 @@ export default function MonthlyProgressReportSection({ history }) {
   return (
     <section 
       className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-3xl p-5 shadow-sm border border-rose-200"
-      dir="rtl"
       data-testid="monthly-progress-report-section"
     >
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground">דוח התקדמות חודשי</h3>
-        <p className="text-xs text-muted-foreground">מגמות התנהגותיות מ-4 השבועות האחרונים</p>
+        <h3 className="text-lg font-semibold text-foreground">Monthly Progress Report</h3>
+        <p className="text-xs text-muted-foreground">Behavioral trends from the last 4 weeks</p>
       </div>
 
       {/* Summary stats */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-xl font-bold text-rose-600">{totalDecisions}</p>
-          <p className="text-xs text-muted-foreground">החלטות</p>
+          <p className="text-xs text-muted-foreground">decisions</p>
         </div>
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-xl font-bold text-rose-600">{totalChains}</p>
-          <p className="text-xs text-muted-foreground">שרשראות</p>
+          <p className="text-xs text-muted-foreground">chains</p>
         </div>
         <div className="bg-white/60 rounded-xl p-3 text-center">
           <p className="text-xl font-bold text-rose-600">4</p>
-          <p className="text-xs text-muted-foreground">שבועות</p>
+          <p className="text-xs text-muted-foreground">weeks</p>
         </div>
       </div>
 
       {/* Weekly trend visualization */}
       <div className="bg-white/60 rounded-xl p-4 mb-4">
-        <p className="text-xs text-muted-foreground mb-3">מגמה שבועית</p>
+        <p className="text-xs text-muted-foreground mb-3">Weekly trend</p>
         
         <svg width="100%" height="140" className="block" style={{ direction: 'ltr' }}>
           {/* Grid lines */}
@@ -298,7 +297,7 @@ export default function MonthlyProgressReportSection({ history }) {
           ))}
 
           {/* Week labels */}
-          {['שבוע 1', 'שבוע 2', 'שבוע 3', 'שבוע 4'].map((label, idx) => (
+          {['Week 1', 'Week 2', 'Week 3', 'Week 4'].map((label, idx) => (
             <text
               key={`label-${idx}`}
               x={60 + idx * 70}
@@ -346,7 +345,7 @@ export default function MonthlyProgressReportSection({ history }) {
           })}
 
           {/* Y-axis label */}
-          <text x="15" y="70" fontSize="9" fill="#999" transform="rotate(-90, 15, 70)">שרשראות</text>
+          <text x="15" y="70" fontSize="9" fill="#999" transform="rotate(-90, 15, 70)">chains</text>
         </svg>
 
         {/* Legend */}
@@ -399,9 +398,9 @@ export default function MonthlyProgressReportSection({ history }) {
             {dominantCategory === 'warning' && '🔻'}
           </div>
           <div>
-            <p className="font-semibold">דפוס דומיננטי החודש</p>
+            <p className="font-semibold">Dominant pattern this month</p>
             <p className="text-sm text-muted-foreground">
-              {categoryLabels[dominantCategory]} ({totals[dominantCategory]} שרשראות)
+              {categoryLabels[dominantCategory]} ({totals[dominantCategory]} chains)
             </p>
           </div>
         </div>
@@ -412,20 +411,20 @@ export default function MonthlyProgressReportSection({ history }) {
         <div className="grid grid-cols-2 gap-3 mb-4">
           {positiveShifts.length > 0 && (
             <div className="bg-green-50 rounded-xl p-3 border border-green-200">
-              <p className="text-xs text-green-600 font-medium mb-1">שיפור חזק</p>
+              <p className="text-xs text-green-600 font-medium mb-1">Strong improvement</p>
               <p className="text-sm font-semibold text-green-700">
                 {categoryLabels[positiveShifts[0].key]}
               </p>
-              <p className="text-xs text-green-600">+{positiveShifts[0].change} לעומת תחילת החודש</p>
+              <p className="text-xs text-green-600">+{positiveShifts[0].change} compared to the start of the month</p>
             </div>
           )}
           {negativeShifts.length > 0 && (
             <div className="bg-red-50 rounded-xl p-3 border border-red-200">
-              <p className="text-xs text-red-600 font-medium mb-1">נקודה לשיפור</p>
+              <p className="text-xs text-red-600 font-medium mb-1">Area for improvement</p>
               <p className="text-sm font-semibold text-red-700">
                 {categoryLabels[negativeShifts[0].key]}
               </p>
-              <p className="text-xs text-red-600">+{negativeShifts[0].change} לעומת תחילת החודש</p>
+              <p className="text-xs text-red-600">+{negativeShifts[0].change} compared to the start of the month</p>
             </div>
           )}
         </div>
@@ -434,7 +433,7 @@ export default function MonthlyProgressReportSection({ history }) {
       {/* Insights */}
       {insights.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">תובנות חודשיות</p>
+          <p className="text-xs text-muted-foreground">Monthly insights</p>
           {insights.map((insight, idx) => (
             <div 
               key={idx}
@@ -450,13 +449,13 @@ export default function MonthlyProgressReportSection({ history }) {
       {/* Monthly progress bar */}
       <div className="mt-4 pt-3 border-t border-rose-200">
         <div className="flex justify-between text-xs text-muted-foreground mb-2">
-          <span>מגמה כללית</span>
+          <span>Overall trend</span>
           <span>
             {(trends.recovery + trends.growth + trends.correction) - (trends.harm + trends.warning) > 0 
-              ? 'חיובית' 
+              ? 'positive' 
               : (trends.recovery + trends.growth + trends.correction) - (trends.harm + trends.warning) < 0
-                ? 'שלילית'
-                : 'יציבה'
+                ? 'Negative'
+                : 'Stable'
             }
           </span>
         </div>
@@ -477,8 +476,8 @@ export default function MonthlyProgressReportSection({ history }) {
           })()}
         </div>
         <div className="flex justify-between text-xs mt-1">
-          <span className="text-green-600">חיובי</span>
-          <span className="text-red-600">שלילי</span>
+          <span className="text-green-600">Positive</span>
+          <span className="text-red-600">Negative</span>
         </div>
       </div>
     </section>

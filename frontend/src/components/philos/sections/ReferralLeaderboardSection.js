@@ -38,7 +38,7 @@ export default function ReferralLeaderboardSection() {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-14 bg-gray-100 rounded-2xl"></div>)}
@@ -48,13 +48,13 @@ export default function ReferralLeaderboardSection() {
   }
 
   return (
-    <section className="philos-section bg-white border-border animate-section animate-section-3" dir="rtl" data-testid="referral-leaderboard-section">
+    <section className="philos-section bg-white border-border animate-section animate-section-3" data-testid="referral-leaderboard-section">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
           <Trophy className="w-5 h-5 text-amber-600" />
         </div>
-        <span className="text-sm font-medium text-amber-700">תורמים מובילים לשדה</span>
+        <span className="text-sm font-medium text-amber-700">Top Field Contributors</span>
       </div>
 
       {data.length > 0 ? (
@@ -105,7 +105,7 @@ export default function ReferralLeaderboardSection() {
       ) : (
         <div className="text-center py-8 text-gray-400">
           <Trophy className="w-8 h-8 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">עוד אין הזמנות. הזמן אנשים לשדה!</p>
+          <p className="text-sm">No more invites. Invite people to the field!</p>
         </div>
       )}
     </section>

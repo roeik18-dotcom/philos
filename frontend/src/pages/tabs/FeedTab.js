@@ -34,7 +34,7 @@ export default function FeedTab({ user, setActiveTab }) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
         <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
-        <span className="text-xs text-gray-400">טוען פיד...</span>
+        <span className="text-xs text-gray-400">Loading Feed...</span>
       </div>
     );
   }
@@ -45,17 +45,17 @@ export default function FeedTab({ user, setActiveTab }) {
       <HighlightedRecords />
 
       {/* Feed header */}
-      <div className="flex items-center justify-between mb-1" dir="rtl">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center">
             <Rss className="w-4 h-4 text-purple-600" />
           </div>
           <div>
-            <span className="text-sm font-semibold text-gray-800">בשבילך</span>
-            {userNicheHe && <p className="text-[10px] text-gray-400">מותאם ל{userNicheHe}</p>}
+            <span className="text-sm font-semibold text-gray-800">For You</span>
+            {userNicheHe && <p className="text-[10px] text-gray-400">Tailored to {userNicheHe}</p>}
           </div>
         </div>
-        <span className="text-[10px] text-gray-400">{cards.length} כרטיסים</span>
+        <span className="text-[10px] text-gray-400">{cards.length} cards</span>
       </div>
 
       {/* Feed cards */}
@@ -64,8 +64,8 @@ export default function FeedTab({ user, setActiveTab }) {
       ))}
 
       {cards.length === 0 && (
-        <div className="text-center py-10 text-sm text-gray-400" dir="rtl">
-          אין עדיין תוכן בפיד שלך
+        <div className="text-center py-10 text-sm text-gray-400">
+          No content in your feed yet
         </div>
       )}
     </div>

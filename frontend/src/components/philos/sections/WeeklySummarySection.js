@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות',
-  neutral: 'ניטרלי'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance',
+  neutral: 'Neutral'
 };
 
 const valueColors = {
@@ -129,36 +129,36 @@ export default function WeeklySummarySection({ trendHistory, globalStats }) {
     
     // Direction insight
     const directions = [];
-    if (avgOrderDrift > 1) directions.push('סדר');
-    if (avgOrderDrift < -1) directions.push('כאוס');
-    if (avgCollectiveDrift > 1) directions.push('תרומה חברתית');
-    if (avgCollectiveDrift < -1) directions.push('התמקדות עצמית');
+    if (avgOrderDrift > 1) directions.push('Order');
+    if (avgOrderDrift < -1) directions.push('Chaos');
+    if (avgCollectiveDrift > 1) directions.push('Contribution Social');
+    if (avgCollectiveDrift < -1) directions.push('Self-focus');
     
     if (directions.length > 0) {
-      lines.push(`השבוע נע לכיוון ${directions.join(' ו')}.`);
+      lines.push(`This week moved towards ${directions.join(' and ')}.`);
     }
     
     // Dominant value insight
     if (dominantValue && dominantValue !== 'neutral') {
-      lines.push(`הערך השולט השבוע: ${valueLabels[dominantValue]}.`);
+      lines.push(`Dominant value this week: ${valueLabels[dominantValue]}.`);
     }
     
     // Harm trend
     if (trends.harm === 'decreasing') {
-      lines.push('לחץ נזק ירד - מגמה חיובית!');
+      lines.push('Harm Pressure decreased — positive trend!');
     } else if (trends.harm === 'increasing') {
-      lines.push('לחץ נזק עלה - שים לב להתאוששות.');
+      lines.push('Harm Pressure increased — pay attention to recovery.');
     }
     
     // Recovery trend
     if (trends.recovery === 'increasing') {
-      lines.push('יציבות התאוששות התחזקה.');
+      lines.push('Recovery Stability strengthened.');
     } else if (trends.recovery === 'decreasing') {
-      lines.push('יציבות התאוששות נחלשה.');
+      lines.push('Recovery Stability weakened.');
     }
     
     if (lines.length === 0) {
-      lines.push('שבוע מאוזן - המשך במסלול.');
+      lines.push('Balanced week — continue on the path.');
     }
     
     return lines.slice(0, 4);
@@ -181,11 +181,11 @@ export default function WeeklySummarySection({ trendHistory, globalStats }) {
   if (!weeklyData) {
     return (
       <section className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-5 shadow-sm border border-amber-200" data-testid="weekly-summary-section">
-        <h3 className="text-lg font-semibold text-foreground mb-2">סיכום שבועי</h3>
-        <p className="text-xs text-muted-foreground mb-4">סקירה קוגניטיבית של 7 הימים האחרונים</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Weekly Summary</h3>
+        <p className="text-xs text-muted-foreground mb-4">Cognitive review of the last 7 days</p>
         <div className="text-center py-8 bg-white/50 rounded-xl">
-          <p className="text-muted-foreground">אין מספיק נתונים לסיכום שבועי</p>
-          <p className="text-xs text-muted-foreground mt-1">המשך להשתמש באפליקציה כדי לצבור נתונים</p>
+          <p className="text-muted-foreground">Not enough data for weekly summary</p>
+          <p className="text-xs text-muted-foreground mt-1">Continue using the app to accumulate data</p>
         </div>
       </section>
     );
@@ -193,51 +193,51 @@ export default function WeeklySummarySection({ trendHistory, globalStats }) {
 
   return (
     <section className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-5 shadow-sm border border-amber-200" data-testid="weekly-summary-section">
-      <h3 className="text-lg font-semibold text-foreground mb-2">סיכום שבועי</h3>
-      <p className="text-xs text-muted-foreground mb-4">סקירה קוגניטיבית של 7 הימים האחרונים</p>
+      <h3 className="text-lg font-semibold text-foreground mb-2">Weekly Summary</h3>
+      <p className="text-xs text-muted-foreground mb-4">Cognitive review of the last 7 days</p>
       
       {/* Overview Stats */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-white/70 rounded-xl p-3 text-center">
-          <p className="text-xs text-muted-foreground mb-1">סה״כ החלטות</p>
+          <p className="text-xs text-muted-foreground mb-1">Total decisions</p>
           <p className="text-2xl font-bold text-amber-600">{weeklyData.totalDecisions}</p>
         </div>
         <div className="bg-white/70 rounded-xl p-3 text-center">
-          <p className="text-xs text-muted-foreground mb-1">סשנים</p>
+          <p className="text-xs text-muted-foreground mb-1">sessions</p>
           <p className="text-2xl font-bold text-amber-600">{weeklyData.sessionCount}</p>
         </div>
         <div className="bg-white/70 rounded-xl p-3 text-center">
-          <p className="text-xs text-muted-foreground mb-1">ערך דומיננטי</p>
+          <p className="text-xs text-muted-foreground mb-1">Dominant value</p>
           <p className="text-sm font-bold text-amber-700">{valueLabels[weeklyData.dominantValue]}</p>
         </div>
       </div>
       
       {/* Average Metrics */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-sm font-semibold text-foreground mb-3">ממוצעים שבועיים</p>
+        <p className="text-sm font-semibold text-foreground mb-3">Weekly Averages</p>
         
         <div className="grid grid-cols-2 gap-3">
           <div className="flex items-center justify-between p-2 bg-amber-50 rounded-lg">
-            <span className="text-xs text-muted-foreground">סחף סדר</span>
+            <span className="text-xs text-muted-foreground">Order Drift</span>
             <span className="text-sm font-bold text-foreground">
               {weeklyData.avgOrderDrift > 0 ? '+' : ''}{weeklyData.avgOrderDrift}
             </span>
           </div>
           
           <div className="flex items-center justify-between p-2 bg-amber-50 rounded-lg">
-            <span className="text-xs text-muted-foreground">סחף חברתי</span>
+            <span className="text-xs text-muted-foreground">Social drift</span>
             <span className="text-sm font-bold text-foreground">
               {weeklyData.avgCollectiveDrift > 0 ? '+' : ''}{weeklyData.avgCollectiveDrift}
             </span>
           </div>
           
           <div className="flex items-center justify-between p-2 bg-amber-50 rounded-lg">
-            <span className="text-xs text-muted-foreground">לחץ נזק</span>
+            <span className="text-xs text-muted-foreground">Harm Pressure</span>
             <span className="text-sm font-bold text-foreground">{weeklyData.avgHarmPressure}%</span>
           </div>
           
           <div className="flex items-center justify-between p-2 bg-amber-50 rounded-lg">
-            <span className="text-xs text-muted-foreground">יציבות התאוששות</span>
+            <span className="text-xs text-muted-foreground">Recovery Stability</span>
             <span className="text-sm font-bold text-foreground">{weeklyData.avgRecoveryStability}%</span>
           </div>
         </div>
@@ -245,34 +245,34 @@ export default function WeeklySummarySection({ trendHistory, globalStats }) {
       
       {/* Trends */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-sm font-semibold text-foreground mb-3">מגמות השבוע</p>
+        <p className="text-sm font-semibold text-foreground mb-3">Weekly Trends</p>
         
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center justify-between p-2 rounded-lg border border-gray-100">
-            <span className="text-xs text-muted-foreground">סדר</span>
+            <span className="text-xs text-muted-foreground">Order</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTrendColor(weeklyData.trends.order)}`}>
-              {getTrendIcon(weeklyData.trends.order)} {weeklyData.trends.order === 'increasing' ? 'עולה' : weeklyData.trends.order === 'decreasing' ? 'יורד' : 'יציב'}
+              {getTrendIcon(weeklyData.trends.order)} {weeklyData.trends.order === 'increasing' ? 'rising' : weeklyData.trends.order === 'decreasing' ? 'falling' : 'Stable'}
             </span>
           </div>
           
           <div className="flex items-center justify-between p-2 rounded-lg border border-gray-100">
-            <span className="text-xs text-muted-foreground">חברתי</span>
+            <span className="text-xs text-muted-foreground">Social</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTrendColor(weeklyData.trends.collective)}`}>
-              {getTrendIcon(weeklyData.trends.collective)} {weeklyData.trends.collective === 'increasing' ? 'עולה' : weeklyData.trends.collective === 'decreasing' ? 'יורד' : 'יציב'}
+              {getTrendIcon(weeklyData.trends.collective)} {weeklyData.trends.collective === 'increasing' ? 'rising' : weeklyData.trends.collective === 'decreasing' ? 'falling' : 'Stable'}
             </span>
           </div>
           
           <div className="flex items-center justify-between p-2 rounded-lg border border-gray-100">
-            <span className="text-xs text-muted-foreground">נזק</span>
+            <span className="text-xs text-muted-foreground">Harm</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTrendColor(weeklyData.trends.harm, true)}`}>
-              {getTrendIcon(weeklyData.trends.harm)} {weeklyData.trends.harm === 'increasing' ? 'עולה' : weeklyData.trends.harm === 'decreasing' ? 'יורד' : 'יציב'}
+              {getTrendIcon(weeklyData.trends.harm)} {weeklyData.trends.harm === 'increasing' ? 'rising' : weeklyData.trends.harm === 'decreasing' ? 'falling' : 'Stable'}
             </span>
           </div>
           
           <div className="flex items-center justify-between p-2 rounded-lg border border-gray-100">
-            <span className="text-xs text-muted-foreground">התאוששות</span>
+            <span className="text-xs text-muted-foreground">Recovery</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTrendColor(weeklyData.trends.recovery)}`}>
-              {getTrendIcon(weeklyData.trends.recovery)} {weeklyData.trends.recovery === 'increasing' ? 'עולה' : weeklyData.trends.recovery === 'decreasing' ? 'יורד' : 'יציב'}
+              {getTrendIcon(weeklyData.trends.recovery)} {weeklyData.trends.recovery === 'increasing' ? 'rising' : weeklyData.trends.recovery === 'decreasing' ? 'falling' : 'Stable'}
             </span>
           </div>
         </div>
@@ -280,7 +280,7 @@ export default function WeeklySummarySection({ trendHistory, globalStats }) {
       
       {/* Value Distribution Bar */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-sm font-semibold text-foreground mb-3">התפלגות ערכים שבועית</p>
+        <p className="text-sm font-semibold text-foreground mb-3">Weekly Value Distribution</p>
         <div className="flex h-4 rounded-full overflow-hidden bg-gray-100">
           {Object.entries(weeklyData.valueCounts)
             .filter(([_, count]) => count > 0)
@@ -309,7 +309,7 @@ export default function WeeklySummarySection({ trendHistory, globalStats }) {
       
       {/* Weekly Insights */}
       <div className="bg-amber-100/50 border border-amber-200 rounded-xl p-4">
-        <p className="text-sm font-semibold text-amber-800 mb-2">תובנות שבועיות</p>
+        <p className="text-sm font-semibold text-amber-800 mb-2">Weekly Insights</p>
         <div className="space-y-1">
           {insights.map((insight, idx) => (
             <p key={idx} className="text-sm text-amber-700">• {insight}</p>

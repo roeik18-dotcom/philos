@@ -156,33 +156,32 @@ export default function OrientationCompassSection({ history, state, userId }) {
     if (!driftInfo) return null;
     
     if (driftInfo.alignmentScore > 70) {
-      return 'אתה מיושר היטב עם השדה הקולקטיבי.';
+      return 'You are well aligned with the collective field.';
     } else if (driftInfo.alignmentScore > 50) {
-      return 'המיקום שלך קרוב למרכז השדה הקולקטיבי.';
+      return 'Your position is close to the collective field center.';
     } else if (driftInfo.alignmentScore < 30) {
-      return 'אתה רחוק ממרכז השדה הקולקטיבי.';
+      return 'You are far from the collective field center.';
     } else {
-      return 'יש מרחק בין המיקום שלך לבין מרכז השדה.';
+      return 'There is a distance between your position and the field center.';
     }
   }, [driftInfo]);
 
   // Hebrew labels for directions
   const directionLabels = {
-    recovery: 'התאוששות',
-    order: 'סדר',
-    contribution: 'תרומה',
-    exploration: 'חקירה'
+    recovery: 'Recovery',
+    order: 'Order',
+    contribution: 'Contribution',
+    exploration: 'Exploration'
   };
 
   return (
     <section 
       className="bg-white rounded-3xl p-6 shadow-sm border border-border"
-      dir="rtl"
       data-testid="orientation-compass-section"
     >
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground">מצפן התמצאות</h3>
-        <p className="text-xs text-muted-foreground">המיקום שלך מול השדה הקולקטיבי</p>
+        <h3 className="text-lg font-semibold text-foreground">Orientation Compass</h3>
+        <p className="text-xs text-muted-foreground">Your position vs. the collective field</p>
       </div>
 
       {/* Compass Grid */}
@@ -198,23 +197,23 @@ export default function OrientationCompassSection({ history, state, userId }) {
         <div className="absolute left-3/4 top-0 bottom-0 w-px bg-gray-200"></div>
 
         {/* Axis Labels */}
-        <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 font-medium bg-gray-50 px-1">סדר</span>
-        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 font-medium bg-gray-50 px-1">כאוס</span>
-        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-medium bg-gray-50 px-1">קולקטיב</span>
-        <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-medium bg-gray-50 px-1">אגו</span>
+        <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 font-medium bg-gray-50 px-1">Order</span>
+        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 font-medium bg-gray-50 px-1">Chaos</span>
+        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-medium bg-gray-50 px-1">Collective</span>
+        <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-medium bg-gray-50 px-1">Ego</span>
 
         {/* Quadrant Labels */}
         <div className="absolute top-[15%] left-[15%] text-center opacity-40">
-          <span className="text-[10px] text-indigo-600 font-medium">סדר</span>
+          <span className="text-[10px] text-indigo-600 font-medium">Order</span>
         </div>
         <div className="absolute top-[15%] right-[15%] text-center opacity-40">
-          <span className="text-[10px] text-green-600 font-medium">תרומה</span>
+          <span className="text-[10px] text-green-600 font-medium">Contribution</span>
         </div>
         <div className="absolute bottom-[15%] left-[15%] text-center opacity-40">
-          <span className="text-[10px] text-blue-600 font-medium">התאוששות</span>
+          <span className="text-[10px] text-blue-600 font-medium">Recovery</span>
         </div>
         <div className="absolute bottom-[15%] right-[15%] text-center opacity-40">
-          <span className="text-[10px] text-amber-600 font-medium">חקירה</span>
+          <span className="text-[10px] text-amber-600 font-medium">Exploration</span>
         </div>
 
         {/* SVG Layer for Lines and Markers */}
@@ -344,7 +343,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
               transform: 'translate(-50%, -50%)'
             }}
             data-testid="collective-center"
-            title="מרכז השדה הקולקטיבי"
+            title="Collective field center"
           />
         )}
 
@@ -371,12 +370,12 @@ export default function OrientationCompassSection({ history, state, userId }) {
       <div className="mt-4 flex flex-wrap justify-center gap-2">
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <div className="w-3 h-3 rounded-full bg-gray-600 border-2 border-white shadow"></div>
-          <span>מיקום שלך</span>
+          <span>Your position</span>
         </div>
         {collectiveData?.field_center && (
           <div className="flex items-center gap-1 text-xs text-violet-600">
             <div className="w-3 h-3 rounded-full bg-violet-200 border-2 border-violet-400"></div>
-            <span>מרכז קולקטיבי</span>
+            <span>center Collective</span>
           </div>
         )}
         {collectiveData?.momentum_arrow?.from_x && collectiveData?.field_momentum !== 'stable' && (
@@ -384,7 +383,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-            <span>מומנטום</span>
+            <span>Momentum</span>
           </div>
         )}
         {recommendedArrow && (
@@ -392,7 +391,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-            <span>כיוון מומלץ</span>
+            <span>Recommended direction</span>
           </div>
         )}
       </div>
@@ -458,7 +457,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
             </p>
             {collectiveData.momentum_strength > 0 && (
               <div className="mt-1.5 flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground">עוצמה:</span>
+                <span className="text-[10px] text-muted-foreground">Strength:</span>
                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[100px]">
                   <div 
                     className={`h-full rounded-full transition-all duration-500 ${
@@ -485,7 +484,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
           data-testid="field-history-section"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700">מגמת השדה (4 שבועות)</span>
+            <span className="text-sm font-medium text-slate-700">Field trend (4 weeks)</span>
             {historyData.trend_type && historyData.trend_type !== 'stable' && (
               <span className={`text-xs px-2 py-0.5 rounded-full ${
                 historyData.trend_type === 'stabilizing' 
@@ -494,9 +493,9 @@ export default function OrientationCompassSection({ history, state, userId }) {
                   ? 'bg-amber-100 text-amber-700'
                   : 'bg-violet-100 text-violet-700'
               }`}>
-                {historyData.trend_type === 'stabilizing' ? 'מתייצב' :
-                 historyData.trend_type === 'drifting' ? 'נסחף' :
-                 historyData.trend_direction ? `נע ל${directionLabels[historyData.trend_direction] || historyData.trend_direction}` : 'משתנה'}
+                {historyData.trend_type === 'stabilizing' ? 'stabilizing' :
+                 historyData.trend_type === 'drifting' ? 'drifting' :
+                 historyData.trend_direction ? `Moving towards ${directionLabels[historyData.trend_direction] || historyData.trend_direction}` : 'changing'}
               </span>
             )}
           </div>
@@ -592,7 +591,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
                       ? (directionColors[week.dominant_direction]?.fill || '#9ca3af')
                       : '#e5e7eb'
                   }}
-                  title={week.dominant_direction ? directionLabels[week.dominant_direction] : 'אין נתונים'}
+                  title={week.dominant_direction ? directionLabels[week.dominant_direction] : 'No data'}
                 />
                 <span className="text-[8px] text-muted-foreground mt-0.5">
                   {week.total_actions > 0 ? week.total_actions : '-'}
@@ -617,8 +616,8 @@ export default function OrientationCompassSection({ history, state, userId }) {
           data-testid="user-comparison-section"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-sky-800">המיקום שלך השבוע</span>
-            <span className="text-xs text-sky-600">{comparisonData.total_user_actions} פעולות</span>
+            <span className="text-sm font-medium text-sky-800">Your position this week</span>
+            <span className="text-xs text-sky-600">{comparisonData.total_user_actions} actions</span>
           </div>
           
           {/* Direction Percentile Bars */}
@@ -693,7 +692,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
           {/* Week Distribution Mini-Chart */}
           {comparisonData.week_comparison && Object.keys(comparisonData.week_comparison).length > 0 && (
             <div className="mt-3 pt-3 border-t border-sky-200">
-              <div className="text-[10px] text-sky-600 mb-2">התפלגות השבוע שלך:</div>
+              <div className="text-[10px] text-sky-600 mb-2">Your weekly distribution:</div>
               <div className="flex gap-1 h-4">
                 {Object.entries(comparisonData.week_comparison)
                   .filter(([, pct]) => pct > 0)
@@ -737,7 +736,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
       {driftInfo && currentPosition.valueTag && (
         <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-violet-800">התאמה לשדה</span>
+            <span className="text-sm font-medium text-violet-800">Match to field</span>
             <span className={`text-lg font-bold ${
               driftInfo.alignmentScore > 70 ? 'text-green-600' :
               driftInfo.alignmentScore > 40 ? 'text-amber-600' :
@@ -770,7 +769,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
       {currentPosition.valueTag && (
         <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200 text-center">
           <p className="text-sm text-muted-foreground">
-            הכיוון הנוכחי: 
+            Current direction: 
             <span 
               className="font-bold mr-1"
               style={{ color: directionColors[currentPosition.valueTag]?.fill || '#6b7280' }}
@@ -780,12 +779,12 @@ export default function OrientationCompassSection({ history, state, userId }) {
           </p>
           {currentPosition.actionsAnalyzed && (
             <p className="text-[10px] text-muted-foreground mt-1">
-              מבוסס על {currentPosition.actionsAnalyzed} פעולות ב-7 ימים אחרונים
+              Based on {currentPosition.actionsAnalyzed} actions in the last 7 days
             </p>
           )}
           {recommendedArrow && (
             <p className="text-xs text-green-600 mt-1">
-              כיוון מאזן מומלץ: {directionLabels[recommendedArrow.direction]}
+              Recommended balancing direction: {directionLabels[recommendedArrow.direction]}
             </p>
           )}
         </div>
@@ -795,7 +794,7 @@ export default function OrientationCompassSection({ history, state, userId }) {
       {collectiveData && collectiveData.total_users > 0 && (
         <div className="mt-3 p-3 rounded-xl bg-violet-50/50 border border-violet-100 text-center">
           <p className="text-xs text-violet-700">
-            {collectiveData.field_insight || `השדה הקולקטיבי מבוסס על ${collectiveData.total_users} משתמשים`}
+            {collectiveData.field_insight || `The collective field based on ${collectiveData.total_users} users`}
           </p>
         </div>
       )}
@@ -804,10 +803,10 @@ export default function OrientationCompassSection({ history, state, userId }) {
       {!currentPosition.valueTag && (
         <div className="mt-4 p-4 rounded-xl bg-gray-50 border border-gray-200 text-center">
           <p className="text-sm text-muted-foreground">
-            אין מספיק נתונים להצגת מיקום.
+            Not enough data to display position.
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            בצע פעולה ראשונה כדי להתחיל.
+            Perform your first action to get started.
           </p>
         </div>
       )}

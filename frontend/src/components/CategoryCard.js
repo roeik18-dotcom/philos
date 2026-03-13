@@ -2,7 +2,7 @@ import { Activity, Heart, Brain } from 'lucide-react';
 
 const CATEGORY_CONFIG = {
   body: {
-    label: 'גוף',
+    label: 'Body',
     icon: Activity,
     bgColor: '#E8F0ED',
     textColor: '#2C4A40',
@@ -10,7 +10,7 @@ const CATEGORY_CONFIG = {
     image: 'https://images.unsplash.com/photo-1593068415562-8b5db003f219?q=80&w=800&auto=format&fit=crop',
   },
   emotion: {
-    label: 'רגש',
+    label: 'Emotion',
     icon: Heart,
     bgColor: '#F7EBEB',
     textColor: '#5A3A3A',
@@ -18,7 +18,7 @@ const CATEGORY_CONFIG = {
     image: 'https://images.unsplash.com/photo-1648993880088-37d4a048e6d5?q=80&w=800&auto=format&fit=crop',
   },
   mind: {
-    label: 'מחשבה',
+    label: 'Mind',
     icon: Brain,
     bgColor: '#EBF4F8',
     textColor: '#2A4550',

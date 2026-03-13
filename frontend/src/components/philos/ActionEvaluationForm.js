@@ -17,9 +17,9 @@ export default function ActionEvaluationForm({ onSubmit }) {
   };
 
   const fields = [
-    { key: 'action_harm', label: 'נזק' },
-    { key: 'personal_gain', label: 'רווח אישי' },
-    { key: 'collective_gain', label: 'רווח קולקטיבי' }
+    { key: 'action_harm', label: 'Harm' },
+    { key: 'personal_gain', label: 'Personal gain' },
+    { key: 'collective_gain', label: 'Collective gain' }
   ];
 
   return (
@@ -49,7 +49,7 @@ export default function ActionEvaluationForm({ onSubmit }) {
         type="submit"
         className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all"
       >
-        הגדר הערכה
+        Set evaluation
       </button>
     </form>
   );

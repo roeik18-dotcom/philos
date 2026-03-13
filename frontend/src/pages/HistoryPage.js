@@ -1,5 +1,4 @@
 import { format, parseISO, startOfDay, isSameDay } from 'date-fns';
-import { he } from 'date-fns/locale';
 import { Heart, Circle, Clock, Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
 
 export default function HistoryPage({ history }) {
@@ -43,11 +42,11 @@ export default function HistoryPage({ history }) {
   const getStatusLabel = (status) => {
     switch (status) {
       case 'completed':
-        return 'עזרתי';
+        return 'Helped';
       case 'partial':
-        return 'התחלתי';
+        return 'Started';
       default:
-        return 'לא עזרתי';
+        return 'Did not help';
     }
   };
 
@@ -55,8 +54,8 @@ export default function HistoryPage({ history }) {
     return (
       <div className="flex-1 px-6 py-8 pb-24 flex flex-col items-center justify-center gap-4">
         <CalendarIcon className="w-16 h-16 text-muted-foreground" />
-        <p className="text-lg text-muted-foreground text-center">אין היסטוריה עדיין</p>
-        <p className="text-base text-muted-foreground/70 text-center">קבל בקשת עזרה ראשונה כדי לראות את ההיסטוריה שלך</p>
+        <p className="text-lg text-muted-foreground text-center">No history yet</p>
+        <p className="text-base text-muted-foreground/70 text-center">Complete your first help request to see your history</p>
       </div>
     );
   }
@@ -64,7 +63,7 @@ export default function HistoryPage({ history }) {
   return (
     <div data-testid="history-page" className="flex-1 px-6 py-8 pb-24 flex flex-col gap-6">
       <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-        היסטוריה
+        History
       </h1>
 
       <div className="flex flex-col gap-4">
@@ -81,7 +80,7 @@ export default function HistoryPage({ history }) {
               <div className="flex items-center gap-3">
                 <CalendarIcon className="w-5 h-5 text-muted-foreground" />
                 <h3 className="text-lg font-medium text-foreground">
-                  {isToday ? 'היום' : format(date, 'd MMMM yyyy', { locale: he })}
+                  {isToday ? 'Today' : format(date, 'd MMMM yyyy')}
                 </h3>
               </div>
 
@@ -112,11 +111,11 @@ export default function HistoryPage({ history }) {
                                 data-testid="repeat-badge"
                               >
                                 <RefreshCw className="w-3 h-3" />
-                                בקשה חוזרת
+                                Repeat request
                               </span>
                             )}
                           </div>
-                          <span className="text-sm text-muted-foreground">{request.minutes} דקות</span>
+                          <span className="text-sm text-muted-foreground">{request.minutes} min</span>
                         </div>
                       </div>
                       <span className="text-sm text-muted-foreground mr-2">{getStatusLabel(request.status)}</span>

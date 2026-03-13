@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { listSavedSessions, getSessionById } from '../../../services/cloudSync';
 
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות',
-  neutral: 'ניטרלי'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance',
+  neutral: 'Neutral'
 };
 
 export default function SessionComparisonSection({ cloudAvailable }) {
@@ -97,41 +97,41 @@ export default function SessionComparisonSection({ cloudAvailable }) {
     
     // Recovery comparison
     if (b.recoveryStability > a.recoveryStability + 10) {
-      insights.push('סשן ב׳ מראה יציבות התאוששות גבוהה יותר.');
+      insights.push('Session B shows higher recovery stability.');
     } else if (a.recoveryStability > b.recoveryStability + 10) {
-      insights.push('סשן א׳ מראה יציבות התאוששות גבוהה יותר.');
+      insights.push('Session A shows higher recovery stability.');
     }
     
     // Harm comparison
     if (b.harmPressure < a.harmPressure - 5) {
-      insights.push('סשן ב׳ מראה לחץ נזק נמוך יותר.');
+      insights.push('Session B shows lower harm pressure.');
     } else if (a.harmPressure < b.harmPressure - 5) {
-      insights.push('סשן א׳ מראה לחץ נזק נמוך יותר.');
+      insights.push('Session A shows lower harm pressure.');
     }
     
     // Order drift comparison
     if (b.orderDrift > a.orderDrift + 1) {
-      insights.push('סשן ב׳ נוטה יותר לכיוון סדר.');
+      insights.push('Session B leans more towards order direction.');
     } else if (a.orderDrift > b.orderDrift + 1) {
-      insights.push('סשן א׳ נוטה יותר לכיוון סדר.');
+      insights.push('Session A leans more towards order direction.');
     }
     
     // Collective drift comparison
     if (b.collectiveDrift > a.collectiveDrift + 1) {
-      insights.push('סשן ב׳ מראה נטייה חברתית חזקה יותר.');
+      insights.push('Session B shows stronger social tendency.');
     } else if (a.collectiveDrift > b.collectiveDrift + 1) {
-      insights.push('סשן א׳ מראה נטייה חברתית חזקה יותר.');
+      insights.push('Session A shows stronger social tendency.');
     }
     
     // Decision count
     if (b.decisionCount > a.decisionCount * 1.5) {
-      insights.push('סשן ב׳ כולל יותר החלטות.');
+      insights.push('Session B has more decisions.');
     } else if (a.decisionCount > b.decisionCount * 1.5) {
-      insights.push('סשן א׳ כולל יותר החלטות.');
+      insights.push('Session A has more decisions.');
     }
     
     if (insights.length === 0) {
-      insights.push('שני הסשנים דומים במדדים העיקריים.');
+      insights.push('Both sessions are similar in key metrics.');
     }
     
     return insights.slice(0, 3);
@@ -140,7 +140,7 @@ export default function SessionComparisonSection({ cloudAvailable }) {
   const formatDate = (dateStr) => {
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch {
       return dateStr;
     }
@@ -166,7 +166,7 @@ export default function SessionComparisonSection({ cloudAvailable }) {
         </div>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs w-8 text-right">א׳</span>
+            <span className="text-xs w-8 text-right">A</span>
             <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
               <div 
                 className={`h-full ${getColor(valueA, true)} transition-all rounded-full`}
@@ -176,7 +176,7 @@ export default function SessionComparisonSection({ cloudAvailable }) {
             <span className="text-xs w-12 text-left font-medium">{valueA}{unit}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs w-8 text-right">ב׳</span>
+            <span className="text-xs w-8 text-right">B</span>
             <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
               <div 
                 className={`h-full ${getColor(valueB, false)} transition-all rounded-full`}
@@ -199,9 +199,9 @@ export default function SessionComparisonSection({ cloudAvailable }) {
         onClick={() => setExpanded(!expanded)}
       >
         <div>
-          <h3 className="text-lg font-semibold text-foreground">השוואת סשנים</h3>
+          <h3 className="text-lg font-semibold text-foreground">Session Comparison</h3>
           <p className="text-xs text-muted-foreground">
-            השווה בין שני סשנים שמורים
+            Compare two saved sessions
           </p>
         </div>
         <button className="text-2xl text-cyan-600 transition-transform" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}>
@@ -213,46 +213,46 @@ export default function SessionComparisonSection({ cloudAvailable }) {
         <div className="mt-4 space-y-4">
           {loading ? (
             <div className="text-center py-8">
-              <span className="text-muted-foreground animate-pulse">טוען סשנים...</span>
+              <span className="text-muted-foreground animate-pulse">Loading sessions...</span>
             </div>
           ) : sessions.length < 2 ? (
             <div className="text-center py-8 bg-white/50 rounded-xl">
-              <p className="text-muted-foreground">צריך לפחות 2 סשנים שמורים להשוואה</p>
-              <p className="text-xs text-muted-foreground mt-1">שמור עוד סשנים בספריית הסשנים</p>
+              <p className="text-muted-foreground">Need at least 2 saved sessions for comparison</p>
+              <p className="text-xs text-muted-foreground mt-1">Save more sessions in the session library</p>
             </div>
           ) : (
             <>
               {/* Session Selectors */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/70 rounded-xl p-3">
-                  <label className="text-xs text-muted-foreground block mb-2">סשן א׳</label>
+                  <label className="text-xs text-muted-foreground block mb-2">Session A</label>
                   <select
                     value={sessionA || ''}
                     onChange={(e) => setSessionA(e.target.value || null)}
                     className="w-full px-3 py-2 border border-cyan-200 rounded-lg text-sm bg-white"
                     data-testid="session-a-select"
                   >
-                    <option value="">בחר סשן...</option>
+                    <option value="">Select session...</option>
                     {sessions.map(s => (
                       <option key={s.session_id} value={s.session_id} disabled={s.session_id === sessionB}>
-                        {formatDate(s.date)} ({s.total_decisions} החלטות)
+                        {formatDate(s.date)} ({s.total_decisions} decisions)
                       </option>
                     ))}
                   </select>
                 </div>
                 
                 <div className="bg-white/70 rounded-xl p-3">
-                  <label className="text-xs text-muted-foreground block mb-2">סשן ב׳</label>
+                  <label className="text-xs text-muted-foreground block mb-2">Session B</label>
                   <select
                     value={sessionB || ''}
                     onChange={(e) => setSessionB(e.target.value || null)}
                     className="w-full px-3 py-2 border border-cyan-200 rounded-lg text-sm bg-white"
                     data-testid="session-b-select"
                   >
-                    <option value="">בחר סשן...</option>
+                    <option value="">Select session...</option>
                     {sessions.map(s => (
                       <option key={s.session_id} value={s.session_id} disabled={s.session_id === sessionA}>
-                        {formatDate(s.date)} ({s.total_decisions} החלטות)
+                        {formatDate(s.date)} ({s.total_decisions} decisions)
                       </option>
                     ))}
                   </select>
@@ -262,20 +262,20 @@ export default function SessionComparisonSection({ cloudAvailable }) {
               {/* Comparison Results */}
               {loadingComparison ? (
                 <div className="text-center py-8">
-                  <span className="text-muted-foreground animate-pulse">טוען השוואה...</span>
+                  <span className="text-muted-foreground animate-pulse">Loading comparison...</span>
                 </div>
               ) : sessionAData && sessionBData ? (
                 <div className="space-y-4">
                   {/* Dominant Values */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white/70 rounded-xl p-3 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">ערך דומיננטי א׳</p>
+                      <p className="text-xs text-muted-foreground mb-1">Dominant value A</p>
                       <p className="text-lg font-bold text-cyan-700">
                         {valueLabels[sessionAData.metrics.dominantValue]}
                       </p>
                     </div>
                     <div className="bg-white/70 rounded-xl p-3 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">ערך דומיננטי ב׳</p>
+                      <p className="text-xs text-muted-foreground mb-1">Dominant value B</p>
                       <p className="text-lg font-bold text-teal-700">
                         {valueLabels[sessionBData.metrics.dominantValue]}
                       </p>
@@ -284,31 +284,31 @@ export default function SessionComparisonSection({ cloudAvailable }) {
                   
                   {/* Comparison Bars */}
                   <div className="bg-white/70 rounded-xl p-4">
-                    <p className="text-sm font-semibold text-foreground mb-3">השוואת מדדים</p>
+                    <p className="text-sm font-semibold text-foreground mb-3">Metrics Comparison</p>
                     
                     <ComparisonBar 
-                      label="מספר החלטות"
+                      label="Number of decisions"
                       valueA={sessionAData.metrics.decisionCount}
                       valueB={sessionBData.metrics.decisionCount}
                       maxValue={20}
                     />
                     
                     <ComparisonBar 
-                      label="סחף סדר"
+                      label="Order Drift"
                       valueA={sessionAData.metrics.orderDrift}
                       valueB={sessionBData.metrics.orderDrift}
                       maxValue={10}
                     />
                     
                     <ComparisonBar 
-                      label="סחף חברתי"
+                      label="Social drift"
                       valueA={sessionAData.metrics.collectiveDrift}
                       valueB={sessionBData.metrics.collectiveDrift}
                       maxValue={10}
                     />
                     
                     <ComparisonBar 
-                      label="לחץ נזק"
+                      label="Harm Pressure"
                       valueA={sessionAData.metrics.harmPressure}
                       valueB={sessionBData.metrics.harmPressure}
                       maxValue={100}
@@ -317,7 +317,7 @@ export default function SessionComparisonSection({ cloudAvailable }) {
                     />
                     
                     <ComparisonBar 
-                      label="יציבות התאוששות"
+                      label="Recovery Stability"
                       valueA={sessionAData.metrics.recoveryStability}
                       valueB={sessionBData.metrics.recoveryStability}
                       maxValue={100}
@@ -327,7 +327,7 @@ export default function SessionComparisonSection({ cloudAvailable }) {
                   
                   {/* Insights */}
                   <div className="bg-cyan-100/50 border border-cyan-200 rounded-xl p-4">
-                    <p className="text-sm font-semibold text-cyan-800 mb-2">תובנות השוואה</p>
+                    <p className="text-sm font-semibold text-cyan-800 mb-2">Comparison insights</p>
                     <div className="space-y-1">
                       {generateInsights().map((insight, idx) => (
                         <p key={idx} className="text-sm text-cyan-700">• {insight}</p>
@@ -337,7 +337,7 @@ export default function SessionComparisonSection({ cloudAvailable }) {
                 </div>
               ) : (
                 <div className="text-center py-8 bg-white/50 rounded-xl">
-                  <p className="text-muted-foreground">בחר שני סשנים להשוואה</p>
+                  <p className="text-muted-foreground">Select two sessions for comparison</p>
                 </div>
               )}
             </>

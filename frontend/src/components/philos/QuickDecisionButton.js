@@ -4,10 +4,10 @@ import { Zap, Loader2, Check, X, Flame, Target, User } from 'lucide-react';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const DIRECTIONS = [
-  { id: 'contribution', label: 'תרומה', desc: 'לתת', color: '#22c55e' },
-  { id: 'recovery', label: 'התאוששות', desc: 'להיטען', color: '#3b82f6' },
-  { id: 'order', label: 'סדר', desc: 'לארגן', color: '#6366f1' },
-  { id: 'exploration', label: 'חקירה', desc: 'לגלות', color: '#f59e0b' }
+  { id: 'contribution', label: 'Contribution', desc: 'Give', color: '#22c55e' },
+  { id: 'recovery', label: 'Recovery', desc: 'Recharge', color: '#3b82f6' },
+  { id: 'order', label: 'Order', desc: 'Organize', color: '#6366f1' },
+  { id: 'exploration', label: 'Exploration', desc: 'Discover', color: '#f59e0b' }
 ];
 
 export default function QuickDecisionButton({ onSubmit }) {
@@ -66,17 +66,16 @@ export default function QuickDecisionButton({ onSubmit }) {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 backdrop-blur-sm" onClick={handleClose}>
           <div
             className="w-full max-w-md bg-white rounded-t-3xl p-5 pb-8 shadow-2xl"
-            dir="rtl"
             onClick={e => e.stopPropagation()}
             data-testid="quick-action-panel"
           >
             {phase === 'pick' && (
               <>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-gray-800">פעולה מהירה</h3>
+                  <h3 className="text-sm font-bold text-gray-800">Quick Action</h3>
                   <button onClick={handleClose} className="text-gray-300 hover:text-gray-500"><X className="w-4 h-4" /></button>
                 </div>
-                <p className="text-xs text-gray-400 mb-3">בחר כיוון — הנקודה נשלחת לגלובוס מיד</p>
+                <p className="text-xs text-gray-400 mb-3">Choose a direction — your point is sent to the globe immediately</p>
                 <div className="grid grid-cols-2 gap-2">
                   {DIRECTIONS.map(d => (
                     <button
@@ -100,7 +99,7 @@ export default function QuickDecisionButton({ onSubmit }) {
             {phase === 'sending' && (
               <div className="flex flex-col items-center justify-center py-8 gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-                <span className="text-xs text-gray-400">שולח לגלובוס...</span>
+                <span className="text-xs text-gray-400">Sending to globe...</span>
               </div>
             )}
 
@@ -110,7 +109,7 @@ export default function QuickDecisionButton({ onSubmit }) {
                   <Check className="w-7 h-7" style={{ color: reward.direction.color }} />
                 </div>
                 <p className="text-base font-bold text-gray-900 mb-1">{reward.message}</p>
-                <p className="text-lg font-black mb-2" style={{ color: reward.direction.color }}>+{(2.5).toFixed(1)} השפעה</p>
+                <p className="text-lg font-black mb-2" style={{ color: reward.direction.color }}>+{(2.5).toFixed(1)} Impact</p>
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                   <span className="flex items-center gap-0.5" style={{ color: reward.direction.color }}>
                     <Zap className="w-3 h-3" />{reward.direction.label}
@@ -118,7 +117,7 @@ export default function QuickDecisionButton({ onSubmit }) {
                 </div>
                 {userId && (
                   <a href={`/profile/${userId}`} className="flex items-center justify-center gap-1 text-[10px] text-gray-400 hover:text-indigo-500 mt-3 transition-colors">
-                    <User className="w-3 h-3" />צפה ברשומה שלך
+                    <User className="w-3 h-3" />View your record
                   </a>
                 )}
               </div>

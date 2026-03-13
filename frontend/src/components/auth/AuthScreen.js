@@ -38,19 +38,19 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
 
     // Validation
     if (!email || !password) {
-      setError('נא למלא את כל השדות');
+      setError('Please fill in all fields');
       setLoading(false);
       return;
     }
 
     if (mode === 'register' && password !== confirmPassword) {
-      setError('הסיסמאות אינן תואמות');
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('הסיסמה חייבת להכיל לפחות 6 תווים');
+      setError('Password must be at least 6 characters');
       setLoading(false);
       return;
     }
@@ -97,11 +97,11 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
         // Clear pending invite
         localStorage.removeItem('philos_pending_invite');
       } else {
-        setError(data.message || 'אירעה שגיאה');
+        setError(data.message || 'An error occurred');
       }
     } catch (err) {
       console.error('Auth error:', err);
-      setError('שגיאת התחברות. נסה שוב.');
+      setError('Connection error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -110,13 +110,12 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
   return (
     <div 
       className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4"
-      dir="rtl"
     >
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Philos Orientation</h1>
-          <p className="text-gray-600">מערכת ניווט מנטלי</p>
+          <p className="text-gray-600">Mental navigation system</p>
         </div>
 
         {/* Auth Card */}
@@ -132,7 +131,7 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
               }`}
               data-testid="auth-login-tab"
             >
-              התחברות
+              Sign In
             </button>
             <button
               onClick={() => { setMode('register'); setError(''); }}
@@ -143,7 +142,7 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
               }`}
               data-testid="auth-register-tab"
             >
-              הרשמה
+              Sign Up
             </button>
           </div>
 
@@ -152,7 +151,7 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                אימייל
+                Email
               </label>
               <input
                 type="email"
@@ -168,7 +167,7 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                סיסמה
+                Password
               </label>
               <input
                 type="password"
@@ -184,7 +183,7 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
             {mode === 'register' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  אימות סיסמה
+                  Confirm Password
                 </label>
                 <input
                   type="password"
@@ -201,7 +200,7 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
             {mode === 'register' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  קוד הזמנה <span className="text-gray-400 font-normal">(אופציונלי)</span>
+                  Invite Code <span className="text-gray-400 font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -239,16 +238,16 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  מעבד...
+                  Processing...
                 </span>
-              ) : mode === 'login' ? 'התחבר' : 'הרשם'}
+              ) : mode === 'login' ? 'Sign In' : 'Sign Up'}
             </button>
           </form>
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-sm text-gray-400">או</span>
+            <span className="text-sm text-gray-400">or</span>
             <div className="flex-1 h-px bg-gray-200"></div>
           </div>
 
@@ -258,14 +257,14 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
             className="w-full py-3 px-4 rounded-xl font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 transition-all"
             data-testid="auth-skip-btn"
           >
-            המשך ללא חשבון
+            Continue without account
           </button>
 
           {/* Info Text */}
           <p className="text-xs text-gray-400 text-center mt-4">
             {mode === 'register' 
-              ? 'בהרשמה אתה מסכים לתנאי השימוש' 
-              : 'הנתונים שלך ישמרו בענן ויסונכרנו בין מכשירים'}
+              ? 'By signing up you agree to the Terms of Service' 
+              : 'Your data will be saved in the cloud and synced across devices'}
           </p>
         </div>
 

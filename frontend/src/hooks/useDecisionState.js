@@ -103,7 +103,7 @@ export function useDecisionState({
     const actionToEvaluate = actionText;
     
     if (!actionToEvaluate || typeof actionToEvaluate !== 'string') {
-      alert('יש להזין פעולה');
+      alert('There is a need to enter an action');
       return;
     }
 
@@ -181,7 +181,7 @@ export function useDecisionState({
       balance_score: newBalanceScore,
       value_tag: valueTag,
       parent_decision_id: parentDecision?.id || null,
-      time: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       timestamp: timestamp,
       ...(isRecommendationMetadata && {
         followed_recommendation: true,

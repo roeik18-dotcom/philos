@@ -16,12 +16,12 @@ export default function InvitePage({ code, onEnter }) {
         if (res.ok) {
           const json = await res.json();
           if (json.success) setInvite(json);
-          else setError('קוד ההזמנה אינו תקף');
+          else setError('This invite code is invalid');
         } else {
-          setError('קוד ההזמנה אינו תקף');
+          setError('This invite code is invalid');
         }
       } catch (e) {
-        setError('שגיאה בטעינת ההזמנה');
+        setError('Error loading invitation');
       } finally {
         setLoading(false);
       }
@@ -63,7 +63,7 @@ export default function InvitePage({ code, onEnter }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-6" dir="rtl" data-testid="invite-page">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-6" data-testid="invite-page">
       <div className="max-w-sm w-full text-center space-y-6">
         {/* Icon */}
         <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center mx-auto">
@@ -76,7 +76,7 @@ export default function InvitePage({ code, onEnter }) {
           <p className="text-sm text-gray-400" dir="ltr">You've been invited to start.</p>
           {invite?.inviter_alias && (
             <p className="text-xs text-violet-600 mt-1">
-              הוזמנת על ידי <span className="font-semibold">{invite.inviter_alias}</span>
+              Invited by <span className="font-semibold">{invite.inviter_alias}</span>
             </p>
           )}
         </div>
@@ -108,14 +108,14 @@ export default function InvitePage({ code, onEnter }) {
           data-testid="invite-skip-btn"
         >
           <ArrowLeft className="w-3 h-3" />
-          <span>המשך בלי הזמנה</span>
+          <span>Continue without invitation</span>
         </button>
 
         {/* Stats */}
         {invite && (
           <div className="flex items-center justify-center gap-1 text-[10px] text-gray-300">
             <Users className="w-3 h-3" />
-            <span>{invite.use_count || 0} כבר הצטרפו דרך הזמנה זו</span>
+            <span>{invite.use_count || 0} already joined through this invitation</span>
           </div>
         )}
       </div>

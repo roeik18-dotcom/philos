@@ -5,11 +5,11 @@ import { Share2, Download, Flame, Compass, X, Loader2 } from 'lucide-react';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const directionColors = {
-  'התאוששות': '#3b82f6',
-  'סדר': '#6366f1',
-  'תרומה': '#22c55e',
-  'חקירה': '#f59e0b',
-  'איזון': '#8b5cf6'
+  'Recovery': '#3b82f6',
+  'Order': '#6366f1',
+  'Contribution': '#22c55e',
+  'Exploration': '#f59e0b',
+  'Balance': '#8b5cf6'
 };
 
 export default function OrientationShareCard({ userId, onClose }) {
@@ -118,7 +118,6 @@ export default function OrientationShareCard({ userId, onClose }) {
           ref={cardRef}
           className="rounded-3xl overflow-hidden shadow-xl"
           style={{ background: `linear-gradient(135deg, ${accentColor}15 0%, ${accentColor}08 50%, white 100%)` }}
-          dir="rtl"
         >
           <div className="p-6 space-y-5">
             {/* Logo */}
@@ -127,7 +126,7 @@ export default function OrientationShareCard({ userId, onClose }) {
                 <Compass className="w-5 h-5" style={{ color: accentColor }} />
                 <span className="text-sm font-bold text-gray-800">Philos Orientation</span>
               </div>
-              <span className="text-xs text-gray-400">{new Date().toLocaleDateString('he-IL')}</span>
+              <span className="text-xs text-gray-400">{new Date().toLocaleDateString('en-US')}</span>
             </div>
 
             {/* Main orientation */}
@@ -148,7 +147,7 @@ export default function OrientationShareCard({ userId, onClose }) {
             {data.streak > 0 && (
               <div className="flex items-center justify-center gap-2 bg-orange-50 rounded-2xl py-2 px-4">
                 <Flame className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-bold text-orange-700">{data.streak} ימים רצופים</span>
+                <span className="text-sm font-bold text-orange-700">{data.streak} consecutive days</span>
               </div>
             )}
 
@@ -157,10 +156,10 @@ export default function OrientationShareCard({ userId, onClose }) {
               <svg viewBox="0 0 100 80" className="w-full h-full">
                 <line x1="50" y1="5" x2="50" y2="75" stroke="#e5e7eb" strokeWidth="0.5" />
                 <line x1="10" y1="40" x2="90" y2="40" stroke="#e5e7eb" strokeWidth="0.5" />
-                <text x="50" y="12" textAnchor="middle" fill="#9ca3af" fontSize="5">סדר</text>
-                <text x="50" y="74" textAnchor="middle" fill="#9ca3af" fontSize="5">חקירה</text>
-                <text x="14" y="42" textAnchor="middle" fill="#9ca3af" fontSize="5">התאוששות</text>
-                <text x="86" y="42" textAnchor="middle" fill="#9ca3af" fontSize="5">תרומה</text>
+                <text x="50" y="12" textAnchor="middle" fill="#9ca3af" fontSize="5">Order</text>
+                <text x="50" y="74" textAnchor="middle" fill="#9ca3af" fontSize="5">Exploration</text>
+                <text x="14" y="42" textAnchor="middle" fill="#9ca3af" fontSize="5">Recovery</text>
+                <text x="86" y="42" textAnchor="middle" fill="#9ca3af" fontSize="5">Contribution</text>
                 <circle cx={data.compass_position?.x || 50} cy={data.compass_position?.y || 40} r="5" fill={accentColor} opacity="0.8" />
                 <circle cx={data.compass_position?.x || 50} cy={data.compass_position?.y || 40} r="8" fill={accentColor} opacity="0.2" />
               </svg>
@@ -181,7 +180,7 @@ export default function OrientationShareCard({ userId, onClose }) {
             ) : (
               <Download className="w-4 h-4" />
             )}
-            <span>{downloading ? 'מייצר...' : 'הורדה'}</span>
+            <span>{downloading ? 'Generating...' : 'Download'}</span>
           </button>
           <button
             onClick={handleShare}
@@ -191,7 +190,7 @@ export default function OrientationShareCard({ userId, onClose }) {
             data-testid="share-card-share"
           >
             <Share2 className="w-4 h-4" />
-            <span>שיתוף</span>
+            <span>Share</span>
           </button>
         </div>
       </div>

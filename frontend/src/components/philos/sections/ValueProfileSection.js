@@ -4,7 +4,7 @@ import { Award, TrendingUp, Shield, Zap, Star, ChevronLeft, Lock } from 'lucide-
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const dirColors = { contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b' };
-const dirLabels = { contribution: 'תרומה', recovery: 'התאוששות', order: 'סדר', exploration: 'חקירה' };
+const dirLabels = { contribution: 'Contribution', recovery: 'Recovery', order: 'Order', exploration: 'Exploration' };
 
 export default function ValueProfileSection({ userId }) {
   const [data, setData] = useState(null);
@@ -27,7 +27,7 @@ export default function ValueProfileSection({ userId }) {
   const maxScore = Math.max(value_scores.internal, value_scores.external, value_scores.collective, 1);
 
   return (
-    <section className="philos-section bg-white border-border" dir="rtl" data-testid="value-profile-section">
+    <section className="philos-section bg-white border-border" data-testid="value-profile-section">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -35,20 +35,20 @@ export default function ValueProfileSection({ userId }) {
             <Award className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <span className="text-sm font-semibold text-gray-800">פרופיל ערך</span>
-            <p className="text-[10px] text-gray-400">רמה {progression.level}</p>
+            <span className="text-sm font-semibold text-gray-800">Value Profile</span>
+            <p className="text-[10px] text-gray-400">Level {progression.level}</p>
           </div>
         </div>
         <div className="text-left">
           <p className="text-lg font-bold text-gray-800">{value_scores.total}</p>
-          <p className="text-[9px] text-gray-400">ערך כולל</p>
+          <p className="text-[9px] text-gray-400">Total Value</p>
         </div>
       </div>
 
       {/* Level progress */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] text-gray-400">רמה {progression.level}</span>
+          <span className="text-[10px] text-gray-400">Level {progression.level}</span>
           <span className="text-[10px] text-gray-400">{progression.total_actions}/{progression.next_level_at}</span>
         </div>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -59,9 +59,9 @@ export default function ValueProfileSection({ userId }) {
       {/* Value breakdown bars */}
       <div className="space-y-2 mb-4">
         {[
-          { label: 'ערך פנימי', value: value_scores.internal, color: '#3b82f6', icon: Shield },
-          { label: 'ערך חיצוני', value: value_scores.external, color: '#22c55e', icon: TrendingUp },
-          { label: 'ערך קולקטיבי', value: value_scores.collective, color: '#8b5cf6', icon: Zap }
+          { label: 'Value Internal', value: value_scores.internal, color: '#3b82f6', icon: Shield },
+          { label: 'Value External', value: value_scores.external, color: '#22c55e', icon: TrendingUp },
+          { label: 'Value Collective', value: value_scores.collective, color: '#8b5cf6', icon: Zap }
         ].map(({ label, value, color, icon: Icon }) => (
           <div key={label} className="flex items-center gap-2">
             <Icon className="w-3.5 h-3.5" style={{ color }} />
@@ -80,7 +80,7 @@ export default function ValueProfileSection({ userId }) {
           <div className="flex items-center gap-2 mb-1">
             <Star className="w-4 h-4 text-amber-500" />
             <span className="text-sm font-semibold text-gray-800">{niche.label_he}</span>
-            {leader_status && <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">מוביל</span>}
+            {leader_status && <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">Leading</span>}
           </div>
           <p className="text-xs text-gray-500 mb-2">{niche.description_he}</p>
           <div className="flex flex-wrap gap-1">
@@ -95,14 +95,14 @@ export default function ValueProfileSection({ userId }) {
       {next_niche && (
         <div className="flex items-center gap-2 p-2 bg-purple-50 rounded-xl mb-3" data-testid="value-next-niche">
           <ChevronLeft className="w-3.5 h-3.5 text-purple-500" />
-          <span className="text-[10px] text-purple-700">הנישה הבאה: <strong>{next_niche.label_he}</strong></span>
+          <span className="text-[10px] text-purple-700">Next niche: <strong>{next_niche.label_he}</strong></span>
         </div>
       )}
 
       {/* Badges */}
       {progression.badges.length > 0 && (
         <div data-testid="value-badges">
-          <p className="text-[10px] text-gray-400 mb-2">תגים</p>
+          <p className="text-[10px] text-gray-400 mb-2">Tags</p>
           <div className="flex flex-wrap gap-1.5">
             {progression.badges.map((b) => (
               <div key={b.id} className="flex items-center gap-1 bg-amber-50 border border-amber-200 rounded-full px-2 py-1" data-testid={`badge-${b.id}`}>

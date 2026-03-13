@@ -54,14 +54,14 @@ export default function SubscriptionSection({ userId }) {
   const planOrder = ['free', 'plus', 'collective'];
 
   return (
-    <section className="philos-section bg-white border-border" dir="rtl" data-testid="subscription-section">
+    <section className="philos-section bg-white border-border" data-testid="subscription-section">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
           <Crown className="w-5 h-5 text-amber-600" />
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-800">מנוי</span>
-          <p className="text-[10px] text-gray-400">בחר את הרמה שלך</p>
+          <span className="text-sm font-semibold text-gray-800">Subscription</span>
+          <p className="text-[10px] text-gray-400">Choose your level</p>
         </div>
       </div>
 
@@ -77,10 +77,10 @@ export default function SubscriptionSection({ userId }) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-bold ${accent.text}`}>{plan.label_he}</span>
-                  {isCurrent && <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">פעיל</span>}
+                  {isCurrent && <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Active</span>}
                 </div>
                 <span className={`text-lg font-bold ${accent.text}`}>
-                  {plan.price > 0 ? `$${plan.price}/חודש` : 'חינם'}
+                  {plan.price > 0 ? `$${plan.price}/Month` : 'Synchronize'}
                 </span>
               </div>
 
@@ -100,7 +100,7 @@ export default function SubscriptionSection({ userId }) {
                   className={`w-full py-2 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98] ${accent.btn}`}
                   data-testid={`upgrade-${pid}`}
                 >
-                  {upgrading === pid ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'שדרג'}
+                  {upgrading === pid ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Upgrade'}
                 </button>
               )}
             </div>

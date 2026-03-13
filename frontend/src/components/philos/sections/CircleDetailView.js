@@ -5,7 +5,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const dirColors = { contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b' };
 
 const INNER_TABS = ['feed', 'leaders', 'missions'];
-const INNER_TAB_LABELS = { feed: 'פיד', leaders: 'מובילים', missions: 'משימות' };
+const INNER_TAB_LABELS = { feed: 'Feed', leaders: 'Leaders', missions: 'Missions' };
 
 export default function CircleDetailView({ circleId, userId, onBack }) {
   const [data, setData] = useState(null);
@@ -44,7 +44,7 @@ export default function CircleDetailView({ circleId, userId, onBack }) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
-        <span className="text-xs text-gray-400">טוען מעגל...</span>
+        <span className="text-xs text-gray-400">Loading circle...</span>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function CircleDetailView({ circleId, userId, onBack }) {
   const color = circle.color || '#6366f1';
 
   return (
-    <div className="space-y-4" data-testid="circle-detail-view" dir="rtl">
+    <div className="space-y-4" data-testid="circle-detail-view">
       {/* Back button */}
       <button
         onClick={onBack}
@@ -63,7 +63,7 @@ export default function CircleDetailView({ circleId, userId, onBack }) {
         data-testid="circle-detail-back"
       >
         <ArrowRight className="w-3.5 h-3.5" />
-        <span>חזרה למעגלים</span>
+        <span>Back to circles</span>
       </button>
 
       {/* Circle Header */}
@@ -77,7 +77,7 @@ export default function CircleDetailView({ circleId, userId, onBack }) {
               <h2 className="text-base font-bold text-gray-800">{circle.label_he}</h2>
               {circle.direction && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: `${color}12`, color }}>
-                  {circle.direction === 'contribution' ? 'תרומה' : circle.direction === 'recovery' ? 'התאוששות' : circle.direction === 'order' ? 'סדר' : 'חקירה'}
+                  {circle.direction === 'contribution' ? 'Contribution' : circle.direction === 'recovery' ? 'Recovery' : circle.direction === 'order' ? 'Order' : 'Exploration'}
                 </span>
               )}
             </div>
@@ -92,13 +92,13 @@ export default function CircleDetailView({ circleId, userId, onBack }) {
             }
             data-testid="circle-detail-toggle-membership"
           >
-            {toggling ? <Loader2 className="w-3 h-3 animate-spin" /> : is_member ? <><LogOut className="w-3 h-3" />עזוב</> : <><LogIn className="w-3 h-3" />הצטרף</>}
+            {toggling ? <Loader2 className="w-3 h-3 animate-spin" /> : is_member ? <><LogOut className="w-3 h-3" />Leave</> : <><LogIn className="w-3 h-3" />Join</>}
           </button>
         </div>
         <p className="text-xs text-gray-500 leading-relaxed mb-3">{circle.description_he}</p>
         <div className="flex items-center gap-1 text-[10px] text-gray-400">
           <Users className="w-3 h-3" />
-          <span>{circle.member_count.toLocaleString()} חברים</span>
+          <span>{circle.member_count.toLocaleString()} members</span>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ export default function CircleDetailView({ circleId, userId, onBack }) {
 }
 
 function CircleFeed({ feed, color }) {
-  if (!feed?.length) return <EmptyState text="אין פעולות עדיין" />;
+  if (!feed?.length) return <EmptyState text="No actions yet" />;
   return (
     <div className="space-y-2" data-testid="circle-feed">
       {feed.map((item, i) => (
@@ -147,7 +147,7 @@ function CircleFeed({ feed, color }) {
 }
 
 function CircleLeaders({ leaderboard }) {
-  if (!leaderboard?.length) return <EmptyState text="אין מובילים עדיין" />;
+  if (!leaderboard?.length) return <EmptyState text="No leaders yet" />;
   return (
     <div className="bg-white rounded-xl border border-border overflow-hidden" data-testid="circle-leaders">
       {leaderboard.map((l, i) => (
@@ -161,7 +161,7 @@ function CircleLeaders({ leaderboard }) {
           </div>
           <div className="text-left">
             <p className="text-xs font-bold text-gray-800">{Math.round(l.impact)}</p>
-            <p className="text-[8px] text-gray-400">{l.actions} פעולות</p>
+            <p className="text-[8px] text-gray-400">{l.actions} actions</p>
           </div>
         </div>
       ))}
@@ -170,7 +170,7 @@ function CircleLeaders({ leaderboard }) {
 }
 
 function CircleMissions({ missions }) {
-  if (!missions?.length) return <EmptyState text="אין משימות פעילות" />;
+  if (!missions?.length) return <EmptyState text="No active missions" />;
   return (
     <div className="space-y-2" data-testid="circle-missions">
       {missions.map((m, i) => {

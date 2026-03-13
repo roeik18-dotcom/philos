@@ -18,15 +18,15 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
 
     // Validation
     if (!formData.name.trim()) {
-      setError('נא להזין שם פרטי');
+      setError('Please enter your name');
       return;
     }
     if (!formData.need.trim()) {
-      setError('נא להזין תיאור העזרה');
+      setError('Please describe what help you need');
       return;
     }
     if (!formData.minutes || formData.minutes < 1) {
-      setError('נא להזין זמן משוער');
+      setError('Please enter estimated time');
       return;
     }
 
@@ -34,7 +34,7 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
     onSubmit({
       ...formData,
       minutes: parseInt(formData.minutes),
-      distance: formData.distance.trim() || 'לא צוין'
+      distance: formData.distance.trim() || 'Not noted'
     });
 
     // Reset form
@@ -52,9 +52,9 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
 
   const getCategoryLabel = (cat) => {
     const labels = {
-      body: 'גוף',
-      emotion: 'רגש',
-      mind: 'מחשבה'
+      body: 'Body',
+      emotion: 'Emotion',
+      mind: 'Mind'
     };
     return labels[cat];
   };
@@ -71,7 +71,7 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-foreground">צריך עזרה?</h2>
+          <h2 className="text-2xl font-semibold text-foreground">Need help?</h2>
           <button
             onClick={onClose}
             className="rounded-full hover:bg-muted text-muted-foreground hover:text-foreground h-10 w-10 p-0 flex items-center justify-center transition-all"
@@ -84,21 +84,21 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="block text-base font-medium text-foreground mb-2">
-              שם פרטי
+              Your Name
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full rounded-2xl border border-border bg-white/50 px-4 py-3 text-base focus:ring-2 focus:ring-ring focus:border-transparent transition-all placeholder:text-muted-foreground/50"
-              placeholder="לדוגמה: דוד"
+              placeholder="e.g., David"
               data-testid="name-input"
             />
           </div>
 
           <div>
             <label className="block text-base font-medium text-foreground mb-2">
-              סוג עזרה
+              Help type
             </label>
             <select
               value={formData.category}
@@ -106,22 +106,22 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
               className="w-full rounded-2xl border border-border bg-white/50 px-4 py-3 text-base focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
               data-testid="category-select"
             >
-              <option value="body">גוף</option>
-              <option value="emotion">רגש</option>
-              <option value="mind">מחשבה</option>
+              <option value="body">Body</option>
+              <option value="emotion">Emotion</option>
+              <option value="mind">Mind</option>
             </select>
           </div>
 
           <div>
             <label className="block text-base font-medium text-foreground mb-2">
-              תיאור קצר
+              Description short
             </label>
             <input
               type="text"
               value={formData.need}
               onChange={(e) => setFormData({ ...formData, need: e.target.value })}
               className="w-full rounded-2xl border border-border bg-white/50 px-4 py-3 text-base focus:ring-2 focus:ring-ring focus:border-transparent transition-all placeholder:text-muted-foreground/50"
-              placeholder="לדוגמה: ליווי להליכה בפארק"
+              placeholder="e.g., Help with a walk in the park"
               maxLength="50"
               data-testid="description-input"
             />
@@ -130,7 +130,7 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-base font-medium text-foreground mb-2">
-                זמן משוער (דקות)
+                Estimated time (minutes)
               </label>
               <input
                 type="number"
@@ -146,14 +146,14 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
 
             <div>
               <label className="block text-base font-medium text-foreground mb-2">
-                מרחק (אופציונלי)
+                Distance (optional)
               </label>
               <input
                 type="text"
                 value={formData.distance}
                 onChange={(e) => setFormData({ ...formData, distance: e.target.value })}
                 className="w-full rounded-2xl border border-border bg-white/50 px-4 py-3 text-base focus:ring-2 focus:ring-ring focus:border-transparent transition-all placeholder:text-muted-foreground/50"
-                placeholder='0.5 ק"מ'
+                placeholder='0.5 km'
                 data-testid="distance-input"
               />
             </div>
@@ -171,7 +171,7 @@ export default function CreateRequestModal({ isOpen, onClose, onSubmit }) {
             data-testid="submit-request-button"
           >
             <Send className="w-5 h-5" />
-            <span>שלח בקשה</span>
+            <span>Submit request</span>
           </button>
         </form>
       </div>

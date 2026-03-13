@@ -34,14 +34,14 @@ export default function MissionsSection({ userId }) {
   if (loading) return null;
 
   return (
-    <section className="philos-section bg-white border-border" dir="rtl" data-testid="missions-section">
+    <section className="philos-section bg-white border-border" data-testid="missions-section">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
           <Target className="w-5 h-5 text-indigo-600" />
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-800">משימות שדה</span>
-          <p className="text-[10px] text-gray-400">הצטרף למאמץ הקולקטיבי</p>
+          <span className="text-sm font-semibold text-gray-800">Field Missions</span>
+          <p className="text-[10px] text-gray-400">Join the collective effort</p>
         </div>
       </div>
 
@@ -54,7 +54,7 @@ export default function MissionsSection({ userId }) {
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold" style={{ color }}>{m.title_he}</span>
-                  {m.is_today && <span className="text-[8px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">פעיל היום</span>}
+                  {m.is_today && <span className="text-[8px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Active Today</span>}
                 </div>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${color}15`, color }}>{m.direction_he}</span>
               </div>
@@ -69,9 +69,9 @@ export default function MissionsSection({ userId }) {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Zap className="w-2.5 h-2.5" /> השפעה: +{m.total_field_impact.toLocaleString()}</span>
+                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Zap className="w-2.5 h-2.5" /> Impact: +{m.total_field_impact.toLocaleString()}</span>
                 <button onClick={() => handleJoin(m)} disabled={!!joining} className="text-[10px] font-medium flex items-center gap-0.5 hover:opacity-80 transition-opacity" style={{ color }} data-testid={`join-mission-${m.id}`}>
-                  {joining === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><ChevronLeft className="w-3 h-3" />הצטרף</>}
+                  {joining === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><ChevronLeft className="w-3 h-3" />Join</>}
                 </button>
               </div>
             </div>

@@ -5,25 +5,25 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 // Direction configuration
 const directionConfig = {
   contribution: { 
-    label: 'תרומה', 
+    label: 'Contribution', 
     color: '#22c55e', 
     bgClass: 'bg-green-500',
     lightBg: 'bg-green-100'
   },
   recovery: { 
-    label: 'התאוששות', 
+    label: 'Recovery', 
     color: '#3b82f6', 
     bgClass: 'bg-blue-500',
     lightBg: 'bg-blue-100'
   },
   order: { 
-    label: 'סדר', 
+    label: 'Order', 
     color: '#6366f1', 
     bgClass: 'bg-indigo-500',
     lightBg: 'bg-indigo-100'
   },
   exploration: { 
-    label: 'חקירה', 
+    label: 'Exploration', 
     color: '#f59e0b', 
     bgClass: 'bg-amber-500',
     lightBg: 'bg-amber-100'
@@ -62,7 +62,7 @@ export default function OrientationFieldToday() {
 
   if (loading && !fieldData) {
     return (
-      <section className="bg-white rounded-3xl p-5 shadow-sm border border-border animate-pulse" dir="rtl">
+      <section className="bg-white rounded-3xl p-5 shadow-sm border border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
         <div className="space-y-3">
           {[1, 2, 3, 4].map(i => (
@@ -80,7 +80,6 @@ export default function OrientationFieldToday() {
   return (
     <section 
       className="bg-white rounded-3xl p-5 shadow-sm border border-border"
-      dir="rtl"
       data-testid="orientation-field-today"
     >
       {/* Header */}
@@ -92,11 +91,11 @@ export default function OrientationFieldToday() {
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-800">שדה ההתמצאות היום</h3>
+            <h3 className="text-sm font-semibold text-gray-800">Orientation Field Today</h3>
             <p className="text-[10px] text-gray-500">
               {fieldData.active_users > 0 
-                ? `${fieldData.active_users} משתמשים פעילים · ${fieldData.total_actions} פעולות`
-                : 'מבוסס על נתונים היסטוריים'}
+                ? `${fieldData.active_users} users active · ${fieldData.total_actions} actions`
+                : 'Based on historical data'}
             </p>
           </div>
         </div>
@@ -123,7 +122,7 @@ export default function OrientationFieldToday() {
                   </span>
                   {isDominant && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700">
-                      מוביל
+                      Leading
                     </span>
                   )}
                 </div>

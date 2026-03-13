@@ -33,7 +33,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       setShowSummary(false);
     } catch (error) {
       console.error('Error fetching request:', error);
-      alert('שגיאה בטעינת בקשות. נסה שוב.');
+      alert('Error loading requests. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
         
         if (!result.success) {
           // Someone else already accepted it
-          alert('מישהו כבר קיבל את הבקשה');
+          alert('Someone already accepted this request');
           // Go back to category selection
           handleNewRequest();
           return;
@@ -66,7 +66,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       });
     } catch (error) {
       console.error('Error accepting request:', error);
-      alert('שגיאה בקבלת הבקשה. נסה שוב.');
+      alert('Error accepting request. Please try again.');
     }
   };
 
@@ -78,7 +78,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
         
         if (!result.success) {
           // Status is not 'accepted' - cannot start timer
-          alert('אי אפשר להתחיל — הבקשה לא התקבלה');
+          alert('Cannot start — the request was not accepted');
           // Return to home
           handleNewRequest();
           return;
@@ -88,7 +88,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       }
     } catch (error) {
       console.error('Error updating to in_progress:', error);
-      alert('שגיאה בהתחלת הטיימר. נסה שוב.');
+      alert('Error starting timer. Please try again.');
       handleNewRequest();
     }
   };
@@ -101,7 +101,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
         
         if (!result.success) {
           // Status is not 'in_progress' - cannot finish
-          alert('אי אפשר לסיים — הפעולה לא התחילה');
+          alert('Cannot finish — the action was not started');
           handleNewRequest();
           return;
         }
@@ -120,7 +120,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       setShowSummary(true);
     } catch (error) {
       console.error('Error completing request:', error);
-      alert('שגיאה בסיום הבקשה. נסה שוב.');
+      alert('Error completing request. Please try again.');
     }
   };
 
@@ -133,7 +133,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
 
   const handleBack = () => {
     if (timerActive) {
-      const confirmed = window.confirm('האם אתה בטוח? ההתקדמות תישמר כהתחלתי');
+      const confirmed = window.confirm('Are you sure? Progress will be saved as started');
       if (!confirmed) return;
     }
     handleNewRequest();
@@ -145,7 +145,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       const hasActive = await hasActiveRequest(formData.name);
       
       if (hasActive) {
-        alert(`${formData.name} כבר יש בקשה פעילה. נא להמתין עד שמישהו יעזור לך.`);
+        alert(`${formData.name} already has an active request. Please wait until someone helps.`);
         return;
       }
 
@@ -155,14 +155,14 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
       
       // Show success message with pilot info
       alert(
-        'הבקשה נשלחה בהצלחה!\n\n' +
-        'זו גרסת פיילוט קהילתית.\n' +
-        'ייתכן שלא יימצא עוזר באופן מיידי.\n' +
-        'הסטטוס יתעדכן כאן ברגע שמישהו יקבל את הבקשה.'
+        'Request submitted successfully!\n\n' +
+        'This is a community pilot version.\n' +
+        'A helper may not be available immediately.\n' +
+        'Status will update here once someone accepts the request.'
       );
     } catch (error) {
       console.error('Error creating request:', error);
-      alert('שגיאה ביצירת הבקשה. נסה שוב.');
+      alert('Error creating request. Please try again.');
     }
   };
 
@@ -176,10 +176,10 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
         <>
           <div className="text-center mb-6">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-none text-foreground mb-3">
-              עזרה לקהילה
+              Community Help
             </h1>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-              בחר תחום לעזרה היום
+              Choose a category to help today
             </p>
           </div>
           
@@ -195,7 +195,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
             data-testid="open-create-request-button"
           >
             <HandHeart className="w-6 h-6" />
-            <span>צריך עזרה?</span>
+            <span>Need help?</span>
           </button>
         </>
       )}
@@ -216,14 +216,14 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
             >
               <ChevronRight className="w-6 h-6" />
             </button>
-            <h2 className="text-2xl font-semibold text-foreground">בקשת עזרה</h2>
+            <h2 className="text-2xl font-semibold text-foreground">Help Request</h2>
           </div>
           {currentRequest ? (
             <RequestCard request={currentRequest} onAccept={handleAcceptRequest} />
           ) : (
             <div className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg rounded-[2rem] p-8 text-center">
-              <p className="text-lg text-muted-foreground mb-2">אין בקשות זמינות בתחום זה</p>
-              <p className="text-sm text-muted-foreground/70">נסה תחום אחר או חזור מאוחר יותר</p>
+              <p className="text-lg text-muted-foreground mb-2">No requests available in this category</p>
+              <p className="text-sm text-muted-foreground/70">Try another category or come back later</p>
             </div>
           )}
         </>
@@ -239,7 +239,7 @@ export default function HomePage({ todayRequests, onSaveRequest }) {
             >
               <ChevronRight className="w-6 h-6" />
             </button>
-            <h2 className="text-2xl font-semibold text-foreground">עוזר עכשיו</h2>
+            <h2 className="text-2xl font-semibold text-foreground">Helping Now</h2>
           </div>
           <Timer request={currentRequest} onFinish={handleFinishRequest} onMount={onTimerMount} />
         </>

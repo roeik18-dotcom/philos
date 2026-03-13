@@ -8,24 +8,24 @@ import {
 
 // Pattern descriptions in Hebrew
 const patternDescriptions = {
-  contribution: 'מומנטום חיובי של תרומה',
-  recovery: 'איזון של התאוששות',
-  order: 'מיקוד בסדר וארגון',
-  harm: 'דפוס של לחץ ונזק',
-  avoidance: 'דפוס של הימנעות',
-  balanced: 'מערכת מאוזנת',
-  none: 'אין נתונים'
+  contribution: 'Positive contribution momentum',
+  recovery: 'Recovery balance',
+  order: 'Focus on order and organization',
+  harm: 'Pattern of pressure and harm',
+  avoidance: 'Pattern of avoidance',
+  balanced: 'Balanced system',
+  none: 'No data'
 };
 
 // Recommended actions by pattern
 const recommendedActions = {
-  harm: { direction: 'recovery', action: 'לבצע פעולת התאוששות קטנה' },
-  avoidance: { direction: 'order', action: 'לבחור פעולה קטנה של סדר' },
-  contribution: { direction: 'contribution', action: 'להמשיך במומנטום החיובי' },
-  recovery: { direction: 'order', action: 'להוסיף מעט סדר להתאוששות' },
-  order: { direction: 'contribution', action: 'לפתוח לכיוון של תרומה' },
-  balanced: { direction: 'contribution', action: 'לבצע פעולה קטנה של תרומה' },
-  none: { direction: 'recovery', action: 'להתחיל עם פעולת התאוששות' }
+  harm: { direction: 'recovery', action: 'Perform a small recovery action' },
+  avoidance: { direction: 'order', action: 'Choose a small order action' },
+  contribution: { direction: 'contribution', action: 'Continue with the positive momentum' },
+  recovery: { direction: 'order', action: 'Add a bit of order to recovery' },
+  order: { direction: 'contribution', action: 'Open up to a contribution direction' },
+  balanced: { direction: 'contribution', action: 'Perform a small act of contribution' },
+  none: { direction: 'recovery', action: 'Start with a recovery action' }
 };
 
 // Direction colors
@@ -191,7 +191,6 @@ export default function DailyOrientationLoopSection({ history, onStartDay }) {
   return (
     <section 
       className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-5 shadow-sm border border-amber-200"
-      dir="rtl"
       data-testid="daily-orientation-loop-section"
     >
       {/* Header */}
@@ -202,36 +201,36 @@ export default function DailyOrientationLoopSection({ history, onStartDay }) {
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">התמצאות יומית</h3>
-          <p className="text-xs text-amber-700">היום מתחיל מחזור חדש של החלטות.</p>
+          <h3 className="text-lg font-semibold text-foreground">Daily Orientation</h3>
+          <p className="text-xs text-amber-700">Today begins a new cycle of decisions.</p>
         </div>
       </div>
 
       {/* Yesterday's Pattern */}
       <div className="bg-white/60 rounded-xl p-4 mb-3">
-        <h4 className="text-sm font-medium text-muted-foreground mb-2">אתמול</h4>
+        <h4 className="text-sm font-medium text-muted-foreground mb-2">Yesterday</h4>
         <p className="text-base font-medium text-foreground" data-testid="yesterday-pattern">
           {yesterdayAnalysis.pattern === 'none' 
-            ? 'לא הייתה פעילות.' 
-            : `נראה ${patternDescriptions[yesterdayAnalysis.pattern]}.`}
+            ? 'There was no activity.' 
+            : `appears ${patternDescriptions[yesterdayAnalysis.pattern]}.`}
         </p>
         {yesterdayAnalysis.count > 0 && (
           <p className="text-xs text-muted-foreground mt-1">
-            {yesterdayAnalysis.count} החלטות
+            {yesterdayAnalysis.count} decisions
           </p>
         )}
       </div>
 
       {/* Today's Recommendation */}
       <div className={`${colors.bg} rounded-xl p-4 mb-4 border ${colors.border}`}>
-        <h4 className="text-sm font-medium text-muted-foreground mb-2">היום</h4>
+        <h4 className="text-sm font-medium text-muted-foreground mb-2">Today</h4>
         <div className="flex items-center gap-2 mb-2">
           <span className={`text-xs px-2 py-1 rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}>
             {valueLabels[todayRecommendation.direction]}
           </span>
         </div>
         <p className={`text-base font-medium ${colors.text}`} data-testid="today-recommendation">
-          מומלץ {todayRecommendation.action}.
+          Recommended {todayRecommendation.action}.
         </p>
       </div>
 
@@ -245,12 +244,12 @@ export default function DailyOrientationLoopSection({ history, onStartDay }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span>התחל את היום</span>
+        <span>Start your day</span>
       </button>
 
       {/* Footer */}
       <p className="text-xs text-muted-foreground mt-3 text-center">
-        ההתמצאות היומית עוזרת ליצור מחזור התנהגותי חיובי
+        Daily orientation helps create a positive behavioral cycle
       </p>
     </section>
   );

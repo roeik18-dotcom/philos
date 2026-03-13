@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 
 // Hebrew labels for value tags
 const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  harm: 'נזק',
-  avoidance: 'הימנעות',
-  neutral: 'ניטרלי'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  harm: 'Harm',
+  avoidance: 'Avoidance',
+  neutral: 'Neutral'
 };
 
 // Color mapping for value tags
@@ -60,9 +60,9 @@ const calculateMatchQuality = (predicted, actual) => {
   // Calculate percentage
   const matchPercentage = (matchScore / totalChecks) * 100;
 
-  if (matchPercentage >= 70) return { quality: 'high', label: 'גבוהה', color: 'text-green-600', bg: 'bg-green-100' };
-  if (matchPercentage >= 40) return { quality: 'medium', label: 'בינונית', color: 'text-yellow-600', bg: 'bg-yellow-100' };
-  return { quality: 'low', label: 'נמוכה', color: 'text-red-600', bg: 'bg-red-100' };
+  if (matchPercentage >= 70) return { quality: 'high', label: 'High', color: 'text-green-600', bg: 'bg-green-100' };
+  if (matchPercentage >= 40) return { quality: 'medium', label: 'Moderate', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+  return { quality: 'low', label: 'Low', color: 'text-red-600', bg: 'bg-red-100' };
 };
 
 // Generate insight text in Hebrew
@@ -71,41 +71,41 @@ const generateInsight = (predicted, actual, matchQuality) => {
   
   // Value tag insight
   if (predicted.predicted_value_tag === actual.value_tag) {
-    insights.push(`המסלול שנבחר אכן הוביל ל${valueLabels[actual.value_tag]}.`);
+    insights.push(`The chosen path did lead to ${valueLabels[actual.value_tag]}.`);
   } else {
-    insights.push(`התחזית הייתה ${valueLabels[predicted.predicted_value_tag]}, אך התוצאה הייתה ${valueLabels[actual.value_tag]}.`);
+    insights.push(`The prediction was ${valueLabels[predicted.predicted_value_tag]}, but the result was ${valueLabels[actual.value_tag]}.`);
   }
 
   // Order drift insight
   if (predicted.predicted_order_drift > 0 && actual.orderDrift > 0) {
-    insights.push('סחף הסדר עלה כמצופה.');
+    insights.push('Order drift increased as expected.');
   } else if (predicted.predicted_order_drift < 0 && actual.orderDrift < 0) {
-    insights.push('סחף הסדר ירד כמצופה.');
+    insights.push('Order drift decreased as expected.');
   } else if (Math.sign(predicted.predicted_order_drift) !== Math.sign(actual.orderDrift) && actual.orderDrift !== 0) {
-    insights.push('סחף הסדר התנהג אחרת מהתחזית.');
+    insights.push('Order drift behaved differently from the prediction.');
   }
 
   // Collective drift insight
   if (predicted.predicted_collective_drift > 0 && actual.collectiveDrift > 0) {
-    insights.push('התרומה החברתית עלתה כמצופה.');
+    insights.push('Social contribution increased as expected.');
   } else if (predicted.predicted_collective_drift !== 0 && actual.collectiveDrift === 0) {
-    insights.push('השפעה חברתית לא התממשה.');
+    insights.push('Social impact was not realized.');
   }
 
   // Harm pressure insight
   if (predicted.predicted_harm_pressure < 0 && actual.harmPressure < 0) {
-    insights.push('לחץ הנזק ירד - תוצאה חיובית!');
+    insights.push('Harm pressure decreased — positive result!');
   } else if (predicted.predicted_harm_pressure < 0 && actual.harmPressure > 0) {
-    insights.push('לחץ הנזק עלה למרות התחזית.');
+    insights.push('Harm pressure increased despite the prediction.');
   }
 
   // Overall summary based on match quality
   if (matchQuality.quality === 'high') {
-    insights.push('התחזית הייתה מדויקת ברובה.');
+    insights.push('The prediction was mostly accurate.');
   } else if (matchQuality.quality === 'medium') {
-    insights.push('התחזית הייתה חלקית בלבד.');
+    insights.push('The prediction was only partial.');
   } else {
-    insights.push('התחזית לא התאימה לתוצאה בפועל.');
+    insights.push('The prediction did not match the actual result.');
   }
 
   return insights.slice(0, 3);
@@ -148,24 +148,23 @@ export default function PathLearningSection({ selectedPath, actualOutcome }) {
     <section 
       className="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-3xl p-5 shadow-sm border border-cyan-200"
       data-testid="path-learning-section"
-      dir="rtl"
     >
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">למידת מסלולים</h3>
-          <p className="text-xs text-muted-foreground">השוואה בין תחזית לתוצאה בפועל</p>
+          <h3 className="text-lg font-semibold text-foreground">Path Learning</h3>
+          <p className="text-xs text-muted-foreground">Comparison between prediction and actual result</p>
         </div>
         <div className={`px-3 py-1 rounded-full text-sm font-bold ${matchQuality.bg} ${matchQuality.color}`}>
-          התאמה: {matchQuality.label}
+          Match: {matchQuality.label}
         </div>
       </div>
 
       {/* Selected Path Info */}
       <div className="bg-white/70 rounded-xl p-4 mb-4">
-        <p className="text-sm font-medium text-muted-foreground mb-2">מסלול שנבחר:</p>
+        <p className="text-sm font-medium text-muted-foreground mb-2">Chosen path:</p>
         <p className="text-lg font-semibold text-foreground">{selectedPath.suggested_action}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          נבחר ב-{new Date(selectedPath.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+          Chosen at {new Date(selectedPath.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
 
@@ -173,7 +172,7 @@ export default function PathLearningSection({ selectedPath, actualOutcome }) {
       <div className="grid grid-cols-2 gap-4 mb-4">
         {/* Predicted Column */}
         <div className="bg-white/70 rounded-xl p-4">
-          <p className="text-sm font-semibold text-foreground mb-3 text-center border-b pb-2">תחזית</p>
+          <p className="text-sm font-semibold text-foreground mb-3 text-center border-b pb-2">Prediction</p>
           
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -215,7 +214,7 @@ export default function PathLearningSection({ selectedPath, actualOutcome }) {
 
         {/* Actual Column */}
         <div className="bg-white/70 rounded-xl p-4">
-          <p className="text-sm font-semibold text-foreground mb-3 text-center border-b pb-2">תוצאה בפועל</p>
+          <p className="text-sm font-semibold text-foreground mb-3 text-center border-b pb-2">Actual Result</p>
           
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -259,7 +258,7 @@ export default function PathLearningSection({ selectedPath, actualOutcome }) {
       {/* Match Indicators */}
       <div className="bg-white/70 rounded-xl p-3 mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">איכות התאמה:</span>
+          <span className="text-xs text-muted-foreground">Match quality:</span>
           <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
             <div 
               className={`h-full rounded-full transition-all ${
@@ -277,7 +276,7 @@ export default function PathLearningSection({ selectedPath, actualOutcome }) {
 
       {/* Insights */}
       <div className="bg-cyan-100/50 border border-cyan-200 rounded-xl p-4">
-        <p className="text-sm font-semibold text-cyan-800 mb-2">תובנות:</p>
+        <p className="text-sm font-semibold text-cyan-800 mb-2">Insights:</p>
         <div className="space-y-1">
           {insights.map((insight, idx) => (
             <p key={idx} className="text-sm text-cyan-700">• {insight}</p>

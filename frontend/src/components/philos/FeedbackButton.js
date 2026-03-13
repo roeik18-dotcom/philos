@@ -49,19 +49,18 @@ export default function FeedbackButton({ userId, currentTab }) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 backdrop-blur-sm p-4" onClick={() => setOpen(false)}>
           <div
             className="bg-white rounded-2xl shadow-2xl p-5 w-full max-w-sm"
-            dir="rtl"
             onClick={e => e.stopPropagation()}
             data-testid="feedback-modal"
           >
             {sent ? (
               <div className="text-center py-6" data-testid="feedback-success">
-                <p className="text-lg font-bold text-green-600 mb-1">תודה!</p>
-                <p className="text-xs text-gray-400">המשוב שלך התקבל</p>
+                <p className="text-lg font-bold text-green-600 mb-1">Thank you!</p>
+                <p className="text-xs text-gray-400">Your feedback was received</p>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-gray-800">שלח משוב</h3>
+                  <h3 className="text-sm font-bold text-gray-800">Send Feedback</h3>
                   <button onClick={() => setOpen(false)} className="text-gray-300 hover:text-gray-500" data-testid="feedback-close">
                     <X className="w-4 h-4" />
                   </button>
@@ -70,9 +69,9 @@ export default function FeedbackButton({ userId, currentTab }) {
                 {/* Type selector */}
                 <div className="flex gap-2 mb-3" data-testid="feedback-type-selector">
                   {[
-                    { id: 'confusion', label: 'בלבול', color: 'orange' },
-                    { id: 'improvement', label: 'הצעת שיפור', color: 'blue' },
-                    { id: 'bug', label: 'באג', color: 'red' }
+                    { id: 'confusion', label: 'Confusion', color: 'orange' },
+                    { id: 'improvement', label: 'Suggestion', color: 'blue' },
+                    { id: 'bug', label: 'Bug', color: 'red' }
                   ].map(t => (
                     <button
                       key={t.id}
@@ -98,7 +97,7 @@ export default function FeedbackButton({ userId, currentTab }) {
                 <textarea
                   value={text}
                   onChange={e => setText(e.target.value)}
-                  placeholder="ספר לנו מה קרה..."
+                  placeholder="Tell us what happened..."
                   className="w-full h-24 p-3 text-sm border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                   data-testid="feedback-text-input"
                 />
@@ -110,7 +109,7 @@ export default function FeedbackButton({ userId, currentTab }) {
                   className="w-full mt-3 py-2.5 bg-gray-900 text-white text-xs font-medium rounded-xl flex items-center justify-center gap-1.5 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   data-testid="feedback-submit-btn"
                 >
-                  {sending ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Send className="w-3 h-3" />שלח משוב</>}
+                  {sending ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Send className="w-3 h-3" />Send Feedback</>}
                 </button>
               </>
             )}

@@ -14,22 +14,22 @@ import { fetchCollectiveLayer } from './dataService';
 export const theoryBalancingPaths = {
   harm: {
     balancingDirection: 'recovery',
-    explanation: 'פעולות נזק דורשות איזון דרך התאוששות',
+    explanation: 'actions Harm requires balance through recovery',
     explanationEn: 'Harm actions require balancing through recovery'
   },
   avoidance: {
     balancingDirection: 'order',
-    explanation: 'הימנעות מאוזנת על ידי יצירת סדר ומבנה',
+    explanation: 'Avoidance balanced by creating order and structure',
     explanationEn: 'Avoidance is balanced by creating order and structure'
   },
   isolation: {
     balancingDirection: 'contribution',
-    explanation: 'מיקוד עצמי מאוזן על ידי תרומה לאחרים',
+    explanation: 'Self-focus balanced by contribution others',
     explanationEn: 'Self-focus is balanced by contributing to others'
   },
   rigidity: {
     balancingDirection: 'exploration',
-    explanation: 'קיפאון מאוזן על ידי פתיחות וחקירה',
+    explanation: 'Stagnation balanced by openness and exploration',
     explanationEn: 'Rigidity is balanced by openness and exploration'
   }
 };
@@ -42,22 +42,22 @@ export const positiveReinforcement = {
   recovery: {
     strengthen: 'recovery',
     adjacent: 'order',
-    explanation: 'להמשיך בהתאוששות או להוסיף סדר'
+    explanation: 'Continue with recovery or add order'
   },
   order: {
     strengthen: 'order',
     adjacent: 'contribution',
-    explanation: 'לחזק את הסדר או לפתוח לתרומה'
+    explanation: 'Strengthen order or open to contribution'
   },
   contribution: {
     strengthen: 'contribution',
     adjacent: 'exploration',
-    explanation: 'להמשיך בתרומה או לפתוח לחקירה'
+    explanation: 'Continue contribution or open to exploration'
   },
   exploration: {
     strengthen: 'exploration',
     adjacent: 'recovery',
-    explanation: 'להמשיך בחקירה או לאזן עם התאוששות'
+    explanation: 'Continue exploration or balance with recovery'
   }
 };
 
@@ -82,14 +82,14 @@ export const compassPositions = {
 
 // Hebrew value tag labels (extended for theory)
 export const valueLabels = {
-  contribution: 'תרומה',
-  recovery: 'התאוששות',
-  order: 'סדר',
-  exploration: 'חקירה',
-  harm: 'נזק',
-  avoidance: 'הימנעות',
-  isolation: 'בידוד',
-  rigidity: 'נוקשות'
+  contribution: 'Contribution',
+  recovery: 'Recovery',
+  order: 'Order',
+  exploration: 'Exploration',
+  harm: 'Harm',
+  avoidance: 'Avoidance',
+  isolation: 'Isolation',
+  rigidity: 'rigidity'
 };
 
 // Direction colors (shared across components)
@@ -105,34 +105,34 @@ export const directionColors = {
 // Action suggestions for each direction
 export const actionSuggestions = {
   contribution: [
-    'פעולה קטנה של עזרה למישהו',
-    'לשתף משהו שלמדת',
-    'להציע סיוע לחבר'
+    'A small act of helping someone',
+    'Share something you learned',
+    'Offer help to a friend'
   ],
   recovery: [
-    'הפסקה קצרה ומודעת',
-    'נשימות עמוקות לכמה דקות',
-    'לצאת להליכה קצרה'
+    'Short mindful break',
+    'Deep breathing for a few minutes',
+    'Go for a short walk'
   ],
   order: [
-    'פעולה קטנה של סדר',
-    'לארגן משהו קטן בסביבה',
-    'לסיים משימה פתוחה אחת'
+    'A small act of order',
+    'Organize something small in your environment',
+    'Finish one open task'
   ],
   exploration: [
-    'לנסות משהו חדש',
-    'לשאול שאלה פתוחה',
-    'לצאת מאזור הנוחות'
+    'Try something new',
+    'Ask an open question',
+    'Step out of your comfort zone'
   ],
   harm: [
-    'לעצור ולנשום לפני תגובה',
-    'לזהות את הרגש ולתת לו מקום',
-    'לבחור בתגובה מתונה'
+    'Stop and breathe before reacting',
+    'Identify the emotion and give it space',
+    'Choose a measured response'
   ],
   avoidance: [
-    'לבצע החלטה קטנה במקום דחייה',
-    'לקחת צעד ראשון קטן',
-    'להתמודד עם משהו אחד קטן'
+    'Make a small decision instead of postponing',
+    'Take a small first step',
+    'Deal with one small thing'
   ]
 };
 
@@ -173,7 +173,7 @@ export const getTheoryBasedRecommendation = (currentDirection) => {
   return {
     direction: 'recovery',
     reason: 'default',
-    explanation: 'התאוששות היא תמיד בחירה טובה',
+    explanation: 'Recovery is always a good choice',
     fromTheory: false
   };
 };
@@ -516,7 +516,7 @@ export const calculateCalibrationWeights = (history) => {
         insights.push({
           type: 'boost',
           direction: dir,
-          text: `מסלולי ${valueLabels[dir]} קיבלו חיזוק בעקבות התאמה גבוהה לתוצאות בפועל (${Math.round(alignmentRate * 100)}%)`,
+          text: `Paths of ${valueLabels[dir]} received reinforcement following high match to actual results (${Math.round(alignmentRate * 100)}%)`,
           priority: 'positive'
         });
       } else if (alignmentRate > 0.4) {
@@ -529,7 +529,7 @@ export const calculateCalibrationWeights = (history) => {
           insights.push({
             type: 'reduce',
             direction: dir,
-            text: `מסלולי ${valueLabels[dir]} מקבלים כרגע משקל נמוך יותר עקב פער בין המלצה לתוצאה (${Math.round(alignmentRate * 100)}% התאמה)`,
+            text: `Paths of ${valueLabels[dir]} currently receive lower weight due to gap between recommendation and result (${Math.round(alignmentRate * 100)}% match)`,
             priority: 'warning'
           });
         }
@@ -562,7 +562,7 @@ export const calculateCalibrationWeights = (history) => {
   if (hasSignificantCalibration && strongestDir && strongestDir !== weakestDir) {
     insights.push({
       type: 'summary',
-      text: `הכיול הנוכחי מעדיף ${valueLabels[strongestDir]} על פני ${valueLabels[weakestDir]}`,
+      text: `Current calibration favors ${valueLabels[strongestDir]} over ${valueLabels[weakestDir]}`,
       priority: 'info'
     });
   }
@@ -600,7 +600,7 @@ export const calculateRecommendation = ({ history }) => {
       direction: 'recovery',
       reason: 'no_history',
       strength: 50,
-      insight: 'אין מספיק נתונים. מומלץ להתחיל עם התאוששות.',
+      insight: 'Not enough data. Recommended to start with recovery.',
       actionSuggestion: actionSuggestions.recovery[0],
       fromTheory: true,
       theoryPath: null,
@@ -648,15 +648,15 @@ export const calculateRecommendation = ({ history }) => {
       theoryCategory = 'harm';
       recommendedDirection = 'recovery';
       reason = 'theory_balancing';
-      insight = 'פעולות נזק דורשות איזון דרך התאוששות.';
-      theoryPath = 'נזק → התאוששות';
+      insight = 'actions Harm requires balance through recovery.';
+      theoryPath = 'Harm → Recovery';
       strength = 80;
     } else if (lastTag === 'avoidance') {
       theoryCategory = 'avoidance';
       recommendedDirection = 'order';
       reason = 'theory_balancing';
-      insight = 'הימנעות מאוזנת על ידי יצירת סדר ומבנה.';
-      theoryPath = 'הימנעות → סדר';
+      insight = 'Avoidance balanced by creating order and structure.';
+      theoryPath = 'Avoidance → Order';
       strength = 80;
     }
   }
@@ -670,8 +670,8 @@ export const calculateRecommendation = ({ history }) => {
       theoryCategory = 'isolation';
       recommendedDirection = 'contribution';
       reason = 'theory_balancing';
-      insight = 'מיקוד עצמי מאוזן על ידי תרומה לאחרים.';
-      theoryPath = 'בידוד → תרומה';
+      insight = 'Self-focus balanced by contribution others.';
+      theoryPath = 'Isolation → Contribution';
       strength = 70;
     }
   }
@@ -686,8 +686,8 @@ export const calculateRecommendation = ({ history }) => {
       theoryCategory = 'rigidity';
       recommendedDirection = 'exploration';
       reason = 'theory_balancing';
-      insight = 'קיפאון מאוזן על ידי פתיחות וחקירה.';
-      theoryPath = 'נוקשות → חקירה';
+      insight = 'Stagnation balanced by openness and exploration.';
+      theoryPath = 'rigidity → exploration';
       strength = 70;
     }
   }
@@ -793,7 +793,7 @@ export const analyzeCurrentState = (history) => {
   if (!history || history.length === 0) {
     return {
       hasData: false,
-      summary: 'אין נתונים עדיין',
+      summary: 'No data yet',
       pattern: null,
       patternType: 'neutral',
       todayCount: 0,
@@ -828,30 +828,30 @@ export const analyzeCurrentState = (history) => {
     if (harmCount > avoidanceCount) {
       pattern = 'harm';
       patternType = 'negative';
-      summary = 'נראה דפוס של לחץ ונזק.';
+      summary = 'appears Pattern of pressure and harm.';
     } else {
       pattern = 'avoidance';
       patternType = 'negative';
-      summary = 'נראה דפוס של הימנעות.';
+      summary = 'appears Pattern of avoidance.';
     }
   } else if (positiveRatio > 0.6) {
     if (contributionCount >= recoveryCount && contributionCount >= orderCount) {
       pattern = 'contribution';
       patternType = 'positive';
-      summary = 'מומנטום חיובי של תרומה.';
+      summary = 'Positive contribution momentum.';
     } else if (recoveryCount >= orderCount) {
       pattern = 'recovery';
       patternType = 'positive';
-      summary = 'איזון טוב של התאוששות.';
+      summary = 'Good balance of recovery.';
     } else {
       pattern = 'order';
       patternType = 'positive';
-      summary = 'מיקוד בסדר וארגון.';
+      summary = 'Focus on order and organization.';
     }
   } else {
     pattern = 'balanced';
     patternType = 'neutral';
-    summary = 'המערכת מאוזנת.';
+    summary = 'The system is balanced.';
   }
 
   // Get last decision info

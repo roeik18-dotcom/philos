@@ -46,7 +46,7 @@ export default function FieldMissionSection({ missionContributed }) {
 
   if (loading) {
     return (
-      <section className="philos-section bg-white border-border animate-pulse" dir="rtl">
+      <section className="philos-section bg-white border-border animate-pulse">
         <div className="h-5 bg-gray-200 rounded w-1/3 mb-3"></div>
         <div className="h-3 bg-gray-200 rounded w-full mb-3"></div>
         <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -61,7 +61,6 @@ export default function FieldMissionSection({ missionContributed }) {
   return (
     <section
       className={`philos-section animate-section animate-section-2 ${style.border} bg-gradient-to-br ${style.bg}`}
-      dir="rtl"
       data-testid="field-mission-section"
     >
       {/* Header */}
@@ -97,10 +96,10 @@ export default function FieldMissionSection({ missionContributed }) {
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-1 text-gray-600" data-testid="mission-participants">
           <Users className="w-3.5 h-3.5" />
-          <span>{data.participants.toLocaleString('he-IL')} אנשים כבר השתתפו</span>
+          <span>{data.participants.toLocaleString('en-US')} people already participated</span>
         </div>
         <span className="text-gray-400" data-testid="mission-target">
-          יעד: {data.target.toLocaleString('he-IL')}
+          Target: {data.target.toLocaleString('en-US')}
         </span>
       </div>
 
@@ -110,7 +109,7 @@ export default function FieldMissionSection({ missionContributed }) {
           <div className="flex items-center justify-center gap-2">
             <PartyPopper className={`w-4 h-4 ${style.text}`} />
             <p className={`text-sm font-medium ${style.text}`}>
-              הפעולה שלך תרמה למשימת היום
+              Your action contributed to today's mission
             </p>
           </div>
         </div>
