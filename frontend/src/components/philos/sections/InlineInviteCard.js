@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Copy, Check, UserPlus } from 'lucide-react';
+import { track } from '../../../utils/track';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -47,6 +48,7 @@ export default function InlineInviteCard() {
       document.execCommand('copy'); document.body.removeChild(inp);
     }
     setCopied(true);
+    track('invite_copied', 'user', { code });
     fetch(`${API_URL}/api/invites/share`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

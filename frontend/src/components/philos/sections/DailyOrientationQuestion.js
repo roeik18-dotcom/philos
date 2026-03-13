@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Flame, Check, Sun, Loader2, TrendingUp, Target, User, UserPlus } from 'lucide-react';
 import SendToGlobeButton from './SendToGlobeButton';
+import { track } from '../../../utils/track';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -94,6 +95,7 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
           if (onActionRecorded) {
             onActionRecorded({ direction: questionData.suggested_direction, question_id: questionData.question_id, timestamp: new Date().toISOString(), mission_contributed: result.mission_contributed || false });
           }
+          track('question_answered', userId, { direction: questionData.suggested_direction });
           setTimeout(() => setShowSuccess(false), 8000);
         }
       }

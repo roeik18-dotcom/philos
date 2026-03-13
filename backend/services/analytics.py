@@ -69,3 +69,39 @@ async def get_event_log(limit: int = 50) -> list:
         {}, {"_id": 0}
     ).sort("timestamp", -1).limit(limit).to_list(limit)
     return events
+
+
+FUNNEL_STEPS = [
+    "landing_view",
+    "start_clicked",
+    "base_selected",
+    "question_answered",
+    "trust_shown",
+    "invite_copied",
+]
+
+
+async def get_funnel(days: int = 7) -> dict:
+    """Count unique users at each funnel step over the last N days."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    base_query = {"timestamp": {"$gte": cutoff}}
+
+    steps = []
+    for step in FUNNEL_STEPS:
+        count = len(await db.analytics_events.distinct(
+            "user_id", {**base_query, "event_type": step}
+        ))
+        steps.append({"step": step, "unique_users": count})
+
+    # Add drop-off percentages
+    for i, s in enumerate(steps):
+        if i == 0 or steps[0]["unique_users"] == 0:
+            s["pct_of_top"] = 100.0 if s["unique_users"] > 0 else 0.0
+        else:
+            s["pct_of_top"] = round(s["unique_users"] / steps[0]["unique_users"] * 100, 1)
+        if i > 0 and steps[i - 1]["unique_users"] > 0:
+            s["pct_of_prev"] = round(s["unique_users"] / steps[i - 1]["unique_users"] * 100, 1)
+        else:
+            s["pct_of_prev"] = None
+
+    return {"steps": steps, "period_days": days}

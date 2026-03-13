@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Globe, Zap, Loader2, Check } from 'lucide-react';
+import { track } from '../../utils/track';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const ONBOARDING_KEY = 'philos_onboarding_complete';
@@ -21,7 +22,10 @@ export default function OnboardingHint({ onComplete }) {
 
   useEffect(() => {
     const completed = localStorage.getItem(ONBOARDING_KEY);
-    if (!completed) setShowHint(true);
+    if (!completed) {
+      setShowHint(true);
+      track('landing_view', 'anonymous');
+    }
   }, []);
 
   const handleComplete = () => {
@@ -77,7 +81,7 @@ export default function OnboardingHint({ onComplete }) {
             <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight" dir="ltr" data-testid="onboarding-title">Measure your trust.</h2>
             <p className="text-sm text-gray-400 mb-8" dir="ltr">Answer one question. See your trust state.</p>
             <button
-              onClick={() => setStep(1)}
+              onClick={() => { track('start_clicked', 'anonymous'); setStep(1); }}
               className="w-full py-3.5 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 transition-colors active:scale-[0.97]"
               data-testid="onboarding-next"
             >

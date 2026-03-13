@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Shield, ArrowUpRight } from 'lucide-react';
+import { track } from '../../../utils/track';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -10,7 +11,7 @@ export default function TrustChangeCard({ userId }) {
     if (!userId) return;
     fetch(`${API_URL}/api/user/${userId}/trust`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setTrust(d); })
+      .then(d => { if (d) { setTrust(d); track('trust_shown', userId, { score: d.trust_score }); } })
       .catch(() => {});
   }, [userId]);
 

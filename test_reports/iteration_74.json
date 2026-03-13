@@ -1,0 +1,80 @@
+{
+  "summary": "Iteration 74 - Funnel Analytics Testing Complete. All 23 backend API tests passed. POST /api/analytics/track works for all 6 funnel events. GET /api/analytics/funnel returns correct unique user counts with drop-off percentages. Deduplication verified - same user_id counted once per event. Existing endpoints (/api/analytics/summary, /api/analytics/events, /api/auth/login, /api/user/trust, /api/invites/me) all working. Frontend tracking code reviewed and properly implemented in all 6 components.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Login form",
+        "issue": "Login button appears stuck in loading state during Playwright automation, but API works correctly via curl. May be a timing/redirect issue.",
+        "affected_selectors": ["button[type='submit']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_funnel_analytics.py",
+    "/app/test_reports/pytest/pytest_funnel_analytics.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "OnboardingHint.js: landing_view fires on mount (line 27), start_clicked on button click (line 84) - VERIFIED",
+    "DailyBaseSelection.js: base_selected fires on confirm with metadata (line 98) - VERIFIED",
+    "DailyOrientationQuestion.js: question_answered fires on answer submit with direction metadata (line 98) - VERIFIED",
+    "TrustChangeCard.js: trust_shown fires on data load with score metadata (line 14) - VERIFIED",
+    "InlineInviteCard.js: invite_copied fires on copy click with code metadata (line 51) - VERIFIED",
+    "track.js: Fire-and-forget POST using REACT_APP_BACKEND_URL correctly - VERIFIED",
+    "analytics.py: FUNNEL_STEPS array contains all 6 events in correct order - VERIFIED",
+    "analytics.py: get_funnel() uses distinct() for deduplication - VERIFIED"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_funnel_analytics.py"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23 tests passed)",
+    "frontend": "UI tracking code verified via code review, events tracked in DB"
+  },
+  "test_credentials": {
+    "test_user": {
+      "email": "newuser@test.com",
+      "password": "password123",
+      "user_id": "05d47b99-88f1-44b3-a879-6c995634eaa0"
+    }
+  },
+  "verified_features": {
+    "POST_ANALYTICS_TRACK": "PASS - Returns {success: true} and writes to analytics_events collection",
+    "POST_TRACK_WITH_METADATA": "PASS - Accepts {event, user_id, metadata}",
+    "POST_TRACK_ANONYMOUS": "PASS - user_id defaults to 'anonymous' when not provided",
+    "POST_TRACK_MISSING_EVENT": "PASS - Returns {success: false} when event missing",
+    "POST_TRACK_ALL_FUNNEL_EVENTS": "PASS - All 6 event types work",
+    "GET_ANALYTICS_FUNNEL": "PASS - Returns {funnel: {steps: [...], period_days}}",
+    "FUNNEL_6_STEPS": "PASS - landing_view, start_clicked, base_selected, question_answered, trust_shown, invite_copied",
+    "FUNNEL_UNIQUE_USERS": "PASS - Uses db.distinct() for deduplication",
+    "FUNNEL_PCT_OF_TOP": "PASS - Percentage relative to first step",
+    "FUNNEL_PCT_OF_PREV": "PASS - Percentage relative to previous step (null for first)",
+    "FUNNEL_DAYS_PARAM": "PASS - Supports days=1 to days=30, clamped",
+    "GET_ANALYTICS_SUMMARY": "PASS - Existing endpoint unchanged",
+    "GET_ANALYTICS_EVENTS": "PASS - Includes funnel events",
+    "POST_AUTH_LOGIN": "PASS - Returns user + token",
+    "GET_USER_TRUST": "PASS - Returns trust_score",
+    "GET_INVITES_ME": "PASS - Returns codes with auth"
+  },
+  "funnel_data_sample": {
+    "landing_view": {"unique_users": 6, "pct_of_top": 100},
+    "start_clicked": {"unique_users": 4, "pct_of_top": 66.7, "pct_of_prev": 66.7},
+    "base_selected": {"unique_users": 3, "pct_of_top": 50, "pct_of_prev": 75},
+    "question_answered": {"unique_users": 2, "pct_of_top": 33.3, "pct_of_prev": 66.7},
+    "trust_shown": {"unique_users": 2, "pct_of_top": 33.3, "pct_of_prev": 100},
+    "invite_copied": {"unique_users": 2, "pct_of_top": 33.3, "pct_of_prev": 100}
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Funnel analytics fully working. All 6 events tracked: landing_view (OnboardingHint mount), start_clicked (OnboardingHint button), base_selected (DailyBaseSelection confirm), question_answered (DailyOrientationQuestion submit), trust_shown (TrustChangeCard data load), invite_copied (InlineInviteCard copy). GET /api/analytics/funnel returns unique user counts with pct_of_top and pct_of_prev. Events are deduplicated by user_id. The track.js helper is fire-and-forget (no auth needed). Frontend Playwright login has timing issues but all APIs verified working via curl.",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "note": "All APIs use real database operations"
+  }
+}

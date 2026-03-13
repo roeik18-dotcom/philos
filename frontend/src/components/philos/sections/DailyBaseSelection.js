@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { track } from '../../../utils/track';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -94,6 +95,7 @@ export default function DailyBaseSelection({ userId, onBaseSelected }) {
             allocations_he: json.allocations_he
           }));
           onBaseSelected?.(selectedBase);
+          track('base_selected', userId, { base: selectedBase });
         }
       }
     } catch (e) {}
