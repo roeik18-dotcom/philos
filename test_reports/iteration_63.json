@@ -1,0 +1,104 @@
+{
+  "summary": "Trust Integration to Product Flows testing complete. Backend: 16/16 tests PASSED. Frontend: Profile page verified with field-trust-block, ai-profile-interpretation, and trust values (value=51.3, risk=5.8, state=יציב). Daily orientation, globe points, mission joins, and onboarding actions all create trust events correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_trust_integration_product_flows.py",
+    "/app/test_reports/pytest/pytest_trust_integration_flows.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "trust_integration.py correctly implements mapping rules: daily_action(direction-based, impact=3+streak*0.5 capped at 15, auth=1.0), globe_point(contribute, impact=3, auth=0.8), mission_join(contribute, impact=5, auth=0.9), onboarding(direction-mapped, impact=2, auth=0.7)",
+    "on_daily_action called at orientation.py:1619 after daily answer with action_taken=true",
+    "on_globe_point called at orientation.py:3536 after globe point added",
+    "on_mission_joined called at social.py:313 after mission join",
+    "on_onboarding_action called at admin.py:165 after first action",
+    "on_invite_used called at auth.py:94 when invite code redeemed during registration",
+    "No risk signals mapped yet (as expected per problem statement)",
+    "Trust values properly accumulate across multiple actions"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_trust_integration_product_flows.py"
+  ],
+  "success_rate": {
+    "backend": "100% (16/16 tests passed)",
+    "frontend": "100% (profile page with trust elements verified)"
+  },
+  "test_credentials": {
+    "main_test_user": {
+      "email": "newuser@test.com",
+      "password": "password123",
+      "user_id": "05d47b99-88f1-44b3-a879-6c995634eaa0"
+    }
+  },
+  "seed_data_creation": "Used existing test user from previous iterations",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Trust integration to product flows verified. Daily action flow creates trust events (POST daily-base -> GET daily-question -> POST daily-answer with action_taken=true). Globe points (POST /api/orientation/globe-point) and mission joins (POST /api/orientation/missions/join) and onboarding actions (POST /api/onboarding/first-action) all increase total_actions and value_score in GET /api/user/{user_id}/trust. Profile page at /profile/{user_id} displays field-trust-block with value/risk/state and ai-profile-interpretation. API fields: value_score (not total_value), risk_score, trust_score, total_actions.",
+  "verified_trust_integration_flows": {
+    "daily_action_flow": {
+      "steps": ["POST /api/orientation/daily-base/{user_id}", "GET /api/orientation/daily-question/{user_id}", "POST /api/orientation/daily-answer/{user_id} with action_taken=true"],
+      "trust_integration": "on_daily_action called at orientation.py:1619",
+      "mapping": "action_type from direction, impact=3+streak*0.5 (max 15), auth=1.0",
+      "status": "WORKING"
+    },
+    "globe_point": {
+      "endpoint": "POST /api/orientation/globe-point",
+      "trust_integration": "on_globe_point called at orientation.py:3536",
+      "mapping": "action_type='contribute', impact=3, auth=0.8",
+      "status": "WORKING"
+    },
+    "mission_join": {
+      "endpoint": "POST /api/orientation/missions/join",
+      "trust_integration": "on_mission_joined called at social.py:313",
+      "mapping": "action_type='contribute', impact=5, auth=0.9",
+      "status": "WORKING"
+    },
+    "onboarding_first_action": {
+      "endpoint": "POST /api/onboarding/first-action",
+      "trust_integration": "on_onboarding_action called at admin.py:165",
+      "mapping": "action_type from direction, impact=2, auth=0.7",
+      "status": "WORKING"
+    },
+    "invite_used": {
+      "trigger": "During registration with invite_code",
+      "trust_integration": "on_invite_used called at auth.py:94",
+      "mapping": "action_type='contribute', impact=8, auth=0.9 (credits inviter)",
+      "status": "NOT_TESTED (requires new user registration)"
+    }
+  },
+  "existing_endpoints_verified": [
+    "GET /api/orientation/field-dashboard (returns ai_field_interpretation)",
+    "GET /api/collective/layer",
+    "GET /api/collective/trends",
+    "GET /api/orientation/field-today",
+    "GET /api/memory/stats",
+    "GET /api/profile/{user_id}/record (returns field_trust and ai_profile_interpretation)"
+  ],
+  "manual_trust_endpoints_verified": [
+    "GET /api/user/{user_id}/trust - returns value_score, risk_score, trust_score, total_actions",
+    "POST /api/actions - requires auth, creates manual trust action",
+    "POST /api/risk-signal - creates risk signal (valid signal_types: aggression, deception, disruption, manipulation, spam)"
+  ],
+  "frontend_verified_elements": {
+    "profile_page": "[data-testid='profile-page'] FOUND",
+    "field_trust_block": "[data-testid='field-trust-block'] FOUND",
+    "ai_profile_interpretation": "[data-testid='ai-profile-interpretation'] FOUND",
+    "trust_values_displayed": {
+      "value": "51.3",
+      "risk": "5.8",
+      "state": "יציב (stable)"
+    }
+  },
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "note": "All trust integration flows use real database and real AI interpretation"
+  }
+}

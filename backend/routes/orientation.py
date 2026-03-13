@@ -15,9 +15,10 @@ from constants import (
     DIRECTION_THEORY, GLOBE_COUNTRY_COORDS, GLOBE_COLOR_MAP, GLOBE_DIR_LABELS,
     BASE_DEFINITIONS, DIRECTION_TO_DEPT, DEPT_LABELS_HE,
     MISSION_DESCRIPTIONS, MISSION_TARGET, MAX_INVITE_CODES,
-    ANONYMOUS_ALIASES, DIRECTIONS
+    ANONYMOUS_ALIASES, DIRECTIONS, VALUE_NICHES
 )
 from services.helpers import _get_or_create_mission_today
+from services.trust_integration import on_daily_action, on_globe_point
 from philos_ai import interpret_action, interpret_field, interpret_profile
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
@@ -1612,6 +1613,10 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
                         "inviter_alias": ANONYMOUS_ALIASES[inviter_alias_idx],
                         "message_he": f"הפעולה הראשונה שלך העניקה נקודת ערך ל{ANONYMOUS_ALIASES[inviter_alias_idx]}"
                     }
+
+        # === TRUST INTEGRATION: Record value event for daily action ===
+        if request.action_taken:
+            await on_daily_action(user_id, suggested_direction, streak)
 
         return {
             'success': True,
@@ -3525,6 +3530,10 @@ async def add_globe_point(data: dict):
             "timestamp": now
         }
         await db.user_globe_points.insert_one(doc)
+
+        # === TRUST INTEGRATION: Record value event for globe contribution ===
+        if user_id:
+            await on_globe_point(user_id)
 
         return {
             "success": True,

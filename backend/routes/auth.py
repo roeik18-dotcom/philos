@@ -4,6 +4,7 @@ from database import db
 from auth_utils import (
     verify_password, get_password_hash, create_access_token, get_current_user
 )
+from services.trust_integration import on_invite_used
 from models.schemas import (
     StatusCheck, StatusCheckCreate, UserRegister, UserLogin,
     UserResponse, AuthResponse
@@ -89,6 +90,8 @@ async def register_user(data: UserRegister):
                 {"code": data.invite_code},
                 {"$push": {"used_by": user_id}, "$inc": {"use_count": 1}}
             )
+            # === TRUST INTEGRATION: Inviter gets value for bringing someone in ===
+            await on_invite_used(inviter_id)
 
         # Auto-generate 5 invite codes for the new user
         import string as _string

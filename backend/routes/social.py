@@ -12,6 +12,7 @@ from services.helpers import (
     _calculate_level, _determine_niche, _build_value_profile,
     _generate_field_narrative
 )
+from services.trust_integration import on_mission_joined
 from philos_ai import interpret_field
 from typing import Dict, Any
 from datetime import datetime, timezone, timedelta
@@ -306,6 +307,10 @@ async def join_mission(data: dict):
 
         today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
         await db.daily_missions.update_one({"date": today}, {"$inc": {"participants": 1}})
+
+        # === TRUST INTEGRATION: Record value event for mission participation ===
+        if user_id:
+            await on_mission_joined(user_id)
 
         return {'success': True, 'message_he': 'הצטרפת למשימה!'}
     except Exception as e:

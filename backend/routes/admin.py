@@ -2,6 +2,7 @@
 from fastapi import APIRouter, HTTPException
 from database import db
 from constants import GLOBE_DIR_LABELS, DIRECTIONS, GLOBE_COUNTRY_COORDS
+from services.trust_integration import on_onboarding_action
 from datetime import datetime, timezone, timedelta
 import uuid
 import logging
@@ -158,6 +159,10 @@ async def onboarding_first_action(data: dict):
             'country_code': random_coord.get('code', 'IL'),
             'timestamp': now.isoformat()
         })
+
+        # === TRUST INTEGRATION: Record value event for first onboarding action ===
+        if user_id:
+            await on_onboarding_action(user_id, direction)
 
         return {'success': True, 'message_he': 'הפעולה הראשונה שלך נשלחה לשדה!', 'direction': direction}
     except Exception as e:
