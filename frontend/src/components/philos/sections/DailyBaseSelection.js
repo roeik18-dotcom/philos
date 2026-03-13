@@ -6,7 +6,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 const baseConfig = {
   heart: {
     key: 'heart',
-    label: 'לב',
+    label: 'Connection',
     color: '#ef4444',
     bgColor: '#ef444410',
     icon: (
@@ -141,7 +141,7 @@ export default function DailyBaseSelection({ userId, onBaseSelected }) {
 
       <div className="relative z-10">
         <p className="text-sm text-gray-300 font-medium mb-1">מאיזה מרכז אתה פועל היום?</p>
-        <p className="text-[10px] text-gray-600 mb-5">בחר את הבסיס שממנו תפעל — לב, ראש או גוף</p>
+        <p className="text-[10px] text-gray-600 mb-5">בחר את הבסיס שממנו תפעל — Connection, ראש או גוף</p>
 
         {/* Three base options */}
         <div className="grid grid-cols-3 gap-2.5 mb-4">

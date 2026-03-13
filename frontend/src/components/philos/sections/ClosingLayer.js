@@ -10,7 +10,7 @@ const directionLabels = {
   recovery: 'התאוששות', order: 'סדר', contribution: 'תרומה', exploration: 'חקירה'
 };
 const deptColors = { heart: '#ef4444', head: '#6366f1', body: '#f59e0b' };
-const deptLabels = { heart: 'לב', head: 'ראש', body: 'גוף' };
+const deptLabels = { heart: 'Connection', head: 'ראש', body: 'גוף' };
 
 const tomorrowHints = {
   contribution: 'מחר, שקול אם יש מקום גם להתאוששות — נתינה מתמדת דורשת הטענה.',
