@@ -13,6 +13,7 @@ from services.helpers import (
     _generate_field_narrative
 )
 from services.trust_integration import on_mission_joined
+from services.analytics import log_event
 from philos_ai import interpret_field
 from typing import Dict, Any
 from datetime import datetime, timezone, timedelta
@@ -311,6 +312,7 @@ async def join_mission(data: dict):
         # === TRUST INTEGRATION: Record value event for mission participation ===
         if user_id:
             await on_mission_joined(user_id)
+            await log_event(user_id, "mission_joined", {"mission_id": mission_id, "direction": direction})
 
         return {'success': True, 'message_he': 'הצטרפת למשימה!'}
     except Exception as e:

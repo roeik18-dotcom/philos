@@ -12,6 +12,7 @@ Mapping rules:
 """
 import logging
 from services.trust import calculate_action_value, recalculate_user_state, write_ledger
+from services.analytics import log_event
 from database import db
 from datetime import datetime, timezone
 import uuid
@@ -57,6 +58,7 @@ async def record_trust_action(user_id: str, action_type: str, impact: float, aut
         )
 
         logger.info(f"Trust action: user={user_id} type={action_type} value={value} src={source}")
+        await log_event(user_id, "trust_change", {"action_type": action_type, "value": value, "source": source, "trust_score": state["trust_score"]})
         return doc
     except Exception as e:
         logger.error(f"record_trust_action error: {e}")

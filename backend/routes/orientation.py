@@ -19,6 +19,7 @@ from constants import (
 )
 from services.helpers import _get_or_create_mission_today
 from services.trust_integration import on_daily_action, on_globe_point
+from services.analytics import log_event
 from philos_ai import interpret_action, interpret_field, interpret_profile
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
@@ -1617,6 +1618,7 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
         # === TRUST INTEGRATION: Record value event for daily action ===
         if request.action_taken:
             await on_daily_action(user_id, suggested_direction, streak)
+            await log_event(user_id, "daily_action", {"direction": suggested_direction, "streak": streak})
 
         return {
             'success': True,
@@ -3534,6 +3536,7 @@ async def add_globe_point(data: dict):
         # === TRUST INTEGRATION: Record value event for globe contribution ===
         if user_id:
             await on_globe_point(user_id)
+            await log_event(user_id, "globe_point", {"direction": direction, "country_code": country_code})
 
         return {
             "success": True,

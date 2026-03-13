@@ -15,7 +15,8 @@ import {
   GlobalFieldDashboard,
   CompassAISection,
   FieldGlobeSection,
-  DailyBaseSelection
+  DailyBaseSelection,
+  RetentionNudges
 } from '../../components/philos/sections';
 
 export default function HomeTab({
@@ -77,6 +78,14 @@ export default function HomeTab({
           <p className="text-xs text-gray-400">בחר בסיס יומי כדי להמשיך לפעולה</p>
         </div>
       )}
+
+      {/* ═══ RETENTION NUDGES — After daily action ═══ */}
+      <RetentionNudges
+        visible={actionCompleted}
+        onNavigate={(target) => {
+          if (target === 'community') setShowCommunity(true);
+        }}
+      />
 
       {/* ═══ LAYER 5: FIELD — "How does my action affect the world?" ═══ */}
       <FieldImpactLayer

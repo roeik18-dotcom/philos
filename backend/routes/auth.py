@@ -5,6 +5,7 @@ from auth_utils import (
     verify_password, get_password_hash, create_access_token, get_current_user
 )
 from services.trust_integration import on_invite_used
+from services.analytics import log_event, log_session
 from models.schemas import (
     StatusCheck, StatusCheckCreate, UserRegister, UserLogin,
     UserResponse, AuthResponse
@@ -157,6 +158,9 @@ async def login_user(data: UserLogin):
         
         # Create access token
         access_token = create_access_token(data={"sub": user["id"]})
+
+        # === ANALYTICS: Log return session ===
+        await log_session(user["id"])
 
         # Ensure user has invite codes (for existing users pre-invite system)
         existing_invites = await db.invites.count_documents({"inviter_id": user["id"]})

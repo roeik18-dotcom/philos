@@ -1,7 +1,7 @@
 """System health, status, and admin operations."""
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from database import db, client
 from auth_utils import get_current_user
@@ -9,6 +9,24 @@ from services.scheduler import get_scheduler_status, run_decay_manual
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# In-memory error ring buffer (last 50 errors)
+_error_log: list = []
+MAX_ERROR_LOG = 50
+
+
+def record_error(component: str, message: str, detail: str = None):
+    """Record an error event for monitoring."""
+    entry = {
+        "component": component,
+        "message": message,
+        "detail": detail,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    _error_log.append(entry)
+    if len(_error_log) > MAX_ERROR_LOG:
+        _error_log.pop(0)
+    logger.error(f"[{component}] {message}: {detail}")
 
 
 @router.get("/system/status")
@@ -67,6 +85,10 @@ async def system_status():
     except Exception as e:
         status["overall"] = "degraded"
         status["components"]["decay_scheduler"] = {"status": "unhealthy", "message": str(e)}
+
+    # 6. Recent errors
+    status["recent_errors"] = _error_log[-10:]
+    status["total_errors_logged"] = len(_error_log)
 
     return status
 

@@ -40,6 +40,7 @@ from routes.profile import router as profile_router
 from routes.admin import router as admin_router
 from routes.trust import router as trust_router
 from routes.system import router as system_router
+from routes.analytics import router as analytics_router
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(philos_router, prefix="/api")
@@ -51,6 +52,7 @@ app.include_router(profile_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
 app.include_router(trust_router, prefix="/api")
 app.include_router(system_router, prefix="/api")
+app.include_router(analytics_router, prefix="/api")
 
 # Database shutdown
 from database import client

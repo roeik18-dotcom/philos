@@ -78,3 +78,4 @@ export { default as CompassAISection } from './CompassAISection';
 export { default as CircleDetailView } from './CircleDetailView';
 export { default as DailyBaseSelection } from './DailyBaseSelection';
 export { default as HighlightedRecords } from './HighlightedRecords';
+export { default as RetentionNudges } from './RetentionNudges';
