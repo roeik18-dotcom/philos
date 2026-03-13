@@ -1,57 +1,42 @@
 # Philos Orientation - Product Requirements Document
 
 ## Original Problem Statement
-A Hebrew (RTL) philosophical orientation application where users engage in daily actions, observe a collective "human field" via a 3D globe, and build personal value profiles. Features an AI Interpretation Layer (Claude Sonnet 4.5) and a Value + Risk + Trust scoring system with UI integration and trust-aware AI interpretations.
+A Hebrew (RTL) philosophical orientation application with daily actions, a collective "human field" globe, value profiles, AI Interpretation Layer (Claude Sonnet 4.5), and a Value + Risk + Trust scoring system.
 
-## Core Architecture (Refactored 2026-03-13)
+## Architecture
 ```
 /app/backend/
-  server.py           # Slim orchestrator
-  database.py         # Shared MongoDB connection
-  auth_utils.py       # JWT, password hashing, get_current_user
-  constants.py        # All domain constants
-  philos_ai.py        # AI Interpretation Layer (Claude Sonnet 4.5) — trust-aware
-  models/
-    schemas.py        # All existing Pydantic models
-    trust.py          # Action, RiskSignal, TrustProfile models
-  routes/
-    auth.py, philos.py, memory.py, collective.py, orientation.py, social.py
-    profile.py        # Human Action Record + field_trust + trust-aware AI
-    admin.py, trust.py
-  services/
-    helpers.py, demo.py, trust.py
+  server.py, database.py, auth_utils.py, constants.py
+  philos_ai.py        # AI Layer: SYSTEM_PROMPT (action/field) + PROFILE_SYSTEM_PROMPT (calibrated, grounded)
+  models/  routes/  services/
 ```
 
 ## Implemented Features
-1. World State & Globe UI
-2. Opposition Engine
-3. Daily Base Allocation System
-4. Base-Influenced Daily Questions
-5. Invite System + Reward System
-6. Human Action Record (public profile)
-7. Profile Discovery + Presence Indicator
-8. AI Interpretation Layer (Claude Sonnet 4.5)
-9. Backend Refactor (modular routes/models/services)
-10. Value + Risk + Trust System (3 endpoints + daily decay)
-11. Trust UI Integration on Profile (value/risk bars + state label)
-12. **Trust-Aware AI Interpretation** — Completed 2026-03-13
-    - interpret_profile now receives trust_data (value_score, risk_score, trust_score)
-    - Prompt includes Hebrew trust context: ערך שדה, סיכון שדה, מצב שדה
-    - Output remains: one Hebrew sentence, calm, symbolic, non-punitive
-    - All other AI functions (interpret_action, interpret_field) unchanged
+1-9. Core system (globe, orientation, invites, profiles, presence)
+10. AI Interpretation Layer (Claude Sonnet 4.5)
+11. Backend Refactor (modular routes/models/services)
+12. Value + Risk + Trust System (POST /api/actions, POST /api/risk-signal, GET /api/user/{id}/trust)
+13. Trust UI on Profile (value/risk bars + state label: יציב/בבנייה/שביר/מוגבל)
+14. Trust-Aware AI Interpretation (trust data in profile prompt)
+15. **AI Calibration Pass** — Completed 2026-03-13
+    - New PROFILE_SYSTEM_PROMPT: grounded, anti-poetry rules, reference examples per state
+    - Outputs now describe actual value/risk relationship, not abstract imagery
+    - Non-punitive for all states including restricted
 
 ## Test Reports
-- `/app/test_reports/iteration_58.json` — AI Interpretation Layer: 100%
-- `/app/test_reports/iteration_59.json` — Refactor + Trust System: 100%
-- `/app/test_reports/iteration_60.json` — Trust UI: 100%
-- `/app/test_reports/iteration_61.json` — Trust-Aware AI: 100%
+- iteration_58: AI Layer 100%
+- iteration_59: Refactor + Trust 100%
+- iteration_60: Trust UI 100%
+- iteration_61: Trust-Aware AI 100%
+- iteration_62: AI Calibration 100% (22/22 backend, 4/4 frontend profiles)
 
 ## Test Credentials
-- newuser@test.com / password123 (stable trust, user_id: 05d47b99...)
-- trust_building@test.com / password123 (building trust, user_id: 2f49d593...)
-- trust_fragile@test.com / password123 (fragile trust, user_id: 0c98a493...)
+- newuser@test.com / password123 (stable, trust ~15)
+- trust_building@test.com / password123 (building, trust ~4)
+- trust_fragile@test.com / password123 (fragile, trust ~0.1)
+- trust_restricted@test.com / password123 (restricted, trust ~-2.8)
 
 ## Backlog
 - Trust visualization dashboard
-- Further split routes/orientation.py (~3700 lines)
+- Further split routes/orientation.py
 - Production-grade scheduler for daily decay
