@@ -305,23 +305,106 @@ const ACTION_LABELS = {
 };
 
 function buildSummaryLine(history) {
-  const { summary_by_source } = history;
+  const { summary_by_source, ledger, trust_score, value_score, risk_score } = history;
   if (!summary_by_source || Object.keys(summary_by_source).length === 0) return null;
 
-  const sources = Object.entries(summary_by_source)
-    .filter(([k]) => k !== 'decay')
-    .sort((a, b) => b[1].count - a[1].count);
+  // --- Compute trust state ---
+  let state;
+  if (trust_score <= 0) state = 'restricted';
+  else if (trust_score < 5) state = 'fragile';
+  else if (trust_score < 15) state = 'building';
+  else state = 'stable';
 
-  if (sources.length === 0) return 'אמון השדה הושפע בעיקר מדעיכה יומית.';
+  // --- Aggregate by source: value contribution (positive flows) ---
+  const positiveSources = Object.entries(summary_by_source)
+    .filter(([k, v]) => k !== 'decay' && v.total_value_delta > 0)
+    .sort((a, b) => b[1].total_value_delta - a[1].total_value_delta);
 
-  const top = sources[0];
-  const label = SOURCE_LABELS[top[0]] || top[0];
-  const count = top[1].count;
+  // --- Risk contribution ---
+  const riskSources = Object.entries(summary_by_source)
+    .filter(([, v]) => v.total_risk_delta > 0)
+    .sort((a, b) => b[1].total_risk_delta - a[1].total_risk_delta);
 
-  const hasDecay = summary_by_source.decay?.count > 0;
-  const decayNote = hasDecay ? ' לצד דעיכה טבעית' : '';
+  const totalPositiveValue = positiveSources.reduce((s, [, v]) => s + v.total_value_delta, 0);
+  const totalRisk = riskSources.reduce((s, [, v]) => s + v.total_risk_delta, 0);
+  const decayData = summary_by_source.decay;
+  const decayValueLoss = decayData ? Math.abs(decayData.total_value_delta) : 0;
 
-  return `${label} (${count}) היא המקור המרכזי לאמון השדה הנוכחי${decayNote}.`;
+  // --- Recentness: analyze last 5 entries ---
+  const recent = (ledger || []).slice(0, 5);
+  const recentDecayCount = recent.filter(e => e.source_flow === 'decay').length;
+  const recentActionCount = recent.filter(e => e.source_flow !== 'decay').length;
+  const recentlyDecayDominant = recentDecayCount >= 4;
+
+  // --- Check if value is mainly from shallow sources (onboarding/manual one-offs) ---
+  const shallowSources = ['onboarding', 'manual'];
+  const shallowValue = positiveSources
+    .filter(([k]) => shallowSources.includes(k))
+    .reduce((s, [, v]) => s + v.total_value_delta, 0);
+  const deepValue = totalPositiveValue - shallowValue;
+  const mostlyShallow = totalPositiveValue > 0 && shallowValue > deepValue * 2;
+
+  // --- Build summary ---
+
+  // Case 1: Decay dominates recently
+  if (recentlyDecayDominant && recentActionCount <= 1) {
+    if (state === 'stable' || state === 'building') {
+      return 'השינוי האחרון באמון נובע בעיקר מדעיכה טבעית, אך הבסיס שנבנה עדיין מחזיק.';
+    }
+    return 'הדעיכה היומית משפיעה על האמון — פעולות חדשות יחזקו את המצב.';
+  }
+
+  // Case 2: Risk materially shapes trust
+  if (totalRisk > 0 && totalRisk > totalPositiveValue * 0.3) {
+    const topRisk = riskSources[0];
+    const topRiskKey = topRisk[0];
+    if (state === 'restricted') {
+      return 'הסיכון שנצבר עולה על הערך, והנוכחות בשדה מוגבלת כרגע.';
+    }
+    if (state === 'fragile') {
+      return 'דפוסי הסיכון מצמצמים חלק מהערך שנבנה — המצב בשדה עדיין שביר.';
+    }
+    const topPos = positiveSources.length > 0 ? positiveSources[0] : null;
+    if (topPos && topPos[0] !== topRiskKey) {
+      const posLabel = SOURCE_LABELS[topPos[0]] || topPos[0];
+      const riskLabel = SOURCE_LABELS[topRiskKey] || topRiskKey;
+      return `הערך נבנה בעיקר מ${posLabel}, אך ${riskLabel} מפחית חלק ממנו.`;
+    }
+    return 'הערך שנצבר מאוזן בחלקו על ידי דפוסי סיכון — מצב שדורש המשך בנייה.';
+  }
+
+  // Case 3: Mostly shallow (onboarding/manual)
+  if (mostlyShallow && positiveSources.length > 0) {
+    if (state === 'building' || state === 'stable') {
+      return 'הערך הנוכחי מבוסס בעיקר על פעולות חד-פעמיות — פעולות יומיות יחזקו את הבסיס.';
+    }
+    return 'הערך שנצבר עדיין לא מגובה בפעילות מתמשכת בשדה.';
+  }
+
+  // Case 4: Clear dominant positive source
+  if (positiveSources.length > 0) {
+    const top = positiveSources[0];
+    const topLabel = SOURCE_LABELS[top[0]] || top[0];
+    const topPct = totalPositiveValue > 0 ? Math.round((top[1].total_value_delta / totalPositiveValue) * 100) : 0;
+
+    const decayNote = decayValueLoss > totalPositiveValue * 0.3
+      ? ', עם דעיכה טבעית שמאזנת חלק מהערך'
+      : '';
+
+    if (topPct >= 70) {
+      return `${topLabel} היא המקור המרכזי לערך בשדה${decayNote}.`;
+    }
+
+    if (positiveSources.length >= 2) {
+      const secondLabel = SOURCE_LABELS[positiveSources[1][0]] || positiveSources[1][0];
+      return `הערך בשדה נבנה בעיקר מ${topLabel} ומ${secondLabel}${decayNote}.`;
+    }
+
+    return `${topLabel} בונה את הערך בשדה${decayNote}.`;
+  }
+
+  // Case 5: Only decay, no positive sources
+  return 'אין עדיין פעולות שמשפיעות על האמון — הדעיכה היומית פועלת ברקע.';
 }
 
 function formatTimestamp(ts) {
