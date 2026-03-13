@@ -11,7 +11,7 @@ Mapping rules:
   Invite code used            → action_type='contribute', impact=8,            authenticity=0.9
 """
 import logging
-from services.trust import calculate_action_value, recalculate_user_state
+from services.trust import calculate_action_value, recalculate_user_state, write_ledger
 from database import db
 from datetime import datetime, timezone
 import uuid
@@ -26,8 +26,8 @@ DIRECTION_TO_ACTION_TYPE = {
 }
 
 
-async def record_trust_action(user_id: str, action_type: str, impact: float, authenticity: float, source: str):
-    """Insert an action and recalculate user state. Returns the action doc or None on error."""
+async def record_trust_action(user_id: str, action_type: str, impact: float, authenticity: float, source: str, metadata: dict = None):
+    """Insert an action, recalculate state, and write ledger entry."""
     try:
         value = calculate_action_value(impact, authenticity)
         now = datetime.now(timezone.utc).isoformat()
@@ -42,7 +42,20 @@ async def record_trust_action(user_id: str, action_type: str, impact: float, aut
             "timestamp": now,
         }
         await db.actions.insert_one(doc)
-        await recalculate_user_state(user_id)
+        state = await recalculate_user_state(user_id)
+
+        await write_ledger(
+            user_id=user_id,
+            source_flow=source,
+            action_type=action_type,
+            impact=impact,
+            authenticity=authenticity,
+            value_delta=value,
+            risk_delta=0,
+            trust_score_after=state["trust_score"],
+            metadata=metadata,
+        )
+
         logger.info(f"Trust action: user={user_id} type={action_type} value={value} src={source}")
         return doc
     except Exception as e:
@@ -54,7 +67,8 @@ async def on_daily_action(user_id: str, direction: str, streak: int):
     """Called when a user completes a daily orientation action."""
     action_type = DIRECTION_TO_ACTION_TYPE.get(direction, 'explore')
     impact = min(3 + streak * 0.5, 15)
-    return await record_trust_action(user_id, action_type, impact, 1.0, "daily_action")
+    return await record_trust_action(user_id, action_type, impact, 1.0, "daily_action",
+                                     metadata={"direction": direction, "streak": streak})
 
 
 async def on_globe_point(user_id: str):

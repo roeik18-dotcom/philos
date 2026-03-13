@@ -47,3 +47,28 @@ class TrustProfileResponse(BaseModel):
     last_updated: str
     recent_actions: List[ActionResponse] = []
     recent_risk_signals: List[RiskSignalResponse] = []
+
+
+class LedgerEntry(BaseModel):
+    id: str
+    user_id: str
+    source_flow: str
+    action_type: str
+    impact: float
+    authenticity: float
+    computed_value_delta: float
+    computed_risk_delta: float
+    trust_score_after: float
+    timestamp: str
+    metadata: dict = {}
+
+
+class TrustHistoryResponse(BaseModel):
+    user_id: str
+    value_score: float
+    risk_score: float
+    trust_score: float
+    total_ledger_entries: int
+    summary_by_source: dict = {}
+    summary_by_action_type: dict = {}
+    ledger: List[LedgerEntry] = []
