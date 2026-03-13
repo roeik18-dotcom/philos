@@ -1,7 +1,7 @@
 # Philos Orientation - Product Requirements Document
 
 ## Original Problem Statement
-Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation" application. The project has evolved through several phases of implementation and refinement. A major milestone was translating the entire application from Hebrew to English to prepare for a public launch to an English-speaking audience.
+Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation" application. The project has evolved through several phases, culminating in a full Hebrew-to-English translation to prepare for public launch to an English-speaking audience.
 
 ## Core System
 - **V+R+T Engine**: Value, Risk, and Trust scoring system
@@ -19,47 +19,36 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - **Payments**: Stripe
 - **Scheduling**: APScheduler
 
-## What's Been Implemented
+## Launch Status: READY
+- All user-facing text: English
+- Layout: LTR
+- Analytics: Tracking and funnel working
+- Auth: Register, login, logout — all English
+- Trust test flow: End-to-end verified
+- Onboarding: English
+- Dashboard: English
+- Invite system: English
+- Backend: 18/18 tests passed
+- Frontend: 100% English, LTR verified
+- Hebrew in production code: Zero
 
-### Phase 1-4: Core System (Complete)
-- Full V+R+T reputation engine
-- User registration, login, and auth flow
-- Orientation map with daily questions
-- Decision path and identity system
-- Collective field visualization
-- Social features (circles, missions, compass)
-- Globe interaction and visualization
-- Weekly insights and drift detection
-- Invite system with rewards
-
-### Phase 5: Full English Translation (Complete - March 2026)
-- **Frontend**: 90+ React component files translated from Hebrew to English
-- **Backend Routes**: All 7 route files translated (auth, admin, collective, social, orientation, profile, memory)
-- **Backend Services**: helpers.py, constants.py translated
-- **Backend Models**: schemas.py comments updated
-- **Backend Logic**: philos_orientation/decision.py and constraints.py translated
-- **AI Prompts**: philos_ai.py updated to generate English responses
-- **CSS/Layout**: Switched from RTL to LTR layout, updated fonts for English
-- **Result**: Zero Hebrew characters in all production code
-
-## Key Database Collections
-- `users`, `user_state`, `trust_ledger`, `decay_log`
-- `analytics_events`, `invite_codes`, `invites`
-- `daily_questions`, `user_globe_points`, `feedback`
+## Key Funnel Steps (tracked)
+landing_view → start_clicked → base_selected → question_answered → trust_shown → invite_copied
 
 ## Key API Endpoints
-- `POST /api/auth/register`, `/api/auth/login`, `/api/auth/logout`
-- `GET /api/orientation/field-today`, `/api/orientation/field`
+- `POST /api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `GET /api/auth/me`
+- `GET /api/orientation/field-today`, `/api/orientation/field`, `/api/orientation/history`
 - `GET /api/decision-path/{user_id}`, `/api/orientation/identity/{user_id}`
-- `GET /api/orientation/daily-question/{user_id}`
-- `POST /api/orientation/daily-answer/{user_id}`
-- `GET /api/orientation/weekly-insight/{user_id}`
-- `GET /api/orientation/compare/{user_id}`
+- `GET /api/orientation/daily-question/{user_id}`, `POST /api/orientation/daily-answer/{user_id}`
+- `GET /api/orientation/weekly-insight/{user_id}`, `/api/orientation/compare/{user_id}`
 - `POST /api/onboarding/first-action`
+- `POST /api/analytics/track` (payload: `{event, user_id, metadata}`)
+- `GET /api/analytics/funnel`
 - `GET /api/system/status`
+- `GET /api/invites/me`, `POST /api/invites/generate`, `POST /api/invites/redeem`
+- `POST /api/feedback`
 
 ## Prioritized Backlog
-
 ### P1: Expand Trust-Aware AI
 - Extend trust context to action and field interpretation layers
 
@@ -67,10 +56,10 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Define risk signals based on user behavior patterns
 
 ### P2: ProfilePage Refactoring
-- Break down `/app/frontend/src/pages/ProfilePage.js` (809 lines) into smaller components
+- Break down ProfilePage.js (809 lines) into smaller components
 
-### P3: Legacy Data Migration
-- Optional: migrate existing Hebrew daily questions in database for legacy users
+### P3: Legacy Data Migration (Optional)
+- Migrate existing Hebrew daily questions in DB for legacy users
 
 ## Test Credentials
 - Email: `newuser@test.com` | Password: `password123`
