@@ -37,12 +37,18 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
 19. **System Health Endpoint** — Completed 2026-03-13
     - GET /api/system/status
     - Reports on: database, trust_engine, trust_ledger, ai_layer, decay_scheduler
-    - Includes next scheduled run, lock state, recent execution logs
+    - Flat scheduler fields: scheduler_running, last_decay_run, last_decay_success, decay_runs_last_7_days, next_decay_run, lock_state
+20. **MVP Freeze** — Completed 2026-03-13
+    - POST /api/system/decay/trigger (admin-only, returns users_processed/total_value_decay/total_risk_decay)
+    - Scheduler double-start protection (idempotent start_scheduler)
+    - Manual trigger bypasses 23h interval, respects concurrency lock
+    - Internal documentation: /app/backend/TRUST_ENGINE.md
 
 ## Test Reports
 - iteration_58-64: All prior features — 100%
 - iteration_65: Trust Explanation UI — 100% (10/10 backend + all frontend elements)
 - iteration_67: Decay Scheduler + System Status — 100% (17/17 backend tests)
+- iteration_68: MVP Freeze Full Regression — 100% (35/35 backend tests)
 
 ## Test Credentials
 - newuser@test.com / password123 (stable trust)
