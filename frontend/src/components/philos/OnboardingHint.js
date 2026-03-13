@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Compass, Globe, Zap, ChevronLeft, Loader2, Check } from 'lucide-react';
+import { Globe, Zap, Loader2, Check } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const ONBOARDING_KEY = 'philos_onboarding_complete';
@@ -71,28 +71,17 @@ export default function OnboardingHint({ onComplete }) {
           ))}
         </div>
 
-        {/* Step 1: What is Philos */}
+        {/* Step 1: Measure your trust */}
         {step === 0 && (
-          <div className="text-center">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
-              <Compass className="w-7 h-7 text-indigo-600" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-3" data-testid="onboarding-title">ברוך הבא ל-Philos</h2>
-            <p className="text-sm text-gray-600 leading-relaxed mb-2">
-              Philos עוזר לך להתמצא בחיים דרך פעולה יומית אחת.
-            </p>
-            <p className="text-sm text-gray-500 leading-relaxed mb-6">
-              כל יום תבחר כיוון, תבצע פעולה קטנה, ותראה את ההשפעה שלך על שדה אנושי גלובלי.
-            </p>
+          <div className="text-center py-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight" dir="ltr" data-testid="onboarding-title">Measure your trust.</h2>
+            <p className="text-sm text-gray-400 mb-8" dir="ltr">Answer one question. See your trust state.</p>
             <button
               onClick={() => setStep(1)}
-              className="w-full py-3 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 transition-colors active:scale-[0.97]"
+              className="w-full py-3.5 bg-gray-900 text-white rounded-2xl font-medium hover:bg-gray-800 transition-colors active:scale-[0.97]"
               data-testid="onboarding-next"
             >
-              הבא
-            </button>
-            <button onClick={handleComplete} className="w-full mt-2 py-2 text-xs text-gray-400 hover:text-gray-600" data-testid="onboarding-skip">
-              דלג
+              Start the trust test
             </button>
           </div>
         )}

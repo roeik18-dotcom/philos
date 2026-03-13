@@ -169,9 +169,12 @@ export default function DailyOrientationQuestion({ userId, onActionRecorded }) {
       )}
 
       {/* Question */}
-      <p className={`text-lg font-medium mb-4 transition-all duration-500 ${completed ? 'text-green-800 line-through opacity-60' : 'text-gray-800'}`} data-testid="daily-question-text">
+      <p className={`text-lg font-medium mb-1 transition-all duration-500 ${completed ? 'text-green-800 line-through opacity-60' : 'text-gray-800'}`} data-testid="daily-question-text">
         {questionData.question_he}
       </p>
+      {!completed && (
+        <p className="text-[10px] text-gray-400 mb-4" data-testid="trust-hint">Your answer changes your trust score.</p>
+      )}
 
       {/* Action Area */}
       {!completed ? (

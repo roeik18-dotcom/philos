@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Compass, Users, ArrowLeft, UserPlus, Loader2 } from 'lucide-react';
+import { Users, ArrowLeft, UserPlus, Loader2 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -72,9 +72,10 @@ export default function InvitePage({ code, onEnter }) {
 
         {/* Title */}
         <div>
-          <h1 className="text-xl font-bold text-gray-800 mb-1">הוזמנת לשדה</h1>
+          <h1 className="text-xl font-bold text-gray-800 mb-1" dir="ltr">Measure your trust.</h1>
+          <p className="text-sm text-gray-400" dir="ltr">You've been invited to start.</p>
           {invite?.inviter_alias && (
-            <p className="text-sm text-violet-600">
+            <p className="text-xs text-violet-600 mt-1">
               הוזמנת על ידי <span className="font-semibold">{invite.inviter_alias}</span>
             </p>
           )}
@@ -84,23 +85,19 @@ export default function InvitePage({ code, onEnter }) {
           <div className="p-4 bg-red-50 rounded-xl border border-red-100">
             <p className="text-sm text-red-600">{error}</p>
           </div>
-        ) : (
-          <p className="text-sm text-gray-500 leading-relaxed">
-            ההתמצאות מתחילה כאן — מרחב להתבוננות פנימית, פעולה יומית, וחיבור לשדה אנושי גלובלי.
-          </p>
-        )}
+        ) : null}
 
         {/* CTA */}
         <button
           onClick={handleAccept}
           disabled={accepting || error}
-          className="w-full py-3 px-6 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 text-white rounded-2xl text-sm font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
+          className="w-full py-3 px-6 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-2xl text-sm font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.97]"
           data-testid="invite-accept-btn"
         >
           {accepting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <><Compass className="w-4 h-4" /><span>הצטרף לשדה</span></>
+            <span>Start the trust test</span>
           )}
         </button>
 
