@@ -8,8 +8,8 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
 /app/backend/
   server.py, database.py, auth_utils.py, constants.py, philos_ai.py
   models/ (schemas.py, trust.py)
-  routes/ (auth.py, philos.py, memory.py, collective.py, orientation.py, social.py, profile.py, admin.py, trust.py)
-  services/ (helpers.py, demo.py, trust.py, trust_integration.py)
+  routes/ (auth.py, philos.py, memory.py, collective.py, orientation.py, social.py, profile.py, admin.py, trust.py, system.py)
+  services/ (helpers.py, demo.py, trust.py, trust_integration.py, scheduler.py)
 ```
 
 ## Implemented Features
@@ -28,9 +28,21 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
     - Value/risk deltas with color coding
     - Placed between field-trust-block and direction-bar
 
+18. **Automated Decay Scheduler** — Completed 2026-03-13
+    - APScheduler (CronTrigger 03:00 UTC daily)
+    - MongoDB lock in `scheduler_locks` — prevents duplicate concurrent runs
+    - Execution logging to `decay_log` collection
+    - Clean startup/shutdown lifecycle in server.py
+    - 23-hour minimum interval between runs
+19. **System Health Endpoint** — Completed 2026-03-13
+    - GET /api/system/status
+    - Reports on: database, trust_engine, trust_ledger, ai_layer, decay_scheduler
+    - Includes next scheduled run, lock state, recent execution logs
+
 ## Test Reports
 - iteration_58-64: All prior features — 100%
 - iteration_65: Trust Explanation UI — 100% (10/10 backend + all frontend elements)
+- iteration_67: Decay Scheduler + System Status — 100% (17/17 backend tests)
 
 ## Test Credentials
 - newuser@test.com / password123 (stable trust)
@@ -42,4 +54,4 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
 - Risk signal mapping from product behavior
 - Trust visualization dashboard
 - Further split routes/orientation.py
-- Production-grade scheduler for daily decay
+- Expand Trust-Aware AI to action/field interpretation layers
