@@ -8,7 +8,7 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
 /app/backend/
   server.py, database.py, auth_utils.py, constants.py, philos_ai.py
   models/ (schemas.py, trust.py)
-  routes/ (auth.py, philos.py, memory.py, collective.py, orientation.py, social.py, profile.py, admin.py, trust.py, system.py, analytics.py)
+  routes/ (auth.py, philos.py, memory.py, collective.py, orientation.py, social.py, profile.py, admin.py, trust.py, system.py, analytics.py, invites.py)
   services/ (helpers.py, demo.py, trust.py, trust_integration.py, scheduler.py, analytics.py)
 ```
 
@@ -53,12 +53,23 @@ Hebrew (RTL) philosophical orientation app with daily actions, collective "human
     - Error monitoring: system status includes recent_errors ring buffer + total_errors_logged
     - First-session flow: onboarding → first trust event → daily action → AI interpretation → profile trust view
 
+22. **Invite System MVP** — Completed 2026-03-13
+    - New `invite_codes` collection: code, owner_user_id, status (active/used/expired), created_at, used_at, used_by_user_id
+    - 2 active codes per user (auto-generated on registration)
+    - Endpoints: GET /api/invites/me, POST /api/invites/generate, POST /api/invites/redeem, POST /api/invites/share, GET /api/invites/lookup/{code}
+    - Invite links: /join?invite=CODE and /invite/CODE both supported
+    - Trust integration: redeem fires action_type=contribute, source_flow=invite_used (impact=8, authenticity=0.9)
+    - Analytics: invite_generated, invite_viewed, invite_shared, invite_redeemed, invite_accepted
+    - Frontend: InviteSection (codes + copy link), InvitePage (landing for invite links), AuthScreen (pre-fill invite code)
+    - Legacy invites collection backward-compatible via lookup fallback
+
 ## Test Reports
 - iteration_58-64: All prior features — 100%
 - iteration_65: Trust Explanation UI — 100% (10/10 backend + all frontend elements)
 - iteration_67: Decay Scheduler + System Status — 100% (17/17 backend tests)
 - iteration_68: MVP Freeze Full Regression — 100% (35/35 backend tests)
 - iteration_69: Real Usage Loop — 100% (14/14 backend + frontend rendering)
+- iteration_70: Invite System MVP — 100% (14/14 backend + frontend rendering)
 
 ## Test Credentials
 - newuser@test.com / password123 (stable trust)
