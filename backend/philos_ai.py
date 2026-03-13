@@ -17,6 +17,22 @@ SYSTEM_PROMPT = """אתה פילוסוף שקט שצופה בשדה האנושי
 רק תצפה ותתאר מה אתה רואה.
 משפט אחד בלבד. קצר. שקט. משמעותי."""
 
+PROFILE_SYSTEM_PROMPT = """אתה צופה שקט שמתאר מצב של אדם בשדה.
+אתה כותב משפט אחד בלבד בעברית.
+הטון שלך: רגוע, ברור, מרוסן.
+אל תשתמש במטאפורות גדולות. אל תישמע מיסטי.
+אל תבייש. אל תגזים. אל תייעץ.
+העדף תיאור קרקעי של המצב על פני דימויים.
+המשפט צריך לעזור לאדם להבין את מצבו בשדה — לא לקשט אותו.
+משפט אחד בלבד. קצר. ברור. משמעותי.
+
+דוגמאות לפי מצב:
+מצב יציב — "הערך שנצבר גבוה ביחס לסיכון, והנוכחות בשדה יציבה ועקבית."
+מצב בבנייה — "יש ערך שמתחיל להיבנות, אך עדיין אין מספיק היסטוריה כדי לבסס אמון מלא."
+מצב שביר — "הערך שנצבר נמוך והסיכון קרוב אליו, המצב בשדה עדיין לא מגובש."
+מצב מוגבל — "הסיכון עולה על הערך, והנוכחות בשדה מוגבלת עד שהאיזון ישתנה."
+"""
+
 _api_key = None
 
 def _get_key():
@@ -76,7 +92,7 @@ async def interpret_field(dominant_he, momentum_he, secondary_he=None, region_co
 
 
 async def interpret_profile(alias, dominant_he, total_actions, streak, invited_count=0, trust_data=None):
-    """Interpret a user's orientation pattern. Returns one Hebrew sentence."""
+    """Interpret a user's orientation pattern. Returns one grounded Hebrew sentence."""
     key = _get_key()
     if not key:
         return ""
@@ -84,7 +100,7 @@ async def interpret_profile(alias, dominant_he, total_actions, streak, invited_c
         chat = LlmChat(
             api_key=key,
             session_id=f"profile-{uuid.uuid4().hex[:8]}",
-            system_message=SYSTEM_PROMPT
+            system_message=PROFILE_SYSTEM_PROMPT
         ).with_model("anthropic", "claude-sonnet-4-5-20250929")
 
         parts = [f"שם: {alias}.", f"כיוון דומיננטי: {dominant_he}.", f"מספר פעולות: {total_actions}."]
@@ -113,7 +129,7 @@ async def interpret_profile(alias, dominant_he, total_actions, streak, invited_c
                 state = "stable"
             parts.append(f"ערך שדה: {vs}. סיכון שדה: {rs}. מצב שדה: {state_map[state]}.")
 
-        prompt = " ".join(parts) + " כתוב משפט אחד קצר שמתאר את דפוס ההתמצאות של האדם הזה ואת מצבו בשדה."
+        prompt = " ".join(parts) + " תאר במשפט אחד קצר וברור את מצבו של האדם הזה בשדה, על סמך היחס בין הערך לסיכון ודפוס הפעולות שלו."
 
         response = await chat.send_message(UserMessage(text=prompt))
         return response.strip().split('\n')[0] if response else ""
