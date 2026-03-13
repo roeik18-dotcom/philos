@@ -240,10 +240,23 @@ async def get_human_action_record(user_id: str):
                 'total_invited': len(invitee_ids),
                 'invite_credits': invite_credits
             },
-            'ai_profile_interpretation': await interpret_profile(alias, GLOBE_DIR_LABELS.get(dominant_dir, ''), total_actions, streak, len(invitee_ids))
+            'ai_profile_interpretation': await interpret_profile(alias, GLOBE_DIR_LABELS.get(dominant_dir, ''), total_actions, streak, len(invitee_ids)),
+            'field_trust': await _get_field_trust(user_id)
         }
     except Exception as e:
         logger.error(f"Human action record error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def _get_field_trust(user_id: str) -> dict:
+    """Get trust data for the profile, or return zeros if none exists."""
+    state = await db.user_state.find_one({"user_id": user_id}, {"_id": 0})
+    if not state:
+        return {"value_score": 0, "risk_score": 0, "trust_score": 0}
+    return {
+        "value_score": round(state.get("value_score", 0), 1),
+        "risk_score": round(state.get("risk_score", 0), 1),
+        "trust_score": round(state.get("trust_score", 0), 1),
+    }
 
 

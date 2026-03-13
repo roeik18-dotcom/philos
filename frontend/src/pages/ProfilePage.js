@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toPng } from 'html-to-image';
-import { MapPin, ChevronDown, ChevronUp, Loader2, Flame, Share2, Download, Link2, Check, Copy } from 'lucide-react';
+import { MapPin, ChevronDown, ChevronUp, Loader2, Flame, Share2, Download, Link2, Check, Copy, Info } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const dirColors = { contribution: '#22c55e', recovery: '#3b82f6', order: '#6366f1', exploration: '#f59e0b' };
@@ -55,7 +55,7 @@ export default function ProfilePage() {
     );
   }
 
-  const { identity, action_record, opposition_axes, value_growth, direction_distribution, influence_chain, field_contribution, ai_profile_interpretation } = data;
+  const { identity, action_record, opposition_axes, value_growth, direction_distribution, influence_chain, field_contribution, ai_profile_interpretation, field_trust } = data;
   const dc = dirColors[identity.dominant_direction] || '#6366f1';
 
   return (
@@ -142,6 +142,9 @@ export default function ProfilePage() {
           <StatCell label="תרומה לשדה" value={`${field_contribution?.field_percentage || 0}%`} color="#22c55e" testId="profile-field-contribution" />
         </section>
 
+        {/* ═══ FIELD TRUST — Quiet indicator ═══ */}
+        {field_trust && <FieldTrustBlock trust={field_trust} />}
+
         {/* ═══ DIRECTION DISTRIBUTION ═══ */}
         <DirectionBar distribution={direction_distribution} total={value_growth.total_actions} dominantDir={identity.dominant_direction} />
 
@@ -182,6 +185,90 @@ function StatCell({ label, value, suffix = '', color, testId }) {
       <p className="text-lg font-bold tabular-nums" style={{ color }}>{value}{suffix}</p>
       <p className="text-[9px] text-gray-600 mt-0.5">{label}</p>
     </div>
+  );
+}
+
+
+function FieldTrustBlock({ trust }) {
+  const { value_score, risk_score, trust_score } = trust;
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const maxBar = Math.max(value_score, risk_score, 1);
+  const valuePct = Math.min((value_score / maxBar) * 100, 100);
+  const riskPct = Math.min((risk_score / maxBar) * 100, 100);
+
+  let stateLabel, stateColor;
+  if (trust_score <= 0) {
+    stateLabel = 'מוגבל'; stateColor = '#ef4444';
+  } else if (trust_score < 5) {
+    stateLabel = 'שביר'; stateColor = '#f59e0b';
+  } else if (trust_score < 15) {
+    stateLabel = 'בבנייה'; stateColor = '#3b82f6';
+  } else {
+    stateLabel = 'יציב'; stateColor = '#22c55e';
+  }
+
+  return (
+    <section data-testid="field-trust-block">
+      <div className="flex items-center gap-1.5 mb-3">
+        <p className="text-[10px] text-gray-600">אמון שדה</p>
+        <button
+          onClick={() => setShowTooltip(!showTooltip)}
+          className="text-gray-700 hover:text-gray-500 transition-colors"
+          data-testid="field-trust-info-btn"
+        >
+          <Info className="w-3 h-3" />
+        </button>
+      </div>
+
+      {showTooltip && (
+        <p className="text-[9px] text-gray-500 leading-relaxed mb-3 bg-white/[0.02] rounded-lg p-2.5 border border-white/[0.04]" data-testid="field-trust-tooltip">
+          אמון שדה משקף את הערך שנצבר ביחס לדפוסי הסיכון לאורך זמן.
+        </p>
+      )}
+
+      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-4 space-y-3.5">
+        {/* Value bar */}
+        <div data-testid="field-trust-value">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] text-gray-500">ערך שדה</span>
+            <span className="text-[10px] font-medium text-emerald-500 tabular-nums">{value_score}</span>
+          </div>
+          <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${valuePct}%`, backgroundColor: '#22c55e' }}
+            />
+          </div>
+        </div>
+
+        {/* Risk bar */}
+        <div data-testid="field-trust-risk">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] text-gray-500">סיכון שדה</span>
+            <span className="text-[10px] font-medium text-red-400 tabular-nums">{risk_score}</span>
+          </div>
+          <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${riskPct}%`, backgroundColor: '#ef444480' }}
+            />
+          </div>
+        </div>
+
+        {/* Trust state */}
+        <div className="pt-2.5 border-t border-white/[0.04] flex items-center justify-between" data-testid="field-trust-state">
+          <span className="text-[10px] text-gray-500">מצב אמון</span>
+          <span
+            className="text-[10px] font-medium px-2.5 py-0.5 rounded-full"
+            style={{ color: stateColor, backgroundColor: `${stateColor}12`, border: `1px solid ${stateColor}20` }}
+            data-testid="field-trust-state-label"
+          >
+            {stateLabel}
+          </span>
+        </div>
+      </div>
+    </section>
   );
 }
 
