@@ -3,7 +3,7 @@
 
 **Generated:** March 8, 2026  
 **Purpose:** Development continuity across context resets  
-**Preview URL:** https://philos-launch.preview.emergentagent.com
+**Preview URL:** https://philos-english.preview.emergentagent.com
 
 ---
 
@@ -330,7 +330,7 @@ DELETE /api/philos/sessions/{user_id}/{session_id}  # Delete session
 
 ### Frontend (.env)
 ```
-REACT_APP_BACKEND_URL=https://philos-launch.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://philos-english.preview.emergentagent.com
 ```
 
 ### Backend (.env)

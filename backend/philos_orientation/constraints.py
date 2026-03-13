@@ -12,11 +12,10 @@ class ConstraintsValidator:
     ENERGY_FLOOR_THRESHOLD = 20
     EXPLOITATION_RATIO_MAX = 2.0
     
-    # Hebrew constraint failure messages
     MESSAGES = {
-        'moral_floor': 'רצפה מוסרית: נזק גבוה מדי',
-        'energy_floor': 'קריסת אנרגיה: capacity נמוך מדי',
-        'exploitation': 'ניצול: רווח אישי גבוה מדי ביחס לקולקטיבי'
+        'moral_floor': 'Moral floor: harm is too high',
+        'energy_floor': 'Energy collapse: capacity is too low',
+        'exploitation': 'Exploitation: personal gain is too high relative to collective'
     }
     
     @classmethod

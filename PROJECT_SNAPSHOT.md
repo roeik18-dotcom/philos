@@ -2,7 +2,7 @@
 ## Mental Navigation System
 **Snapshot Date:** March 8, 2026  
 **Version:** 1.0.0 Stable MVP  
-**Preview URL:** https://philos-launch.preview.emergentagent.com
+**Preview URL:** https://philos-english.preview.emergentagent.com
 
 ---
 
@@ -365,13 +365,13 @@ GET  /api/collective/trends             # Time-based collective trends
 
 ## DEPLOY PREVIEW
 
-**Live URL:** https://philos-launch.preview.emergentagent.com
+**Live URL:** https://philos-english.preview.emergentagent.com
 
 ### Environment Variables
 
 #### Frontend (`/app/frontend/.env`)
 ```
-REACT_APP_BACKEND_URL=https://philos-launch.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://philos-english.preview.emergentagent.com
 ```
 
 #### Backend (`/app/backend/.env`)

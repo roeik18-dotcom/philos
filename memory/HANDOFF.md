@@ -280,7 +280,7 @@ User requested a "Collective Navigation System" with:
 # 11. PREVIEW URL
 
 ```
-https://philos-launch.preview.emergentagent.com
+https://philos-english.preview.emergentagent.com
 ```
 
 ---

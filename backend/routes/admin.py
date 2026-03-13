@@ -121,7 +121,7 @@ async def submit_feedback(data: dict):
             'created_at': datetime.now(timezone.utc).isoformat()
         }
         await db.feedback.insert_one(doc)
-        return {'success': True, 'message_he': 'תודה על המשוב!'}
+        return {'success': True, 'message': 'Thank you for your feedback!'}
     except HTTPException:
         raise
     except Exception as e:
@@ -168,7 +168,7 @@ async def onboarding_first_action(data: dict):
 
         return {
             'success': True,
-            'message_he': 'הפעולה הראשונה שלך נשלחה לשדה!',
+            'message': 'Your first action has been sent to the field!',
             'direction': direction,
             'first_trust_event': True,
         }

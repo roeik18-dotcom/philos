@@ -289,7 +289,7 @@ class OrientationFieldResponse(BaseModel):
     momentum_insight: Optional[str] = None     # specific insight about momentum
 
 class WeeklyFieldSnapshot(BaseModel):
-    week_label: str                            # "שבוע 1", "שבוע 2", etc.
+    week_label: str                            # "Week 1", "Week 2", etc.
     week_start: str                            # ISO date
     center_x: float
     center_y: float
@@ -346,7 +346,7 @@ class DirectionPercentile(BaseModel):
     direction: str
     user_count: int                            # User's action count in this direction
     percentile: float                          # 0-100, user's percentile (higher = more focused)
-    rank_label: Optional[str] = None           # "עליון 10%", "עליון 25%", etc.
+    rank_label: Optional[str] = None           # "Top 10%", "Top 25%", etc.
 
 class UserComparisonResponse(BaseModel):
     success: bool

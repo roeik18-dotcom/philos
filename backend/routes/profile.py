@@ -47,7 +47,7 @@ async def get_human_action_record(user_id: str):
         if globe_pts:
             codes = [p.get("country_code", "IL") for p in globe_pts]
             country_code = max(set(codes), key=codes.count)
-        country_name = GLOBE_COUNTRY_COORDS.get(country_code, {}).get("name", "ישראל")
+        country_name = GLOBE_COUNTRY_COORDS.get(country_code, {}).get("name", "Israel")
 
         # Niche
         niche = None

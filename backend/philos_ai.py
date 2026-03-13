@@ -1,6 +1,6 @@
 """
 Philos AI Interpretation Layer.
-Generates short, calm, observational Hebrew sentences using Claude Sonnet 4.5.
+Generates short, calm, observational English sentences using Claude Sonnet 4.5.
 One sentence only. No explanations. No chat. A quiet philosopher observing the field.
 """
 import os
@@ -10,27 +10,27 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 logger = logging.getLogger("philos_ai")
 
-SYSTEM_PROMPT = """אתה פילוסוף שקט שצופה בשדה האנושי.
-אתה כותב משפט אחד בלבד בעברית.
-הטון שלך: רגוע, סמלי, תצפיתי.
-אל תסביר. אל תנתח. אל תייעץ.
-רק תצפה ותתאר מה אתה רואה.
-משפט אחד בלבד. קצר. שקט. משמעותי."""
+SYSTEM_PROMPT = """You are a quiet philosopher observing the human field.
+You write only one sentence in English.
+Your tone: calm, symbolic, observational.
+Do not explain. Do not analyze. Do not advise.
+Just observe and describe what you see.
+One sentence only. Short. Quiet. Meaningful."""
 
-PROFILE_SYSTEM_PROMPT = """אתה צופה שקט שמתאר מצב של אדם בשדה.
-אתה כותב משפט אחד בלבד בעברית.
-הטון שלך: רגוע, ברור, מרוסן.
-אל תשתמש במטאפורות גדולות. אל תישמע מיסטי.
-אל תבייש. אל תגזים. אל תייעץ.
-העדף תיאור קרקעי של המצב על פני דימויים.
-המשפט צריך לעזור לאדם להבין את מצבו בשדה — לא לקשט אותו.
-משפט אחד בלבד. קצר. ברור. משמעותי.
+PROFILE_SYSTEM_PROMPT = """You are a quiet observer describing a person's state in the field.
+You write only one sentence in English.
+Your tone: calm, clear, restrained.
+Do not use grand metaphors. Do not sound mystical.
+Do not shame. Do not exaggerate. Do not advise.
+Prefer grounded description of the state over imagery.
+The sentence should help the person understand their state in the field — not embellish it.
+One sentence only. Short. Clear. Meaningful.
 
-דוגמאות לפי מצב:
-מצב יציב — "הערך שנצבר גבוה ביחס לסיכון, והנוכחות בשדה יציבה ועקבית."
-מצב בבנייה — "יש ערך שמתחיל להיבנות, אך עדיין אין מספיק היסטוריה כדי לבסס אמון מלא."
-מצב שביר — "הערך שנצבר נמוך והסיכון קרוב אליו, המצב בשדה עדיין לא מגובש."
-מצב מוגבל — "הסיכון עולה על הערך, והנוכחות בשדה מוגבלת עד שהאיזון ישתנה."
+Examples by state:
+Stable — "The accumulated value is high relative to risk, and field presence is stable and consistent."
+Building — "Value is starting to build, but there isn't enough history yet to establish full trust."
+Fragile — "Accumulated value is low and risk is close to it, the field state is not yet solidified."
+Restricted — "Risk exceeds value, and field presence is limited until the balance shifts."
 """
 
 _api_key = None
@@ -43,7 +43,7 @@ def _get_key():
 
 
 async def interpret_action(direction_he, base_he=None):
-    """Interpret a user's action as value movement. Returns one Hebrew sentence."""
+    """Interpret a user's action as value movement. Returns one English sentence."""
     key = _get_key()
     if not key:
         return ""
@@ -54,8 +54,8 @@ async def interpret_action(direction_he, base_he=None):
             system_message=SYSTEM_PROMPT
         ).with_model("anthropic", "claude-sonnet-4-5-20250929")
 
-        base_context = f" הבסיס היומי: {base_he}." if base_he else ""
-        prompt = f"משתמש פעל בכיוון: {direction_he}.{base_context} כתוב משפט אחד קצר שמתאר את התנועה הזו בשדה."
+        base_context = f" Daily base: {base_he}." if base_he else ""
+        prompt = f"A user acted in the direction of: {direction_he}.{base_context} Write one short sentence describing this movement in the field."
 
         response = await chat.send_message(UserMessage(text=prompt))
         return response.strip().split('\n')[0] if response else ""
@@ -65,7 +65,7 @@ async def interpret_action(direction_he, base_he=None):
 
 
 async def interpret_field(dominant_he, momentum_he, secondary_he=None, region_count=0):
-    """Interpret the current field state as tension between directions. Returns one Hebrew sentence."""
+    """Interpret the current field state as tension between directions. Returns one English sentence."""
     key = _get_key()
     if not key:
         return ""
@@ -76,13 +76,13 @@ async def interpret_field(dominant_he, momentum_he, secondary_he=None, region_co
             system_message=SYSTEM_PROMPT
         ).with_model("anthropic", "claude-sonnet-4-5-20250929")
 
-        parts = [f"הכיוון הדומיננטי בשדה: {dominant_he}.", f"המומנטום: {momentum_he}."]
+        parts = [f"Dominant direction in the field: {dominant_he}.", f"Momentum: {momentum_he}."]
         if secondary_he:
-            parts.append(f"כיוון משני: {secondary_he}.")
+            parts.append(f"Secondary direction: {secondary_he}.")
         if region_count > 3:
-            parts.append(f"השדה פעיל במספר אזורים.")
+            parts.append(f"The field is active in several regions.")
 
-        prompt = " ".join(parts) + " כתוב משפט אחד קצר שמתאר את מצב השדה האנושי כרגע."
+        prompt = " ".join(parts) + " Write one short sentence describing the current state of the human field."
 
         response = await chat.send_message(UserMessage(text=prompt))
         return response.strip().split('\n')[0] if response else ""
@@ -92,7 +92,7 @@ async def interpret_field(dominant_he, momentum_he, secondary_he=None, region_co
 
 
 async def interpret_profile(alias, dominant_he, total_actions, streak, invited_count=0, trust_data=None):
-    """Interpret a user's orientation pattern. Returns one grounded Hebrew sentence."""
+    """Interpret a user's orientation pattern. Returns one grounded English sentence."""
     key = _get_key()
     if not key:
         return ""
@@ -103,21 +103,21 @@ async def interpret_profile(alias, dominant_he, total_actions, streak, invited_c
             system_message=PROFILE_SYSTEM_PROMPT
         ).with_model("anthropic", "claude-sonnet-4-5-20250929")
 
-        parts = [f"שם: {alias}.", f"כיוון דומיננטי: {dominant_he}.", f"מספר פעולות: {total_actions}."]
+        parts = [f"Name: {alias}.", f"Dominant direction: {dominant_he}.", f"Total actions: {total_actions}."]
         if streak > 1:
-            parts.append(f"רצף פעילות: {streak} ימים.")
+            parts.append(f"Activity streak: {streak} days.")
         if invited_count > 0:
-            parts.append(f"הביא {invited_count} אנשים לשדה.")
+            parts.append(f"Brought {invited_count} people to the field.")
 
         if trust_data:
             vs = trust_data.get("value_score", 0)
             rs = trust_data.get("risk_score", 0)
             ts = trust_data.get("trust_score", 0)
             state_map = {
-                "stable": "יציב",
-                "building": "בבנייה",
-                "fragile": "שביר",
-                "restricted": "מוגבל"
+                "stable": "Stable",
+                "building": "Building",
+                "fragile": "Fragile",
+                "restricted": "Restricted"
             }
             if ts <= 0:
                 state = "restricted"
@@ -127,9 +127,9 @@ async def interpret_profile(alias, dominant_he, total_actions, streak, invited_c
                 state = "building"
             else:
                 state = "stable"
-            parts.append(f"ערך שדה: {vs}. סיכון שדה: {rs}. מצב שדה: {state_map[state]}.")
+            parts.append(f"Field value: {vs}. Field risk: {rs}. Field state: {state_map[state]}.")
 
-        prompt = " ".join(parts) + " תאר במשפט אחד קצר וברור את מצבו של האדם הזה בשדה, על סמך היחס בין הערך לסיכון ודפוס הפעולות שלו."
+        prompt = " ".join(parts) + " Describe in one short, clear sentence this person's state in the field, based on the ratio between value and risk and their action patterns."
 
         response = await chat.send_message(UserMessage(text=prompt))
         return response.strip().split('\n')[0] if response else ""

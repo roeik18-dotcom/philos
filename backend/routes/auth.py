@@ -59,7 +59,7 @@ async def register_user(data: UserRegister):
         if existing:
             return AuthResponse(
                 success=False,
-                message="כתובת האימייל כבר קיימת במערכת"  # Email already exists
+                message="This email address is already registered"
             )
 
         # Validate invite code if provided (check both old and new collections)
@@ -78,7 +78,7 @@ async def register_user(data: UserRegister):
                     inviter_id = old_invite.get("inviter_id")
                     invite_code_collection = "legacy"
                 else:
-                    return AuthResponse(success=False, message="קוד ההזמנה אינו תקף")
+                    return AuthResponse(success=False, message="Invalid invite code")
 
         # Create new user
         now = datetime.now(timezone.utc).isoformat()
@@ -136,7 +136,7 @@ async def register_user(data: UserRegister):
                 last_login_at=now
             ),
             token=access_token,
-            message="ההרשמה הצליחה!"  # Registration successful
+            message="Registration successful!"
         )
         
     except Exception as e:
@@ -156,14 +156,14 @@ async def login_user(data: UserLogin):
         if not user:
             return AuthResponse(
                 success=False,
-                message="אימייל או סיסמה שגויים"  # Invalid email or password
+                message="Invalid email or password"
             )
         
         # Verify password
         if not verify_password(data.password, user["password_hash"]):
             return AuthResponse(
                 success=False,
-                message="אימייל או סיסמה שגויים"  # Invalid email or password
+                message="Invalid email or password"
             )
         
         # Update last login
@@ -203,7 +203,7 @@ async def login_user(data: UserLogin):
                 last_login_at=now
             ),
             token=access_token,
-            message="התחברת בהצלחה!"  # Login successful
+            message="Logged in successfully!"
         )
         
     except Exception as e:
@@ -216,7 +216,7 @@ async def logout_user():
     """
     Logout a user (client-side token removal).
     """
-    return {"success": True, "message": "התנתקת בהצלחה"}  # Logged out successfully
+    return {"success": True, "message": "Logged out successfully"}
 
 
 @router.get("/auth/me", response_model=AuthResponse)
@@ -227,7 +227,7 @@ async def get_current_user_info(user = Depends(get_current_user)):
     if not user:
         return AuthResponse(
             success=False,
-            message="לא מחובר"  # Not logged in
+            message="Not logged in"
         )
     
     return AuthResponse(
@@ -290,7 +290,7 @@ async def migrate_anonymous_data(anonymous_user_id: str, user = Depends(get_curr
         
         return {
             "success": True,
-            "message": "הנתונים הועברו בהצלחה לחשבון שלך",  # Data migrated successfully
+            "message": "Data migrated successfully to your account",
             "new_user_id": authenticated_user_id
         }
         

@@ -8,7 +8,7 @@
 
 ```bash
 # Preview URL
-https://philos-launch.preview.emergentagent.com
+https://philos-english.preview.emergentagent.com
 
 # Resume file
 /app/frontend/src/components/philos/sections/DailyOrientationQuestion.js
