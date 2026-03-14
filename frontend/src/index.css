@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&family=Heebo:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=DM+Sans:wght@300;400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,14 +10,15 @@
   }
   
   body {
-    @apply bg-background text-foreground font-heebo;
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    direction: rtl;
+    direction: ltr;
   }
 
   h1, h2, h3, h4, h5, h6, button {
-    @apply font-rubik;
+    font-family: 'Inter', 'DM Sans', system-ui, sans-serif;
   }
 }
 
@@ -147,31 +148,15 @@
 /* Smooth transitions for all interactive elements */
 .philos-section {
   @apply rounded-3xl p-5 shadow-sm border transition-all duration-300;
-  text-align: right;
+  text-align: left;
 }
 
 .philos-section:hover {
   @apply shadow-md;
 }
 
-/* RTL consistency helpers */
-[dir="rtl"] .gap-1\.5,
-[dir="rtl"] .gap-2,
-[dir="rtl"] .gap-3 {
-  direction: rtl;
-}
-
-/* Ensure flex items align properly in RTL */
-[dir="rtl"] .flex-row-reverse {
-  flex-direction: row;
-}
-
-/* Button group RTL fix */
-[dir="rtl"] button {
-  text-align: right;
-}
-[dir="rtl"] button.text-center,
-[dir="rtl"] .text-center button {
+/* LTR layout helpers */
+button {
   text-align: center;
 }
 

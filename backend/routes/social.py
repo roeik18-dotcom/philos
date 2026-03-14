@@ -12,6 +12,8 @@ from services.helpers import (
     _calculate_level, _determine_niche, _build_value_profile,
     _generate_field_narrative
 )
+from services.trust_integration import on_mission_joined
+from services.analytics import log_event
 from philos_ai import interpret_field
 from typing import Dict, Any
 from datetime import datetime, timezone, timedelta
@@ -62,7 +64,7 @@ async def get_personalized_feed(user_id: str):
         cards.insert(3, {'type': 'question', 'question_he': FEED_QUESTIONS_HE[_random.randint(0, len(FEED_QUESTIONS_HE) - 1)], 'direction': dominant_dir, 'direction_he': GLOBE_DIR_LABELS.get(dominant_dir, ''), 'timestamp': datetime.now(timezone.utc).isoformat()})
         cards.insert(7, {'type': 'reflection', 'reflection_he': FEED_REFLECTIONS_HE[_random.randint(0, len(FEED_REFLECTIONS_HE) - 1)], 'direction': dominant_dir, 'direction_he': GLOBE_DIR_LABELS.get(dominant_dir, ''), 'timestamp': datetime.now(timezone.utc).isoformat()})
         if profile['total_value'] > 0:
-            cards.insert(5, {'type': 'leader', 'alias': 'Atlas', 'user_id': 'demo_0', 'country': 'ישראל', 'country_code': 'IL', 'direction': 'contribution', 'direction_he': 'תרומה', 'total_value': 87, 'niche_tag': 'תורם', 'leader': True, 'timestamp': datetime.now(timezone.utc).isoformat()})
+            cards.insert(5, {'type': 'leader', 'alias': 'Atlas', 'user_id': 'demo_0', 'country': 'Israel', 'country_code': 'IL', 'direction': 'contribution', 'direction_he': 'Contribution', 'total_value': 87, 'niche_tag': 'Contributor', 'leader': True, 'timestamp': datetime.now(timezone.utc).isoformat()})
 
         return {'success': True, 'cards': cards, 'total': len(cards), 'user_direction': dominant_dir, 'user_niche': niche, 'user_niche_he': VALUE_NICHES.get(niche, {}).get('label_he', '') if niche else ''}
     except Exception as e:
@@ -89,7 +91,7 @@ async def get_value_profile(user_id: str):
         level_progress = min(100, int((profile['total_actions'] / max(next_threshold, 1)) * 100))
 
         milestones = []
-        for label, thresh in [('פעולה ראשונה', 1), ('10 פעולות', 10), ('50 פעולות', 50), ('שבוע רצוף', None)]:
+        for label, thresh in [('First action', 1), ('10 actions', 10), ('50 actions', 50), ('Consecutive week', None)]:
             if thresh and profile['total_actions'] >= thresh: milestones.append({'label_he': label, 'achieved': True})
             elif not thresh and profile['current_streak'] >= 7: milestones.append({'label_he': label, 'achieved': True})
 
@@ -103,7 +105,7 @@ async def get_value_profile(user_id: str):
             'leader_status': profile['leader_status'],
             'progression': {'level': level, 'level_progress': level_progress, 'next_level_at': next_threshold, 'total_actions': profile['total_actions'],
                 'badges': [{'id': b['id'], 'label_he': b['label_he'], 'desc_he': b['desc_he']} for b in BADGES if b['id'] in profile['badges']],
-                'milestones': milestones, 'next_milestone_he': '10 פעולות' if profile['total_actions'] < 10 else '50 פעולות' if profile['total_actions'] < 50 else '100 פעולות'},
+                'milestones': milestones, 'next_milestone': '10 actions' if profile['total_actions'] < 10 else '50 actions' if profile['total_actions'] < 50 else '100 actions'},
             'stats': {'current_streak': profile['current_streak'], 'longest_streak': profile['longest_streak'], 'action_consistency': profile['action_consistency'], 'globe_points': profile['globe_points'], 'dir_counts': profile['dir_counts']}
         }
     except Exception as e:
@@ -236,7 +238,7 @@ async def get_field_dashboard():
         dominant = max(dir_counts, key=dir_counts.get) if total_today > 0 else None
         top_regions = sorted(region_counts.items(), key=lambda x: x[1], reverse=True)[:5]
 
-        momentum = 'עולה' if total_today > yesterday_events else ('יורד' if total_today < yesterday_events * 0.8 else 'יציב')
+        momentum = 'rising' if total_today > yesterday_events else ('falling' if total_today < yesterday_events * 0.8 else 'stable')
 
         # Generate symbolic narrative — one short Hebrew sentence, no numbers
         narrative = _generate_field_narrative(dominant, dir_counts, total_today, momentum, len(region_counts))
@@ -277,10 +279,10 @@ async def get_missions():
             demo_count = _random.randint(800, 5000)
             missions.append({
                 'id': f'mission-{d}',
-                'title_he': {'contribution': 'חזק את הקשר', 'recovery': 'שקם את הבסיס', 'order': 'שחזר סדר', 'exploration': 'הרחב את השדה'}.get(d, ''),
+                'title': {'contribution': 'Strengthen the bond', 'recovery': 'Rebuild the foundation', 'order': 'Restore order', 'exploration': 'Expand the field'}.get(d, ''),
                 'direction': d,
                 'direction_he': GLOBE_DIR_LABELS.get(d, ''),
-                'description_he': {'contribution': 'עשה פעולה אחת של נתינה היום', 'recovery': 'קח זמן אחד להתאוששות', 'order': 'ארגן דבר אחד בסביבה שלך', 'exploration': 'נסה דבר חדש אחד היום'}.get(d, ''),
+                'description': {'contribution': 'Do one act of giving today', 'recovery': 'Take a moment to recover', 'order': 'Organize one thing in your environment', 'exploration': 'Try one new thing today'}.get(d, ''),
                 'participants': today_mission.get('participants', 0) if is_today else demo_count,
                 'total_field_impact': (today_mission.get('participants', 0) * 4) if is_today else demo_count * 3,
                 'status': 'active' if is_today else 'available',
@@ -307,7 +309,12 @@ async def join_mission(data: dict):
         today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
         await db.daily_missions.update_one({"date": today}, {"$inc": {"participants": 1}})
 
-        return {'success': True, 'message_he': 'הצטרפת למשימה!'}
+        # === TRUST INTEGRATION: Record value event for mission participation ===
+        if user_id:
+            await on_mission_joined(user_id)
+            await log_event(user_id, "mission_joined", {"mission_id": mission_id, "direction": direction})
+
+        return {'success': True, 'message': 'You have joined the mission!'}
     except Exception as e:
         logger.error(f"Join mission error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -343,10 +350,10 @@ async def join_value_circle(data: dict):
 
         existing = await db.circle_memberships.find_one({"user_id": user_id, "circle_id": circle_id})
         if existing:
-            return {'success': True, 'message_he': 'כבר חבר במעגל', 'already_member': True}
+            return {'success': True, 'message': 'Already a member of the circle', 'already_member': True}
 
         await db.circle_memberships.insert_one({'user_id': user_id, 'circle_id': circle_id, 'joined_at': datetime.now(timezone.utc).isoformat()})
-        return {'success': True, 'message_he': 'הצטרפת למעגל!', 'already_member': False}
+        return {'success': True, 'message': 'You have joined the circle!', 'already_member': False}
     except HTTPException:
         raise
     except Exception as e:
@@ -396,10 +403,10 @@ async def get_value_circle_detail(circle_id: str, user_id: str = ""):
             demo_p = _random.randint(200, 2000)
             missions.append({
                 'id': f'circle-mission-{circle_id}-{d}',
-                'title_he': {'contribution': 'חזק את הקשר', 'recovery': 'שקם את הבסיס', 'order': 'שחזר סדר', 'exploration': 'הרחב את השדה'}.get(d, 'משימה'),
+                'title': {'contribution': 'Strengthen the bond', 'recovery': 'Rebuild the foundation', 'order': 'Restore order', 'exploration': 'Expand the field'}.get(d, 'Mission'),
                 'direction': d,
                 'direction_he': GLOBE_DIR_LABELS.get(d, ''),
-                'description_he': f"משימת מעגל: {cdef['label_he']}",
+                'description': f"Circle mission: {cdef.get('label', cdef.get('label_he', ''))}",
                 'participants': demo_p,
                 'target': demo_p + _random.randint(500, 2000),
                 'status': 'active'
@@ -431,9 +438,9 @@ async def leave_value_circle(data: dict):
 
         result = await db.circle_memberships.delete_one({"user_id": user_id, "circle_id": circle_id})
         if result.deleted_count == 0:
-            return {'success': True, 'message_he': 'לא חבר במעגל', 'was_member': False}
+            return {'success': True, 'message': 'Not a member of the circle', 'was_member': False}
 
-        return {'success': True, 'message_he': 'עזבת את המעגל', 'was_member': True}
+        return {'success': True, 'message': 'You have left the circle', 'was_member': True}
     except HTTPException:
         raise
     except Exception as e:
@@ -489,12 +496,12 @@ async def get_compass_ai(user_id: str):
                 'success': True, 'user_id': user_id,
                 'dominant_direction': None, 'dominant_direction_he': None,
                 'weak_direction': None, 'weak_direction_he': None,
-                'suggestion_he': 'בצע את הפעולה הראשונה שלך כדי לקבל ניתוח מצפן.',
+                'suggestion': 'Perform your first action to receive a compass analysis.',
                 'niche_he': None, 'streak': 0, 'balance_score': 0
             }
 
         weak = min(dir_counts, key=dir_counts.get)
-        suggestion = COMPASS_SUGGESTIONS.get(dominant, {}).get('suggestion_he', 'המשך בכיוון שלך.')
+        suggestion = COMPASS_SUGGESTIONS.get(dominant, {}).get('suggestion_he', 'Keep going in your direction.')
 
         vals = list(dir_counts.values())
         mean = total / 4

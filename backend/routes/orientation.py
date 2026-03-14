@@ -15,9 +15,11 @@ from constants import (
     DIRECTION_THEORY, GLOBE_COUNTRY_COORDS, GLOBE_COLOR_MAP, GLOBE_DIR_LABELS,
     BASE_DEFINITIONS, DIRECTION_TO_DEPT, DEPT_LABELS_HE,
     MISSION_DESCRIPTIONS, MISSION_TARGET, MAX_INVITE_CODES,
-    ANONYMOUS_ALIASES, DIRECTIONS
+    ANONYMOUS_ALIASES, DIRECTIONS, VALUE_NICHES
 )
 from services.helpers import _get_or_create_mission_today
+from services.trust_integration import on_daily_action, on_globe_point
+from services.analytics import log_event
 from philos_ai import interpret_action, interpret_field, interpret_profile
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
@@ -41,10 +43,10 @@ async def get_field_today():
         all_sessions = await db.philos_sessions.find({}, {"_id": 0}).to_list(1000)
         
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration'
         }
         
         positive_directions = ['contribution', 'recovery', 'order', 'exploration']
@@ -96,9 +98,9 @@ async def get_field_today():
         # Generate insight
         insight = None
         if total_actions > 0 and dominant_direction:
-            insight = f"היום השדה נוטה לכיוון {direction_labels.get(dominant_direction, dominant_direction)}."
+            insight = f"Today the field leans toward {direction_labels.get(dominant_direction, dominant_direction)}."
         else:
-            insight = "השדה מאוזן היום."
+            insight = "The field is balanced today."
         
         return FieldTodayResponse(
             success=True,
@@ -135,10 +137,10 @@ async def get_orientation_field():
         }
         
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration'
         }
         
         positive_directions = ['recovery', 'order', 'contribution', 'exploration']
@@ -311,28 +313,28 @@ async def get_orientation_field():
             
             # Generate momentum insight
             if field_momentum == "stabilizing":
-                momentum_insight = "השדה הקולקטיבי מתייצב ונע לכיוון איזון חיובי."
+                momentum_insight = "The collective field is stabilizing and moving toward positive balance."
             elif field_momentum == "drifting":
-                momentum_insight = "השדה הקולקטיבי נסחף מהאיזון בימים האחרונים."
+                momentum_insight = "The collective field has been drifting from balance in recent days."
             elif field_momentum == "shifting" and momentum_direction:
-                momentum_insight = f"השדה הקולקטיבי נע בהדרגה לכיוון {direction_labels.get(momentum_direction, momentum_direction)}."
+                momentum_insight = f"The collective field is gradually moving toward {direction_labels.get(momentum_direction, momentum_direction)}."
             else:
-                momentum_insight = "השדה הקולקטיבי יציב ומאוזן."
+                momentum_insight = "The collective field is stable and balanced."
         else:
             # Not enough data for momentum
-            momentum_insight = "אין מספיק נתונים לחישוב מומנטום."
+            momentum_insight = "Not enough data to calculate momentum."
         
         # Generate field insight (overall state)
         field_insight = None
         if dominant_direction and dominant_direction in direction_labels:
             if field_momentum == "stabilizing":
-                field_insight = f"השדה הקולקטיבי מראה נטייה חזקה ל{direction_labels[dominant_direction]} ומתייצב."
+                field_insight = f"The collective field shows a strong leaning toward {direction_labels[dominant_direction]} and is stabilizing."
             elif field_momentum == "drifting":
-                field_insight = f"השדה הקולקטיבי נוטה ל{direction_labels[dominant_direction]} אך יש סחף מהאיזון."
+                field_insight = f"The collective field leans toward {direction_labels[dominant_direction]} but there is drift from balance."
             elif field_momentum == "shifting":
-                field_insight = f"השדה הקולקטיבי נוטה ל{direction_labels[dominant_direction]} ומשנה כיוון."
+                field_insight = f"The collective field leans toward {direction_labels[dominant_direction]} and is shifting direction."
             else:
-                field_insight = f"השדה הקולקטיבי מראה נטייה ל{direction_labels[dominant_direction]}."
+                field_insight = f"The collective field shows a leaning toward {direction_labels[dominant_direction]}."
         
         return OrientationFieldResponse(
             success=True,
@@ -375,10 +377,10 @@ async def get_field_history():
         }
         
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration'
         }
         
         positive_directions = ['recovery', 'order', 'contribution', 'exploration']
@@ -392,7 +394,7 @@ async def get_field_history():
             week_boundaries.append({
                 'start': week_start.isoformat(),
                 'end': week_end.isoformat(),
-                'label': f'שבוע {4 - i}' if i > 0 else 'השבוע'
+                'label': f'Week {4 - i}' if i > 0 else 'This week'
             })
         week_boundaries.reverse()  # Oldest first
         
@@ -494,17 +496,17 @@ async def get_field_history():
             # Determine trend type
             if ratio_change > 10:
                 trend_type = "stabilizing"
-                trend_insight = "השדה הקולקטיבי מתייצב בשבועות האחרונים."
+                trend_insight = "The collective field has been stabilizing in recent weeks."
             elif ratio_change < -10:
                 trend_type = "drifting"
-                trend_insight = "השדה הקולקטיבי נסחף מהאיזון בשבועות האחרונים."
+                trend_insight = "The collective field has been drifting from balance in recent weeks."
             elif consistent_direction:
                 trend_type = f"shifting_{consistent_direction}"
                 trend_direction = consistent_direction
-                trend_insight = f"השדה הקולקטיבי נע בהדרגה לכיוון {direction_labels.get(consistent_direction, consistent_direction)} בשבועות האחרונים."
+                trend_insight = f"The collective field has been gradually moving toward {direction_labels.get(consistent_direction, consistent_direction)} in recent weeks."
             else:
                 trend_type = "stable"
-                trend_insight = "השדה הקולקטיבי יציב ומאוזן בשבועות האחרונים."
+                trend_insight = "The collective field has been stable and balanced in recent weeks."
             
             # More specific insights based on movement
             if len(weeks_with_data) >= 3:
@@ -524,19 +526,19 @@ async def get_field_history():
                 if avg_dy < -3:  # Moving up (toward order)
                     if avg_dx > 3:
                         trend_direction = "contribution"
-                        trend_insight = "השדה הקולקטיבי נע לכיוון תרומה וסדר בשבועות האחרונים."
+                        trend_insight = "The collective field has been moving toward Contribution and Order in recent weeks."
                     elif avg_dx < -3:
                         trend_direction = "order"
-                        trend_insight = "השדה הקולקטיבי נע לכיוון סדר בשבועות האחרונים."
+                        trend_insight = "The collective field has been moving toward Order in recent weeks."
                 elif avg_dy > 3:  # Moving down (toward chaos)
                     if avg_dx > 3:
                         trend_direction = "exploration"
-                        trend_insight = "השדה הקולקטיבי נע לכיוון חקירה בשבועות האחרונים."
+                        trend_insight = "The collective field has been moving toward Exploration in recent weeks."
                     elif avg_dx < -3:
                         trend_direction = "recovery"
-                        trend_insight = "השדה הקולקטיבי נע לכיוון התאוששות בשבועות האחרונים."
+                        trend_insight = "The collective field has been moving toward Recovery in recent weeks."
         else:
-            trend_insight = "אין מספיק נתונים היסטוריים לזיהוי מגמה."
+            trend_insight = "Not enough historical data to identify a trend."
         
         return FieldHistoryResponse(
             success=True,
@@ -564,10 +566,10 @@ async def get_user_comparison(user_id: str):
         all_sessions = await db.philos_sessions.find({}, {"_id": 0}).to_list(1000)
         
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration'
         }
         
         positive_directions = ['recovery', 'order', 'contribution', 'exploration']
@@ -606,7 +608,7 @@ async def get_user_comparison(user_id: str):
                 user_id=user_id,
                 total_user_actions=0,
                 direction_percentiles=[],
-                comparison_insight="אין מספיק נתונים השבוע. בצע פעולות כדי להשוות את עצמך לאחרים."
+                comparison_insight="Not enough data this week. Perform actions to compare yourself with others."
             )
         
         # Calculate percentiles for each direction
@@ -631,13 +633,13 @@ async def get_user_comparison(user_id: str):
             rank_label = None
             if user_count > 0:
                 if percentile >= 90:
-                    rank_label = "עליון 10%"
+                    rank_label = "Top 10%"
                 elif percentile >= 75:
-                    rank_label = "עליון 25%"
+                    rank_label = "Top 25%"
                 elif percentile >= 50:
-                    rank_label = "מעל הממוצע"
+                    rank_label = "Above average"
                 else:
-                    rank_label = "פעיל"
+                    rank_label = "Active"
             
             direction_percentiles.append(DirectionPercentile(
                 direction=direction,
@@ -668,11 +670,11 @@ async def get_user_comparison(user_id: str):
         comparison_insight = None
         
         if dominant_direction and dominant_percentile >= 75:
-            comparison_insight = f"אתה בין ה-{100 - int(dominant_percentile)}% המובילים במיקוד על {direction_labels.get(dominant_direction, dominant_direction)} השבוע."
+            comparison_insight = f"You are among the top {100 - int(dominant_percentile)}% focused on {direction_labels.get(dominant_direction, dominant_direction)} this week."
         elif dominant_direction and dominant_percentile >= 50:
-            comparison_insight = f"אתה מעל הממוצע במיקוד על {direction_labels.get(dominant_direction, dominant_direction)}."
+            comparison_insight = f"You are above average in focus on {direction_labels.get(dominant_direction, dominant_direction)}."
         elif dominant_direction:
-            comparison_insight = f"הכיוון המוביל שלך השבוע הוא {direction_labels.get(dominant_direction, dominant_direction)}."
+            comparison_insight = f"Your leading direction this week is {direction_labels.get(dominant_direction, dominant_direction)}."
         
         # Add balance insight if user is well-distributed
         if total_user_actions >= 4:
@@ -681,7 +683,7 @@ async def get_user_comparison(user_id: str):
                 max_count = max(counts_above_zero)
                 min_count = min(counts_above_zero)
                 if max_count - min_count <= 2:
-                    comparison_insight = "המיקוד שלך מאוזן בין הכיוונים. זהו סימן טוב לאיזון."
+                    comparison_insight = "Your focus is balanced across directions. This is a good sign of equilibrium."
         
         return UserComparisonResponse(
             success=True,
@@ -706,10 +708,10 @@ async def get_decision_path(user_id: str):
     based on user's current position and imbalance.
     
     Theory-based recommendations:
-    - harm → recovery: "יצאת מהמסלול. הצעד הבא: התאוששות."
-    - avoidance → order: "נסחפת להימנעות. הצעד הבא: ליצור מבנה."
-    - isolation → contribution: "מיקוד עצמי גבוה. הצעד הבא: לתרום לאחרים."
-    - rigidity → exploration: "יש קיפאון. הצעד הבא: לפתוח לחדש."
+    - harm → recovery: "You went off track. Next step: Recovery."
+    - avoidance → order: "You drifted into avoidance. Next step: Create structure."
+    - isolation → contribution: "High self-focus. Next step: Contribute to others."
+    - rigidity → exploration: "There is stagnation. Next step: Open to new things."
     """
     try:
         # Get user's session data
@@ -722,70 +724,70 @@ async def get_decision_path(user_id: str):
         
         # Direction labels in Hebrew
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה',
-            'harm': 'נזק',
-            'avoidance': 'הימנעות'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration',
+            'harm': 'Harm',
+            'avoidance': 'Avoidance'
         }
         
         # Concrete actions for each direction (Hebrew)
         concrete_actions = {
             'recovery': [
-                "קח הפסקה של 5 דקות ונשום עמוק.",
-                "שתה כוס מים ושב בשקט לרגע.",
-                "צא להליכה קצרה של 10 דקות.",
-                "כתוב 3 דברים שאתה אסיר תודה עליהם.",
-                "האזן לשיר אחד שאתה אוהב."
+                "Take a 5-minute break and breathe deeply.",
+                "Drink a glass of water and sit quietly for a moment.",
+                "Go for a short 10-minute walk.",
+                "Write down 3 things you are grateful for.",
+                "Listen to one song you love."
             ],
             'order': [
-                "בחר משימה קטנה אחת והשלם אותה עכשיו.",
-                "סדר פינה אחת בחדר שלך.",
-                "כתוב רשימה של 3 דברים לעשות היום.",
-                "קבע זמן קבוע למשימה שדחית.",
-                "מחק 5 הודעות ישנות מהטלפון."
+                "Pick one small task and complete it now.",
+                "Tidy up one corner of your room.",
+                "Write a list of 3 things to do today.",
+                "Set a fixed time for a task you have been putting off.",
+                "Delete 5 old messages from your phone."
             ],
             'contribution': [
-                "שלח הודעה חיובית למישהו שאכפת לך ממנו.",
-                "הצע עזרה קטנה למישהו קרוב.",
-                "הקשב למישהו במשך 5 דקות בלי להפריע.",
-                "שתף משהו מועיל עם אחרים.",
-                "תן מחמאה כנה למישהו."
+                "Send a positive message to someone you care about.",
+                "Offer a small help to someone close to you.",
+                "Listen to someone for 5 minutes without interrupting.",
+                "Share something useful with others.",
+                "Give a sincere compliment to someone."
             ],
             'exploration': [
-                "נסה משהו חדש שלא עשית קודם.",
-                "קרא מאמר על נושא שמעניין אותך.",
-                "שאל שאלה שלא שאלת קודם.",
-                "לך בדרך אחרת מהרגיל.",
-                "התחל שיחה עם מישהו חדש."
+                "Try something new that you have not done before.",
+                "Read an article on a topic that interests you.",
+                "Ask a question you have not asked before.",
+                "Take a different route than usual.",
+                "Start a conversation with someone new."
             ]
         }
         
         # Recommended steps for each imbalance (Hebrew)
         recommended_steps = {
-            'harm': "הצעד הבא: התאוששות. חזור לאיזון.",
-            'avoidance': "הצעד הבא: ליצור מבנה וסדר.",
-            'isolation': "הצעד הבא: לתרום לאחרים.",
-            'rigidity': "הצעד הבא: להיפתח לחדש."
+            'harm': "Next step: Recovery. Return to balance.",
+            'avoidance': "Next step: Create structure and order.",
+            'isolation': "Next step: Contribute to others.",
+            'rigidity': "Next step: Open up to new things."
         }
         
         # Theory basis for each path
         theory_basis = {
-            'harm': "נזק → התאוששות: כשיש נזק, הדרך חזרה היא דרך התאוששות.",
-            'avoidance': "הימנעות → סדר: הימנעות מאוזנת על ידי יצירת מבנה.",
-            'isolation': "בידוד → תרומה: מיקוד עצמי מאוזן על ידי תרומה לאחרים.",
-            'rigidity': "נוקשות → חקירה: קיפאון מאוזן על ידי פתיחות וחקירה."
+            'harm': "Harm → Recovery: When there is harm, the way back is through recovery.",
+            'avoidance': "Avoidance → Order: Avoidance is balanced by creating structure.",
+            'isolation': "Isolation → Contribution: Self-focus is balanced by contributing to others.",
+            'rigidity': "Rigidity → Exploration: Stagnation is balanced by openness and exploration."
         }
         
         # Headlines for each imbalance
         headlines = {
-            'harm': "יצאת מהמסלול.",
-            'avoidance': "נסחפת להימנעות.",
-            'isolation': "מיקוד עצמי גבוה.",
-            'rigidity': "יש קיפאון.",
-            'positive': "אתה על המסלול הנכון.",
-            'new_user': "ברוך הבא למסע."
+            'harm': "You went off track.",
+            'avoidance': "You drifted into avoidance.",
+            'isolation': "High self-focus.",
+            'rigidity': "There is stagnation.",
+            'positive': "You are on the right track.",
+            'new_user': "Welcome to the journey."
         }
         
         # Default response for new users
@@ -799,9 +801,9 @@ async def get_decision_path(user_id: str):
                 drift_type=None,
                 recommended_direction="recovery",
                 headline=headlines['new_user'],
-                recommended_step="התחל עם פעולת התאוששות.",
+                recommended_step="Start with a Recovery action.",
                 concrete_action=action,
-                theory_basis="התאוששות היא נקודת הפתיחה הטובה ביותר.",
+                theory_basis="Recovery is the best starting point.",
                 session_id=str(uuid.uuid4())[:8]
             )
         
@@ -896,12 +898,12 @@ async def get_decision_path(user_id: str):
         # Build response
         if drift_type:
             headline = headlines.get(drift_type, headlines['new_user'])
-            recommended_step = recommended_steps.get(drift_type, "המשך קדימה.")
+            recommended_step = recommended_steps.get(drift_type, "Keep moving forward.")
             theory = theory_basis.get(drift_type, "")
         else:
             headline = headlines['positive']
-            recommended_step = f"לאיזון מלא, נסה גם {direction_labels.get(recommended_direction, recommended_direction)}."
-            theory = "איזון בין הכיוונים מחזק את ההתמצאות."
+            recommended_step = f"For full balance, also try {direction_labels.get(recommended_direction, recommended_direction)}."
+            theory = "Balance between directions strengthens orientation."
         
         return DecisionPathResponse(
             success=True,
@@ -951,60 +953,60 @@ async def get_orientation_identity(user_id: str):
         
         # Direction labels in Hebrew
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה',
-            'harm': 'נזק',
-            'avoidance': 'הימנעות'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration',
+            'harm': 'Harm',
+            'avoidance': 'Avoidance'
         }
         
         # Identity definitions
         identity_definitions = {
             'avoidance_loop': {
-                'label': 'לולאת הימנעות',
-                'description': 'נראה שאתה בדפוס של הימנעות. זה בסדר - זיהוי זה הצעד הראשון לשינוי.',
-                'insight': 'הימנעות היא תגובה טבעית. הצעד הבא הוא ליצור מבנה קטן.'
+                'label': 'Avoidance loop',
+                'description': 'It seems you are in an avoidance pattern. That is okay — recognizing it is the first step to change.',
+                'insight': 'Avoidance is a natural response. The next step is to create a small structure.'
             },
             'recovery_dominant': {
-                'label': 'ממוקד בהתאוששות',
-                'description': 'אתה בתהליך התאוששות פעיל. זה זמן חשוב לריפוי ואיזון.',
-                'insight': 'התאוששות היא בסיס חיוני. כשתרגיש מוכן, נסה גם פעולות סדר.'
+                'label': 'Focused on Recovery',
+                'description': 'You are in an active recovery process. This is an important time for healing and balance.',
+                'insight': 'Recovery is an essential foundation. When you feel ready, try some Order actions too.'
             },
             'order_builder': {
-                'label': 'בונה סדר',
-                'description': 'אתה יוצר מבנה וסדר בחיים שלך. זה סימן של התקדמות.',
-                'insight': 'סדר מאפשר יציבות. השלב הבא יכול להיות תרומה לאחרים.'
+                'label': 'Building Order',
+                'description': 'You are creating structure and order in your life. This is a sign of progress.',
+                'insight': 'Order enables stability. The next step could be contributing to others.'
             },
             'contribution_oriented': {
-                'label': 'מכוון לתרומה',
-                'description': 'אתה ממוקד בתרומה לאחרים. זה מעשיר אותך ואת הסביבה.',
-                'insight': 'תרומה מחברת אותך לאחרים. זכור גם לדאוג לעצמך.'
+                'label': 'Oriented toward Contribution',
+                'description': 'You are focused on contributing to others. This enriches you and your surroundings.',
+                'insight': 'Contribution connects you to others. Remember to take care of yourself too.'
             },
             'exploration_driven': {
-                'label': 'מונע מחקירה',
-                'description': 'אתה פתוח לחדש ולחקירה. זה מרחיב את האופקים שלך.',
-                'insight': 'חקירה מביאה צמיחה. לפעמים כדאי גם לעצור וליצור סדר.'
+                'label': 'Driven by Exploration',
+                'description': 'You are open to new things and exploration. This broadens your horizons.',
+                'insight': 'Exploration brings growth. Sometimes it is also worth pausing to create order.'
             },
             'recovery_to_contribution': {
-                'label': 'מעבר מהתאוששות לתרומה',
-                'description': 'אתה עובר מהתאוששות לתרומה. זה מסע חיובי מאוד.',
-                'insight': 'המעבר הזה מראה התקדמות משמעותית. המשך בקצב שלך.'
+                'label': 'Transitioning from Recovery to Contribution',
+                'description': 'You are moving from Recovery to Contribution. This is a very positive journey.',
+                'insight': 'This transition shows significant progress. Continue at your own pace.'
             },
             'drifting_from_order': {
-                'label': 'סחף מסדר',
-                'description': 'היית ממוקד בסדר אבל יש סחף. זה הזדמנות לבדוק מה השתנה.',
-                'insight': 'סחף הוא טבעי. חזור ליצור מבנה קטן אחד.'
+                'label': 'Drifting from Order',
+                'description': 'You were focused on Order but there is drift. This is an opportunity to check what has changed.',
+                'insight': 'Drift is natural. Go back and create one small structure.'
             },
             'balanced': {
-                'label': 'מאוזן',
-                'description': 'אתה מפזר את הפעולות שלך בין הכיוונים. זה מצב בריא.',
-                'insight': 'איזון הוא מטרה טובה. המשך לשמור על מגוון.'
+                'label': 'Balanced',
+                'description': 'You are spreading your actions across directions. This is a healthy state.',
+                'insight': 'Balance is a good goal. Keep maintaining variety.'
             },
             'new_user': {
-                'label': 'מתחיל מסע',
-                'description': 'ברוך הבא! אתה בתחילת המסע שלך.',
-                'insight': 'כל מסע מתחיל בצעד אחד. התחל עם פעולת התאוששות.'
+                'label': 'Starting the journey',
+                'description': 'Welcome! You are at the beginning of your journey.',
+                'insight': 'Every journey begins with a single step. Start with a Recovery action.'
             }
         }
         
@@ -1278,73 +1280,73 @@ async def get_daily_question(user_id: str):
         identity_questions = {
             'avoidance_loop': {
                 'questions': [
-                    "מה הדבר הקטן ביותר שאתה יכול לעשות עכשיו כדי ליצור סדר?",
-                    "איזו משימה קטנה אתה יכול להשלים ב-5 דקות הקרובות?",
-                    "מה הצעד הראשון שתוכל לעשות היום לקראת משהו שדחית?"
+                    "What is the smallest thing you can do right now to create order?",
+                    "What small task can you complete in the next 5 minutes?",
+                    "What is the first step you can take today toward something you have been putting off?"
                 ],
                 'suggested_direction': 'order'
             },
             'recovery_dominant': {
                 'questions': [
-                    "מה הדבר הקטן שאתה יכול לעשות היום עבור מישהו אחר?",
-                    "איך תוכל לתרום למישהו קרוב אליך היום?",
-                    "מה תוכל לשתף עם אחרים מהניסיון שלך?"
+                    "What small thing can you do today for someone else?",
+                    "How can you contribute to someone close to you today?",
+                    "What can you share with others from your experience?"
                 ],
                 'suggested_direction': 'contribution'
             },
             'order_builder': {
                 'questions': [
-                    "מה משהו חדש שתוכל לנסות היום?",
-                    "איזו שאלה חדשה תוכל לשאול היום?",
-                    "מה הדבר שתמיד רצית לחקור אבל לא הספקת?"
+                    "What is something new you can try today?",
+                    "What new question can you ask today?",
+                    "What have you always wanted to explore but never had the time for?"
                 ],
                 'suggested_direction': 'exploration'
             },
             'contribution_oriented': {
                 'questions': [
-                    "מה תעשה היום כדי לדאוג לעצמך?",
-                    "איזו הפסקה קטנה מגיעה לך היום?",
-                    "מה יעזור לך להתאושש ולהטען מחדש?"
+                    "What will you do today to take care of yourself?",
+                    "What small break do you deserve today?",
+                    "What will help you recover and recharge?"
                 ],
                 'suggested_direction': 'recovery'
             },
             'exploration_driven': {
                 'questions': [
-                    "איזו משימה תוכל לסיים היום כדי ליצור סדר?",
-                    "מה הדבר שצריך ארגון בחיים שלך עכשיו?",
-                    "איך תוכל ליצור מבנה קטן שיתמוך בך?"
+                    "What task can you finish today to create order?",
+                    "What needs organizing in your life right now?",
+                    "How can you create a small structure to support yourself?"
                 ],
                 'suggested_direction': 'order'
             },
             'recovery_to_contribution': {
                 'questions': [
-                    "מה הצעד הבא שתעשה היום בכיוון של תרומה?",
-                    "איך תוכל להמשיך את המומנטום החיובי שלך?",
-                    "מה תוכל לעשות היום שירחיב את המעגל שלך?"
+                    "What is the next step you will take today toward contribution?",
+                    "How can you continue your positive momentum?",
+                    "What can you do today that will expand your circle?"
                 ],
                 'suggested_direction': 'contribution'
             },
             'drifting_from_order': {
                 'questions': [
-                    "מה המבנה הקטן שתוכל ליצור מחדש היום?",
-                    "איזו הרגל טובה תוכל לחזור אליה?",
-                    "מה יעזור לך להרגיש יותר מאורגן?"
+                    "What small structure can you recreate today?",
+                    "What good habit can you return to?",
+                    "What will help you feel more organized?"
                 ],
                 'suggested_direction': 'order'
             },
             'balanced': {
                 'questions': [
-                    "מה הכיוון שהכי מושך אותך היום?",
-                    "באיזה תחום תרצה להתמקד היום?",
-                    "מה יהפוך את היום הזה למשמעותי עבורך?"
+                    "What direction appeals to you most today?",
+                    "What area would you like to focus on today?",
+                    "What would make this day meaningful for you?"
                 ],
                 'suggested_direction': dominant_direction or 'recovery'
             },
             'new_user': {
                 'questions': [
-                    "מה הדבר הראשון שתעשה היום לטובת עצמך?",
-                    "איך תרצה להתחיל את המסע שלך?",
-                    "מה יגרום לך להרגיש טוב היום?"
+                    "What is the first thing you will do today for yourself?",
+                    "How would you like to start your journey?",
+                    "What will make you feel good today?"
                 ],
                 'suggested_direction': 'recovery'
             }
@@ -1365,28 +1367,28 @@ async def get_daily_question(user_id: str):
             base_questions = {
                 'body': {
                     'questions': [
-                        "עשה פעולה פיזית קטנה שמסדרת משהו סביבך.",
-                        "הזז את הגוף היום — אפילו הליכה קצרה.",
-                        "סדר פינה אחת בסביבה שלך.",
-                        "עשה משהו מעשי שדחית."
+                        "Do a small physical action that organizes something around you.",
+                        "Move your body today — even a short walk.",
+                        "Tidy up one corner of your environment.",
+                        "Do something practical that you have been putting off."
                     ],
                     'suggested_direction': 'order'
                 },
                 'heart': {
                     'questions': [
-                        "שלח מילה טובה למישהו שלא ציפה לזה.",
-                        "הקשב למישהו היום — באמת הקשב.",
-                        "עשה משהו קטן עבור מישהו קרוב.",
-                        "תן לעצמך רגע של חמלה היום."
+                        "Send a kind word to someone who does not expect it.",
+                        "Listen to someone today — really listen.",
+                        "Do something small for someone close to you.",
+                        "Give yourself a moment of compassion today."
                     ],
                     'suggested_direction': 'contribution'
                 },
                 'head': {
                     'questions': [
-                        "מצא דבר אחד חדש שלא שמת לב אליו קודם.",
-                        "ארגן רעיון אחד שמסתובב לך בראש.",
-                        "למד משהו קטן שלא ידעת.",
-                        "קבל החלטה אחת שדחית."
+                        "Find one new thing you had not noticed before.",
+                        "Organize one idea that has been on your mind.",
+                        "Learn something small that you did not know.",
+                        "Make one decision you have been putting off."
                     ],
                     'suggested_direction': 'exploration'
                 }
@@ -1506,7 +1508,7 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
                 # Add to history
                 new_action = {
                     'id': str(uuid.uuid4()),
-                    'action_text': f"השלמתי את השאלה היומית: {question.get('question_he', '')}",
+                    'action_text': f"Completed the daily question: {question.get('question', question.get('question_he', ''))}",
                     'value_tag': suggested_direction,
                     'timestamp': now.isoformat(),
                     'source': 'daily_question',
@@ -1528,10 +1530,10 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
         # Calculate impact on field (percentage of today's actions)
         impact_percent = 0.0
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration'
         }
         
         if request.action_taken:
@@ -1543,14 +1545,14 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
         
         impact_message = None
         if request.action_taken and suggested_direction in direction_labels:
-            impact_message = f"הפעולה שלך חיזקה היום את שדה ה{direction_labels[suggested_direction]}"
+            impact_message = f"Your action today strengthened the {direction_labels[suggested_direction]} field"
         
         # Increment mission participants if direction matches today's mission
         mission_contributed = False
+        today_str = now.strftime("%Y-%m-%d")  # Define here for use throughout function
         if request.action_taken:
             mission = await _get_or_create_mission_today()
             if mission.get("direction") == suggested_direction:
-                today_str = now.strftime("%Y-%m-%d")
                 await db.daily_missions.update_one(
                     {"date": today_str},
                     {"$inc": {"participants": 1}}
@@ -1610,8 +1612,13 @@ async def submit_daily_answer(user_id: str, request: DailyQuestionAnswerRequest)
                     inviter_alias_idx = hash(inviter_check) % len(ANONYMOUS_ALIASES)
                     invite_reward = {
                         "inviter_alias": ANONYMOUS_ALIASES[inviter_alias_idx],
-                        "message_he": f"הפעולה הראשונה שלך העניקה נקודת ערך ל{ANONYMOUS_ALIASES[inviter_alias_idx]}"
+                        "message": f"Your first action granted a value point to {ANONYMOUS_ALIASES[inviter_alias_idx]}"
                     }
+
+        # === TRUST INTEGRATION: Record value event for daily action ===
+        if request.action_taken:
+            await on_daily_action(user_id, suggested_direction, streak)
+            await log_event(user_id, "daily_action", {"direction": suggested_direction, "streak": streak})
 
         return {
             'success': True,
@@ -1657,7 +1664,7 @@ async def get_user_orientation(user_id: str):
                 user_position={"x": 50, "y": 50},
                 collective_center={"x": 50, "y": 50},
                 alignment_score=50,
-                insights=["אין מספיק נתונים. בצע פעולות כדי לראות את המיקום שלך."]
+                insights=["Not enough data. Perform actions to see your position."]
             )
         
         # Get collective field data
@@ -1750,41 +1757,41 @@ async def get_user_orientation(user_id: str):
         # Generate insights
         insights = []
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה',
-            'harm': 'נזק',
-            'avoidance': 'הימנעות'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration',
+            'harm': 'Harm',
+            'avoidance': 'Avoidance'
         }
         
         # Position insight based on alignment
         if alignment_score > 70:
-            insights.append("אתה מיושר היטב עם השדה הקולקטיבי.")
+            insights.append("You are well aligned with the collective field.")
         elif alignment_score > 50:
-            insights.append("המיקום שלך קרוב למרכז השדה הקולקטיבי.")
+            insights.append("Your position is close to the center of the collective field.")
         elif alignment_score < 30:
-            insights.append("אתה רחוק ממרכז השדה הקולקטיבי.")
+            insights.append("You are far from the center of the collective field.")
         else:
-            insights.append("יש מרחק בין המיקום שלך לבין מרכז השדה הקולקטיבי.")
+            insights.append("There is a distance between your position and the center of the collective field.")
         
         # Drift insight
         if drift_pattern == "drift_toward_chaos":
-            insights.append("נראה סחף לכיוון כאוס. מומלץ לשקול פעולת התאוששות או סדר.")
+            insights.append("There appears to be drift toward chaos. Consider a Recovery or Order action.")
         elif drift_pattern == "drift_toward_isolation":
-            insights.append("יש נטייה לבידוד. כדאי לשקול פעולת תרומה.")
+            insights.append("There is a tendency toward isolation. Consider a Contribution action.")
         elif drift_pattern == "stabilization_toward_order":
-            insights.append("אתה מתייצב לכיוון סדר.")
+            insights.append("You are stabilizing toward Order.")
         elif drift_pattern == "movement_toward_contribution":
-            insights.append("יש תנועה חיובית לכיוון תרומה.")
+            insights.append("There is positive movement toward Contribution.")
         elif drift_pattern == "recovery_mode":
-            insights.append("אתה במצב התאוששות.")
+            insights.append("You are in a Recovery state.")
         
         # Momentum insight
         if momentum == "stabilizing" and momentum_direction:
-            insights.append(f"המומנטום שלך חיובי לכיוון {direction_labels.get(momentum_direction, momentum_direction)}.")
+            insights.append(f"Your momentum is positive toward {direction_labels.get(momentum_direction, momentum_direction)}.")
         elif momentum == "drifting":
-            insights.append("המומנטום מראה סחף מהאיזון.")
+            insights.append("Momentum shows drift from balance.")
         
         return UserOrientationResponse(
             success=True,
@@ -1823,7 +1830,7 @@ async def detect_drift(user_id: str):
             return DriftDetectionResponse(
                 success=True,
                 drift_detected=False,
-                insight="אין מספיק נתונים לזיהוי דפוס. המשך לבצע פעולות."
+                insight="Not enough data to identify a pattern. Keep performing actions."
             )
         
         # Extract pattern
@@ -1849,33 +1856,33 @@ async def detect_drift(user_id: str):
             drift_type = "chaos"
             drift_strength = round((chaos_count / total) * 100, 1)
             if counts.get('harm', 0) > counts.get('avoidance', 0):
-                insight = "זוהה סחף לכיוון נזק. מומלץ לאזן עם התאוששות."
+                insight = "Drift toward Harm detected. Balance with Recovery is recommended."
             else:
-                insight = "זוהה סחף לכיוון הימנעות. מומלץ לאזן עם סדר."
+                insight = "Drift toward Avoidance detected. Balance with Order is recommended."
         
         # Check for isolation drift (only order, no contribution/exploration)
         elif counts.get('order', 0) >= 3 and counts.get('contribution', 0) == 0 and counts.get('exploration', 0) == 0:
             drift_detected = True
             drift_type = "isolation"
             drift_strength = round((counts.get('order', 0) / total) * 100, 1)
-            insight = "זוהה דפוס של בידוד (סדר ללא תרומה). מומלץ לפתוח לכיוון תרומה."
+            insight = "Isolation pattern detected (Order without Contribution). Opening toward Contribution is recommended."
         
         # Check for positive stabilization
         elif counts.get('order', 0) + counts.get('contribution', 0) >= total * 0.6:
             drift_detected = False
             drift_type = "stabilization"
             drift_strength = round(((counts.get('order', 0) + counts.get('contribution', 0)) / total) * 100, 1)
-            insight = "נראה דפוס של התייצבות חיובית. המשך בכיוון זה."
+            insight = "Positive stabilization pattern detected. Keep going in this direction."
         
         # Check for contribution movement
         elif counts.get('contribution', 0) >= 2:
             drift_detected = False
             drift_type = "contribution_movement"
             drift_strength = round((counts.get('contribution', 0) / total) * 100, 1)
-            insight = "יש תנועה חיובית לכיוון תרומה."
+            insight = "There is positive movement toward Contribution."
         
         if not insight:
-            insight = "הדפוס הנוכחי מאוזן יחסית."
+            insight = "The current pattern is relatively balanced."
         
         return DriftDetectionResponse(
             success=True,
@@ -1907,10 +1914,10 @@ async def get_weekly_insight(user_id: str):
         user_history = user_session.get('history', []) if user_session else []
         
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration'
         }
         
         positive_directions = ['contribution', 'recovery', 'order', 'exploration']
@@ -1948,27 +1955,27 @@ async def get_weekly_insight(user_id: str):
         trend = 'stable'
         
         if total_actions == 0:
-            insight_he = "אין מספיק נתונים השבוע. התחל עם פעולה אחת."
+            insight_he = "Not enough data this week. Start with one action."
         elif total_actions < 3:
-            insight_he = "שבוע שקט. כדאי להוסיף עוד פעולות."
+            insight_he = "A quiet week. Consider adding more actions."
         else:
             # Check for balance
             active_directions = [d for d in positive_directions if direction_counts.get(d, 0) > 0]
             
             if len(active_directions) >= 3:
-                insight_he = "שבוע מאוזן! פעלת במגוון כיוונים."
+                insight_he = "A balanced week! You acted in diverse directions."
                 trend = 'improving'
             elif dominant_direction:
                 label = direction_labels.get(dominant_direction, dominant_direction)
                 pct = distribution_percent.get(dominant_direction, 0)
                 
                 if pct > 60:
-                    insight_he = f"השבוע התמקדת מאוד ב{label}. כדאי לשקול גיוון."
+                    insight_he = f"This week you were very focused on {label}. Consider diversifying."
                 elif pct > 40:
-                    insight_he = f"השבוע עברת מהתאוששות לפעולה. כיוון מוביל: {label}."
+                    insight_he = f"This week you moved from recovery to action. Leading direction: {label}."
                     trend = 'improving'
                 else:
-                    insight_he = f"הכיוון המוביל שלך השבוע: {label}."
+                    insight_he = f"Your leading direction this week: {label}."
         
         return WeeklyInsightResponse(
             success=True,
@@ -1999,16 +2006,16 @@ async def get_share_card(user_id: str):
         daily_question = await get_daily_question(user_id)
         
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration'
         }
         
         orientation = identity.dominant_direction
-        orientation_label = direction_labels.get(orientation, 'איזון')
+        orientation_label = direction_labels.get(orientation, 'Balance')
         
-        message_he = f"היום אני באוריינטציית {orientation_label}"
+        message_he = f"Today my orientation is {orientation_label}"
         
         # Calculate compass position
         direction_positions = {
@@ -2041,10 +2048,10 @@ async def get_orientation_index():
     """
     try:
         direction_labels = {
-            'recovery': 'התאוששות',
-            'order': 'סדר',
-            'contribution': 'תרומה',
-            'exploration': 'חקירה'
+            'recovery': 'Recovery',
+            'order': 'Order',
+            'contribution': 'Contribution',
+            'exploration': 'Exploration'
         }
         
         positive_directions = ['contribution', 'recovery', 'order', 'exploration']
@@ -2101,13 +2108,13 @@ async def get_orientation_index():
         headline_he = None
         if dominant_today:
             label = direction_labels.get(dominant_today, dominant_today)
-            headline_he = f"מדד ההתמצאות היום: {label} מובילה"
+            headline_he = f"Orientation index today: {label} leads"
             
             if direction_change and direction_change != 'same':
                 yesterday_label = direction_labels.get(dominant_yesterday, dominant_yesterday)
-                headline_he += f" (אתמול: {yesterday_label})"
+                headline_he += f" (yesterday: {yesterday_label})"
         else:
-            headline_he = "מדד ההתמצאות היום: מאוזן"
+            headline_he = "Orientation index today: Balanced"
         
         return OrientationIndexResponse(
             success=True,
@@ -2131,20 +2138,20 @@ async def get_orientation_index():
 
 MISSION_DESCRIPTIONS = {
     'contribution': {
-        'mission_he': 'משימת היום: תרומה',
-        'description_he': 'עשה פעולה קטנה שתעזור למישהו אחר היום'
+        'mission_he': 'Mission of the day: Contribution',
+        'description_he': 'Do a small action that will help someone else today'
     },
     'recovery': {
-        'mission_he': 'משימת היום: התאוששות',
-        'description_he': 'קח רגע של מנוחה והטענה עצמית היום'
+        'mission_he': 'Mission of the day: Recovery',
+        'description_he': 'Take a moment of rest and self-recharging today'
     },
     'order': {
-        'mission_he': 'משימת היום: סדר',
-        'description_he': 'ארגן דבר אחד קטן בסביבה שלך היום'
+        'mission_he': 'Mission of the day: Order',
+        'description_he': 'Organize one small thing in your environment today'
     },
     'exploration': {
-        'mission_he': 'משימת היום: חקירה',
-        'description_he': 'נסה משהו חדש או למד דבר אחד חדש היום'
+        'mission_he': 'Mission of the day: Exploration',
+        'description_he': 'Try something new or learn one new thing today'
     }
 }
 
@@ -2545,12 +2552,12 @@ async def get_orientation_feed():
                 diff = now - action_time
                 minutes = int(diff.total_seconds() / 60)
                 if minutes < 1:
-                    time_str = "עכשיו"
+                    time_str = "now"
                 elif minutes < 60:
-                    time_str = f"{minutes}ד"
+                    time_str = f"{minutes}m"
                 else:
                     hours = minutes // 60
-                    time_str = f"{hours}ש"
+                    time_str = f"{hours}h"
             except Exception:
                 time_str = ""
             item = {
@@ -2579,7 +2586,7 @@ async def create_invite(user_id: str):
         import string as _string
         existing_count = await db.invites.count_documents({"inviter_id": user_id})
         if existing_count >= MAX_INVITE_CODES:
-            return {"success": False, "message": "הגעת למגבלת קודי ההזמנה"}
+            return {"success": False, "message": "You have reached the invite code limit"}
 
         code = "PH-" + ''.join(_random.choices(_string.ascii_uppercase + _string.digits, k=4))
         now = datetime.now(timezone.utc)
@@ -2762,17 +2769,17 @@ async def get_weekly_report(user_id: str):
         dominant = max(dist, key=dist.get) if sum(dist.values()) > 0 else None
 
         direction_labels_he = {
-            'recovery': 'התאוששות', 'order': 'סדר',
-            'contribution': 'תרומה', 'exploration': 'חקירה'
+            'recovery': 'Recovery', 'order': 'Order',
+            'contribution': 'Contribution', 'exploration': 'Exploration'
         }
 
         # Insight text
         if sum(dist.values()) == 0:
-            insight_he = "אין מספיק נתונים השבוע. נסה לענות על השאלה היומית כל יום."
+            insight_he = "Not enough data this week. Try answering the daily question every day."
         elif dominant:
-            insight_he = f"השבוע הכיוון המוביל שלך היה {direction_labels_he.get(dominant, dominant)} ({distribution[dominant]}%). המשך לפעול בכיוון זה או נסה לאזן."
+            insight_he = f"This week your leading direction was {direction_labels_he.get(dominant, dominant)} ({distribution[dominant]}%). Keep going in this direction or try to balance."
         else:
-            insight_he = "השבוע הייתה לך פעילות מאוזנת בכל הכיוונים."
+            insight_he = "This week you had balanced activity across all directions."
 
         # Streak
         all_answered = await db.daily_questions.find(
@@ -2858,16 +2865,16 @@ async def get_daily_opening(user_id: str):
             day_idx = now.timetuple().tm_yday % 4
             suggested = dirs[day_idx]
 
-        dir_labels = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+        dir_labels = {'recovery': 'Recovery', 'order': 'Order', 'contribution': 'Contribution', 'exploration': 'Exploration'}
 
         # Greeting based on time of day
         hour = now.hour
         if hour < 12:
-            greeting = 'בוקר טוב'
+            greeting = 'Good morning'
         elif hour < 17:
-            greeting = 'צהריים טובים'
+            greeting = 'Good afternoon'
         else:
-            greeting = 'ערב טוב'
+            greeting = 'Good evening'
 
         return {
             "success": True,
@@ -2909,7 +2916,7 @@ async def get_day_summary(user_id: str):
                         today_total += 1
 
         chosen_direction = max(dir_counts, key=dir_counts.get) if today_total > 0 else None
-        dir_labels = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+        dir_labels = {'recovery': 'Recovery', 'order': 'Order', 'contribution': 'Contribution', 'exploration': 'Exploration'}
 
         # Impact on field
         all_sessions = await db.philos_sessions.find({}, {"_id": 0, "history": 1}).to_list(10000)
@@ -2950,9 +2957,9 @@ async def get_day_summary(user_id: str):
 
         # Reflection text
         if today_total == 0:
-            reflection_he = "היום עוד לא ביצעת פעולות. מחר יום חדש."
+            reflection_he = "You have not performed any actions today. Tomorrow is a new day."
         else:
-            reflection_he = f"היום פעלת {today_total} פעמים, בעיקר בכיוון {dir_labels.get(chosen_direction, '')}. ההשפעה שלך על השדה: {impact_percent}%."
+            reflection_he = f"Today you acted {today_total} times, mostly in the {dir_labels.get(chosen_direction, '')} direction. Your impact on the field: {impact_percent}%."
 
         # Department allocation analysis
         today_base_doc = await db.daily_bases.find_one(
@@ -2991,9 +2998,9 @@ async def get_day_summary(user_id: str):
             chosen_he = DEPT_LABELS_HE.get(chosen_base, '')
             used_he = DEPT_LABELS_HE.get(most_used_dept, '')
             if chosen_base == most_used_dept:
-                base_reflection_he = f"בחרת לפעול מה{chosen_he}, והפעולות שלך היום תאמו את הבחירה."
+                base_reflection_he = f"You chose to act from {chosen_he}, and your actions today aligned with that choice."
             else:
-                base_reflection_he = f"בחרת לפעול מה{chosen_he}, אך רוב הפעולות היום נעו לכיוון ה{used_he}."
+                base_reflection_he = f"You chose to act from {chosen_he}, but most of your actions today leaned toward {used_he}."
 
         return {
             "success": True,
@@ -3029,21 +3036,21 @@ async def get_day_summary(user_id: str):
 
 BASE_DEFINITIONS = {
     'heart': {
-        'name_he': 'לב',
-        'description_he': 'מאיזה מרכז אתה פועל היום?',
-        'allocations_he': ['קשרים ומערכות יחסים', 'אמפתיה והקשבה', 'תרומה ונתינה', 'תיקון רגשי'],
+        'name_he': 'Heart',
+        'description_he': 'Which center are you acting from today?',
+        'allocations_he': ['Relationships and connections', 'Empathy and listening', 'Contribution and giving', 'Emotional repair'],
         'allocations_keys': ['relationships', 'empathy', 'contribution', 'emotional_repair']
     },
     'head': {
-        'name_he': 'ראש',
-        'description_he': 'מאיזה מרכז אתה פועל היום?',
-        'allocations_he': ['סדר ותכנון', 'למידה וחקירה', 'קבלת החלטות', 'חשיבה אסטרטגית'],
+        'name_he': 'Head',
+        'description_he': 'Which center are you acting from today?',
+        'allocations_he': ['Order and planning', 'Learning and exploration', 'Decision making', 'Strategic thinking'],
         'allocations_keys': ['order', 'learning', 'decision_making', 'strategic_thinking']
     },
     'body': {
-        'name_he': 'גוף',
-        'description_he': 'מאיזה מרכז אתה פועל היום?',
-        'allocations_he': ['תנועה ובריאות', 'פעולה מעשית', 'משמעת ומחויבות', 'סדר פיזי'],
+        'name_he': 'Body',
+        'description_he': 'Which center are you acting from today?',
+        'allocations_he': ['Movement and health', 'Practical action', 'Discipline and commitment', 'Physical order'],
         'allocations_keys': ['movement', 'practical_action', 'discipline', 'physical_order']
     }
 }
@@ -3056,7 +3063,7 @@ DIRECTION_TO_DEPT = {
     'exploration': 'head'
 }
 
-DEPT_LABELS_HE = {'heart': 'לב', 'head': 'ראש', 'body': 'גוף'}
+DEPT_LABELS_HE = {'heart': 'Heart', 'head': 'Head', 'body': 'Body'}
 
 
 @router.get("/orientation/daily-base/{user_id}")
@@ -3256,7 +3263,7 @@ async def get_daily_summary(user_id: str):
         dominant_force = max(forces, key=forces.get) if today_total > 0 else None
         dominant_vector = max(vectors, key=vectors.get) if today_total > 0 else None
 
-        dir_labels = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+        dir_labels = {'recovery': 'Recovery', 'order': 'Order', 'contribution': 'Contribution', 'exploration': 'Exploration'}
 
         # Field impact: what % of today's collective actions came from this user
         all_sessions = await db.philos_sessions.find({}, {"_id": 0, "history": 1}).to_list(10000)
@@ -3268,9 +3275,9 @@ async def get_daily_summary(user_id: str):
 
         # Build summary text
         if today_total == 0:
-            summary_he = "עוד לא ביצעת פעולות היום. התחל את היום עם השאלה היומית."
+            summary_he = "You have not performed any actions today. Start the day with the daily question."
         else:
-            summary_he = f"היום ביצעת {today_total} פעולות. הכיוון המוביל: {dir_labels.get(dominant_dir, '')}. הכוח הדומיננטי: {FORCE_LABELS_HE.get(dominant_force, '')}."
+            summary_he = f"Today you performed {today_total} actions. Leading direction: {dir_labels.get(dominant_dir, '')}. Dominant force: {FORCE_LABELS_HE.get(dominant_force, '')}."
 
         return {
             "success": True,
@@ -3315,8 +3322,8 @@ async def get_user_profile(user_id: str):
         dir_counts = {d: stats.get(d, 0) for d in dirs}
         total_actions = sum(dir_counts.values())
         dominant_dir = max(dir_counts, key=dir_counts.get) if total_actions > 0 else None
-        dir_labels = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
-        identity = dir_labels.get(dominant_dir, 'חדש') + ' מוביל' if dominant_dir else 'משתמש חדש'
+        dir_labels = {'recovery': 'Recovery', 'order': 'Order', 'contribution': 'Contribution', 'exploration': 'Exploration'}
+        identity = dir_labels.get(dominant_dir, 'New') + ' leader' if dominant_dir else 'New user'
 
         # Streak
         answered = await db.daily_questions.find(
@@ -3398,16 +3405,16 @@ async def get_user_profile(user_id: str):
 
 
 GLOBE_COUNTRY_COORDS = {
-    "BR": {"lat": -14.2, "lng": -51.9, "name": "ברזיל"}, "IN": {"lat": 20.6, "lng": 78.9, "name": "הודו"},
-    "DE": {"lat": 51.2, "lng": 10.5, "name": "גרמניה"}, "US": {"lat": 37.1, "lng": -95.7, "name": "ארה\"ב"},
-    "JP": {"lat": 36.2, "lng": 138.3, "name": "יפן"}, "NG": {"lat": 9.1, "lng": 8.7, "name": "ניגריה"},
-    "IL": {"lat": 31.0, "lng": 34.9, "name": "ישראל"}, "FR": {"lat": 46.2, "lng": 2.2, "name": "צרפת"},
-    "AU": {"lat": -25.3, "lng": 133.8, "name": "אוסטרליה"}, "KR": {"lat": 35.9, "lng": 127.8, "name": "דרום קוריאה"},
-    "MX": {"lat": 23.6, "lng": -102.6, "name": "מקסיקו"}, "GB": {"lat": 55.4, "lng": -3.4, "name": "בריטניה"},
-    "CA": {"lat": 56.1, "lng": -106.3, "name": "קנדה"}, "IT": {"lat": 41.9, "lng": 12.6, "name": "איטליה"},
-    "ES": {"lat": 40.5, "lng": -3.7, "name": "ספרד"}, "AR": {"lat": -38.4, "lng": -63.6, "name": "ארגנטינה"},
-    "TR": {"lat": 39.0, "lng": 35.2, "name": "טורקיה"}, "TH": {"lat": 15.9, "lng": 100.5, "name": "תאילנד"},
-    "PL": {"lat": 51.9, "lng": 19.1, "name": "פולין"}, "NL": {"lat": 52.1, "lng": 5.3, "name": "הולנד"}
+    "BR": {"lat": -14.2, "lng": -51.9, "name": "Brazil"}, "IN": {"lat": 20.6, "lng": 78.9, "name": "India"},
+    "DE": {"lat": 51.2, "lng": 10.5, "name": "Germany"}, "US": {"lat": 37.1, "lng": -95.7, "name": "USA"},
+    "JP": {"lat": 36.2, "lng": 138.3, "name": "Japan"}, "NG": {"lat": 9.1, "lng": 8.7, "name": "Nigeria"},
+    "IL": {"lat": 31.0, "lng": 34.9, "name": "Israel"}, "FR": {"lat": 46.2, "lng": 2.2, "name": "France"},
+    "AU": {"lat": -25.3, "lng": 133.8, "name": "Australia"}, "KR": {"lat": 35.9, "lng": 127.8, "name": "South Korea"},
+    "MX": {"lat": 23.6, "lng": -102.6, "name": "Mexico"}, "GB": {"lat": 55.4, "lng": -3.4, "name": "United Kingdom"},
+    "CA": {"lat": 56.1, "lng": -106.3, "name": "Canada"}, "IT": {"lat": 41.9, "lng": 12.6, "name": "Italy"},
+    "ES": {"lat": 40.5, "lng": -3.7, "name": "Spain"}, "AR": {"lat": -38.4, "lng": -63.6, "name": "Argentina"},
+    "TR": {"lat": 39.0, "lng": 35.2, "name": "Turkey"}, "TH": {"lat": 15.9, "lng": 100.5, "name": "Thailand"},
+    "PL": {"lat": 51.9, "lng": 19.1, "name": "Poland"}, "NL": {"lat": 52.1, "lng": 5.3, "name": "Netherlands"}
 }
 
 GLOBE_COLOR_MAP = {
@@ -3415,7 +3422,7 @@ GLOBE_COLOR_MAP = {
     'order': '#6366f1', 'exploration': '#f59e0b'
 }
 
-GLOBE_DIR_LABELS = {'recovery': 'התאוששות', 'order': 'סדר', 'contribution': 'תרומה', 'exploration': 'חקירה'}
+GLOBE_DIR_LABELS = {'recovery': 'Recovery', 'order': 'Order', 'contribution': 'Contribution', 'exploration': 'Exploration'}
 
 
 @router.get("/orientation/globe-activity")
@@ -3526,6 +3533,11 @@ async def add_globe_point(data: dict):
         }
         await db.user_globe_points.insert_one(doc)
 
+        # === TRUST INTEGRATION: Record value event for globe contribution ===
+        if user_id:
+            await on_globe_point(user_id)
+            await log_event(user_id, "globe_point", {"direction": direction, "country_code": country_code})
+
         return {
             "success": True,
             "point": {
@@ -3536,7 +3548,7 @@ async def add_globe_point(data: dict):
                 "country_code": country_code,
                 "timestamp": now
             },
-            "message_he": "הפעולה שלך נוספה לשדה האנושי"
+            "message": "Your action has been added to the human field"
         }
     except Exception as e:
         logger.error(f"Add globe point error: {str(e)}")
@@ -3582,9 +3594,9 @@ async def get_globe_region(country_code: str):
         recent = sum(1 for e in events + user_pts if e.get("timestamp", "") >= mid)
         older = total - recent
         if older > 0:
-            trend = "עולה" if recent > older else ("יורד" if recent < older else "יציב")
+            trend = "rising" if recent > older else ("falling" if recent < older else "stable")
         else:
-            trend = "חדש" if recent > 0 else "שקט"
+            trend = "new" if recent > 0 else "quiet"
 
         return {
             "success": True,

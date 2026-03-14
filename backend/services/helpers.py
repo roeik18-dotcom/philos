@@ -24,13 +24,12 @@ def generate_replay_insights_hebrew(
     """
     insights = []
     
-    # Hebrew labels
     tag_labels = {
-        'contribution': 'תרומה',
-        'recovery': 'התאוששות',
-        'order': 'סדר',
-        'harm': 'נזק',
-        'avoidance': 'הימנעות'
+        'contribution': 'Contribution',
+        'recovery': 'Recovery',
+        'order': 'Order',
+        'harm': 'Harm',
+        'avoidance': 'Avoidance'
     }
     
     # 1. Most explored alternative path insight
@@ -39,7 +38,7 @@ def generate_replay_insights_hebrew(
         if top_alt[1] > 0:
             percentage = round((top_alt[1] / total) * 100)
             insights.append(
-                f"המסלול החלופי הנבדק ביותר הוא {tag_labels.get(top_alt[0], top_alt[0])} ({percentage}% מההפעלות החוזרות)."
+                f"The most explored alternative path is {tag_labels.get(top_alt[0], top_alt[0])} ({percentage}% of replays)."
             )
     
     # 2. Top transition pattern insight
@@ -51,14 +50,14 @@ def generate_replay_insights_hebrew(
         
         if top_trans['from'] in ['harm', 'avoidance'] and top_trans['to'] in ['contribution', 'recovery', 'order']:
             insights.append(
-                f"אתה נוטה לבדוק מסלולי {to_label} כשאתה בוחר ב{from_label}. "
-                f"זה מצביע על מודעות לחלופות חיוביות ({count} פעמים)."
+                f"You tend to explore {to_label} paths when choosing {from_label}. "
+                f"This indicates awareness of positive alternatives ({count} times)."
             )
         elif top_trans['from'] == top_trans['to']:
             pass  # Skip same-to-same
         else:
             insights.append(
-                f"הדפוס הנפוץ ביותר: מ{from_label} ל{to_label} ({count} פעמים)."
+                f"Most common pattern: from {from_label} to {to_label} ({count} times)."
             )
     
     # 3. Most replayed original decision type
@@ -66,7 +65,7 @@ def generate_replay_insights_hebrew(
         top_orig = max(orig_counts.items(), key=lambda x: x[1])
         if top_orig[1] > 2:  # Only if significant
             insights.append(
-                f"אתה מרבה לבדוק חלופות להחלטות מסוג {tag_labels.get(top_orig[0], top_orig[0])}."
+                f"You frequently explore alternatives for {tag_labels.get(top_orig[0], top_orig[0])} decisions."
             )
     
     # 4. Blind spot insight
@@ -75,19 +74,19 @@ def generate_replay_insights_hebrew(
         from_label = tag_labels.get(spot['from'], spot['from'])
         to_label = tag_labels.get(spot['to'], spot['to'])
         insights.append(
-            f"נקודה עיוורת: מעולם לא בדקת מסלול {to_label} אחרי החלטת {from_label}."
+            f"Blind spot: you have never explored a {to_label} path after a {from_label} decision."
         )
     
     # 5. Recovery-specific insight
     if alt_counts.get('recovery', 0) > alt_counts.get('order', 0) * 1.5:
         insights.append(
-            "יש לך נטייה לבדוק מסלולי התאוששות - ייתכן שאתה מרגיש צורך במנוחה שלא מתממש."
+            "You tend to explore Recovery paths — you may feel a need for rest that is not being met."
         )
     
     # 6. Harm avoidance insight
     if alt_counts.get('harm', 0) == 0 and total > 5:
         insights.append(
-            "אתה נמנע מלבדוק מסלולי נזק בהפעלות חוזרות - סימן חיובי למודעות ערכית."
+            "You avoid exploring Harm paths in replays — a positive sign of value awareness."
         )
     
     # Limit to 4 most relevant insights
@@ -191,7 +190,7 @@ def _generate_field_narrative(dominant, dir_counts, total, momentum, region_coun
     import random as _rng
 
     if not dominant or total == 0:
-        return 'השדה שקט. ממתין לפעולה ראשונה.'
+        return 'The field is quiet. Waiting for the first action.'
 
     dir_he = GLOBE_DIR_LABELS.get(dominant, '')
 
@@ -204,41 +203,41 @@ def _generate_field_narrative(dominant, dir_counts, total, momentum, region_coun
     secondary = sorted_dirs[1] if len(sorted_dirs) > 1 else None
     secondary_he = GLOBE_DIR_LABELS.get(secondary[0], '') if secondary else ''
 
-    if momentum == 'עולה' and dominant_pct > 0.4:
+    if momentum == 'rising' and dominant_pct > 0.4:
         templates = [
-            f'השדה נוטה ל{dir_he} — התנועה מתחזקת',
-            f'גל של {dir_he} עובר בשדה',
-            f'פעילות {dir_he} עולה ברחבי השדה',
+            f'The field leans toward {dir_he} — momentum is building',
+            f'A wave of {dir_he} is moving through the field',
+            f'{dir_he} activity is rising across the field',
         ]
-    elif momentum == 'יורד':
+    elif momentum == 'falling':
         templates = [
-            f'השדה נרגע — {dir_he} עדיין מוביל',
-            f'התנועה מאטה, {dir_he} שומר על נוכחות',
-            f'השדה שוקע לשקט, עם נטייה ל{dir_he}',
+            f'The field is calming — {dir_he} still leads',
+            f'Movement is slowing, {dir_he} maintains presence',
+            f'The field is settling into stillness, leaning toward {dir_he}',
         ]
     elif dominant_pct > 0.5:
         templates = [
-            f'השדה נוטה בבירור ל{dir_he}',
-            f'{dir_he} שולט בשדה היום',
-            f'כוח ה{dir_he} דומיננטי בשדה',
+            f'The field clearly leans toward {dir_he}',
+            f'{dir_he} dominates the field today',
+            f'{dir_he} force is dominant in the field',
         ]
     elif dominant_pct < 0.3 and secondary:
         templates = [
-            f'השדה מתפצל בין {dir_he} ל{secondary_he}',
-            f'מתח בין {dir_he} ל{secondary_he} — השדה בתנועה',
-            f'{dir_he} ו{secondary_he} מושכים את השדה לכיוונים שונים',
+            f'The field is split between {dir_he} and {secondary_he}',
+            f'Tension between {dir_he} and {secondary_he} — the field is in motion',
+            f'{dir_he} and {secondary_he} pull the field in different directions',
         ]
     elif region_count > 4:
         templates = [
-            f'{dir_he} מתייצב במספר אזורים',
-            f'השדה פעיל ברחבי העולם — {dir_he} מוביל',
-            f'פעילות {dir_he} מתפשטת בין אזורים',
+            f'{dir_he} is stabilizing across multiple regions',
+            f'The field is active worldwide — {dir_he} leads',
+            f'{dir_he} activity is spreading across regions',
         ]
     else:
         templates = [
-            f'השדה נוטה ל{dir_he} היום',
-            f'תנועת {dir_he} נמשכת בשדה',
-            f'השדה חי — {dir_he} מוביל את הכיוון',
+            f'The field leans toward {dir_he} today',
+            f'{dir_he} movement continues in the field',
+            f'The field is alive — {dir_he} leads the way',
         ]
 
     return _rng.choice(templates)

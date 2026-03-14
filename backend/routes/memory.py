@@ -354,7 +354,7 @@ async def get_replay_insights(user_id: str):
                 success=True,
                 user_id=user_id,
                 total_replays=0,
-                insights=["אין עדיין נתוני הפעלה חוזרת. התחל לבדוק מסלולים חלופיים כדי לקבל תובנות."],
+                insights=["No replay data yet. Start exploring alternative paths to gain insights."],
                 generated_at=now.isoformat()
             )
         
