@@ -10,39 +10,40 @@ class DecisionEngine:
     # Priority order for recommendations (highest to lowest)
     CONSTRAINT_PRIORITY = ['moral_floor', 'energy_floor', 'exploitation']
     
+    # Hebrew recommendations by constraint type
     RECOMMENDATIONS = {
-        'moral_floor': 'Stop and look for an action with less harm',
-        'energy_floor': 'Reduce scope and return when you have more capacity',
-        'exploitation': 'Adjust the action to benefit the collective more',
-        'allowed': 'You may proceed with a measured action'
+        'moral_floor': 'עצור ובדוק פעולה עם פחות נזק',
+        'energy_floor': 'צמצם היקף וחזור כשיש יותר capacity',
+        'exploitation': 'שנה את הפעולה כך שתועיל יותר לקולקטיב',
+        'allowed': 'אפשר להמשיך לפעולה מדודה'
     }
     
     # Action paths by gap type
     ACTION_PATHS = {
         'energy': {
-            'path_name': 'Body path',
-            'explanation': 'The gap requires restoring capacity through physical action',
-            'first_action': 'Do a short physical action that restores capacity'
+            'path_name': 'מסלול גוף',
+            'explanation': 'הפער דורש החזרת קיבולת דרך פעולה גופנית',
+            'first_action': 'בצע פעולה גופנית קצרה שמחזירה capacity'
         },
         'clarity': {
-            'path_name': 'Thought path',
-            'explanation': 'The gap requires clarity and precise definition',
-            'first_action': 'Write the problem in one clear sentence'
+            'path_name': 'מסלול מחשבה',
+            'explanation': 'הפער דורש בהירות והגדרה מדויקת',
+            'first_action': 'כתוב את הבעיה במשפט אחד ברור'
         },
         'order': {
-            'path_name': 'Order path',
-            'explanation': 'The gap requires organizing an existing element in reality',
-            'first_action': 'Organize one small element in your reality'
+            'path_name': 'מסלול סדר',
+            'explanation': 'הפער דורש ארגון של מרכיב קיים במציאות',
+            'first_action': 'סדר מרכיב אחד קטן במציאות'
         },
         'relation': {
-            'path_name': 'Connection path',
-            'explanation': 'The gap requires direct contact with a relevant person',
-            'first_action': 'Reach out directly to one relevant person'
+            'path_name': 'מסלול קשר',
+            'explanation': 'הפער דורש מגע ישיר עם גורם אנושי רלוונטי',
+            'first_action': 'צור קשר ישיר עם אדם אחד רלוונטי'
         },
         'collective_value': {
-            'path_name': 'Contribution path',
-            'explanation': 'The gap requires an action that creates value for more than one person',
-            'first_action': 'Do one action that benefits more than one person'
+            'path_name': 'מסלול תרומה',
+            'explanation': 'הפער דורש פעולה שיוצרת ערך ליותר מאדם אחד',
+            'first_action': 'בצע פעולה אחת שמועילה ליותר מאדם אחד'
         }
     }
     
@@ -85,9 +86,9 @@ class DecisionEngine:
         
         # Map reasons to constraint types
         constraint_map = {
-            'Moral floor: harm is too high': 'moral_floor',
-            'Energy collapse: capacity is too low': 'energy_floor',
-            'Exploitation: personal gain is too high relative to collective': 'exploitation'
+            'רצפה מוסרית: נזק גבוה מדי': 'moral_floor',
+            'קריסת אנרגיה: capacity נמוך מדי': 'energy_floor',
+            'ניצול: רווח אישי גבוה מדי ביחס לקולקטיבי': 'exploitation'
         }
         
         # Find highest priority failed constraint

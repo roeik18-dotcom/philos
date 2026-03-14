@@ -4,8 +4,6 @@ from database import db
 from auth_utils import (
     verify_password, get_password_hash, create_access_token, get_current_user
 )
-from services.trust_integration import on_invite_used
-from services.analytics import log_event, log_session
 from models.schemas import (
     StatusCheck, StatusCheckCreate, UserRegister, UserLogin,
     UserResponse, AuthResponse
@@ -59,26 +57,16 @@ async def register_user(data: UserRegister):
         if existing:
             return AuthResponse(
                 success=False,
-                message="This email address is already registered"
+                message="כתובת האימייל כבר קיימת במערכת"  # Email already exists
             )
 
-        # Validate invite code if provided (check both old and new collections)
+        # Validate invite code if provided
         inviter_id = None
-        invite_code_collection = None
         if data.invite_code:
-            # Check new invite_codes collection first
-            new_invite = await db.invite_codes.find_one({"code": data.invite_code, "status": "active"}, {"_id": 0})
-            if new_invite:
-                inviter_id = new_invite.get("owner_user_id")
-                invite_code_collection = "new"
-            else:
-                # Fallback to legacy invites collection
-                old_invite = await db.invites.find_one({"code": data.invite_code}, {"_id": 0})
-                if old_invite:
-                    inviter_id = old_invite.get("inviter_id")
-                    invite_code_collection = "legacy"
-                else:
-                    return AuthResponse(success=False, message="Invalid invite code")
+            invite = await db.invites.find_one({"code": data.invite_code}, {"_id": 0})
+            if not invite:
+                return AuthResponse(success=False, message="קוד ההזמנה אינו תקף")
+            inviter_id = invite.get("inviter_id")
 
         # Create new user
         now = datetime.now(timezone.utc).isoformat()
@@ -97,31 +85,22 @@ async def register_user(data: UserRegister):
 
         # If invite code was used, track it
         if data.invite_code and inviter_id:
-            if invite_code_collection == "new":
-                await db.invite_codes.update_one(
-                    {"code": data.invite_code},
-                    {"$set": {"status": "used", "used_at": now, "used_by_user_id": user_id}},
-                )
-            else:
-                await db.invites.update_one(
-                    {"code": data.invite_code},
-                    {"$push": {"used_by": user_id}, "$inc": {"use_count": 1}}
-                )
-            await on_invite_used(inviter_id)
-            await log_event(inviter_id, "invite_redeemed", {"code": data.invite_code, "redeemer_id": user_id})
-            await log_event(user_id, "invite_accepted", {"code": data.invite_code, "inviter_id": inviter_id})
+            await db.invites.update_one(
+                {"code": data.invite_code},
+                {"$push": {"used_by": user_id}, "$inc": {"use_count": 1}}
+            )
 
-        # Auto-generate 2 invite codes for the new user (new system)
+        # Auto-generate 5 invite codes for the new user
         import string as _string
-        for _ in range(2):
-            code = "PH-" + ''.join(_random.choices(_string.ascii_uppercase + _string.digits, k=5))
-            await db.invite_codes.insert_one({
+        for _ in range(5):
+            code = "PH-" + ''.join(_random.choices(_string.ascii_uppercase + _string.digits, k=4))
+            await db.invites.insert_one({
                 "code": code,
-                "owner_user_id": user_id,
-                "status": "active",
+                "inviter_id": user_id,
                 "created_at": now,
-                "used_at": None,
-                "used_by_user_id": None,
+                "used_by": [],
+                "use_count": 0,
+                "opened_count": 0
             })
 
         # Create access token
@@ -136,7 +115,7 @@ async def register_user(data: UserRegister):
                 last_login_at=now
             ),
             token=access_token,
-            message="Registration successful!"
+            message="ההרשמה הצליחה!"  # Registration successful
         )
         
     except Exception as e:
@@ -156,14 +135,14 @@ async def login_user(data: UserLogin):
         if not user:
             return AuthResponse(
                 success=False,
-                message="Invalid email or password"
+                message="אימייל או סיסמה שגויים"  # Invalid email or password
             )
         
         # Verify password
         if not verify_password(data.password, user["password_hash"]):
             return AuthResponse(
                 success=False,
-                message="Invalid email or password"
+                message="אימייל או סיסמה שגויים"  # Invalid email or password
             )
         
         # Update last login
@@ -175,9 +154,6 @@ async def login_user(data: UserLogin):
         
         # Create access token
         access_token = create_access_token(data={"sub": user["id"]})
-
-        # === ANALYTICS: Log return session ===
-        await log_session(user["id"])
 
         # Ensure user has invite codes (for existing users pre-invite system)
         existing_invites = await db.invites.count_documents({"inviter_id": user["id"]})
@@ -203,7 +179,7 @@ async def login_user(data: UserLogin):
                 last_login_at=now
             ),
             token=access_token,
-            message="Logged in successfully!"
+            message="התחברת בהצלחה!"  # Login successful
         )
         
     except Exception as e:
@@ -216,7 +192,7 @@ async def logout_user():
     """
     Logout a user (client-side token removal).
     """
-    return {"success": True, "message": "Logged out successfully"}
+    return {"success": True, "message": "התנתקת בהצלחה"}  # Logged out successfully
 
 
 @router.get("/auth/me", response_model=AuthResponse)
@@ -227,7 +203,7 @@ async def get_current_user_info(user = Depends(get_current_user)):
     if not user:
         return AuthResponse(
             success=False,
-            message="Not logged in"
+            message="לא מחובר"  # Not logged in
         )
     
     return AuthResponse(
@@ -290,7 +266,7 @@ async def migrate_anonymous_data(anonymous_user_id: str, user = Depends(get_curr
         
         return {
             "success": True,
-            "message": "Data migrated successfully to your account",
+            "message": "הנתונים הועברו בהצלחה לחשבון שלך",  # Data migrated successfully
             "new_user_id": authenticated_user_id
         }
         

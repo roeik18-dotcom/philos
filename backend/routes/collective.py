@@ -119,39 +119,39 @@ async def get_collective_layer():
         
         # Value insight
         value_labels = {
-            'contribution': 'Contribution',
-            'recovery': 'Recovery',
-            'order': 'Order',
-            'harm': 'Harm',
-            'avoidance': 'Avoidance'
+            'contribution': 'תרומה',
+            'recovery': 'התאוששות',
+            'order': 'סדר',
+            'harm': 'נזק',
+            'avoidance': 'הימנעות'
         }
         
         if dominant_value:
             top_values = sorted(positive_values.items(), key=lambda x: x[1], reverse=True)[:2]
             if len(top_values) >= 2 and top_values[1][1] > 0:
-                insights.append(f"The collective field currently leans toward {value_labels.get(top_values[0][0], '')} and {value_labels.get(top_values[1][0], '')}.")
+                insights.append(f"השדה הקולקטיבי נוטה כעת ל{value_labels.get(top_values[0][0], '')} ו{value_labels.get(top_values[1][0], '')}.")
             elif top_values:
-                insights.append(f"The collective field currently leans toward {value_labels.get(top_values[0][0], '')}.")
+                insights.append(f"השדה הקולקטיבי נוטה כעת ל{value_labels.get(top_values[0][0], '')}.")
         
         # Harm pressure insight
         if avg_harm_pressure < 0:
-            insights.append("Average harm pressure is low.")
+            insights.append("לחץ הנזק הממוצע נמוך.")
         elif avg_harm_pressure > 10:
-            insights.append("Average harm pressure is relatively high.")
+            insights.append("לחץ הנזק הממוצע גבוה יחסית.")
         else:
-            insights.append("Average harm pressure is moderate.")
+            insights.append("לחץ הנזק הממוצע בינוני.")
         
         # Direction insight
         if dominant_direction == 'order':
-            insights.append("There is a slight increase toward Order.")
+            insights.append("יש עלייה קלה בכיוון סדר.")
         elif dominant_direction == 'collective':
-            insights.append("There is a slight increase in collective direction.")
+            insights.append("יש עלייה קלה בכיוון קולקטיבי.")
         elif dominant_direction == 'balanced':
-            insights.append("The average direction is balanced.")
+            insights.append("הכיוון הממוצע מאוזן.")
         
         # Recovery insight
         if avg_recovery_stability > 10:
-            insights.append("Collective recovery stability is high.")
+            insights.append("יציבות ההתאוששות הקולקטיבית גבוהה.")
         
         return CollectiveLayerResponse(
             success=True,
@@ -313,37 +313,37 @@ async def get_collective_trends():
         
         # Order drift insight
         if changes['order_drift_change'] > 3:
-            insights.append("The collective field moved more toward Order this week.")
+            insights.append("השדה הקולקטיבי נע השבוע יותר לכיוון סדר.")
         elif changes['order_drift_change'] < -3:
-            insights.append("The collective field moved more toward chaos this week.")
+            insights.append("השדה הקולקטיבי נע השבוע יותר לכיוון כאוס.")
         
         # Harm pressure insight
         if changes['harm_pressure_change'] < -5:
-            insights.append("Harm pressure has decreased compared to the previous period.")
+            insights.append("לחץ הנזק ירד ביחס לתקופה הקודמת.")
         elif changes['harm_pressure_change'] > 5:
-            insights.append("Harm pressure has increased compared to the previous period.")
+            insights.append("לחץ הנזק עלה ביחס לתקופה הקודמת.")
         
         # Recovery stability insight
         if changes['recovery_stability_change'] > 5:
-            insights.append("There is an increase in collective recovery.")
+            insights.append("יש עלייה בהתאוששות הקולקטיבית.")
         elif changes['recovery_stability_change'] < -5:
-            insights.append("There is a decrease in collective recovery.")
+            insights.append("יש ירידה בהתאוששות הקולקטיבית.")
         
         # Collective drift insight
         if changes['collective_drift_change'] > 3:
-            insights.append("The collective direction is strengthening.")
+            insights.append("הכיוון הקולקטיבי מתחזק.")
         elif changes['collective_drift_change'] < -3:
-            insights.append("There is a decrease in collective direction.")
+            insights.append("יש ירידה בכיוון הקולקטיבי.")
         
         # Activity insight
         if changes['decisions_percent'] > 20:
-            insights.append("Higher activity this week.")
+            insights.append("פעילות גבוהה יותר השבוע.")
         elif changes['decisions_percent'] < -20:
-            insights.append("Lower activity this week.")
+            insights.append("פעילות נמוכה יותר השבוע.")
         
         # Stability insight
         if not insights:
-            insights.append("The collective field is relatively stable compared to the previous period.")
+            insights.append("השדה הקולקטיבי יציב יחסית לתקופה הקודמת.")
         
         return CollectiveTrendsResponse(
             success=True,
