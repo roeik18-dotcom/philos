@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PlatformLandingPage from './pages/PlatformLandingPage';
 import PhilosDashboard from './pages/PhilosDashboard';
 import TrustTestPage from './pages/TrustTestPage';
 import InvitePage from './pages/InvitePage';
@@ -137,15 +138,25 @@ function App() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <PhilosDashboard 
-        user={user}
-        onLogout={handleLogout}
-        onShowAuth={handleShowAuth}
-      />
-    </div>
-  );
+  // Dashboard (authenticated app)
+  if (window.location.pathname === '/dashboard') {
+    return (
+      <div className="min-h-screen bg-background">
+        <PhilosDashboard 
+          user={user}
+          onLogout={handleLogout}
+          onShowAuth={handleShowAuth}
+        />
+      </div>
+    );
+  }
+
+  // Default: Platform landing page (primary entry point)
+  const handleEnterApp = () => {
+    window.location.href = '/trust-test';
+  };
+
+  return <PlatformLandingPage onEnterApp={handleEnterApp} />;
 }
 
 export default App;
