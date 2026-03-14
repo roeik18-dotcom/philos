@@ -43,13 +43,24 @@ export default function HomeTab({
   const [actionCompleted, setActionCompleted] = useState(false);
   const [actionDirection, setActionDirection] = useState(null);
   const [baseSelected, setBaseSelected] = useState(false);
-  const [showAtmosphere, setShowAtmosphere] = useState(false);
 
   return (
     <div className="space-y-4">
 
+      {/* ═══ GLOBAL FIELD STATE ═══ */}
+      <GlobalFieldDashboard />
+
+      {/* ═══ 3D FIELD GLOBE ═══ */}
+      <FieldGlobeSection />
+
       {/* ═══ BRIEF CONTEXT ═══ */}
       <EntryLayer userId={user?.id} />
+
+      {/* ═══ PERSONAL ORIENTATION ═══ */}
+      <DailyOpeningSection userId={user?.id} />
+
+      {/* ═══ OPPOSITION ═══ */}
+      <OppositionLayer userId={user?.id} />
 
       {/* ═══ CORE ACTION PATH — Base + Daily Action ═══ */}
       <DailyBaseSelection userId={user?.id} onBaseSelected={() => setBaseSelected(true)} />
@@ -92,28 +103,9 @@ export default function HomeTab({
         actionDirection={actionDirection}
       />
 
-      {/* ─── Atmosphere: globe, opening, opposition, closing ─── */}
-      <div className="pt-1">
-        <button
-          onClick={() => setShowAtmosphere(!showAtmosphere)}
-          className="w-full flex items-center justify-center gap-2 py-2 text-[10px] text-gray-300 hover:text-gray-500 transition-colors"
-          data-testid="toggle-atmosphere-section"
-        >
-          <span>{showAtmosphere ? 'Hide field & observation' : 'Global field & observation'}</span>
-          {showAtmosphere ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-        </button>
-      </div>
-
-      {showAtmosphere && (
-        <div className="space-y-4 animate-fadeIn">
-          <GlobalFieldDashboard />
-          <FieldGlobeSection />
-          <DailyOpeningSection userId={user?.id} />
-          <OppositionLayer userId={user?.id} />
-          <ClosingLayer userId={user?.id} />
-          <CompassAISection userId={user?.id} />
-        </div>
-      )}
+      {/* ═══ CLOSING & COMPASS ═══ */}
+      <ClosingLayer userId={user?.id} />
+      <CompassAISection userId={user?.id} />
 
       {/* ─── Community ─── */}
       <div className="pt-2">
