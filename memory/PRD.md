@@ -81,9 +81,40 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Backend GET /api/actions/{action_id} endpoint for single action lookup
 - Files: ActionFeed.js (ShareModal), ActionSharePage.js, app.css, actions.py
 
+### Dynamic OG Tags (Complete - March 2026)
+- Backend-rendered HTML at /api/share/action/{id} with dynamic OG + Twitter meta tags
+- Server-side OG image generation (1200x630) with Pillow: avatar, title, community, trust score, Philos branding
+- Social share URLs updated to use /api/share/action/{id} for WhatsApp/LinkedIn/Twitter
+- Meta refresh redirect to SPA for real users
+- Files: og_share.py
+
+### Opportunity System (Complete - March 2026)
+- 8 seeded opportunities (jobs, grants, collaborations, support) with trust score requirements
+- /app/opportunities page with type filters and Eligible/Locked status
+- Progress bar shows unlock count
+- Opportunities preview in user profile (top 3)
+- Files: opportunities.py, OpportunitiesPage.js, ProductProfile.js
+
+### Community Funds (Complete - March 2026)
+- 5 seeded communities with fund data (raised, distributed, balance)
+- /app/community-funds leaderboard with expandable transaction history
+- Summary stats: total raised, distributed, balance
+- Files: community.py, CommunityFundsPage.js
+
+### Leaderboard (Complete - March 2026)
+- /app/leaderboard with users ranked by trust score (MongoDB aggregation)
+- Top 3 podium display
+- Per-user stats: trust score, total actions, categories
+- Files: leaderboard.py, LeaderboardPage.js
+
+### Weekly Impact Report (Complete - March 2026)
+- /app/report (auth required) with weekly summary
+- Stats: week actions, trust earned, total trust, rank, categories, communities
+- Network-wide stats: active users, total actions, trust generated
+- All-time summary with rank
+- Files: leaderboard.py, WeeklyReportPage.js
+
 ## Prioritized Backlog
-### P1: Opportunity System (jobs, grants from high trust)
-### P2: Opportunity System
 ### P2: Expand Trust-Aware AI
 ### P2: Define and Map Risk Signals
 ### P3: ProfilePage Refactoring
