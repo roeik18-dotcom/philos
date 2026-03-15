@@ -114,6 +114,16 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - All-time summary with rank
 - Files: leaderboard.py, WeeklyReportPage.js
 
+### Trust Integrity Layer (Complete - March 2026)
+- Verification signals: self_reported (1x), community_verified (2x), org_verified (3x) with trust multiplier
+- Anti-spam: rate limit (5/hour), duplicate detection (24h), self-reaction prevention (403)
+- Reputation decay: 30-day inactivity → 5% trust reduction (scheduled 04:00 UTC daily)
+- Community verification endpoint with upgrade-only logic
+- Suspicious activity flags: reaction farming + velocity spike detection
+- Admin endpoints: /api/trust/integrity-stats, /api/trust/flags
+- Frontend verification badges (BadgeCheck green, Building2 amber)
+- Files: trust_integrity.py, actions.py updated, scheduler.py updated, ActionFeed.js
+
 ## Prioritized Backlog
 ### P2: Expand Trust-Aware AI
 ### P2: Define and Map Risk Signals
