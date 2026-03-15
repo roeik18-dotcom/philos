@@ -465,6 +465,144 @@
   border-color: rgba(255,255,255,0.15);
 }
 
+/* ═══ ARCHITECTURE LAYERS ═══ */
+.arch-section {
+  padding: 6rem 1rem 4rem;
+}
+.arch-header {
+  text-align: center;
+  margin-bottom: 5rem;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: archReveal 0.8s 0.2s ease forwards;
+}
+@keyframes archReveal { to { opacity: 1; transform: translateY(0); } }
+
+.arch-layers {
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+}
+.arch-layers::before {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 10%, rgba(255,255,255,0.06) 90%, transparent);
+}
+@media (min-width: 768px) {
+  .arch-layers::before { left: 50%; transform: translateX(-50%); }
+}
+
+.arch-layer {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  padding: 0 0 4rem 0;
+}
+.arch-layer.arch-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.arch-layer-inner {
+  position: relative;
+  padding-left: 56px;
+}
+@media (min-width: 768px) {
+  .arch-layer-inner { padding-left: 0; }
+}
+
+.arch-num {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--arch-color, var(--pl-border));
+  border-radius: 50%;
+  background: var(--pl-bg);
+  z-index: 2;
+}
+@media (min-width: 768px) {
+  .arch-num {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.arch-content {
+  padding-top: 4px;
+}
+@media (min-width: 768px) {
+  .arch-content {
+    width: 45%;
+    padding-right: 40px;
+    text-align: right;
+  }
+  .arch-content-right {
+    margin-left: auto;
+    padding-right: 0;
+    padding-left: 40px;
+    text-align: left;
+  }
+}
+
+.arch-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+.arch-lead {
+  font-size: 13px;
+  color: var(--pl-text);
+  font-weight: 500;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+.arch-body {
+  font-size: 12px;
+  color: var(--pl-muted);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.arch-principle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--pl-dim);
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--pl-border);
+  background: rgba(255,255,255,0.02);
+}
+.arch-principle-marker {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.arch-line {
+  width: 1px;
+  height: 40px;
+  margin-top: 20px;
+}
+@media (min-width: 768px) {
+  .arch-line { display: none; }
+}
+
 /* ═══ RESPONSIVE ═══ */
 @media (max-width: 768px) {
   .hero-title { font-size: 2rem; }

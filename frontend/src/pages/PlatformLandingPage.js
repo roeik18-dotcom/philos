@@ -47,6 +47,82 @@ const FLOW_STEPS = [
 ];
 
 /* ═══════════════════════════════════════════════════
+   ARCHITECTURE — 10 layers of the Philos model
+   ═══════════════════════════════════════════════════ */
+const ARCHITECTURE = [
+  {
+    num: '01', id: 'foundation', title: 'Foundation',
+    color: '#00d4ff',
+    lead: 'Before anything moves, something must exist.',
+    body: 'The universe begins with a substrate — space, time, and the potential for structure. Foundation is not a thing. It is the condition that makes things possible. Every system, every organism, every decision rests on a layer it cannot see.',
+    principle: 'Existence precedes function.',
+  },
+  {
+    num: '02', id: 'physical-laws', title: 'Physical Laws',
+    color: '#0ea5e9',
+    lead: 'Reality is not arbitrary. It follows rules.',
+    body: 'Gravity, thermodynamics, entropy — these are not suggestions. They are constraints that shape what can and cannot happen. Any model of human behavior that ignores the physical substrate is building on sand.',
+    principle: 'Constraints define possibility.',
+  },
+  {
+    num: '03', id: 'life', title: 'Life',
+    color: '#10b981',
+    lead: 'Matter organizes itself. Complexity emerges.',
+    body: 'At some threshold, chemistry becomes biology. Systems begin to self-replicate, adapt, and persist. Life is not a property — it is a pattern. A pattern that resists entropy by consuming energy and producing order.',
+    principle: 'Life is organized resistance to decay.',
+  },
+  {
+    num: '04', id: 'human-structure', title: 'Human Structure',
+    color: '#34d399',
+    lead: 'The human is a specific architecture of life.',
+    body: 'A nervous system that models the world. A body that acts on it. A social layer that connects individuals into groups. The human is not a blank slate — it is a structure with built-in capacities, limits, and biases.',
+    principle: 'Structure determines range of motion.',
+  },
+  {
+    num: '05', id: 'psychological-systems', title: 'Psychological Systems',
+    color: '#7c3aed',
+    lead: 'Inside the structure, systems compete.',
+    body: 'Cognition, emotion, drives, memory — these are not one system. They are many systems running in parallel, often in contradiction. The human does not have a single will. It has a parliament of impulses negotiating in real time.',
+    principle: 'The mind is a system of systems.',
+  },
+  {
+    num: '06', id: 'conflict-engine', title: 'Conflict Engine',
+    color: '#f43f5e',
+    lead: 'Where opposing forces collide, orientation is born.',
+    body: 'Contribution vs. harm. Order vs. chaos. Individual vs. collective. These are not problems to solve — they are permanent tensions. The human exists at the intersection of forces that pull in different directions. Conflict is not a bug. It is the engine.',
+    principle: 'Tension is the source of movement.',
+  },
+  {
+    num: '07', id: 'action-model', title: 'Action Model',
+    color: '#f59e0b',
+    lead: 'Orientation becomes decision. Decision becomes force.',
+    body: 'The human senses, orients, decides, and acts. Each action carries a direction — toward contribution or harm, toward order or chaos. The action model maps the path from internal state to external impact.',
+    principle: 'Every action has a directional signature.',
+  },
+  {
+    num: '08', id: 'social-system', title: 'Social System',
+    color: '#ec4899',
+    lead: 'No human acts alone. The field is collective.',
+    body: 'Actions propagate. Trust forms networks. Reputation creates asymmetry. The social system is the medium through which individual orientation becomes collective reality. What one person does changes the field for everyone.',
+    principle: 'The field is shared.',
+  },
+  {
+    num: '09', id: 'philos-engine', title: 'Philos Engine',
+    color: '#00d4ff',
+    lead: 'The computational layer that ties it all together.',
+    body: 'Value, Risk, and Trust — computed in real time. The Philos engine takes the raw signal of human action, maps it against the directional forces, and produces a trust score. Not a judgment. A measurement. A position in the field.',
+    principle: 'V + R + T = Orientation.',
+  },
+  {
+    num: '10', id: 'investor-layer', title: 'Investor Layer',
+    color: '#f59e0b',
+    lead: 'A system this deep has surface applications.',
+    body: 'Trust scoring for platforms. Orientation analytics for organizations. Conflict resolution engines for communities. The Philos model is not an app — it is an infrastructure layer for any system that involves human decision-making.',
+    principle: 'Infrastructure scales. Features do not.',
+  },
+];
+
+/* ═══════════════════════════════════════════════════
    GLOBE — 3D with particle layers
    ═══════════════════════════════════════════════════ */
 function generatePoints(count, tier) {
@@ -337,6 +413,51 @@ function ActionFlow() {
 }
 
 /* ═══════════════════════════════════════════════════
+   ARCHITECTURE — vertical deep-dive
+   ═══════════════════════════════════════════════════ */
+function ArchitectureLayer({ layer, index }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const isEven = index % 2 === 0;
+
+  return (
+    <div
+      ref={ref}
+      className={`arch-layer ${visible ? 'arch-visible' : ''}`}
+      data-testid={`arch-layer-${layer.id}`}
+    >
+      <div className="arch-layer-inner" style={{ '--arch-color': layer.color }}>
+        <div className="arch-num" style={{ color: layer.color }}>{layer.num}</div>
+        <div className={`arch-content ${isEven ? '' : 'arch-content-right'}`}>
+          <div className="arch-text">
+            <h3 className="arch-title" style={{ color: layer.color }}>{layer.title}</h3>
+            <p className="arch-lead">{layer.lead}</p>
+            <p className="arch-body">{layer.body}</p>
+            <div className="arch-principle">
+              <span className="arch-principle-marker" style={{ background: layer.color }} />
+              <span>{layer.principle}</span>
+            </div>
+          </div>
+          <div className="arch-line" style={{ background: `linear-gradient(to bottom, ${layer.color}22, transparent)` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
    SECTION WRAPPER — reveal on scroll
    ═══════════════════════════════════════════════════ */
 function Section({ children, className = '', id, style }) {
@@ -484,6 +605,24 @@ export default function PlatformLandingPage({ onEnterApp }) {
           </div>
         </div>
       </Section>
+
+      {/* ═══ PHILOS ARCHITECTURE — 10 deep layers ═══ */}
+      <section id="architecture" className="arch-section" data-testid="architecture-section">
+        <div className="arch-header">
+          <div className="section-label" style={{ color: 'var(--pl-cyan)' }}>Philos Architecture</div>
+          <div className="section-divider mb-8" />
+          <h2 className="section-heading">10 layers. From substrate to system.</h2>
+          <p className="section-body-sm">
+            The complete architecture of the Philos model — from the physical
+            foundation of reality to the application layer.
+          </p>
+        </div>
+        <div className="arch-layers">
+          {ARCHITECTURE.map((layer, i) => (
+            <ArchitectureLayer key={layer.id} layer={layer} index={i} />
+          ))}
+        </div>
+      </section>
 
       {/* ═══ SYSTEM MAP — Interactive layers ═══ */}
       <Section id="system-map" className="py-24 sm:py-32 px-4" style={{ background: 'rgba(255,255,255,0.01)' }}>
