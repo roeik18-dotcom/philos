@@ -754,6 +754,22 @@
   text-transform: capitalize;
   color: rgba(255,255,255,0.5);
 }
+.profile-opps-preview { display: flex; flex-direction: column; gap: 8px; }
+.profile-opp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.profile-opp-item.locked { opacity: 0.5; }
+.profile-opp-item.eligible { border-left: 2px solid #10b981; }
+.profile-opp-status { flex-shrink: 0; }
+.profile-opp-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
+.profile-opp-title { font-size: 13px; font-weight: 500; }
+.profile-opp-req { display: flex; align-items: center; gap: 3px; font-size: 11px; color: #f59e0b; }
 
 /* ═══ DASHBOARD ═══ */
 .dash-summary {
@@ -851,9 +867,14 @@
   .app-bottom-bar { display: flex; }
   .app-main { padding-bottom: 80px; }
 
-  .profile-stats { grid-template-columns: repeat(4, 1fr); }
+  .profile-stats { grid-template-columns: repeat(2, 1fr); }
   .dash-summary { grid-template-columns: 1fr; }
   .dash-stat-card { gap: 12px; }
+  .opp-list { gap: 10px; }
+  .lb-podium { gap: 8px; }
+  .lb-podium-card { padding: 16px 8px; }
+  .funds-summary { grid-template-columns: 1fr; }
+  .report-stats-grid { grid-template-columns: repeat(2, 1fr); }
 
   .map-container { height: 400px; }
   .feed-title { font-size: 1.25rem; }
@@ -862,4 +883,319 @@
 @media (max-width: 480px) {
   .profile-stats { grid-template-columns: 1fr; }
   .feed-card-meta { gap: 8px; }
+  .lb-podium { flex-direction: column; }
+  .lb-podium-card.first { order: -1; }
+  .report-stats-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══ OPPORTUNITIES ═══ */
+.opp-page { animation: fadeIn 0.35s ease; }
+.opp-trust-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  color: #f59e0b;
+  font-weight: 600;
+}
+.opp-progress {
+  margin-bottom: 24px;
+  padding: 16px 18px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+}
+.opp-progress-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 8px;
+}
+.opp-progress-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.opp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d4ff, #10b981);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.opp-list { display: flex; flex-direction: column; gap: 12px; }
+.opp-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 20px;
+  transition: border-color 0.25s;
+}
+.opp-card.eligible { border-left: 3px solid #10b981; }
+.opp-card.locked { opacity: 0.65; }
+.opp-card:hover { border-color: rgba(255,255,255,0.1); }
+
+.opp-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.opp-card-type {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.opp-card-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+.opp-card-status.eligible { color: #10b981; background: rgba(16,185,129,0.1); }
+.opp-card-status.locked { color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.04); }
+
+.opp-card-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.opp-card-desc { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; margin-bottom: 12px; }
+.opp-card-footer {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+}
+.opp-card-req { display: flex; align-items: center; gap: 4px; color: #f59e0b; }
+.opp-card-community { text-transform: capitalize; }
+
+/* ═══ COMMUNITY FUNDS ═══ */
+.funds-page { animation: fadeIn 0.35s ease; }
+.funds-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.funds-stat {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.funds-stat-value { font-size: 1.25rem; font-weight: 700; }
+.funds-stat-label { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+
+.funds-list { display: flex; flex-direction: column; gap: 10px; }
+.fund-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.25s;
+}
+.fund-card:hover { border-color: rgba(255,255,255,0.1); }
+
+.fund-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+}
+.fund-card-rank {
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.2);
+  min-width: 32px;
+}
+.fund-card-info { flex: 1; }
+.fund-card-name { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+
+.fund-card-bars { display: flex; flex-direction: column; gap: 6px; }
+.fund-bar-group { display: flex; align-items: center; gap: 8px; }
+.fund-bar-label { font-size: 10px; color: rgba(255,255,255,0.3); min-width: 68px; text-transform: uppercase; letter-spacing: 0.05em; }
+.fund-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.04); border-radius: 3px; overflow: hidden; }
+.fund-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+.fund-bar-fill.raised { background: #10b981; }
+.fund-bar-fill.distributed { background: #00d4ff; }
+.fund-bar-value { font-size: 11px; color: rgba(255,255,255,0.4); min-width: 60px; text-align: right; }
+
+.fund-card-balance { text-align: right; }
+.fund-balance-value { font-size: 1.25rem; font-weight: 700; color: #f59e0b; }
+.fund-balance-label { font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; }
+
+.fund-txns {
+  border-top: 1px solid rgba(255,255,255,0.04);
+  padding: 12px 20px;
+}
+.fund-txn-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13px;
+}
+.fund-txn-desc { flex: 1; color: rgba(255,255,255,0.5); }
+.fund-txn-type { font-size: 10px; color: rgba(255,255,255,0.25); text-transform: uppercase; padding: 2px 8px; background: rgba(255,255,255,0.04); border-radius: 8px; }
+.fund-txn-amount { font-weight: 600; min-width: 80px; text-align: right; }
+.fund-txn-amount.positive { color: #10b981; }
+.fund-txn-amount.negative { color: #f43f5e; }
+
+/* ═══ LEADERBOARD ═══ */
+.leaderboard-page { animation: fadeIn 0.35s ease; }
+.lb-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.lb-podium-card {
+  flex: 1;
+  max-width: 200px;
+  text-align: center;
+  padding: 20px 14px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  transition: border-color 0.25s;
+}
+.lb-podium-card.first {
+  padding: 28px 14px;
+  border-color: rgba(245,158,11,0.2);
+  background: rgba(245,158,11,0.03);
+}
+.lb-podium-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.lb-podium-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0a0a2e, #1a1a3e);
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 auto 10px;
+}
+.lb-podium-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.lb-podium-trust { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 16px; font-weight: 700; color: #f59e0b; margin-bottom: 4px; }
+.lb-podium-actions { font-size: 11px; color: rgba(255,255,255,0.3); }
+
+.lb-list { display: flex; flex-direction: column; gap: 4px; }
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+.lb-row:hover { background: rgba(255,255,255,0.035); }
+.lb-row.me { border-color: rgba(0,212,255,0.2); background: rgba(0,212,255,0.03); }
+
+.lb-row-rank { font-size: 14px; font-weight: 700; min-width: 24px; text-align: center; }
+.lb-row-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.lb-row-info { flex: 1; }
+.lb-row-name { font-size: 13px; font-weight: 600; display: block; }
+.lb-row-cats { display: flex; gap: 6px; margin-top: 4px; }
+.lb-cat-tag { display: flex; align-items: center; gap: 3px; font-size: 10px; color: rgba(255,255,255,0.25); text-transform: capitalize; }
+.lb-row-stats { display: flex; gap: 14px; align-items: center; }
+.lb-row-actions { display: flex; align-items: center; gap: 4px; font-size: 12px; color: rgba(255,255,255,0.3); }
+.lb-row-trust { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; color: #f59e0b; }
+
+/* ═══ WEEKLY REPORT ═══ */
+.report-page { animation: fadeIn 0.35s ease; }
+.report-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.report-section {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.report-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: rgba(255,255,255,0.7);
+}
+.report-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.report-stat {
+  text-align: center;
+  padding: 14px 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 10px;
+}
+.report-stat-value { font-size: 1.5rem; font-weight: 700; margin: 6px 0 4px; }
+.report-stat-label { font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.report-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.report-tag-label { font-size: 12px; color: rgba(255,255,255,0.35); margin-right: 4px; }
+
+.report-network-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.report-network-stat { text-align: center; }
+.report-network-value { display: block; font-size: 1.5rem; font-weight: 700; color: #00d4ff; }
+.report-network-label { display: block; font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+
+.report-alltime-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+}
+.report-alltime-trust {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #f59e0b;
+  font-weight: 600;
 }

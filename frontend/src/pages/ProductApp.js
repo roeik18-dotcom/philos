@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { List, PlusCircle, Map, User, BarChart3, LogOut, Menu, X, Home } from 'lucide-react';
+import { List, PlusCircle, Map, User, BarChart3, LogOut, Menu, X, Home, Sparkles, Wallet, Trophy, Calendar } from 'lucide-react';
 import ActionFeed from './app/ActionFeed';
 import PostAction from './app/PostAction';
 import ImpactMap from './app/ImpactMap';
 import ProductProfile from './app/ProductProfile';
 import DailyDashboard from './app/DailyDashboard';
 import ActionSharePage from './app/ActionSharePage';
+import OpportunitiesPage from './app/OpportunitiesPage';
+import CommunityFundsPage from './app/CommunityFundsPage';
+import LeaderboardPage from './app/LeaderboardPage';
+import WeeklyReportPage from './app/WeeklyReportPage';
 import AuthScreen from '../components/auth/AuthScreen';
 import './app.css';
 
@@ -13,18 +17,24 @@ const NAV_ITEMS = [
   { id: 'feed', label: 'Feed', icon: List, path: '/app/feed', auth: false },
   { id: 'post', label: 'Post', icon: PlusCircle, path: '/app/post', auth: true },
   { id: 'map', label: 'Map', icon: Map, path: '/app/map', auth: false },
+  { id: 'opportunities', label: 'Opportunities', icon: Sparkles, path: '/app/opportunities', auth: false },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/app/leaderboard', auth: false },
+];
+
+const MORE_NAV = [
+  { id: 'community-funds', label: 'Community Funds', icon: Wallet, path: '/app/community-funds', auth: false },
+  { id: 'report', label: 'Weekly Report', icon: Calendar, path: '/app/report', auth: true },
   { id: 'profile', label: 'Profile', icon: User, path: '/app/profile', auth: true },
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/app/dashboard', auth: true },
 ];
 
+const ALL_NAV = [...NAV_ITEMS, ...MORE_NAV];
+
 function getActiveTab() {
   const p = window.location.pathname;
   if (p.startsWith('/app/action/')) return 'action';
-  if (p.startsWith('/app/post')) return 'post';
-  if (p.startsWith('/app/map')) return 'map';
-  if (p.startsWith('/app/profile')) return 'profile';
-  if (p.startsWith('/app/dashboard')) return 'dashboard';
-  return 'feed';
+  const match = ALL_NAV.find(n => p.startsWith(n.path));
+  return match?.id || 'feed';
 }
 
 export default function ProductApp({ user, onLogout, onAuthSuccess }) {
@@ -33,7 +43,7 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
   const [mobileNav, setMobileNav] = useState(false);
 
   const navigate = useCallback((id) => {
-    const item = NAV_ITEMS.find(n => n.id === id);
+    const item = ALL_NAV.find(n => n.id === id);
     if (item?.auth && !user) {
       setShowAuth(true);
       return;
@@ -65,6 +75,10 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
       case 'map': return <ImpactMap />;
       case 'profile': return <ProductProfile user={user} />;
       case 'dashboard': return <DailyDashboard user={user} />;
+      case 'opportunities': return <OpportunitiesPage user={user} />;
+      case 'community-funds': return <CommunityFundsPage />;
+      case 'leaderboard': return <LeaderboardPage user={user} />;
+      case 'report': return <WeeklyReportPage user={user} />;
       default: return <ActionFeed user={user} />;
     }
   };
@@ -82,6 +96,21 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
           {/* Desktop nav */}
           <nav className="app-nav-desktop" data-testid="app-nav-desktop">
             {NAV_ITEMS.map(item => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  className={`app-nav-btn ${tab === item.id ? 'active' : ''}`}
+                  onClick={() => navigate(item.id)}
+                  data-testid={`nav-${item.id}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+            {/* More dropdown items inline for desktop */}
+            {MORE_NAV.map(item => {
               const Icon = item.icon;
               return (
                 <button
@@ -120,7 +149,7 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
       {/* Mobile nav drawer */}
       {mobileNav && (
         <div className="app-mobile-nav" data-testid="mobile-nav-drawer">
-          {NAV_ITEMS.map(item => {
+          {ALL_NAV.map(item => {
             const Icon = item.icon;
             return (
               <button
@@ -142,7 +171,7 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
         {renderPage()}
       </main>
 
-      {/* Bottom tab bar (mobile) */}
+      {/* Bottom tab bar (mobile) — show primary nav only */}
       <nav className="app-bottom-bar" data-testid="app-bottom-bar">
         {NAV_ITEMS.map(item => {
           const Icon = item.icon;

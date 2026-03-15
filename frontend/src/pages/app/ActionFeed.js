@@ -36,12 +36,13 @@ const BASE_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
 function ShareModal({ action, onClose }) {
   const [copied, setCopied] = useState(false);
-  const shareUrl = `${BASE_URL}/app/action/${action.id}`;
+  const shareUrl = `${BASE_URL}/api/share/action/${action.id}`;
+  const directUrl = `${BASE_URL}/app/action/${action.id}`;
   const trustScore = Math.round(action.trust_signal || 0);
   const shareText = `${action.user_name || 'Someone'} made an impact: "${action.title}"${action.community ? ` for ${action.community}` : ''}${trustScore > 0 ? ` — Trust Score: ${trustScore}` : ''} #Philos`;
 
   const copyLink = async () => {
-    try { await navigator.clipboard.writeText(shareUrl); } catch { /* fallback */ }
+    try { await navigator.clipboard.writeText(directUrl); } catch { /* fallback */ }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

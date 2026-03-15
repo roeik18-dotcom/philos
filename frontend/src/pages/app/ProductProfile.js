@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Tag, Award, Activity, Briefcase, Flame } from 'lucide-react';
+import { Loader2, Tag, Award, Activity, Briefcase, Flame, Sparkles, Lock, CheckCircle } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,21 +16,27 @@ const CATEGORY_COLORS = {
 
 export default function ProductProfile({ user }) {
   const [profile, setProfile] = useState(null);
+  const [opps, setOpps] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.id) { setLoading(false); return; }
-    const fetchProfile = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/impact/profile/${user.id}`);
-        const data = await res.json();
-        if (data.success) setProfile(data.profile);
+        const [profileRes, oppsRes] = await Promise.all([
+          fetch(`${API_URL}/api/impact/profile/${user.id}`),
+          fetch(`${API_URL}/api/opportunities?user_id=${user.id}`),
+        ]);
+        const pd = await profileRes.json();
+        const od = await oppsRes.json();
+        if (pd.success) setProfile(pd.profile);
+        if (od.success) setOpps(od.opportunities.slice(0, 3));
       } catch (err) {
         console.error('Profile fetch error:', err);
       }
       setLoading(false);
     };
-    fetchProfile();
+    fetchAll();
   }, [user]);
 
   if (loading) {
@@ -114,6 +120,26 @@ export default function ProductProfile({ user }) {
           <div className="profile-tags">
             {profile.communities.map(c => (
               <span key={c} className="profile-tag" data-testid={`community-tag-${c}`}>{c}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Opportunities preview */}
+      {opps.length > 0 && (
+        <div className="profile-section" data-testid="profile-opportunities">
+          <h2 className="profile-section-title"><Sparkles className="w-4 h-4" /> Opportunities</h2>
+          <div className="profile-opps-preview">
+            {opps.map(o => (
+              <div key={o.id} className={`profile-opp-item ${o.eligible ? 'eligible' : 'locked'}`} data-testid={`profile-opp-${o.id}`}>
+                <div className="profile-opp-status">
+                  {o.eligible ? <CheckCircle className="w-3.5 h-3.5" style={{ color: '#10b981' }} /> : <Lock className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.2)' }} />}
+                </div>
+                <div className="profile-opp-info">
+                  <span className="profile-opp-title">{o.title}</span>
+                  <span className="profile-opp-req"><Flame className="w-3 h-3" /> {o.min_trust_score} Trust</span>
+                </div>
+              </div>
             ))}
           </div>
         </div>

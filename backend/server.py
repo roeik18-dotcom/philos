@@ -43,6 +43,10 @@ from routes.system import router as system_router
 from routes.analytics import router as analytics_router
 from routes.invites import router as invites_router
 from routes.actions import router as actions_router
+from routes.og_share import router as og_share_router
+from routes.opportunities import router as opportunities_router
+from routes.community import router as community_router
+from routes.leaderboard import router as leaderboard_router
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(philos_router, prefix="/api")
@@ -57,6 +61,10 @@ app.include_router(system_router, prefix="/api")
 app.include_router(analytics_router, prefix="/api")
 app.include_router(invites_router, prefix="/api")
 app.include_router(actions_router, prefix="/api")
+app.include_router(og_share_router, prefix="/api")
+app.include_router(opportunities_router, prefix="/api")
+app.include_router(community_router, prefix="/api")
+app.include_router(leaderboard_router, prefix="/api")
 
 # Database shutdown
 from database import client
