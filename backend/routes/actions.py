@@ -34,7 +34,8 @@ class ReactionRequest(BaseModel):
     reaction_type: str
 
 
-def serialize_action(a):
+def serialize_action(a, viewer_id=""):
+    raw_reactions = a.get("reactions", {})
     return {
         "id": str(a["_id"]),
         "user_id": a.get("user_id", ""),
@@ -45,10 +46,15 @@ def serialize_action(a):
         "community": a.get("community", ""),
         "location": a.get("location", {}),
         "reactions": {
-            "support": len(a.get("reactions", {}).get("support", [])),
-            "useful": len(a.get("reactions", {}).get("useful", [])),
-            "verified": len(a.get("reactions", {}).get("verified", [])),
+            "support": len(raw_reactions.get("support", [])),
+            "useful": len(raw_reactions.get("useful", [])),
+            "verified": len(raw_reactions.get("verified", [])),
         },
+        "user_reacted": {
+            "support": viewer_id in raw_reactions.get("support", []),
+            "useful": viewer_id in raw_reactions.get("useful", []),
+            "verified": viewer_id in raw_reactions.get("verified", []),
+        } if viewer_id else {"support": False, "useful": False, "verified": False},
         "trust_signal": a.get("trust_signal", 0),
         "created_at": a.get("created_at", ""),
     }
@@ -84,8 +90,8 @@ async def post_action(req: PostActionRequest, user=Depends(get_current_user)):
 
 
 @router.get("/actions/feed")
-async def get_feed(skip: int = 0, limit: int = 20, category: str = ""):
-    """Public feed of actions."""
+async def get_feed(skip: int = 0, limit: int = 20, category: str = "", viewer_id: str = ""):
+    """Public feed of actions. Pass viewer_id to get user_reacted flags."""
     query = {}
     if category and category in CATEGORIES:
         query["category"] = category
@@ -97,7 +103,7 @@ async def get_feed(skip: int = 0, limit: int = 20, category: str = ""):
         .limit(min(limit, 50))
     )
 
-    return {"success": True, "actions": [serialize_action(a) for a in actions]}
+    return {"success": True, "actions": [serialize_action(a, viewer_id) for a in actions]}
 
 
 @router.post("/actions/{action_id}/react")
@@ -129,13 +135,13 @@ async def react_to_action(action_id: str, req: ReactionRequest, user=Depends(get
         db.impact_actions.update_one({"_id": oid}, {"$addToSet": {field: user_id}})
         added = True
 
-    # Recalculate trust signal
+    # Recalculate trust signal (Support=1, Useful=2, Verified=5)
     updated = db.impact_actions.find_one({"_id": oid})
     reactions = updated.get("reactions", {})
     trust_signal = (
-        len(reactions.get("support", [])) * 1.0
-        + len(reactions.get("useful", [])) * 1.5
-        + len(reactions.get("verified", [])) * 3.0
+        len(reactions.get("support", [])) * 1
+        + len(reactions.get("useful", [])) * 2
+        + len(reactions.get("verified", [])) * 5
     )
     db.impact_actions.update_one({"_id": oid}, {"$set": {"trust_signal": trust_signal}})
 
@@ -271,6 +277,7 @@ def _build_impact_profile(user_id: str):
 
     return {
         "user_id": user_id,
+        "trust_score": round(total_trust, 1),
         "impact_score": round(total_trust + len(actions) * 2, 1),
         "total_actions": len(actions),
         "fields": list(categories),

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { MapPin, Tag, Users, Clock, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { MapPin, Tag, Users, Clock, Loader2, Heart, ThumbsUp, ShieldCheck, Flame } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -14,6 +14,12 @@ const CATEGORY_COLORS = {
   other: '#6b7280',
 };
 
+const REACTION_CONFIG = [
+  { type: 'support', icon: Heart, label: 'Support', color: '#f43f5e', weight: 1 },
+  { type: 'useful', icon: ThumbsUp, label: 'Useful', color: '#00d4ff', weight: 2 },
+  { type: 'verified', icon: ShieldCheck, label: 'Verified', color: '#10b981', weight: 5 },
+];
+
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -26,28 +32,69 @@ function timeAgo(dateStr) {
   return `${days}d ago`;
 }
 
-export default function ActionFeed() {
+export default function ActionFeed({ user }) {
   const [actions, setActions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('');
+  const [reactingId, setReactingId] = useState(null);
 
-  useEffect(() => {
-    const fetchFeed = async () => {
-      setLoading(true);
-      try {
-        const url = category
-          ? `${API_URL}/api/actions/feed?category=${category}`
-          : `${API_URL}/api/actions/feed`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.success) setActions(data.actions);
-      } catch (err) {
-        console.error('Feed fetch error:', err);
+  const fetchFeed = useCallback(async () => {
+    setLoading(true);
+    try {
+      let url = `${API_URL}/api/actions/feed?`;
+      if (category) url += `category=${category}&`;
+      if (user?.id) url += `viewer_id=${user.id}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success) setActions(data.actions);
+    } catch (err) {
+      console.error('Feed fetch error:', err);
+    }
+    setLoading(false);
+  }, [category, user]);
+
+  useEffect(() => { fetchFeed(); }, [fetchFeed]);
+
+  const handleReact = async (actionId, reactionType) => {
+    if (!user) return;
+    setReactingId(`${actionId}-${reactionType}`);
+
+    // Optimistic update
+    setActions(prev => prev.map(a => {
+      if (a.id !== actionId) return a;
+      const wasReacted = a.user_reacted[reactionType];
+      const weight = REACTION_CONFIG.find(r => r.type === reactionType)?.weight || 0;
+      return {
+        ...a,
+        user_reacted: { ...a.user_reacted, [reactionType]: !wasReacted },
+        reactions: {
+          ...a.reactions,
+          [reactionType]: a.reactions[reactionType] + (wasReacted ? -1 : 1),
+        },
+        trust_signal: a.trust_signal + (wasReacted ? -weight : weight),
+      };
+    }));
+
+    try {
+      const token = localStorage.getItem('philos_auth_token');
+      const res = await fetch(`${API_URL}/api/actions/${actionId}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ reaction_type: reactionType }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Update trust_signal with server value
+        setActions(prev => prev.map(a =>
+          a.id === actionId ? { ...a, trust_signal: data.trust_signal } : a
+        ));
       }
-      setLoading(false);
-    };
-    fetchFeed();
-  }, [category]);
+    } catch (err) {
+      console.error('React error:', err);
+      fetchFeed(); // Revert on error
+    }
+    setReactingId(null);
+  };
 
   const categories = ['', 'education', 'environment', 'health', 'community', 'technology', 'mentorship', 'volunteering'];
 
@@ -58,7 +105,6 @@ export default function ActionFeed() {
         <p className="feed-subtitle">Real actions. Real impact. Real people.</p>
       </div>
 
-      {/* Category filter */}
       <div className="feed-filters" data-testid="feed-filters">
         {categories.map(cat => (
           <button
@@ -72,7 +118,6 @@ export default function ActionFeed() {
         ))}
       </div>
 
-      {/* Feed */}
       {loading ? (
         <div className="feed-loading" data-testid="feed-loading">
           <Loader2 className="w-5 h-5 animate-spin" />
@@ -120,6 +165,37 @@ export default function ActionFeed() {
                     <MapPin className="w-3 h-3" />
                     {action.location.name}
                   </span>
+                )}
+              </div>
+
+              {/* Reactions + Trust Score */}
+              <div className="feed-card-reactions" data-testid={`reactions-${action.id}`}>
+                <div className="reaction-buttons">
+                  {REACTION_CONFIG.map(r => {
+                    const Icon = r.icon;
+                    const active = action.user_reacted?.[r.type];
+                    const count = action.reactions[r.type] || 0;
+                    return (
+                      <button
+                        key={r.type}
+                        className={`reaction-btn ${active ? 'active' : ''}`}
+                        style={{ '--reaction-color': r.color }}
+                        onClick={() => handleReact(action.id, r.type)}
+                        disabled={!user || reactingId === `${action.id}-${r.type}`}
+                        data-testid={`react-${r.type}-${action.id}`}
+                        title={user ? r.label : 'Sign in to react'}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {count > 0 && <span className="reaction-count">{count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                {action.trust_signal > 0 && (
+                  <div className="feed-trust-score" data-testid={`trust-score-${action.id}`}>
+                    <Flame className="w-3.5 h-3.5" />
+                    <span>{Math.round(action.trust_signal)}</span>
+                  </div>
                 )}
               </div>
             </article>
