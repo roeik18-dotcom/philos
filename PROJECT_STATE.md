@@ -341,7 +341,7 @@ Historical data and sessions:
 
 ## Preview URL
 
-https://philos-english.preview.emergentagent.com
+https://philos-mvp.preview.emergentagent.com
 
 ---
 

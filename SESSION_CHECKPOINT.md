@@ -64,5 +64,5 @@ Tasks:
 
 ---
 
-**Preview URL:** https://philos-english.preview.emergentagent.com  
+**Preview URL:** https://philos-mvp.preview.emergentagent.com  
 **Test Credentials:** newuser@test.com / password123
