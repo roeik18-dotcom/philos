@@ -74,6 +74,13 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Profile shows 4 stats: Trust Score, Actions, Impact Score, Verified
 - Files modified: ActionFeed.js, ProductProfile.js, app.css, actions.py
 
+### Share Action Feature (Complete - March 2026)
+- Share button on every feed card opens modal with preview (user, title, community, trust score)
+- 4 share options: Copy Link, WhatsApp, LinkedIn, Twitter/X
+- Shareable action page at /app/action/{id} with full preview card
+- Backend GET /api/actions/{action_id} endpoint for single action lookup
+- Files: ActionFeed.js (ShareModal), ActionSharePage.js, app.css, actions.py
+
 ## Prioritized Backlog
 ### P1: Opportunity System (jobs, grants from high trust)
 ### P2: Opportunity System
