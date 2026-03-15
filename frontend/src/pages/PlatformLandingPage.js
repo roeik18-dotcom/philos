@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, ChevronRight, Zap, Target, Globe, Layers, Eye, Compass, Activity } from 'lucide-react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { ArrowRight, ChevronRight, Zap, Target, Layers, Eye, Compass, Activity, ArrowDown } from 'lucide-react';
+import Globe from 'react-globe.gl';
 import './platform.css';
 
 /* ═══════════════════════════════════════════════════
-   SYSTEM CHAIN — The 13-stage model
+   DATA
    ═══════════════════════════════════════════════════ */
 const CHAIN = [
   { id: 'cosmos',      label: 'Cosmos',      tier: 'cosmos', tip: 'The total field of existence' },
@@ -21,11 +22,13 @@ const CHAIN = [
   { id: 'impact',      label: 'Impact',      tier: 'action', tip: 'The change left in the field' },
 ];
 
+const TIER_COLORS = { cosmos: '#00d4ff', life: '#10b981', human: '#7c3aed', action: '#f59e0b' };
+
 const FORCES = [
-  { name: 'Contribution', color: 'var(--pl-emerald)', opposite: 'Harm' },
-  { name: 'Recovery', color: 'var(--pl-cyan)', opposite: 'Avoidance' },
-  { name: 'Order', color: 'var(--pl-violet)', opposite: 'Chaos' },
-  { name: 'Exploration', color: 'var(--pl-amber)', opposite: 'Rigidity' },
+  { name: 'Contribution', color: '#10b981', opposite: 'Harm', desc: 'Giving vs. taking' },
+  { name: 'Recovery', color: '#00d4ff', opposite: 'Avoidance', desc: 'Healing vs. escaping' },
+  { name: 'Order', color: '#7c3aed', opposite: 'Chaos', desc: 'Structure vs. entropy' },
+  { name: 'Exploration', color: '#f59e0b', opposite: 'Rigidity', desc: 'Growth vs. stagnation' },
 ];
 
 const CONTRADICTIONS = [
@@ -34,126 +37,297 @@ const CONTRADICTIONS = [
   { left: 'Control', right: 'Freedom', desc: 'Structure vs. emergence' },
 ];
 
-/* ═══════════════════════════════════════════════════
-   SECTION COMPONENTS
-   ═══════════════════════════════════════════════════ */
+const FLOW_STEPS = [
+  { label: 'Forces', icon: Zap, color: '#00d4ff', desc: 'Internal drives and tensions push the human into motion.' },
+  { label: 'Conflict', icon: Activity, color: '#f43f5e', desc: 'Opposing forces collide. The human is caught between poles.' },
+  { label: 'Orientation', icon: Compass, color: '#10b981', desc: 'The system computes position in the field of forces.' },
+  { label: 'Decision', icon: Target, color: '#7c3aed', desc: 'The moment of commitment. One direction is chosen.' },
+  { label: 'Action', icon: Zap, color: '#f59e0b', desc: 'Force is applied to reality. The field changes.' },
+  { label: 'Impact', icon: Layers, color: '#00d4ff', desc: 'The change left in the collective field. Trust shifts.' },
+];
 
-function SystemChain() {
+/* ═══════════════════════════════════════════════════
+   GLOBE — 3D with particle layers
+   ═══════════════════════════════════════════════════ */
+function generatePoints(count, tier) {
+  const color = TIER_COLORS[tier];
+  const points = [];
+  for (let i = 0; i < count; i++) {
+    points.push({
+      lat: (Math.random() - 0.5) * 160,
+      lng: (Math.random() - 0.5) * 360,
+      size: Math.random() * 0.4 + 0.1,
+      color,
+      tier,
+    });
+  }
+  return points;
+}
+
+function generateArcs(count, tier) {
+  const color = TIER_COLORS[tier];
+  const arcs = [];
+  for (let i = 0; i < count; i++) {
+    arcs.push({
+      startLat: (Math.random() - 0.5) * 120,
+      startLng: (Math.random() - 0.5) * 360,
+      endLat: (Math.random() - 0.5) * 120,
+      endLng: (Math.random() - 0.5) * 360,
+      color,
+      tier,
+    });
+  }
+  return arcs;
+}
+
+function PhilosGlobe() {
+  const globeRef = useRef();
+  const containerRef = useRef();
+  const [dim, setDim] = useState(420);
+
+  const points = useMemo(() => [
+    ...generatePoints(40, 'cosmos'),
+    ...generatePoints(30, 'life'),
+    ...generatePoints(20, 'human'),
+    ...generatePoints(15, 'action'),
+  ], []);
+
+  const arcs = useMemo(() => [
+    ...generateArcs(8, 'cosmos'),
+    ...generateArcs(6, 'life'),
+    ...generateArcs(5, 'human'),
+    ...generateArcs(4, 'action'),
+  ], []);
+
+  const rings = useMemo(() => [
+    { lat: 30, lng: 60, maxR: 6, propagationSpeed: 2, repeatPeriod: 1200, color: '#00d4ff' },
+    { lat: -20, lng: -100, maxR: 5, propagationSpeed: 2, repeatPeriod: 1400, color: '#10b981' },
+    { lat: 50, lng: -30, maxR: 4, propagationSpeed: 3, repeatPeriod: 1000, color: '#7c3aed' },
+    { lat: -40, lng: 120, maxR: 5, propagationSpeed: 2, repeatPeriod: 1600, color: '#f59e0b' },
+  ], []);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const update = () => {
+      const w = containerRef.current?.offsetWidth || 420;
+      setDim(Math.min(w, 500));
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  useEffect(() => {
+    const g = globeRef.current;
+    if (!g) return;
+    g.controls().autoRotate = true;
+    g.controls().autoRotateSpeed = 0.8;
+    g.controls().enableZoom = false;
+    g.pointOfView({ altitude: 2.2 });
+  }, []);
+
+  const globeImageUrl = useCallback(() =>
+    '//unpkg.com/three-globe/example/img/earth-dark.jpg', []);
+  const bumpImageUrl = useCallback(() =>
+    '//unpkg.com/three-globe/example/img/earth-topology.png', []);
+
   return (
-    <div className="chain-container" data-testid="system-chain">
-      {CHAIN.map((node, i) => (
-        <div key={node.id} style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="chain-node hover-tooltip">
-            <div className={`node-dot ${node.tier}`} />
-            <span className="node-label">{node.label}</span>
-            <span className="tooltip-text">{node.tip}</span>
+    <div ref={containerRef} className="globe-3d-container" data-testid="globe-3d">
+      <Globe
+        ref={globeRef}
+        width={dim}
+        height={dim}
+        globeImageUrl={globeImageUrl()}
+        bumpImageUrl={bumpImageUrl()}
+        backgroundColor="rgba(0,0,0,0)"
+        atmosphereColor="#00d4ff"
+        atmosphereAltitude={0.18}
+        pointsData={points}
+        pointLat="lat"
+        pointLng="lng"
+        pointAltitude={d => d.size * 0.04}
+        pointRadius={d => d.size * 0.3}
+        pointColor="color"
+        arcsData={arcs}
+        arcStartLat="startLat"
+        arcStartLng="startLng"
+        arcEndLat="endLat"
+        arcEndLng="endLng"
+        arcColor="color"
+        arcStroke={0.4}
+        arcDashLength={0.4}
+        arcDashGap={0.2}
+        arcDashAnimateTime={3000}
+        arcAltitudeAutoScale={0.3}
+        ringsData={rings}
+        ringLat="lat"
+        ringLng="lng"
+        ringMaxRadius="maxR"
+        ringPropagationSpeed="propagationSpeed"
+        ringRepeatPeriod="repeatPeriod"
+        ringColor="color"
+      />
+      {/* Layer legend */}
+      <div className="globe-legend">
+        {Object.entries(TIER_COLORS).map(([tier, color]) => (
+          <div key={tier} className="globe-legend-item">
+            <span className="globe-legend-dot" style={{ background: color }} />
+            <span>{tier.charAt(0).toUpperCase() + tier.slice(1)}</span>
           </div>
-          {i < CHAIN.length - 1 && <div className="chain-connector" style={{ animationDelay: `${i * 0.15}s` }} />}
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   SYSTEM CHAIN — animated node line
+   ═══════════════════════════════════════════════════ */
+function SystemChain() {
+  const [activeNode, setActiveNode] = useState(null);
+
+  return (
+    <div data-testid="system-chain">
+      <div className="chain-container">
+        {CHAIN.map((node, i) => (
+          <div key={node.id} style={{ display: 'flex', alignItems: 'center' }}>
+            <div
+              className="chain-node"
+              onMouseEnter={() => setActiveNode(i)}
+              onMouseLeave={() => setActiveNode(null)}
+            >
+              <div
+                className="node-dot"
+                style={{
+                  background: TIER_COLORS[node.tier],
+                  boxShadow: activeNode === i
+                    ? `0 0 20px ${TIER_COLORS[node.tier]}, 0 0 40px ${TIER_COLORS[node.tier]}50`
+                    : `0 0 8px ${TIER_COLORS[node.tier]}80`,
+                  transform: activeNode === i ? 'scale(1.6)' : 'scale(1)',
+                  transition: 'all 0.3s ease',
+                }}
+              />
+              <span className="node-label" style={{
+                color: activeNode === i ? '#fff' : undefined,
+              }}>{node.label}</span>
+            </div>
+            {i < CHAIN.length - 1 && (
+              <div className="chain-connector" style={{ animationDelay: `${i * 0.15}s` }} />
+            )}
+          </div>
+        ))}
+      </div>
+      {activeNode !== null && (
+        <p className="text-center text-xs mt-2 animate-fadeIn" style={{ color: TIER_COLORS[CHAIN[activeNode].tier] }}>
+          {CHAIN[activeNode].tip}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   INTERACTIVE SYSTEM MAP — layered model
+   ═══════════════════════════════════════════════════ */
+function SystemMap() {
+  const [expandedTier, setExpandedTier] = useState(null);
+
+  const tiers = [
+    {
+      id: 'cosmos', label: 'Cosmos Layer', color: '#00d4ff',
+      nodes: CHAIN.filter(c => c.tier === 'cosmos'),
+      desc: 'The foundational substrate. Space, matter, and energy define the field of all possibility.',
+    },
+    {
+      id: 'life', label: 'Life Layer', color: '#10b981',
+      nodes: CHAIN.filter(c => c.tier === 'life'),
+      desc: 'Energy becomes motion. Motion becomes life. Self-organizing systems emerge and persist.',
+    },
+    {
+      id: 'human', label: 'Human Layer', color: '#7c3aed',
+      nodes: CHAIN.filter(c => c.tier === 'human'),
+      desc: 'The agent of meaning. Internal forces, external pressures, and the conflict between them.',
+    },
+    {
+      id: 'action', label: 'Action Layer', color: '#f59e0b',
+      nodes: CHAIN.filter(c => c.tier === 'action'),
+      desc: 'Orientation crystallizes into decision, decision into action, action into impact on the field.',
+    },
+  ];
+
+  return (
+    <div className="system-map" data-testid="system-map">
+      {tiers.map((tier, ti) => (
+        <div key={tier.id}>
+          <button
+            className="system-map-tier"
+            onClick={() => setExpandedTier(expandedTier === tier.id ? null : tier.id)}
+            style={{ '--tier-color': tier.color }}
+            data-testid={`tier-${tier.id}`}
+          >
+            <div className="system-map-tier-header">
+              <span className="system-map-tier-dot" style={{ background: tier.color }} />
+              <span className="system-map-tier-label">{tier.label}</span>
+              <span className="system-map-tier-count">{tier.nodes.length} stages</span>
+            </div>
+            <div className="system-map-tier-nodes">
+              {tier.nodes.map(n => (
+                <span key={n.id} className="system-map-node" style={{ borderColor: tier.color + '44' }}>
+                  {n.label}
+                </span>
+              ))}
+            </div>
+            {expandedTier === tier.id && (
+              <p className="system-map-tier-desc animate-fadeIn">{tier.desc}</p>
+            )}
+          </button>
+          {ti < tiers.length - 1 && (
+            <div className="system-map-connector">
+              <ArrowDown className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.15)' }} />
+            </div>
+          )}
         </div>
       ))}
     </div>
   );
 }
 
-function GlobeVisualization() {
-  return (
-    <div className="globe-vis" data-testid="globe-visualization">
-      <div className="globe-ring cosmos">
-        <span className="globe-label cosmos-label">Cosmos</span>
-      </div>
-      <div className="globe-ring life">
-        <span className="globe-label life-label">Life</span>
-      </div>
-      <div className="globe-ring human">
-        <span className="globe-label human-label">Human</span>
-      </div>
-      <div className="globe-center">
-        <div className="globe-center-dot" />
-      </div>
-    </div>
-  );
-}
+/* ═══════════════════════════════════════════════════
+   FLOW DIAGRAM — Forces → Impact
+   ═══════════════════════════════════════════════════ */
+function ActionFlow() {
+  const [activeStep, setActiveStep] = useState(null);
 
-function ForcesFlow() {
   return (
-    <div className="flow-card" data-testid="forces-flow">
-      <div className="flex items-center gap-2 mb-4">
-        <Zap className="w-4 h-4" style={{ color: 'var(--pl-cyan)' }} />
-        <span className="text-xs uppercase tracking-widest" style={{ color: 'var(--pl-cyan)' }}>Directional Forces</span>
-      </div>
-      <div className="flex flex-wrap gap-3">
-        {FORCES.map(f => (
-          <div key={f.name} className="flow-node-sm" style={{ borderColor: f.color + '33' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: f.color, display: 'inline-block' }} />
-            <span style={{ color: 'var(--pl-text)' }}>{f.name}</span>
-            <span className="flow-arrow">&harr;</span>
-            <span style={{ color: 'var(--pl-muted)' }}>{f.opposite}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ContradictionsFlow() {
-  return (
-    <div className="flow-card" data-testid="contradictions-flow">
-      <div className="flex items-center gap-2 mb-4">
-        <Activity className="w-4 h-4" style={{ color: 'var(--pl-rose)' }} />
-        <span className="text-xs uppercase tracking-widest" style={{ color: 'var(--pl-rose)' }}>Fundamental Contradictions</span>
-      </div>
-      <div className="space-y-3">
-        {CONTRADICTIONS.map(c => (
-          <div key={c.left} className="flex items-center gap-3">
-            <span className="flow-node-sm" style={{ borderColor: 'var(--pl-violet)33' }}>
-              {c.left}
-            </span>
-            <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, var(--pl-violet), transparent, var(--pl-rose))' }} />
-            <span className="flow-node-sm" style={{ borderColor: 'var(--pl-rose)33' }}>
-              {c.right}
-            </span>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs mt-3" style={{ color: 'var(--pl-dim)' }}>These tensions are not bugs. They are the engine of orientation.</p>
-    </div>
-  );
-}
-
-function OrientationEngine() {
-  const nodes = [
-    { label: 'Sense', angle: -90, color: 'var(--pl-cyan)' },
-    { label: 'Orient', angle: -30, color: 'var(--pl-emerald)' },
-    { label: 'Decide', angle: 30, color: 'var(--pl-violet)' },
-    { label: 'Act', angle: 90, color: 'var(--pl-amber)' },
-    { label: 'Reflect', angle: 150, color: 'var(--pl-rose)' },
-    { label: 'Adapt', angle: 210, color: 'var(--pl-dim)' },
-  ];
-  return (
-    <div className="flow-card flex flex-col items-center" data-testid="orientation-engine">
-      <div className="flex items-center gap-2 mb-6 self-start">
-        <Compass className="w-4 h-4" style={{ color: 'var(--pl-emerald)' }} />
-        <span className="text-xs uppercase tracking-widest" style={{ color: 'var(--pl-emerald)' }}>Orientation Engine</span>
-      </div>
-      <div className="engine-ring">
-        <div className="engine-center-label">Orientation<br/>Loop</div>
-        {nodes.map(n => {
-          const rad = (n.angle * Math.PI) / 180;
-          const r = 96;
-          const x = Math.cos(rad) * r;
-          const y = Math.sin(rad) * r;
+    <div className="action-flow" data-testid="action-flow">
+      <div className="action-flow-steps">
+        {FLOW_STEPS.map((step, i) => {
+          const Icon = step.icon;
+          const isActive = activeStep === i;
           return (
-            <div
-              key={n.label}
-              className="engine-node"
-              style={{
-                top: `calc(50% + ${y}px - 14px)`,
-                left: `calc(50% + ${x}px - 26px)`,
-                borderColor: n.color + '44',
-                color: n.color,
-              }}
-            >
-              {n.label}
+            <div key={step.label} className="action-flow-step-wrapper">
+              <button
+                className={`action-flow-step ${isActive ? 'active' : ''}`}
+                onMouseEnter={() => setActiveStep(i)}
+                onMouseLeave={() => setActiveStep(null)}
+                style={{ '--step-color': step.color }}
+              >
+                <div className="action-flow-icon" style={{
+                  background: isActive ? step.color + '20' : 'transparent',
+                  borderColor: step.color + (isActive ? '66' : '33'),
+                }}>
+                  <Icon className="w-4 h-4" style={{ color: step.color }} />
+                </div>
+                <span className="action-flow-label">{step.label}</span>
+                {isActive && (
+                  <p className="action-flow-desc animate-fadeIn">{step.desc}</p>
+                )}
+              </button>
+              {i < FLOW_STEPS.length - 1 && (
+                <div className="action-flow-connector">
+                  <ChevronRight className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.12)' }} />
+                </div>
+              )}
             </div>
           );
         })}
@@ -163,9 +337,9 @@ function OrientationEngine() {
 }
 
 /* ═══════════════════════════════════════════════════
-   SECTION WRAPPER with reveal animation
+   SECTION WRAPPER — reveal on scroll
    ═══════════════════════════════════════════════════ */
-function Section({ children, className = '', id }) {
+function Section({ children, className = '', id, style }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -174,18 +348,15 @@ function Section({ children, className = '', id }) {
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.12 }
+      { threshold: 0.08 }
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <section
-      ref={ref}
-      id={id}
-      className={`reveal-section ${visible ? 'visible' : ''} ${className}`}
-    >
+    <section ref={ref} id={id} style={style}
+      className={`reveal-section ${visible ? 'visible' : ''} ${className}`}>
       {children}
     </section>
   );
@@ -198,27 +369,25 @@ export default function PlatformLandingPage({ onEnterApp }) {
   return (
     <div className="platform-landing min-h-screen" data-testid="platform-landing">
 
-      {/* ── HERO ── */}
-      <div className="bg-grid min-h-screen flex flex-col justify-center items-center px-4 relative">
-        <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 60% 40% at 50% 40%, rgba(0,212,255,0.06), transparent)'
-        }} />
+      {/* ═══ HERO ═══ */}
+      <div className="hero-section bg-grid" data-testid="hero-section">
+        <div className="hero-glow" />
 
-        <div className="text-center max-w-3xl mx-auto relative z-10" data-testid="hero-section">
-          <p className="text-xs uppercase tracking-[0.25em] mb-6" style={{ color: 'var(--pl-muted)' }}>
-            Philos Orientation System
-          </p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6 glow-cyan" style={{ letterSpacing: '-0.03em' }}>
-            A computational model<br />of human orientation
+        <div className="hero-content">
+          <div className="hero-badge">Philos Orientation System</div>
+
+          <h1 className="hero-title glow-cyan">
+            The computational model<br />of human orientation
           </h1>
-          <p className="text-base sm:text-lg mb-10" style={{ color: 'var(--pl-muted)', maxWidth: '520px', margin: '0 auto 40px' }}>
-            From cosmos to action. A system that maps how humans navigate
-            forces, resolve conflict, and produce impact in the world.
+
+          <p className="hero-subtitle">
+            From cosmos to action. A system that maps how humans navigate forces,
+            resolve conflict, and produce measurable impact in the world.
           </p>
 
           <SystemChain />
 
-          <div className="flex items-center justify-center gap-4 mt-10">
+          <div className="hero-cta">
             <button className="cta-btn cta-btn-primary" onClick={onEnterApp} data-testid="cta-enter-app">
               Enter the system <ArrowRight className="w-4 h-4" />
             </button>
@@ -228,87 +397,86 @@ export default function PlatformLandingPage({ onEnterApp }) {
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <div className="w-px h-8" style={{ background: 'linear-gradient(to bottom, var(--pl-dim), transparent)' }} />
+        <div className="hero-scroll-hint">
+          <ArrowDown className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.2)' }} />
         </div>
       </div>
 
-      {/* ── PROBLEM ── */}
+      {/* ═══ PROBLEM ═══ */}
       <Section id="problem" className="py-24 sm:py-32 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs uppercase tracking-[0.2em] mb-4" style={{ color: 'var(--pl-rose)' }}>The Problem</p>
+          <div className="section-label" style={{ color: 'var(--pl-rose)' }}>The Problem</div>
           <div className="section-divider mb-8" />
-          <h2 className="text-lg sm:text-xl font-semibold mb-6" style={{ lineHeight: 1.5 }}>
+          <h2 className="section-heading">
             Humans act without orientation.
           </h2>
-          <p className="text-sm leading-relaxed mb-8" style={{ color: 'var(--pl-muted)', maxWidth: '480px', margin: '0 auto' }}>
+          <p className="section-body">
             Every day, billions of decisions are made without a model of the forces at play.
             Trust erodes. Value is destroyed. Conflict escalates.
             Not because people are bad — but because they lack a system
             to understand where they stand in the field.
           </p>
-          <div className="grid grid-cols-3 gap-6 max-w-md mx-auto mt-10">
-            <div className="inv-stat">
-              <div className="inv-stat-number">73%</div>
-              <div className="inv-stat-label">Trust deficit</div>
-            </div>
-            <div className="inv-stat">
-              <div className="inv-stat-number">4.2B</div>
-              <div className="inv-stat-label">Daily decisions</div>
-            </div>
-            <div className="inv-stat">
-              <div className="inv-stat-number">0</div>
-              <div className="inv-stat-label">Systems for it</div>
-            </div>
+          <div className="grid grid-cols-3 gap-6 max-w-md mx-auto mt-12">
+            <div className="inv-stat"><div className="inv-stat-number">73%</div><div className="inv-stat-label">Trust deficit</div></div>
+            <div className="inv-stat"><div className="inv-stat-number">4.2B</div><div className="inv-stat-label">Daily decisions</div></div>
+            <div className="inv-stat"><div className="inv-stat-number">0</div><div className="inv-stat-label">Systems for it</div></div>
           </div>
         </div>
       </Section>
 
-      {/* ── MODEL ── */}
+      {/* ═══ MODEL — 3D Globe ═══ */}
       <Section id="model" className="py-24 sm:py-32 px-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-xs uppercase tracking-[0.2em] mb-4" style={{ color: 'var(--pl-cyan)' }}>The Model</p>
+            <div className="section-label" style={{ color: 'var(--pl-cyan)' }}>The Model</div>
             <div className="section-divider mb-8" />
-            <h2 className="text-lg sm:text-xl font-semibold mb-4">
-              Orientation is computable.
-            </h2>
-            <p className="text-sm" style={{ color: 'var(--pl-muted)', maxWidth: '440px', margin: '0 auto' }}>
+            <h2 className="section-heading">Orientation is computable.</h2>
+            <p className="section-body-sm">
               The Philos model traces reality from its most fundamental layer
               to the point where a human produces impact.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <GlobeVisualization />
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <PhilosGlobe />
             <div className="space-y-6">
-              <div className="flex items-start gap-3">
-                <Globe className="w-4 h-4 mt-1 shrink-0" style={{ color: 'var(--pl-cyan)' }} />
+              <div className="layer-card">
+                <Layers className="w-4 h-4 shrink-0" style={{ color: '#00d4ff' }} />
                 <div>
-                  <p className="text-sm font-medium mb-1">Cosmos Layer</p>
-                  <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>
+                  <p className="layer-card-title">Cosmos Layer</p>
+                  <p className="layer-card-desc">
                     Space, matter, and energy — the substrate on which everything operates.
                     The field that contains all possibility.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <Layers className="w-4 h-4 mt-1 shrink-0" style={{ color: 'var(--pl-emerald)' }} />
+              <div className="layer-card">
+                <Layers className="w-4 h-4 shrink-0" style={{ color: '#10b981' }} />
                 <div>
-                  <p className="text-sm font-medium mb-1">Life Layer</p>
-                  <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>
+                  <p className="layer-card-title">Life Layer</p>
+                  <p className="layer-card-desc">
                     Energy becomes motion. Motion becomes life.
                     Self-organizing systems that persist and adapt.
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <Eye className="w-4 h-4 mt-1 shrink-0" style={{ color: 'var(--pl-violet)' }} />
+              <div className="layer-card">
+                <Eye className="w-4 h-4 shrink-0" style={{ color: '#7c3aed' }} />
                 <div>
-                  <p className="text-sm font-medium mb-1">Human Forces Layer</p>
-                  <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>
+                  <p className="layer-card-title">Human Forces Layer</p>
+                  <p className="layer-card-desc">
                     Internal drives, external pressures, and the conflict between them.
                     This is where orientation begins.
+                  </p>
+                </div>
+              </div>
+              <div className="layer-card">
+                <Zap className="w-4 h-4 shrink-0" style={{ color: '#f59e0b' }} />
+                <div>
+                  <p className="layer-card-title">Action Layer</p>
+                  <p className="layer-card-desc">
+                    Decision, action, impact. Force is applied to reality
+                    and the collective field shifts.
                   </p>
                 </div>
               </div>
@@ -317,38 +485,92 @@ export default function PlatformLandingPage({ onEnterApp }) {
         </div>
       </Section>
 
-      {/* ── SYSTEM ENGINE ── */}
-      <Section id="engine" className="py-24 sm:py-32 px-4" style={{ background: 'rgba(255,255,255,0.01)' }}>
+      {/* ═══ SYSTEM MAP — Interactive layers ═══ */}
+      <Section id="system-map" className="py-24 sm:py-32 px-4" style={{ background: 'rgba(255,255,255,0.01)' }}>
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="section-label" style={{ color: 'var(--pl-violet)' }}>System Map</div>
+            <div className="section-divider mb-8" />
+            <h2 className="section-heading">13 stages. 4 layers. 1 system.</h2>
+            <p className="section-body-sm">
+              Click each layer to explore the stages within.
+            </p>
+          </div>
+          <SystemMap />
+        </div>
+      </Section>
+
+      {/* ═══ SYSTEM ENGINE — Forces + Contradictions ═══ */}
+      <Section id="engine" className="py-24 sm:py-32 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-xs uppercase tracking-[0.2em] mb-4" style={{ color: 'var(--pl-emerald)' }}>System Engine</p>
+            <div className="section-label" style={{ color: 'var(--pl-emerald)' }}>System Engine</div>
             <div className="section-divider mb-8" />
-            <h2 className="text-lg sm:text-xl font-semibold mb-4">
-              Forces. Contradictions. Orientation.
-            </h2>
-            <p className="text-sm" style={{ color: 'var(--pl-muted)', maxWidth: '440px', margin: '0 auto' }}>
+            <h2 className="section-heading">Forces. Contradictions. Orientation.</h2>
+            <p className="section-body-sm">
               The engine that computes human position in the field.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <ForcesFlow />
-            <ContradictionsFlow />
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {/* Forces */}
+            <div className="flow-card" data-testid="forces-flow">
+              <div className="flow-card-header">
+                <Zap className="w-4 h-4" style={{ color: '#00d4ff' }} />
+                <span style={{ color: '#00d4ff' }}>Directional Forces</span>
+              </div>
+              <div className="space-y-3">
+                {FORCES.map(f => (
+                  <div key={f.name} className="force-row">
+                    <div className="force-dot" style={{ background: f.color }} />
+                    <span className="force-name">{f.name}</span>
+                    <div className="force-line" style={{ background: `linear-gradient(90deg, ${f.color}44, ${f.color}11)` }} />
+                    <span className="force-opposite">{f.opposite}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Contradictions */}
+            <div className="flow-card" data-testid="contradictions-flow">
+              <div className="flow-card-header">
+                <Activity className="w-4 h-4" style={{ color: '#f43f5e' }} />
+                <span style={{ color: '#f43f5e' }}>Fundamental Contradictions</span>
+              </div>
+              <div className="space-y-3">
+                {CONTRADICTIONS.map(c => (
+                  <div key={c.left} className="contradiction-row">
+                    <span className="contradiction-pole">{c.left}</span>
+                    <div className="contradiction-line" />
+                    <span className="contradiction-pole">{c.right}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs mt-4" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                These tensions are not bugs. They are the engine of orientation.
+              </p>
+            </div>
           </div>
-          <OrientationEngine />
+
+          {/* Action Flow */}
+          <div className="flow-card" data-testid="action-flow-section">
+            <div className="flow-card-header mb-6">
+              <Compass className="w-4 h-4" style={{ color: '#10b981' }} />
+              <span style={{ color: '#10b981' }}>Forces &rarr; Conflict &rarr; Orientation &rarr; Decision &rarr; Action &rarr; Impact</span>
+            </div>
+            <ActionFlow />
+          </div>
         </div>
       </Section>
 
-      {/* ── APPLICATION ── */}
-      <Section id="application" className="py-24 sm:py-32 px-4">
+      {/* ═══ APPLICATION ═══ */}
+      <Section id="application" className="py-24 sm:py-32 px-4" style={{ background: 'rgba(255,255,255,0.01)' }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-xs uppercase tracking-[0.2em] mb-4" style={{ color: 'var(--pl-violet)' }}>Application</p>
+            <div className="section-label" style={{ color: '#7c3aed' }}>Application</div>
             <div className="section-divider mb-8" />
-            <h2 className="text-lg sm:text-xl font-semibold mb-4">
-              A live system, not a theory.
-            </h2>
-            <p className="text-sm" style={{ color: 'var(--pl-muted)', maxWidth: '440px', margin: '0 auto' }}>
+            <h2 className="section-heading">A live system, not a theory.</h2>
+            <p className="section-body-sm">
               Philos is running. Users enter the system, make decisions,
               and produce measurable impact on the collective field.
             </p>
@@ -356,25 +578,19 @@ export default function PlatformLandingPage({ onEnterApp }) {
 
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="flow-card text-center">
-              <Target className="w-5 h-5 mx-auto mb-3" style={{ color: 'var(--pl-cyan)' }} />
+              <Target className="w-5 h-5 mx-auto mb-3" style={{ color: '#00d4ff' }} />
               <p className="text-sm font-medium mb-1">Trust Test</p>
-              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>
-                Measure your trust state with a single question.
-              </p>
+              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>Measure your trust state with a single question.</p>
             </div>
             <div className="flow-card text-center">
-              <Compass className="w-5 h-5 mx-auto mb-3" style={{ color: 'var(--pl-emerald)' }} />
+              <Compass className="w-5 h-5 mx-auto mb-3" style={{ color: '#10b981' }} />
               <p className="text-sm font-medium mb-1">Orientation Map</p>
-              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>
-                See where you stand in the directional field.
-              </p>
+              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>See where you stand in the directional field.</p>
             </div>
             <div className="flow-card text-center">
-              <Activity className="w-5 h-5 mx-auto mb-3" style={{ color: 'var(--pl-violet)' }} />
+              <Activity className="w-5 h-5 mx-auto mb-3" style={{ color: '#7c3aed' }} />
               <p className="text-sm font-medium mb-1">Collective Field</p>
-              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>
-                Watch the global field shift in real time.
-              </p>
+              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>Watch the global field shift in real time.</p>
             </div>
           </div>
 
@@ -386,49 +602,35 @@ export default function PlatformLandingPage({ onEnterApp }) {
         </div>
       </Section>
 
-      {/* ── VISION ── */}
+      {/* ═══ VISION ═══ */}
       <Section id="vision" className="py-24 sm:py-32 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs uppercase tracking-[0.2em] mb-4" style={{ color: 'var(--pl-amber)' }}>Vision</p>
+          <div className="section-label" style={{ color: '#f59e0b' }}>Vision</div>
           <div className="section-divider mb-8" />
-          <h2 className="text-lg sm:text-xl font-semibold mb-6" style={{ lineHeight: 1.5 }}>
+          <h2 className="section-heading" style={{ lineHeight: 1.5 }}>
             Build the orientation layer<br />for human decision-making.
           </h2>
-          <p className="text-sm leading-relaxed mb-10" style={{ color: 'var(--pl-muted)', maxWidth: '480px', margin: '0 auto' }}>
+          <p className="section-body">
             Every decision platform — from social networks to financial systems —
             operates without a model of human orientation. Philos provides
             that missing layer. A computational system that maps forces,
             resolves contradictions, and produces trust.
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-lg mx-auto mb-12">
-            <div className="inv-stat">
-              <div className="inv-stat-number">V+R+T</div>
-              <div className="inv-stat-label">Engine</div>
-            </div>
-            <div className="inv-stat">
-              <div className="inv-stat-number">4</div>
-              <div className="inv-stat-label">Directions</div>
-            </div>
-            <div className="inv-stat">
-              <div className="inv-stat-number">13</div>
-              <div className="inv-stat-label">System layers</div>
-            </div>
-            <div className="inv-stat">
-              <div className="inv-stat-number">1</div>
-              <div className="inv-stat-label">Mission</div>
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-lg mx-auto mt-12 mb-12">
+            <div className="inv-stat"><div className="inv-stat-number">V+R+T</div><div className="inv-stat-label">Engine</div></div>
+            <div className="inv-stat"><div className="inv-stat-number">4</div><div className="inv-stat-label">Directions</div></div>
+            <div className="inv-stat"><div className="inv-stat-number">13</div><div className="inv-stat-label">System layers</div></div>
+            <div className="inv-stat"><div className="inv-stat-number">1</div><div className="inv-stat-label">Mission</div></div>
           </div>
 
-          <div className="flex items-center justify-center gap-4">
-            <button className="cta-btn cta-btn-primary" onClick={onEnterApp} data-testid="cta-enter-system">
-              Enter the system <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+          <button className="cta-btn cta-btn-primary" onClick={onEnterApp} data-testid="cta-enter-system">
+            Enter the system <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </Section>
 
-      {/* ── FOOTER ── */}
+      {/* ═══ FOOTER ═══ */}
       <footer className="py-12 px-4 text-center" style={{ borderTop: '1px solid var(--pl-border)' }}>
         <p className="text-xs" style={{ color: 'var(--pl-dim)' }}>
           Philos Orientation System &middot; Mapping human forces since 2024
