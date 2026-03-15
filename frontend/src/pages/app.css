@@ -245,6 +245,13 @@
   font-weight: 600;
   margin-bottom: 6px;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.feed-verification-badge {
+  display: inline-flex;
+  flex-shrink: 0;
 }
 .feed-card-desc {
   font-size: 13px;

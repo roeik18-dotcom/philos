@@ -18,6 +18,7 @@ db = client[DB_NAME]
 
 CATEGORIES = ["education", "environment", "health", "community", "technology", "mentorship", "volunteering", "other"]
 REACTION_TYPES = ["support", "useful", "verified"]
+VERIFICATION_MULTIPLIERS = {"self_reported": 1, "community_verified": 2, "org_verified": 3}
 
 
 class PostActionRequest(BaseModel):
@@ -36,6 +37,7 @@ class ReactionRequest(BaseModel):
 
 def serialize_action(a, viewer_id=""):
     raw_reactions = a.get("reactions", {})
+    verification = a.get("verification_level", "self_reported")
     return {
         "id": str(a["_id"]),
         "user_id": a.get("user_id", ""),
@@ -56,6 +58,8 @@ def serialize_action(a, viewer_id=""):
             "verified": viewer_id in raw_reactions.get("verified", []),
         } if viewer_id else {"support": False, "useful": False, "verified": False},
         "trust_signal": a.get("trust_signal", 0),
+        "verification_level": verification,
+        "verification_multiplier": VERIFICATION_MULTIPLIERS.get(verification, 1),
         "created_at": a.get("created_at", ""),
     }
 
@@ -65,6 +69,18 @@ async def post_action(req: PostActionRequest, user=Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Login required to post actions")
 
+    from routes.trust_integrity import check_rate_limit, check_duplicate
+
+    # Anti-spam: rate limit
+    rate_check = check_rate_limit(user["id"])
+    if rate_check["blocked"]:
+        raise HTTPException(status_code=429, detail=rate_check["reason"])
+
+    # Anti-spam: duplicate detection
+    dup_check = check_duplicate(user["id"], req.title.strip(), req.description.strip())
+    if dup_check["blocked"]:
+        raise HTTPException(status_code=409, detail=dup_check["reason"])
+
     location = {}
     if req.location_lat is not None and req.location_lng is not None:
         location = {"lat": req.location_lat, "lng": req.location_lng, "name": req.location_name}
@@ -72,18 +88,27 @@ async def post_action(req: PostActionRequest, user=Depends(get_current_user)):
     action = {
         "user_id": user["id"],
         "user_name": user.get("name", user.get("email", "").split("@")[0]),
-        "title": req.title,
-        "description": req.description,
+        "title": req.title.strip(),
+        "description": req.description.strip(),
         "category": req.category if req.category in CATEGORIES else "other",
         "community": req.community,
         "location": location,
         "reactions": {"support": [], "useful": [], "verified": []},
         "trust_signal": 0.0,
+        "verification_level": "self_reported",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
 
     result = db.impact_actions.insert_one(action)
     action_id = str(result.inserted_id)
+
+    # Update user's last_active
+    db.user_activity.update_one(
+        {"user_id": user["id"]},
+        {"$set": {"last_active": datetime.now(timezone.utc).isoformat(), "last_action": "post"}},
+        upsert=True,
+    )
+
     _update_impact_profile(user["id"])
 
     return {"success": True, "action_id": action_id}
@@ -137,6 +162,12 @@ async def react_to_action(action_id: str, req: ReactionRequest, user=Depends(get
     if not action:
         raise HTTPException(status_code=404, detail="Action not found")
 
+    # Anti-spam: prevent self-reaction
+    from routes.trust_integrity import check_self_reaction, check_suspicious_reaction, recalc_trust_signal
+    self_check = check_self_reaction(user_id, action)
+    if self_check["blocked"]:
+        raise HTTPException(status_code=403, detail=self_check["reason"])
+
     field = f"reactions.{req.reaction_type}"
 
     # Toggle: add if not present, remove if present
@@ -148,15 +179,23 @@ async def react_to_action(action_id: str, req: ReactionRequest, user=Depends(get
         db.impact_actions.update_one({"_id": oid}, {"$addToSet": {field: user_id}})
         added = True
 
-    # Recalculate trust signal (Support=1, Useful=2, Verified=5)
+    # Recalculate trust signal with verification multiplier
     updated = db.impact_actions.find_one({"_id": oid})
-    reactions = updated.get("reactions", {})
-    trust_signal = (
-        len(reactions.get("support", [])) * 1
-        + len(reactions.get("useful", [])) * 2
-        + len(reactions.get("verified", [])) * 5
-    )
+    trust_signal = recalc_trust_signal(updated)
     db.impact_actions.update_one({"_id": oid}, {"$set": {"trust_signal": trust_signal}})
+
+    # Check for suspicious activity (non-blocking)
+    try:
+        check_suspicious_reaction(user_id, updated)
+    except Exception:
+        pass  # Don't block the reaction for flag errors
+
+    # Update reactor's last_active
+    db.user_activity.update_one(
+        {"user_id": user_id},
+        {"$set": {"last_active": datetime.now(timezone.utc).isoformat(), "last_action": "react"}},
+        upsert=True,
+    )
 
     # Update poster's impact profile
     _update_impact_profile(action.get("user_id", ""))

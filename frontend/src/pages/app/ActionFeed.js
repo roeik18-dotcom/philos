@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Tag, Users, Clock, Loader2, Heart, ThumbsUp, ShieldCheck, Flame, Share2, Copy, Check, X } from 'lucide-react';
+import { MapPin, Tag, Users, Clock, Loader2, Heart, ThumbsUp, ShieldCheck, Flame, Share2, Copy, Check, X, BadgeCheck, Building2 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -19,6 +19,12 @@ const REACTION_CONFIG = [
   { type: 'useful', icon: ThumbsUp, label: 'Useful', color: '#00d4ff', weight: 2 },
   { type: 'verified', icon: ShieldCheck, label: 'Verified', color: '#10b981', weight: 5 },
 ];
+
+const VERIFICATION_BADGES = {
+  self_reported: null,
+  community_verified: { icon: BadgeCheck, label: 'Community Verified', color: '#10b981' },
+  org_verified: { icon: Building2, label: 'Organization Verified', color: '#f59e0b' },
+};
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -149,10 +155,11 @@ export default function ActionFeed({ user }) {
       });
       const data = await res.json();
       if (data.success) {
-        // Update trust_signal with server value
         setActions(prev => prev.map(a =>
           a.id === actionId ? { ...a, trust_signal: data.trust_signal } : a
         ));
+      } else {
+        fetchFeed(); // Revert optimistic update
       }
     } catch (err) {
       console.error('React error:', err);
@@ -211,7 +218,19 @@ export default function ActionFeed({ user }) {
                 </span>
               </div>
 
-              <h3 className="feed-card-title" data-testid="action-title">{action.title}</h3>
+              <h3 className="feed-card-title" data-testid="action-title">
+                {action.title}
+                {(() => {
+                  const vb = VERIFICATION_BADGES[action.verification_level];
+                  if (!vb) return null;
+                  const VIcon = vb.icon;
+                  return (
+                    <span className="feed-verification-badge" style={{ color: vb.color }} data-testid={`verification-${action.id}`} title={vb.label}>
+                      <VIcon className="w-3.5 h-3.5" />
+                    </span>
+                  );
+                })()}
+              </h3>
               <p className="feed-card-desc" data-testid="action-description">{action.description}</p>
 
               <div className="feed-card-meta">
