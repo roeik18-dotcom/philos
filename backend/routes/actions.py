@@ -106,6 +106,19 @@ async def get_feed(skip: int = 0, limit: int = 20, category: str = "", viewer_id
     return {"success": True, "actions": [serialize_action(a, viewer_id) for a in actions]}
 
 
+@router.get("/actions/{action_id}")
+async def get_action(action_id: str):
+    """Get a single action by ID."""
+    try:
+        oid = ObjectId(action_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid action ID")
+    action = db.impact_actions.find_one({"_id": oid})
+    if not action:
+        raise HTTPException(status_code=404, detail="Action not found")
+    return {"success": True, "action": serialize_action(action)}
+
+
 @router.post("/actions/{action_id}/react")
 async def react_to_action(action_id: str, req: ReactionRequest, user=Depends(get_current_user)):
     if not user:

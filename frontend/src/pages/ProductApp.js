@@ -5,6 +5,7 @@ import PostAction from './app/PostAction';
 import ImpactMap from './app/ImpactMap';
 import ProductProfile from './app/ProductProfile';
 import DailyDashboard from './app/DailyDashboard';
+import ActionSharePage from './app/ActionSharePage';
 import AuthScreen from '../components/auth/AuthScreen';
 import './app.css';
 
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
 
 function getActiveTab() {
   const p = window.location.pathname;
+  if (p.startsWith('/app/action/')) return 'action';
   if (p.startsWith('/app/post')) return 'post';
   if (p.startsWith('/app/map')) return 'map';
   if (p.startsWith('/app/profile')) return 'profile';
@@ -58,6 +60,7 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
 
   const renderPage = () => {
     switch (tab) {
+      case 'action': return <ActionSharePage />;
       case 'post': return <PostAction user={user} onPosted={() => navigate('feed')} />;
       case 'map': return <ImpactMap />;
       case 'profile': return <ProductProfile user={user} />;
