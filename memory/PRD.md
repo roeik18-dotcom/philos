@@ -65,8 +65,17 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - OG image (1200x630) for social sharing added
 - Files: ProductApp.js, ActionFeed.js, PostAction.js, ImpactMap.js, ProductProfile.js, DailyDashboard.js, app.css
 
+### Reactions & Trust Score System (Complete - March 2026)
+- 3 reaction types on every action card: Support (+1), Useful (+2), Verified (+5)
+- Toggle on/off with optimistic UI updates
+- Trust Score per action (displayed as badge when > 0)
+- Aggregate Trust Score per user in profile
+- Feed endpoint supports viewer_id for user_reacted flags
+- Profile shows 4 stats: Trust Score, Actions, Impact Score, Verified
+- Files modified: ActionFeed.js, ProductProfile.js, app.css, actions.py
+
 ## Prioritized Backlog
-### P1: Implement Reactions & Trust Score
+### P1: Opportunity System (jobs, grants from high trust)
 ### P2: Opportunity System
 ### P2: Expand Trust-Aware AI
 ### P2: Define and Map Risk Signals
