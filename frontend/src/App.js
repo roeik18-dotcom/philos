@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import PlatformLandingPage from './pages/PlatformLandingPage';
+import ProductApp from './pages/ProductApp';
 import PhilosDashboard from './pages/PhilosDashboard';
 import TrustTestPage from './pages/TrustTestPage';
 import InvitePage from './pages/InvitePage';
@@ -101,6 +102,17 @@ function App() {
   // Admin page
   if (window.location.pathname === '/admin') {
     return <AdminPage />;
+  }
+
+  // Product App (/app/*)
+  if (window.location.pathname.startsWith('/app')) {
+    return (
+      <ProductApp
+        user={user}
+        onLogout={handleLogout}
+        onAuthSuccess={handleAuthSuccess}
+      />
+    );
   }
 
   // Profile page
