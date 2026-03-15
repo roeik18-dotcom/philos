@@ -58,8 +58,9 @@ export default function ProductProfile({ user }) {
         <div className="profile-avatar" data-testid="profile-avatar">
           {(user.name || user.email || '?')[0].toUpperCase()}
         </div>
-        <h1 className="profile-name" data-testid="profile-name">{user.name || user.email}</h1>
-        <p className="profile-email" data-testid="profile-email">{user.email}</p>
+        <h1 className="profile-name" data-testid="profile-name">{user.name || user.email?.split('@')[0]}</h1>
+        {user.name && <p className="profile-email" data-testid="profile-email">{user.email}</p>}
+        {!user.name && <p className="profile-email" data-testid="profile-email">{user.email}</p>}
       </div>
 
       {/* Stats grid */}

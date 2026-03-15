@@ -52,14 +52,21 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Canonical URL tag
 - Files: sitemap.xml, robots.txt, index.html
 
-### Product MVP Backend Scaffolding (Complete - March 2026)
-- API endpoints: POST /api/actions/, GET /api/actions/feed, GET /api/actions/{id}, POST /api/actions/{id}/react
-- Pydantic models in action_models.py
-- Frontend placeholder files for 5 MVP pages under /app routes
+### Product MVP (Complete - March 2026)
+- 5 pages built under `/app` routes with shared layout and navigation
+- `/app/feed` — Action Feed with category filters, action cards (title, description, category, location, contributor, community, timestamp)
+- `/app/post` — Post Action form (auth required) with Title, Description, Category, Community, Location + geolocation detect
+- `/app/map` — Impact Map using Leaflet + dark CartoCDN tiles, colored markers by category, popups with action details
+- `/app/profile` — User profile with avatar, stats (Actions, Impact Score, Verified), contribution categories, communities
+- `/app/dashboard` — Daily dashboard with summary stats, network activity, suggested actions
+- Auth gating: Post/Profile/Dashboard require sign-in
+- Full E2E flow verified: Post → Feed → Map
+- Mobile responsive with bottom tab bar
+- OG image (1200x630) for social sharing added
+- Files: ProductApp.js, ActionFeed.js, PostAction.js, ImpactMap.js, ProductProfile.js, DailyDashboard.js, app.css
 
 ## Prioritized Backlog
-### P1: Build Product MVP (Feed → Post → Impact Map → Profile → Dashboard)
-### P2: Implement Reactions & Trust Score
+### P1: Implement Reactions & Trust Score
 ### P2: Opportunity System
 ### P2: Expand Trust-Aware AI
 ### P2: Define and Map Risk Signals
