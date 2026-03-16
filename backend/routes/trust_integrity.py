@@ -185,6 +185,7 @@ def check_suspicious_reaction(reactor_id: str, action) -> list:
 
 def run_trust_decay():
     """Decay trust scores for inactive users (30+ days, 5% reduction).
+    Users with burst_and_vanish signals get accelerated decay (10%).
     Called by scheduler. Returns count of affected users."""
     cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -208,6 +209,18 @@ def run_trust_decay():
     all_users = set(r["_id"] for r in db.impact_actions.aggregate(all_users_pipeline))
 
     inactive_users = all_users - active_users
+
+    # Pre-load burst_and_vanish signals for accelerated decay
+    burst_users = set()
+    try:
+        burst_signals = db.risk_signals.find(
+            {"signal_type": "burst_and_vanish", "status": "active"},
+            {"_id": 0, "subject_user_id": 1},
+        )
+        burst_users = set(s["subject_user_id"] for s in burst_signals)
+    except Exception as e:
+        logger.warning(f"Failed to load burst_and_vanish signals: {e}")
+
     decayed_count = 0
 
     for user_id in inactive_users:
@@ -216,11 +229,15 @@ def run_trust_decay():
         if decay_record and decay_record.get("decayed_at", "") > cutoff:
             continue
 
-        # Apply 5% decay to all their actions
+        # Accelerated decay for burst_and_vanish users (10% vs 5%)
+        decay_rate = 0.10 if user_id in burst_users else 0.05
+        retain_rate = 1.0 - decay_rate
+
+        # Apply decay to all their actions
         user_actions = db.impact_actions.find({"user_id": user_id, "trust_signal": {"$gt": 0}})
         for action in user_actions:
             old_trust = action.get("trust_signal", 0)
-            new_trust = round(old_trust * 0.95, 2)
+            new_trust = round(old_trust * retain_rate, 2)
             if new_trust != old_trust:
                 db.impact_actions.update_one(
                     {"_id": action["_id"]},
@@ -229,16 +246,20 @@ def run_trust_decay():
 
         db.trust_decay_log.insert_one({
             "user_id": user_id,
-            "decay_rate": 0.05,
+            "decay_rate": decay_rate,
+            "accelerated": user_id in burst_users,
             "decayed_at": now_iso,
         })
         decayed_count += 1
 
-    logger.info(f"Trust decay: {decayed_count} inactive users decayed, {len(active_users)} active users skipped")
+    logger.info(f"Trust decay: {decayed_count} inactive users decayed ({len(burst_users & inactive_users)} accelerated), {len(active_users)} active users skipped")
     return decayed_count
 
 
 # ── Trust Score Helpers ──
+
+REACTION_WEIGHTS = {"support": 1, "useful": 2, "verified": 5}
+
 
 def _calc_base_trust(reactions: dict) -> float:
     """Calculate base trust signal from reactions (before verification multiplier)."""
@@ -249,12 +270,106 @@ def _calc_base_trust(reactions: dict) -> float:
     )
 
 
+def _load_enforcement_context(action_id: str, poster_id: str, community: str, reactor_ids: set) -> dict:
+    """Load active risk signals relevant to this action. Returns enforcement adjustments.
+    Returns None on error (caller falls back to normal calculation)."""
+    ctx = {
+        "frozen": False,
+        "suppressed_reactors": set(),
+        "discounted_reactors": set(),
+        "ghost_reactors": set(),
+        "community_monopoly": False,
+    }
+
+    # 1. Check trust_flags for inline signals (reaction_farming, velocity_spike)
+    flags = list(db.trust_flags.find(
+        {"action_id": action_id},
+        {"_id": 0, "type": 1, "reactor_id": 1},
+    ))
+    for f in flags:
+        if f["type"] == "velocity_spike":
+            ctx["frozen"] = True
+        elif f["type"] == "reaction_farming":
+            rid = f.get("reactor_id", "")
+            if rid:
+                ctx["suppressed_reactors"].add(rid)
+
+    # 2. Check risk_signals for scanner-detected signals
+    # Query signals about the poster OR about any reactor on this action
+    lookup_ids = list(reactor_ids | {poster_id})
+    signals = list(db.risk_signals.find(
+        {"status": "active", "subject_user_id": {"$in": lookup_ids}},
+        {"_id": 0, "signal_type": 1, "subject_user_id": 1,
+         "related_user_ids": 1, "_community_key": 1},
+    ))
+
+    for s in signals:
+        stype = s["signal_type"]
+        if stype == "reciprocal_boosting":
+            ctx["discounted_reactors"].add(s["subject_user_id"])
+            for uid in s.get("related_user_ids", []):
+                ctx["discounted_reactors"].add(uid)
+        elif stype == "ghost_reactor":
+            ctx["ghost_reactors"].add(s["subject_user_id"])
+        elif stype == "community_monopoly":
+            if s.get("_community_key", "") == community:
+                ctx["community_monopoly"] = True
+
+    return ctx
+
+
+def _calc_enforced_trust(reactions: dict, ctx: dict) -> float:
+    """Calculate base trust with enforcement: suppress, discount, or reduce reaction weights."""
+    total = 0.0
+    for rtype, weight in REACTION_WEIGHTS.items():
+        for reactor_id in reactions.get(rtype, []):
+            if reactor_id in ctx["suppressed_reactors"]:
+                continue  # reaction_farming: fully suppress
+            eff = weight
+            if reactor_id in ctx["discounted_reactors"]:
+                eff *= 0.5  # reciprocal_boosting: half weight
+            if reactor_id in ctx["ghost_reactors"]:
+                eff *= 0.5  # ghost_reactor: half weight
+            total += eff
+    return total
+
+
 def recalc_trust_signal(action: dict) -> float:
-    """Recalculate trust signal including verification multiplier."""
-    base = _calc_base_trust(action.get("reactions", {}))
+    """Recalculate trust signal with enforcement layer.
+    Falls back to normal calculation if enforcement lookup fails."""
+    reactions = action.get("reactions", {})
     level = action.get("verification_level", "self_reported")
-    multiplier = VERIFICATION_LEVELS.get(level, 1)
-    return base * multiplier
+    verification_mult = VERIFICATION_LEVELS.get(level, 1)
+
+    try:
+        action_id = str(action.get("_id", ""))
+        poster_id = action.get("user_id", "")
+        community = action.get("community", "")
+
+        # Collect all reactor IDs
+        reactor_ids = set()
+        for rtype in ["support", "useful", "verified"]:
+            reactor_ids.update(reactions.get(rtype, []))
+
+        ctx = _load_enforcement_context(action_id, poster_id, community, reactor_ids)
+
+        # velocity_spike: freeze trust score
+        if ctx["frozen"]:
+            return action.get("trust_signal", 0)
+
+        # Calculate with enforcement adjustments
+        base = _calc_enforced_trust(reactions, ctx)
+        trust = base * verification_mult
+
+        # community_monopoly: cap at 0.5x
+        if ctx["community_monopoly"]:
+            trust *= 0.5
+
+        return trust
+    except Exception as e:
+        logger.warning(f"Enforcement fallback for action: {e}")
+        base = _calc_base_trust(reactions)
+        return base * verification_mult
 
 
 # ── Admin Endpoints ──

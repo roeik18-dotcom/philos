@@ -384,11 +384,13 @@ class TestLowEffortContentDetection:
     def auth_token(self):
         """Get auth token for creating test actions"""
         response = requests.post(
-            f"{BASE_URL}/api/login",
+            f"{BASE_URL}/api/auth/login",
             json={"email": TEST_USER_EMAIL, "password": TEST_USER_PASSWORD}
         )
         if response.status_code == 200:
-            return response.json().get("token")
+            data = response.json()
+            if data.get("success"):
+                return data.get("token")
         return None
     
     def test_detect_low_effort_content_short_title(self, auth_token):
