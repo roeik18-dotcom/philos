@@ -1,0 +1,68 @@
+{
+  "summary": "Regression test for Landing Page Redesign + PWA Routes. All backend APIs (13/13) and UI tests (11/11) passing. Landing page shows 'product-first' design with globe in hero, live stats bar, and correct navigation to /app. All /app routes load correctly with proper auth handling.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/report/weekly", "issue": "Returns 404 - endpoint doesn't exist at this path (use /api/weekly-report/{user_id} instead)"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Map component", "issue": "Console error 'body stream already read' when navigating to map - doesn't break functionality but should be fixed", "affected_selectors": ["ImpactMap.js"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_landing_page_regression.py",
+    "/app/test_reports/pytest/pytest_landing_page_regression.xml"
+  ],
+  "action_items": [
+    "Minor: Fix double fetch in ImpactMap.js causing 'body stream already read' console error"
+  ],
+  "critical_code_review_comments": [
+    "Landing page redesign successfully implemented with product-first layout",
+    "Globe component renders in hero section using react-globe.gl",
+    "LiveStats component correctly fetches from 3 APIs (/api/actions/feed, /api/leaderboard, /api/community-funds)",
+    "CTA button navigates to /trust-test (not /app directly) - this is intentional per App.js handleEnterApp",
+    "All /app routes have proper data-testid attributes for testing",
+    "Auth-required pages (post, profile, dashboard, report) correctly show auth prompts",
+    "Post page shows form even without auth - users can view but need to sign in to submit"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_landing_page_regression.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "100% (11/11 UI tests passed)"
+  },
+  "test_credentials": {
+    "user_a": "newuser@test.com / password123",
+    "user_b": "trust_fragile@test.com / password123"
+  },
+  "seed_data_creation": "None - used existing data from previous iterations",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Landing page redesign verified. All /app routes working: feed (14 action cards), map (Leaflet), opportunities (5 gated items), leaderboard (1 user), community-funds (5 communities). Auth-required pages prompt for sign-in. Weekly report API is at /api/weekly-report/{user_id} not /api/report/weekly. Minor console error in map component (body stream already read) - non-blocking.",
+  "features_verified": {
+    "landing_page_hero": "PASS - Globe in hero section, Live Network badge, main headline visible",
+    "landing_page_live_stats": "PASS - Shows Actions (14), Contributors (1), Communities (5), Trust Generated (20)",
+    "landing_page_cta": "PASS - 'Start contributing' button present and clickable",
+    "landing_page_sections": "PASS - How It Works, Features, Model, Architecture, Final CTA all render",
+    "app_feed": "PASS - Loads with 14 action cards showing reactions",
+    "app_post": "PASS - Form loads (auth required to submit)",
+    "app_map": "PASS - Leaflet map with category legend",
+    "app_profile": "PASS - Auth prompt shown",
+    "app_dashboard": "PASS - Auth prompt shown",
+    "app_opportunities": "PASS - 5+ opportunities with trust score gates",
+    "app_community_funds": "PASS - 5 communities with financial data",
+    "app_leaderboard": "PASS - Shows ranked users",
+    "app_report": "PASS - Auth prompt shown",
+    "api_actions_feed": "PASS - Returns actions array with verification_level",
+    "api_leaderboard": "PASS - Returns leaders array",
+    "api_community_funds": "PASS - Returns funds array",
+    "api_opportunities": "PASS - Returns opportunities array",
+    "api_auth_login": "PASS - Works with test credentials",
+    "api_trust_integrity_stats": "PASS - Returns stats object"
+  }
+}
