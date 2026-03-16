@@ -423,6 +423,7 @@ async def get_user_trust(user_id: str):
             "success": True,
             "trust_score": 0,
             "action_count": 0,
+            "referral_bonus": 0,
             "decay_rate": 0.05,
             "decay_status": "active",
             "active_risk_signals": [],
@@ -435,6 +436,19 @@ async def get_user_trust(user_id: str):
     total_trust = 0.0
     for a in actions:
         total_trust += recalc_trust_signal(a)
+
+    # Referral bonus: +2 per active referral (referred user posted at least 1 action)
+    referral_bonus = 0.0
+    try:
+        referrals = list(db.referrals.find({"inviter_id": user_id}, {"invited_user_id": 1, "_id": 0}))
+        for ref in referrals:
+            invited_id = ref.get("invited_user_id", "")
+            if invited_id and db.impact_actions.count_documents({"user_id": invited_id}) > 0:
+                referral_bonus += 2.0
+    except Exception as e:
+        logger.warning(f"Referral bonus calc failed: {e}")
+
+    total_trust += referral_bonus
 
     # Get decay info
     has_burst = db.risk_signals.find_one({
@@ -472,6 +486,7 @@ async def get_user_trust(user_id: str):
         "success": True,
         "trust_score": round(total_trust, 1),
         "action_count": len(actions),
+        "referral_bonus": referral_bonus,
         "decay_rate": decay_rate,
         "decay_status": decay_status,
         "active_risk_signals": signals,

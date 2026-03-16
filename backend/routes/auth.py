@@ -14,8 +14,13 @@ from typing import List
 from datetime import datetime, timezone
 import uuid
 import logging
+import os
 import random as _random
 import string as _string
+
+from pymongo import MongoClient as _SyncClient
+_sync_client = _SyncClient(os.environ.get("MONGO_URL"))
+_sync_db = _sync_client[os.environ.get("DB_NAME", "philos")]
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -316,14 +321,59 @@ async def migrate_anonymous_data(anonymous_user_id: str, user = Depends(get_curr
 
 @router.get("/referrals/{user_id}")
 async def get_user_referrals(user_id: str):
-    """Get referrals made by a user (who they brought in via share links)."""
+    """Get referrals made by a user with status and enriched info."""
     referrals = await db.referrals.find(
         {"inviter_id": user_id}, {"_id": 0}
     ).sort("created_at", -1).to_list(100)
 
+    enriched = []
+    active_count = 0
+    pending_count = 0
+
+    for ref in referrals:
+        invited_id = ref.get("invited_user_id", "")
+
+        # Get invited user info
+        invited_user = await db.users.find_one(
+            {"id": invited_id}, {"_id": 0, "email": 1, "created_at": 1}
+        )
+        display_name = invited_user["email"].split("@")[0] if invited_user else "Unknown"
+
+        # Check if invited user has posted any actions
+        action_count = _sync_db.impact_actions.count_documents({"user_id": invited_id})
+
+        # Get invited user's trust score
+        user_trust = 0.0
+        if action_count > 0:
+            actions = list(_sync_db.impact_actions.find({"user_id": invited_id}))
+            for a in actions:
+                user_trust += a.get("trust_signal", 0)
+
+        status = "active" if action_count > 0 else "pending"
+        if status == "active":
+            active_count += 1
+        else:
+            pending_count += 1
+
+        enriched.append({
+            "invited_user_id": invited_id,
+            "display_name": display_name,
+            "action_id": ref.get("action_id", ""),
+            "source": ref.get("source", "share_link"),
+            "status": status,
+            "action_count": action_count,
+            "trust_score": round(user_trust, 1),
+            "created_at": ref.get("created_at", ""),
+        })
+
+    referral_trust_bonus = active_count * 2
+
     return {
         "success": True,
         "user_id": user_id,
-        "referrals": referrals,
-        "total": len(referrals),
+        "referrals": enriched,
+        "total": len(enriched),
+        "active_count": active_count,
+        "pending_count": pending_count,
+        "referral_trust_bonus": referral_trust_bonus,
     }

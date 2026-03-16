@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Tag, Award, Activity, Briefcase, Flame, Sparkles, Lock, CheckCircle, ShieldAlert, TrendingDown } from 'lucide-react';
+import { Loader2, Tag, Award, Activity, Briefcase, Flame, Sparkles, Lock, CheckCircle, ShieldAlert, TrendingDown, UserPlus, Users } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -17,6 +17,7 @@ const CATEGORY_COLORS = {
 export default function ProductProfile({ user }) {
   const [profile, setProfile] = useState(null);
   const [trustData, setTrustData] = useState(null);
+  const [referralData, setReferralData] = useState(null);
   const [opps, setOpps] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,17 +25,20 @@ export default function ProductProfile({ user }) {
     if (!user?.id) { setLoading(false); return; }
     const fetchAll = async () => {
       try {
-        const [profileRes, oppsRes, trustRes] = await Promise.all([
+        const [profileRes, oppsRes, trustRes, refRes] = await Promise.all([
           fetch(`${API_URL}/api/impact/profile/${user.id}`),
           fetch(`${API_URL}/api/opportunities?user_id=${user.id}`),
           fetch(`${API_URL}/api/trust/${user.id}`),
+          fetch(`${API_URL}/api/referrals/${user.id}`),
         ]);
         const pd = await profileRes.json();
         const od = await oppsRes.json();
         const td = await trustRes.json();
+        const rd = await refRes.json();
         if (pd.success) setProfile(pd.profile);
         if (od.success) setOpps(od.opportunities.slice(0, 3));
         if (td.success) setTrustData(td);
+        if (rd.success) setReferralData(rd);
       } catch (err) {
         console.error('Profile fetch error:', err);
       }
@@ -100,6 +104,12 @@ export default function ProductProfile({ user }) {
               <span className="trust-engine-meta-item" data-testid="trust-action-count">
                 {trustData.action_count} actions
               </span>
+              {trustData.referral_bonus > 0 && (
+                <span className="trust-engine-meta-item trust-referral-bonus" data-testid="trust-referral-bonus">
+                  <UserPlus className="w-3 h-3" />
+                  +{trustData.referral_bonus} referral bonus
+                </span>
+              )}
             </div>
             {trustData.risk_signal_count > 0 && (
               <div className="trust-engine-signals" data-testid="trust-risk-signals">
@@ -136,6 +146,49 @@ export default function ProductProfile({ user }) {
           <div className="profile-stat-label">Verified</div>
         </div>
       </div>
+
+      {/* Referrals */}
+      {referralData && referralData.total > 0 && (
+        <div className="profile-section" data-testid="profile-referrals">
+          <h2 className="profile-section-title">
+            <Users className="w-4 h-4" /> People You Brought to Philos
+          </h2>
+          <div className="referral-summary" data-testid="referral-summary">
+            <span className="referral-count-badge" data-testid="referral-total">{referralData.total} invited</span>
+            <span className="referral-active-badge" data-testid="referral-active">{referralData.active_count} active</span>
+            {referralData.pending_count > 0 && (
+              <span className="referral-pending-badge" data-testid="referral-pending">{referralData.pending_count} pending</span>
+            )}
+          </div>
+          <div className="referral-list">
+            {referralData.referrals.map((ref, i) => (
+              <div key={i} className={`referral-item referral-${ref.status}`} data-testid={`referral-item-${i}`}>
+                <div className="referral-avatar">{ref.display_name[0].toUpperCase()}</div>
+                <div className="referral-info">
+                  <span className="referral-name">{ref.display_name}</span>
+                  <span className={`referral-status-badge status-${ref.status}`}>{ref.status}</span>
+                </div>
+                <div className="referral-meta">
+                  {ref.status === 'active' && (
+                    <span className="referral-trust" data-testid={`referral-trust-${i}`}>
+                      <Flame className="w-3 h-3" /> {ref.trust_score}
+                    </span>
+                  )}
+                  {ref.action_count > 0 && (
+                    <span className="referral-actions">{ref.action_count} action{ref.action_count > 1 ? 's' : ''}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          {referralData.referral_trust_bonus > 0 && (
+            <div className="referral-bonus-note" data-testid="referral-bonus-note">
+              <UserPlus className="w-3.5 h-3.5" />
+              +{referralData.referral_trust_bonus} trust from active referrals
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Categories */}
       {profile?.fields?.length > 0 && (
