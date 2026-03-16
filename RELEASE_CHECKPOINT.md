@@ -71,7 +71,7 @@ Language:   Hebrew RTL UI
 
 ## Deployment
 
-**Preview URL:** https://philos-mvp.preview.emergentagent.com
+**Preview URL:** https://trust-integrity-hub.preview.emergentagent.com
 
 ---
 

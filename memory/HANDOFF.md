@@ -280,7 +280,7 @@ User requested a "Collective Navigation System" with:
 # 11. PREVIEW URL
 
 ```
-https://philos-mvp.preview.emergentagent.com
+https://trust-integrity-hub.preview.emergentagent.com
 ```
 
 ---

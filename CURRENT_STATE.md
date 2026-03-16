@@ -27,4 +27,4 @@ Decision → Chain → Replay → Adaptive Scoring → Reports → Collective
 ## Next: System Stabilization
 - API caching, loading states, error handling, RTL verification
 
-**Preview:** https://philos-mvp.preview.emergentagent.com
+**Preview:** https://trust-integrity-hub.preview.emergentagent.com

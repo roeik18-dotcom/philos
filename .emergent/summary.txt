@@ -1,136 +1,156 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to build a comprehensive Value + Risk + Trust system for the Philos Orientation application. The project has evolved through several phases of implementation and refinement, culminating in the current task: translating the entire application from Hebrew to English to prepare for a public launch to an English-speaking audience.
+The user's initial goal was to translate the Philos Orientation application from Hebrew to English. This pivoted to a new goal: building a Philos Visual System Platform MVP.
+
+This involved several phases:
+1.  Creating a new, dark, futuristic, investor-focused landing page with a 3D globe.
+2.  Building a Product Layer PWA under , with a core loop of **Action → Reaction → Trust Score → Opportunity**. This included features like an action feed, posting actions, an impact map, user profiles, and a dashboard.
+3.  Implementing an SEO strategy (, , meta tags).
+4.  Adding a Share Action feature with dynamic, server-generated Open Graph (OG) preview images.
+5.  Building out advanced systems for Opportunities, Community Funds, Leaderboards, and Weekly Reports.
+6.  Implementing a Trust Integrity Layer with features like action verification, anti-spam rules, and reputation decay.
+7.  The most recent request is to rework the landing page to be product-first, moving the globe to the hero section and de-emphasizing theoretical content.
 
 **User's preferred language**: The user communicates in **English**. The next agent must respond to the user in **English**.
 
 **what currently exists?**
-A full-stack application (React, FastAPI, MongoDB) that functions as a Trust Test experiment. It includes a V+R+T (Value + Risk + Trust) engine, an automated daily score decay scheduler, a complete user invite system, lightweight analytics, and a public  page. The entire frontend codebase has been translated from Hebrew to English. The backend AI prompts and data models have also been updated to English. However, backend API route files still contain hardcoded Hebrew strings for user-facing messages.
+The application is a feature-rich full-stack platform (React/FastAPI/MongoDB).
+-   **Frontend ():** A multi-section landing page () that is currently being redesigned to be product-first.
+-   **Frontend ():** A comprehensive Progressive Web App (PWA) that forms the core product. It includes pages for an action feed, posting actions, an interactive map, user profiles, a dashboard, opportunities, community fund leaderboards, user leaderboards, and weekly reports.
+-   **Backend:** The FastAPI backend supports all frontend features with corresponding APIs. It includes advanced systems for:
+    -   Calculating trust scores based on weighted reactions.
+    -   A scheduled job (APScheduler) for trust score decay.
+    -   A Trust Integrity Layer to prevent spam and manipulation (duplicate checks, self-reaction blocks, verification levels).
+    -   A dynamic OG image generator () and a dedicated route () to serve server-rendered meta tags for social sharing.
 
 **Last working item**:
-- **Last item agent was working:** The agent was translating the backend codebase from Hebrew to English. After translating the frontend and fixing issues identified by the testing agent (related to AI prompts and data models), it identified that numerous backend route files still contained Hebrew strings. The agent's last action was to use  to list all the backend route files containing Hebrew text, in preparation for translating them.
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N (Testing was done for the frontend, but not for the backend translation that is in progress).
-- **Which testing method agent to use?** both. Once the backend translation is complete, a full end-to-end test is required. The backend testing agent should verify API responses, and the frontend testing agent should confirm that all UI elements, including dynamic messages from the server, appear in English.
-- **User Testing Done:** N
+-   **Last item agent was working:** Reworking the main landing page () to be product-first by user request. The agent has already applied the necessary code changes to the React component and its corresponding CSS file but was interrupted before it could verify the changes.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N (for this specific rework)
+-   **Which testing method agent to use?** both. The agent should first perform a visual check of the redesigned landing page with the screenshot tool. After confirming the visual changes, it should run the testing agent to perform regression testing on the entire application, especially the  routes, to ensure the landing page changes didn't introduce any side effects.
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Complete Backend Translation (P0)**
-    - **Description:** The agent has identified that multiple backend route files in  contain hardcoded Hebrew strings for API responses (e.g., success or error messages). These need to be translated to English to ensure a fully localized user experience.
-    - **Attempted fixes:** None yet. The agent only identified the scope of the problem in its last step.
-    - **Next debug checklist:**
-        1. Review the list of files generated by the  command in the last message.
-        2. Create a Python script to systematically find and replace the Hebrew strings with their English equivalents in all identified route files (, , , etc.).
-        3. Be careful to preserve Python syntax, especially within f-strings and logging statements.
-        4. After the script runs, restart the backend service (backend: stopped
-backend: started).
-        5. Use  to test a few key endpoints that are known to return user-facing messages to verify the translation.
-    - **Why fix this issue and what will be achieved with the fix?** This will complete the full-stack translation, ensuring no Hebrew text is ever shown to the end-user, making the app ready for its English-speaking audience.
-    - **Status:** IN PROGRESS
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** both
-    - **Blocked on other issue:** None
+There are no pending issues or bugs. The current focus is on completing the landing page redesign.
 
 **In progress Task List**:
-- **Task 1: Complete Full-Stack Translation to English (P0)**
-    - **Where to resume:** Resume by creating and executing a script to translate the Hebrew strings found in the  directory.
-    - **What will be achieved with this?** The application will be fully localized for an English-speaking audience, completing the final major task before the public launch.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** both
-    - **Blocked on something:** None
+-   **Task 1: Complete and Verify Landing Page Redesign (P0)**
+    -   **Where to resume:** The code has been modified. The agent needs to verify the implementation.
+        1.  Verify the frontend compiles without errors.
+        2.  Take a screenshot of the root URL () to confirm the new layout is active (e.g., globe is the main hero element).
+        3.  Run the testing agent to ensure no features were broken by the changes.
+    -   **What will be achieved with this?** The site's landing page will align with the new product-first strategy, improving clarity for new users.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both (frontend for visual, both for regression).
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   **P0: Final QA and Launch Readiness:** Once the backend translation is complete, conduct a final, thorough QA of the entire  user flow. This involves calling the testing agent to perform a full regression test on both frontend and backend.
+    *   There are no immediate upcoming tasks requested by the user. The next step will likely be defined after the current landing page rework is complete.
 *   **Future Tasks:**
-    *   **P1: Expand Trust-Aware AI:** Extend the trust context to other AI interpretation layers (action and field) beyond just the profile.
-    *   **P2: Define and Map Risk Signals:** Define and map risk signals based on user behavior patterns, which was deferred in earlier stages.
+    *   **P2:** Expand Trust-Aware AI interpretation layers.
+    -   **P3:** Define and map risk signals from user behavior.
+    -   **P3:** Clean up legacy Hebrew data from the database (explicitly de-prioritized by the user).
 
 **Completed work in this session**
-- **Frontend UI Translation:** Systematically translated over 90 React component files (, ) from Hebrew to English using a series of bulk replacement scripts and manual cleanup.
-- **Post-Translation Bug Fixes:**
-    - Resolved numerous JavaScript syntax errors caused by unescaped apostrophes in the translated strings.
-    - Fixed an issue in  and other files.
-- **Backend Model & Logic Translation (based on Test Agent feedback):**
-    - Updated  and  to remove legacy  fields and use English constants.
-    - Modified  to update the AI prompts, instructing the model to generate responses in English instead of Hebrew.
+-   **SEO Implementation:** Generated , , and added all necessary meta/OG tags to .
+-   **Product MVP (Phase 1):** Built the five core pages of the  PWA: , , , , and .
+-   **Reactions & Trust Score:** Implemented front and backend for weighted reactions (Support, Useful, Verified) and displayed the resulting Trust Score.
+-   **Shareable Actions:** Added a share feature to action cards with a dedicated shareable page ().
+-   **Dynamic OG Cards:** Created a backend endpoint to dynamically generate and serve Open Graph images and meta tags for shared actions.
+-   **Advanced Systems:** Built the backend and frontend for the Opportunity System, Community Funds leaderboard, general Leaderboard, and Weekly Impact Report pages.
+-   **Trust Integrity Layer:** Implemented a sophisticated backend system to ensure trust score reliability, including anti-spam rules, action verification levels, reputation decay, and suspicious activity flagging. The frontend was updated to display verification status and handle errors.
 
 **Earlier issues found/mentioned but not fixed**
-None.
+-   **Issue 1: Legacy Hebrew Data in Database**
+    -   **Debug checklist:** This requires a one-time data migration script to scan MongoDB collections and update fields containing Hebrew text.
+    -   **Why to solve this issue and what will be achieved with this?** To ensure data consistency for future analytics. The user has marked this as low priority and stated to ignore it unless it blocks a critical flow.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
-None.
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-*   **Backend:** FastAPI, Pydantic, MongoDB.
-*   **Frontend:** React, .
-*   **Scheduling:**  for background jobs.
-*   **AI:** Claude Sonnet 4.5 for text generation.
-*   **Core Logic:** A custom Value + Risk + Trust reputation engine.
+*   **Backend:** FastAPI, Pydantic, MongoDB, APScheduler (for scheduled jobs), Pillow (for server-side image generation).
+*   **Frontend:** React, , , , , .
+*   **Architecture:** A core PWA under the  route, with a separate marketing landing page at the root. The architecture includes server-side rendering of meta tags specifically for social media crawlers.
 
 **key DB schema**
+-   **actions:** 
+-   **opportunities:** 
+-   **communities:** 
+-   **community_funds:** 
 -   **user_state:** 
--   **trust_ledger:** 
--   **decay_log:** 
--   **analytics_events:** 
--   **invite_codes:** 
 
 **changes in tech stack**
--   None in this session.
+-    was added to the backend  for server-side image generation.
 
 **All files of reference**
-*   **Frontend Files ():** Over 90  and  files were modified to replace Hebrew text with English.
-*   **/app/backend/philos_ai.py**: Modified to change AI prompts to generate English text.
-*   **/app/backend/models/schemas.py**: Modified to update data models.
-*   **/app/backend/services/trust.py**: Modified to update constants to English.
-*   **/app/backend/routes/**: The files in this directory (, , etc.) are the next to be translated.
+*   **/app/frontend/src/pages/PlatformLandingPage.js**: The file being actively redesigned.
+*   **/app/frontend/src/styles/platform.css**: The stylesheet for the landing page.
+*   **/app/backend/routes/share.py**: The endpoint that serves dynamic OG tags for social sharing.
+*   **/app/backend/utils/og_image_generator.py**: The utility that creates the OG images.
+-   **/app/backend/routes/trust_integrity.py**: Logic for verification, anti-spam, and flagging.
+*   **/app/backend/server.py**: Main server file, includes the APScheduler for the trust decay job.
+*   **/app/frontend/src/pages/app/**: The directory containing all the core product PWA pages.
 
 **Areas that need refactoring**:
-- **/app/frontend/src/pages/ProfilePage.js**: This remains a very large (809-line) component that would benefit from being broken down into smaller, more manageable components to improve maintainability.
+-   **/app/frontend/src/pages/app/ActionFeed.js**: This component has become large due to handling reaction logic, state updates, and the share modal. It could be broken down into smaller, more manageable components like , , and .
+-   **/app/frontend/src/pages/PlatformLandingPage.js**: Even after the current rework, this component will likely remain large. Further decomposition into sectional components (e.g., , ) would improve maintainability.
 
 **key api endpoints**
-*   
-*   
-*   
-*   
-*   
-*   
-*   
-*   
+*   : Crucial endpoint for social sharing. It detects the user agent; if it's a bot, it serves HTML with dynamic OG tags. Otherwise, it redirects to the frontend URL.
+*   : Create a new action (with anti-spam checks).
+*   : Add a reaction to an action (with self-reaction and anti-spam checks).
+*   : Allows a user with appropriate permissions to verify an action, increasing its trust weight.
+*   : Fetches opportunities, filtered by user eligibility.
+*   , , : Endpoints for the advanced data pages.
 
 **Critical Info for New Agent**
-*   **Your immediate priority is to finish the backend translation.** The frontend and core backend logic have been translated, but API routes still send Hebrew messages.
-*   You must create a script to translate all Hebrew strings in the  directory.
-*   After completing the translation, a full end-to-end QA is critical. Use the  to test both frontend and backend to ensure the entire application experience is in English and no regressions were introduced.
-*   The overall goal is to finalize the English version for public launch.
+*   **Your immediate priority is to finish the landing page redesign.** The code is already written; you need to verify it works, check the visual output, and run regression tests to ensure nothing else broke. The user's goal is Product first. Theory second.
+*   The application has a large, stable, and feature-complete PWA under the  route. Be extremely careful not to introduce regressions here. The testing agent is your best tool for this.
+*   The backend is non-trivial. It includes scheduled jobs, dynamic image generation, and complex business logic for the trust system. Be aware of this complexity when debugging or adding features.
 
 **documents and test reports created in this job**
-*   
+*    (Continuously updated with completed features and backlog).
+*   Test reports located in  from  through .
+*   An example of a dynamically generated OG image was saved to  during a test run.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg 5):** Continue the project. Finish converting all user-facing UI text from Hebrew to natural English. Do not change backend logic or analytics. - This is the primary directive for the entire session. The agent is still in the process of completing this.
+1.  **User (Latest):** continue the run from the last step, do not rebuild the whole project, only finish the pending tasks - A directive to resume the interrupted landing page rework. (PENDING)
+2.  **User:** Proceed. - Approved the plan to rework the landing page.
+3.  **User:** We need to simplify the landing experience and make it product-first. - The request that initiated the current task.
+4.  **Agent:** Finished the Trust Integrity Layer task. (COMPLETED)
+5.  **User:** Proceed with P2 — Trust Integrity Layer. - Approved the plan for the trust system. (COMPLETED)
+6.  **User:** Requested the Trust Integrity Layer feature set. (COMPLETED)
+7.  **Agent:** Finished the phase including Dynamic OG Tags, Opportunities, and more. (COMPLETED)
+8.  **User:** Proceed. - Approved the plan for the advanced features. (COMPLETED)
+9.  **User:** Requested the large batch of advanced features (Dynamic OG, Opportunities, Community Funds, etc.). (COMPLETED)
+10. **Agent:** Finished the Share Action feature. (COMPLETED)
 
 **Project Health Check:**
-*   **Backend:** Healthy and Running, but **Broken** from a user-experience perspective as it serves Hebrew-language API responses to an English-language frontend.
-*   **Frontend:** Partially **Broken**. The UI is translated, but it depends on backend messages that are still in Hebrew. The app is runnable but provides an inconsistent language experience.
+*   **Frontend:** **Healthy but in transition.** The core product at  is stable. The marketing landing page at  is in the middle of a redesign and needs verification.
+*   **Backend:** **Healthy.** All services and APIs, including advanced features like scheduled jobs and image generation, are running correctly.
 
 **3rd Party Integrations**
-*   **Claude Sonnet 4.5:** Used for the AI Interpretation Layer via  with the Emergent LLM Key.
-*   **react-globe.gl, three.js:** For 3D globe visualization.
-*   **Stripe:** For subscription management.
-*   **html-to-image:** For generating shareable profile cards.
+*   **Claude Sonnet 4.5:** Integrated via Emergent LLM Key for potential future AI layers.
+*   **react-globe.gl** & **three.js:** Powers the 3D globe visualization.
+*   **react-leaflet:** Used for the 2D Impact Map.
+*   **Pillow:** Python library used on the backend to dynamically generate OG images for social sharing.
+*   **Stripe:** Exists in the codebase from the original application but is not a focus of current development.
+*   **html-to-image:** Exists in the codebase from the original application but is not a focus of current development.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. The testing agent was used after the frontend translation, which successfully identified that backend components (AI prompts, models) were still producing Hebrew text.
+-   **Testing agent used after significant changes:** YES. It has been used successfully after every major feature implementation phase.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** None currently. Regressions found by the testing agent were fixed.
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
 *   **Email:**  | **Password:** 
 *   **Email:**  | **Password:** 
 
 **What agent forgot to execute**
-The agent has not forgotten anything. It is in the middle of the complex, multi-stage task of translating the application. It correctly identified the remaining work (backend routes) after addressing feedback from the testing agent.</analysis>
+The agent was interrupted mid-task. It has not forgotten anything but needs to pick up exactly where it left off: verifying the landing page rework it just implemented.</analysis>

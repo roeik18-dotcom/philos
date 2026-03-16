@@ -1,211 +1,72 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { ArrowRight, ChevronRight, Zap, Target, Layers, Eye, Compass, Activity, ArrowDown } from 'lucide-react';
+import { ArrowRight, ChevronRight, Zap, Target, Layers, Eye, Compass, Activity, ArrowDown, Flame, Users, MapPin, ShieldCheck } from 'lucide-react';
 import Globe from 'react-globe.gl';
 import './platform.css';
 
-/* ═══════════════════════════════════════════════════
-   DATA
-   ═══════════════════════════════════════════════════ */
-const CHAIN = [
-  { id: 'cosmos',      label: 'Cosmos',      tier: 'cosmos', tip: 'The total field of existence' },
-  { id: 'space',       label: 'Space',       tier: 'cosmos', tip: 'The dimension that holds structure' },
-  { id: 'matter',      label: 'Matter',      tier: 'cosmos', tip: 'The substance of reality' },
-  { id: 'energy',      label: 'Energy',      tier: 'life',   tip: 'The capacity to act and transform' },
-  { id: 'motion',      label: 'Motion',      tier: 'life',   tip: 'Change across time' },
-  { id: 'life',        label: 'Life',        tier: 'life',   tip: 'Self-organizing complexity' },
-  { id: 'human',       label: 'Human',       tier: 'human',  tip: 'The agent of meaning' },
-  { id: 'forces',      label: 'Forces',      tier: 'human',  tip: 'Internal drives and tensions' },
-  { id: 'conflict',    label: 'Conflict',    tier: 'human',  tip: 'The collision of opposing forces' },
-  { id: 'orientation', label: 'Orientation', tier: 'action', tip: 'Where you stand in the field' },
-  { id: 'decision',    label: 'Decision',    tier: 'action', tip: 'The moment of commitment' },
-  { id: 'action',      label: 'Action',      tier: 'action', tip: 'Force applied to reality' },
-  { id: 'impact',      label: 'Impact',      tier: 'action', tip: 'The change left in the field' },
-];
-
-const TIER_COLORS = { cosmos: '#00d4ff', life: '#10b981', human: '#7c3aed', action: '#f59e0b' };
-
-const FORCES = [
-  { name: 'Contribution', color: '#10b981', opposite: 'Harm', desc: 'Giving vs. taking' },
-  { name: 'Recovery', color: '#00d4ff', opposite: 'Avoidance', desc: 'Healing vs. escaping' },
-  { name: 'Order', color: '#7c3aed', opposite: 'Chaos', desc: 'Structure vs. entropy' },
-  { name: 'Exploration', color: '#f59e0b', opposite: 'Rigidity', desc: 'Growth vs. stagnation' },
-];
-
-const CONTRADICTIONS = [
-  { left: 'Individual', right: 'Collective', desc: 'Self-interest vs. shared good' },
-  { left: 'Stability', right: 'Change', desc: 'Preservation vs. transformation' },
-  { left: 'Control', right: 'Freedom', desc: 'Structure vs. emergence' },
-];
-
-const FLOW_STEPS = [
-  { label: 'Forces', icon: Zap, color: '#00d4ff', desc: 'Internal drives and tensions push the human into motion.' },
-  { label: 'Conflict', icon: Activity, color: '#f43f5e', desc: 'Opposing forces collide. The human is caught between poles.' },
-  { label: 'Orientation', icon: Compass, color: '#10b981', desc: 'The system computes position in the field of forces.' },
-  { label: 'Decision', icon: Target, color: '#7c3aed', desc: 'The moment of commitment. One direction is chosen.' },
-  { label: 'Action', icon: Zap, color: '#f59e0b', desc: 'Force is applied to reality. The field changes.' },
-  { label: 'Impact', icon: Layers, color: '#00d4ff', desc: 'The change left in the collective field. Trust shifts.' },
-];
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 /* ═══════════════════════════════════════════════════
-   ARCHITECTURE — 10 layers of the Philos model
+   3D GLOBE — hero visual
    ═══════════════════════════════════════════════════ */
-const ARCHITECTURE = [
-  {
-    num: '01', id: 'foundation', title: 'Foundation',
-    color: '#00d4ff',
-    lead: 'Before anything moves, something must exist.',
-    body: 'The universe begins with a substrate — space, time, and the potential for structure. Foundation is not a thing. It is the condition that makes things possible. Every system, every organism, every decision rests on a layer it cannot see.',
-    principle: 'Existence precedes function.',
-  },
-  {
-    num: '02', id: 'physical-laws', title: 'Physical Laws',
-    color: '#0ea5e9',
-    lead: 'Reality is not arbitrary. It follows rules.',
-    body: 'Gravity, thermodynamics, entropy — these are not suggestions. They are constraints that shape what can and cannot happen. Any model of human behavior that ignores the physical substrate is building on sand.',
-    principle: 'Constraints define possibility.',
-  },
-  {
-    num: '03', id: 'life', title: 'Life',
-    color: '#10b981',
-    lead: 'Matter organizes itself. Complexity emerges.',
-    body: 'At some threshold, chemistry becomes biology. Systems begin to self-replicate, adapt, and persist. Life is not a property — it is a pattern. A pattern that resists entropy by consuming energy and producing order.',
-    principle: 'Life is organized resistance to decay.',
-  },
-  {
-    num: '04', id: 'human-structure', title: 'Human Structure',
-    color: '#34d399',
-    lead: 'The human is a specific architecture of life.',
-    body: 'A nervous system that models the world. A body that acts on it. A social layer that connects individuals into groups. The human is not a blank slate — it is a structure with built-in capacities, limits, and biases.',
-    principle: 'Structure determines range of motion.',
-  },
-  {
-    num: '05', id: 'psychological-systems', title: 'Psychological Systems',
-    color: '#7c3aed',
-    lead: 'Inside the structure, systems compete.',
-    body: 'Cognition, emotion, drives, memory — these are not one system. They are many systems running in parallel, often in contradiction. The human does not have a single will. It has a parliament of impulses negotiating in real time.',
-    principle: 'The mind is a system of systems.',
-  },
-  {
-    num: '06', id: 'conflict-engine', title: 'Conflict Engine',
-    color: '#f43f5e',
-    lead: 'Where opposing forces collide, orientation is born.',
-    body: 'Contribution vs. harm. Order vs. chaos. Individual vs. collective. These are not problems to solve — they are permanent tensions. The human exists at the intersection of forces that pull in different directions. Conflict is not a bug. It is the engine.',
-    principle: 'Tension is the source of movement.',
-  },
-  {
-    num: '07', id: 'action-model', title: 'Action Model',
-    color: '#f59e0b',
-    lead: 'Orientation becomes decision. Decision becomes force.',
-    body: 'The human senses, orients, decides, and acts. Each action carries a direction — toward contribution or harm, toward order or chaos. The action model maps the path from internal state to external impact.',
-    principle: 'Every action has a directional signature.',
-  },
-  {
-    num: '08', id: 'social-system', title: 'Social System',
-    color: '#ec4899',
-    lead: 'No human acts alone. The field is collective.',
-    body: 'Actions propagate. Trust forms networks. Reputation creates asymmetry. The social system is the medium through which individual orientation becomes collective reality. What one person does changes the field for everyone.',
-    principle: 'The field is shared.',
-  },
-  {
-    num: '09', id: 'philos-engine', title: 'Philos Engine',
-    color: '#00d4ff',
-    lead: 'The computational layer that ties it all together.',
-    body: 'Value, Risk, and Trust — computed in real time. The Philos engine takes the raw signal of human action, maps it against the directional forces, and produces a trust score. Not a judgment. A measurement. A position in the field.',
-    principle: 'V + R + T = Orientation.',
-  },
-  {
-    num: '10', id: 'investor-layer', title: 'Investor Layer',
-    color: '#f59e0b',
-    lead: 'A system this deep has surface applications.',
-    body: 'Trust scoring for platforms. Orientation analytics for organizations. Conflict resolution engines for communities. The Philos model is not an app — it is an infrastructure layer for any system that involves human decision-making.',
-    principle: 'Infrastructure scales. Features do not.',
-  },
-];
-
-/* ═══════════════════════════════════════════════════
-   GLOBE — 3D with particle layers
-   ═══════════════════════════════════════════════════ */
-function generatePoints(count, tier) {
-  const color = TIER_COLORS[tier];
-  const points = [];
-  for (let i = 0; i < count; i++) {
-    points.push({
-      lat: (Math.random() - 0.5) * 160,
-      lng: (Math.random() - 0.5) * 360,
-      size: Math.random() * 0.4 + 0.1,
-      color,
-      tier,
-    });
-  }
-  return points;
-}
-
-function generateArcs(count, tier) {
-  const color = TIER_COLORS[tier];
-  const arcs = [];
-  for (let i = 0; i < count; i++) {
-    arcs.push({
-      startLat: (Math.random() - 0.5) * 120,
-      startLng: (Math.random() - 0.5) * 360,
-      endLat: (Math.random() - 0.5) * 120,
-      endLng: (Math.random() - 0.5) * 360,
-      color,
-      tier,
-    });
-  }
-  return arcs;
-}
-
 function PhilosGlobe() {
   const globeRef = useRef();
   const containerRef = useRef();
-  const [dim, setDim] = useState(420);
+  const [dim, setDim] = useState(500);
 
-  const points = useMemo(() => [
-    ...generatePoints(40, 'cosmos'),
-    ...generatePoints(30, 'life'),
-    ...generatePoints(20, 'human'),
-    ...generatePoints(15, 'action'),
-  ], []);
+  const points = useMemo(() => {
+    const pts = [];
+    for (let i = 0; i < 60; i++) {
+      pts.push({
+        lat: (Math.random() - 0.5) * 140,
+        lng: (Math.random() - 0.5) * 340,
+        size: 0.3 + Math.random() * 0.8,
+        color: ['#00d4ff', '#10b981', '#7c3aed', '#f59e0b'][Math.floor(Math.random() * 4)],
+      });
+    }
+    return pts;
+  }, []);
 
-  const arcs = useMemo(() => [
-    ...generateArcs(8, 'cosmos'),
-    ...generateArcs(6, 'life'),
-    ...generateArcs(5, 'human'),
-    ...generateArcs(4, 'action'),
-  ], []);
+  const arcs = useMemo(() => {
+    const a = [];
+    for (let i = 0; i < 18; i++) {
+      a.push({
+        startLat: (Math.random() - 0.5) * 140,
+        startLng: (Math.random() - 0.5) * 340,
+        endLat: (Math.random() - 0.5) * 140,
+        endLng: (Math.random() - 0.5) * 340,
+        color: ['rgba(0,212,255,0.25)', 'rgba(16,185,129,0.25)', 'rgba(124,58,237,0.25)'][i % 3],
+      });
+    }
+    return a;
+  }, []);
 
   const rings = useMemo(() => [
-    { lat: 30, lng: 60, maxR: 6, propagationSpeed: 2, repeatPeriod: 1200, color: '#00d4ff' },
-    { lat: -20, lng: -100, maxR: 5, propagationSpeed: 2, repeatPeriod: 1400, color: '#10b981' },
-    { lat: 50, lng: -30, maxR: 4, propagationSpeed: 3, repeatPeriod: 1000, color: '#7c3aed' },
-    { lat: -40, lng: 120, maxR: 5, propagationSpeed: 2, repeatPeriod: 1600, color: '#f59e0b' },
+    { lat: 32.08, lng: 34.78, maxR: 4, propagationSpeed: 2, repeatPeriod: 2000, color: () => 'rgba(0,212,255,0.3)' },
+    { lat: 40.71, lng: -74.01, maxR: 3, propagationSpeed: 1.5, repeatPeriod: 2500, color: () => 'rgba(16,185,129,0.3)' },
+    { lat: 51.51, lng: -0.13, maxR: 3, propagationSpeed: 1.8, repeatPeriod: 3000, color: () => 'rgba(124,58,237,0.3)' },
   ], []);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    const update = () => {
-      const w = containerRef.current?.offsetWidth || 420;
-      setDim(Math.min(w, 500));
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setDim(Math.min(entry.contentRect.width, entry.contentRect.height, 600));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
     const g = globeRef.current;
     if (!g) return;
     g.controls().autoRotate = true;
-    g.controls().autoRotateSpeed = 0.8;
+    g.controls().autoRotateSpeed = 0.6;
     g.controls().enableZoom = false;
     g.pointOfView({ altitude: 2.2 });
   }, []);
 
-  const globeImageUrl = useCallback(() =>
-    '//unpkg.com/three-globe/example/img/earth-dark.jpg', []);
-  const bumpImageUrl = useCallback(() =>
-    '//unpkg.com/three-globe/example/img/earth-topology.png', []);
+  const globeImg = useCallback(() => '//unpkg.com/three-globe/example/img/earth-dark.jpg', []);
+  const bumpImg = useCallback(() => '//unpkg.com/three-globe/example/img/earth-topology.png', []);
 
   return (
     <div ref={containerRef} className="globe-3d-container" data-testid="globe-3d">
@@ -213,252 +74,93 @@ function PhilosGlobe() {
         ref={globeRef}
         width={dim}
         height={dim}
-        globeImageUrl={globeImageUrl()}
-        bumpImageUrl={bumpImageUrl()}
+        globeImageUrl={globeImg()}
+        bumpImageUrl={bumpImg()}
         backgroundColor="rgba(0,0,0,0)"
         atmosphereColor="#00d4ff"
         atmosphereAltitude={0.18}
         pointsData={points}
-        pointLat="lat"
-        pointLng="lng"
+        pointLat="lat" pointLng="lng"
         pointAltitude={d => d.size * 0.04}
         pointRadius={d => d.size * 0.3}
         pointColor="color"
         arcsData={arcs}
-        arcStartLat="startLat"
-        arcStartLng="startLng"
-        arcEndLat="endLat"
-        arcEndLng="endLng"
-        arcColor="color"
-        arcStroke={0.4}
-        arcDashLength={0.4}
-        arcDashGap={0.2}
-        arcDashAnimateTime={3000}
+        arcStartLat="startLat" arcStartLng="startLng"
+        arcEndLat="endLat" arcEndLng="endLng"
+        arcColor="color" arcStroke={0.4}
+        arcDashLength={0.4} arcDashGap={0.2} arcDashAnimateTime={3000}
         arcAltitudeAutoScale={0.3}
         ringsData={rings}
-        ringLat="lat"
-        ringLng="lng"
+        ringLat="lat" ringLng="lng"
         ringMaxRadius="maxR"
         ringPropagationSpeed="propagationSpeed"
         ringRepeatPeriod="repeatPeriod"
         ringColor="color"
       />
-      {/* Layer legend */}
-      <div className="globe-legend">
-        {Object.entries(TIER_COLORS).map(([tier, color]) => (
-          <div key={tier} className="globe-legend-item">
-            <span className="globe-legend-dot" style={{ background: color }} />
-            <span>{tier.charAt(0).toUpperCase() + tier.slice(1)}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════
-   SYSTEM CHAIN — animated node line
+   LIVE STATS BAR
    ═══════════════════════════════════════════════════ */
-function SystemChain() {
-  const [activeNode, setActiveNode] = useState(null);
-
-  return (
-    <div data-testid="system-chain">
-      <div className="chain-container">
-        {CHAIN.map((node, i) => (
-          <div key={node.id} style={{ display: 'flex', alignItems: 'center' }}>
-            <div
-              className="chain-node"
-              onMouseEnter={() => setActiveNode(i)}
-              onMouseLeave={() => setActiveNode(null)}
-            >
-              <div
-                className="node-dot"
-                style={{
-                  background: TIER_COLORS[node.tier],
-                  boxShadow: activeNode === i
-                    ? `0 0 20px ${TIER_COLORS[node.tier]}, 0 0 40px ${TIER_COLORS[node.tier]}50`
-                    : `0 0 8px ${TIER_COLORS[node.tier]}80`,
-                  transform: activeNode === i ? 'scale(1.6)' : 'scale(1)',
-                  transition: 'all 0.3s ease',
-                }}
-              />
-              <span className="node-label" style={{
-                color: activeNode === i ? '#fff' : undefined,
-              }}>{node.label}</span>
-            </div>
-            {i < CHAIN.length - 1 && (
-              <div className="chain-connector" style={{ animationDelay: `${i * 0.15}s` }} />
-            )}
-          </div>
-        ))}
-      </div>
-      {activeNode !== null && (
-        <p className="text-center text-xs mt-2 animate-fadeIn" style={{ color: TIER_COLORS[CHAIN[activeNode].tier] }}>
-          {CHAIN[activeNode].tip}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════
-   INTERACTIVE SYSTEM MAP — layered model
-   ═══════════════════════════════════════════════════ */
-function SystemMap() {
-  const [expandedTier, setExpandedTier] = useState(null);
-
-  const tiers = [
-    {
-      id: 'cosmos', label: 'Cosmos Layer', color: '#00d4ff',
-      nodes: CHAIN.filter(c => c.tier === 'cosmos'),
-      desc: 'The foundational substrate. Space, matter, and energy define the field of all possibility.',
-    },
-    {
-      id: 'life', label: 'Life Layer', color: '#10b981',
-      nodes: CHAIN.filter(c => c.tier === 'life'),
-      desc: 'Energy becomes motion. Motion becomes life. Self-organizing systems emerge and persist.',
-    },
-    {
-      id: 'human', label: 'Human Layer', color: '#7c3aed',
-      nodes: CHAIN.filter(c => c.tier === 'human'),
-      desc: 'The agent of meaning. Internal forces, external pressures, and the conflict between them.',
-    },
-    {
-      id: 'action', label: 'Action Layer', color: '#f59e0b',
-      nodes: CHAIN.filter(c => c.tier === 'action'),
-      desc: 'Orientation crystallizes into decision, decision into action, action into impact on the field.',
-    },
-  ];
-
-  return (
-    <div className="system-map" data-testid="system-map">
-      {tiers.map((tier, ti) => (
-        <div key={tier.id}>
-          <button
-            className="system-map-tier"
-            onClick={() => setExpandedTier(expandedTier === tier.id ? null : tier.id)}
-            style={{ '--tier-color': tier.color }}
-            data-testid={`tier-${tier.id}`}
-          >
-            <div className="system-map-tier-header">
-              <span className="system-map-tier-dot" style={{ background: tier.color }} />
-              <span className="system-map-tier-label">{tier.label}</span>
-              <span className="system-map-tier-count">{tier.nodes.length} stages</span>
-            </div>
-            <div className="system-map-tier-nodes">
-              {tier.nodes.map(n => (
-                <span key={n.id} className="system-map-node" style={{ borderColor: tier.color + '44' }}>
-                  {n.label}
-                </span>
-              ))}
-            </div>
-            {expandedTier === tier.id && (
-              <p className="system-map-tier-desc animate-fadeIn">{tier.desc}</p>
-            )}
-          </button>
-          {ti < tiers.length - 1 && (
-            <div className="system-map-connector">
-              <ArrowDown className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.15)' }} />
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════
-   FLOW DIAGRAM — Forces → Impact
-   ═══════════════════════════════════════════════════ */
-function ActionFlow() {
-  const [activeStep, setActiveStep] = useState(null);
-
-  return (
-    <div className="action-flow" data-testid="action-flow">
-      <div className="action-flow-steps">
-        {FLOW_STEPS.map((step, i) => {
-          const Icon = step.icon;
-          const isActive = activeStep === i;
-          return (
-            <div key={step.label} className="action-flow-step-wrapper">
-              <button
-                className={`action-flow-step ${isActive ? 'active' : ''}`}
-                onMouseEnter={() => setActiveStep(i)}
-                onMouseLeave={() => setActiveStep(null)}
-                style={{ '--step-color': step.color }}
-              >
-                <div className="action-flow-icon" style={{
-                  background: isActive ? step.color + '20' : 'transparent',
-                  borderColor: step.color + (isActive ? '66' : '33'),
-                }}>
-                  <Icon className="w-4 h-4" style={{ color: step.color }} />
-                </div>
-                <span className="action-flow-label">{step.label}</span>
-                {isActive && (
-                  <p className="action-flow-desc animate-fadeIn">{step.desc}</p>
-                )}
-              </button>
-              {i < FLOW_STEPS.length - 1 && (
-                <div className="action-flow-connector">
-                  <ChevronRight className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.12)' }} />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════
-   ARCHITECTURE — vertical deep-dive
-   ═══════════════════════════════════════════════════ */
-function ArchitectureLayer({ layer, index }) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
+function LiveStats() {
+  const [stats, setStats] = useState({ actions: 0, users: 0, communities: 0, trust: 0 });
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.15 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    const fetchStats = async () => {
+      try {
+        const [feedRes, lbRes, cfRes] = await Promise.all([
+          fetch(`${API_URL}/api/actions/feed?limit=50`),
+          fetch(`${API_URL}/api/leaderboard`),
+          fetch(`${API_URL}/api/community-funds`),
+        ]);
+        const feed = await feedRes.json();
+        const lb = await lbRes.json();
+        const cf = await cfRes.json();
+        const totalTrust = (lb.leaders || []).reduce((s, l) => s + l.trust_score, 0);
+        setStats({
+          actions: (feed.actions || []).length,
+          users: (lb.leaders || []).length,
+          communities: (cf.funds || []).length,
+          trust: Math.round(totalTrust),
+        });
+      } catch (e) { /* silent */ }
+    };
+    fetchStats();
   }, []);
 
-  const isEven = index % 2 === 0;
-
   return (
-    <div
-      ref={ref}
-      className={`arch-layer ${visible ? 'arch-visible' : ''}`}
-      data-testid={`arch-layer-${layer.id}`}
-    >
-      <div className="arch-layer-inner" style={{ '--arch-color': layer.color }}>
-        <div className="arch-num" style={{ color: layer.color }}>{layer.num}</div>
-        <div className={`arch-content ${isEven ? '' : 'arch-content-right'}`}>
-          <div className="arch-text">
-            <h3 className="arch-title" style={{ color: layer.color }}>{layer.title}</h3>
-            <p className="arch-lead">{layer.lead}</p>
-            <p className="arch-body">{layer.body}</p>
-            <div className="arch-principle">
-              <span className="arch-principle-marker" style={{ background: layer.color }} />
-              <span>{layer.principle}</span>
-            </div>
-          </div>
-          <div className="arch-line" style={{ background: `linear-gradient(to bottom, ${layer.color}22, transparent)` }} />
-        </div>
+    <div className="live-stats" data-testid="live-stats">
+      <div className="live-stat">
+        <Zap className="w-3.5 h-3.5" style={{ color: '#00d4ff' }} />
+        <span className="live-stat-num">{stats.actions}</span>
+        <span className="live-stat-label">Actions</span>
+      </div>
+      <div className="live-stat-sep" />
+      <div className="live-stat">
+        <Users className="w-3.5 h-3.5" style={{ color: '#10b981' }} />
+        <span className="live-stat-num">{stats.users}</span>
+        <span className="live-stat-label">Contributors</span>
+      </div>
+      <div className="live-stat-sep" />
+      <div className="live-stat">
+        <MapPin className="w-3.5 h-3.5" style={{ color: '#7c3aed' }} />
+        <span className="live-stat-num">{stats.communities}</span>
+        <span className="live-stat-label">Communities</span>
+      </div>
+      <div className="live-stat-sep" />
+      <div className="live-stat">
+        <Flame className="w-3.5 h-3.5" style={{ color: '#f59e0b' }} />
+        <span className="live-stat-num">{stats.trust}</span>
+        <span className="live-stat-label">Trust Generated</span>
       </div>
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════
-   SECTION WRAPPER — reveal on scroll
+   SCROLL-REVEAL SECTION
    ═══════════════════════════════════════════════════ */
 function Section({ children, className = '', id, style }) {
   const ref = useRef(null);
@@ -484,37 +186,93 @@ function Section({ children, className = '', id, style }) {
 }
 
 /* ═══════════════════════════════════════════════════
-   MAIN PAGE
+   ARCHITECTURE LAYER (deep scroll)
+   ═══════════════════════════════════════════════════ */
+const ARCHITECTURE = [
+  { num: '01', id: 'foundation', title: 'Foundation', color: '#00d4ff', lead: 'Before anything moves, something must exist.', body: 'The universe begins with a substrate — space, time, and the potential for structure.', principle: 'Existence precedes function.' },
+  { num: '02', id: 'physical-laws', title: 'Physical Laws', color: '#0ea5e9', lead: 'Reality is not arbitrary. It follows rules.', body: 'Gravity, thermodynamics, entropy — constraints that shape what can and cannot happen.', principle: 'Constraints define possibility.' },
+  { num: '03', id: 'life', title: 'Life', color: '#10b981', lead: 'Matter organizes itself. Complexity emerges.', body: 'Systems begin to self-replicate, adapt, and persist. Life is organized resistance to decay.', principle: 'Life is organized resistance to decay.' },
+  { num: '04', id: 'human-structure', title: 'Human Structure', color: '#34d399', lead: 'The human is a specific architecture of life.', body: 'A nervous system that models the world. A body that acts on it. A social layer that connects.', principle: 'Structure determines range of motion.' },
+  { num: '05', id: 'forces', title: 'Forces', color: '#7c3aed', lead: 'The human is not still. Forces are always acting.', body: 'Contribution vs. harm. Recovery vs. avoidance. Order vs. chaos. Exploration vs. rigidity.', principle: 'No neutrality. Only direction.' },
+  { num: '06', id: 'contradictions', title: 'Contradictions', color: '#8b5cf6', lead: 'Forces collide. Contradictions are structural.', body: 'Individual vs. collective. Stability vs. change. Control vs. freedom.', principle: 'Contradiction is the engine of orientation.' },
+  { num: '07', id: 'orientation', title: 'Orientation', color: '#f59e0b', lead: 'The system computes a position.', body: 'Given forces and contradictions, orientation is where you stand in the field.', principle: 'Position is computable.' },
+  { num: '08', id: 'decision', title: 'Decision', color: '#f97316', lead: 'Orientation becomes commitment.', body: 'The moment of decision collapses possibility into action.', principle: 'Decision is the collapse of the field.' },
+  { num: '09', id: 'action', title: 'Action', color: '#f43f5e', lead: 'Force is applied to reality.', body: 'Action is not random. It is the output of the entire chain. It changes the field.', principle: 'Action is directed force.' },
+  { num: '10', id: 'impact', title: 'Impact', color: '#ec4899', lead: 'The field has changed.', body: 'Trust shifts. Reputation updates. The collective field absorbs the new data.', principle: 'Impact is the delta on the field.' },
+];
+
+function ArchitectureLayer({ layer, index }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className={`arch-layer ${visible ? 'arch-visible' : ''}`} data-testid={`arch-layer-${layer.id}`}>
+      <div className="arch-layer-inner" style={{ '--arch-color': layer.color }}>
+        <div className="arch-num" style={{ color: layer.color }}>{layer.num}</div>
+        <div className="arch-content">
+          <div className="arch-text">
+            <h3 className="arch-title" style={{ color: layer.color }}>{layer.title}</h3>
+            <p className="arch-lead">{layer.lead}</p>
+            <p className="arch-body">{layer.body}</p>
+            <div className="arch-principle">
+              <span className="arch-principle-marker" style={{ background: layer.color }} />
+              <span>{layer.principle}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN PAGE — Product First
    ═══════════════════════════════════════════════════ */
 export default function PlatformLandingPage({ onEnterApp }) {
   return (
     <div className="platform-landing min-h-screen" data-testid="platform-landing">
 
-      {/* ═══ HERO ═══ */}
+      {/* ═══ HERO — Globe + Product Message ═══ */}
       <div className="hero-section bg-grid" data-testid="hero-section">
         <div className="hero-glow" />
 
-        <div className="hero-content">
-          <div className="hero-badge">Philos Orientation System</div>
+        <div className="hero-globe-layout">
+          <div className="hero-text-col">
+            <div className="hero-badge-live">
+              <span className="hero-badge-dot" />
+              Live Network
+            </div>
 
-          <h1 className="hero-title glow-cyan">
-            The computational model<br />of human orientation
-          </h1>
+            <h1 className="hero-title glow-cyan">
+              Your actions build trust.<br />Trust unlocks opportunity.
+            </h1>
 
-          <p className="hero-subtitle">
-            From cosmos to action. A system that maps how humans navigate forces,
-            resolve conflict, and produce measurable impact in the world.
-          </p>
+            <p className="hero-subtitle">
+              Philos is a live network where real actions produce measurable trust.
+              Contribute to your community, earn a Trust Score,
+              and unlock opportunities others can't see.
+            </p>
 
-          <SystemChain />
-
-          <div className="hero-cta">
-            <button className="cta-btn cta-btn-primary" onClick={onEnterApp} data-testid="cta-enter-app">
-              Enter the system <ArrowRight className="w-4 h-4" />
+            <button className="cta-btn cta-btn-primary hero-cta-main" onClick={onEnterApp} data-testid="cta-enter-app">
+              Start contributing <ArrowRight className="w-4 h-4" />
             </button>
-            <a href="#model" className="cta-btn cta-btn-ghost">
-              Explore the model <ChevronRight className="w-4 h-4" />
-            </a>
+
+            <LiveStats />
+          </div>
+
+          <div className="hero-globe-col">
+            <PhilosGlobe />
           </div>
         </div>
 
@@ -523,98 +281,133 @@ export default function PlatformLandingPage({ onEnterApp }) {
         </div>
       </div>
 
-      {/* ═══ PROBLEM ═══ */}
-      <Section id="problem" className="py-24 sm:py-32 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="section-label" style={{ color: 'var(--pl-rose)' }}>The Problem</div>
-          <div className="section-divider mb-8" />
-          <h2 className="section-heading">
-            Humans act without orientation.
-          </h2>
-          <p className="section-body">
-            Every day, billions of decisions are made without a model of the forces at play.
-            Trust erodes. Value is destroyed. Conflict escalates.
-            Not because people are bad — but because they lack a system
-            to understand where they stand in the field.
-          </p>
-          <div className="grid grid-cols-3 gap-6 max-w-md mx-auto mt-12">
-            <div className="inv-stat"><div className="inv-stat-number">73%</div><div className="inv-stat-label">Trust deficit</div></div>
-            <div className="inv-stat"><div className="inv-stat-number">4.2B</div><div className="inv-stat-label">Daily decisions</div></div>
-            <div className="inv-stat"><div className="inv-stat-number">0</div><div className="inv-stat-label">Systems for it</div></div>
-          </div>
-        </div>
-      </Section>
-
-      {/* ═══ MODEL — 3D Globe ═══ */}
-      <Section id="model" className="py-24 sm:py-32 px-4">
-        <div className="max-w-5xl mx-auto">
+      {/* ═══ HOW IT WORKS — 3-step loop ═══ */}
+      <Section id="how-it-works" className="py-24 sm:py-32 px-4">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <div className="section-label" style={{ color: 'var(--pl-cyan)' }}>The Model</div>
+            <div className="section-label" style={{ color: '#00d4ff' }}>How It Works</div>
             <div className="section-divider mb-8" />
-            <h2 className="section-heading">Orientation is computable.</h2>
-            <p className="section-body-sm">
-              The Philos model traces reality from its most fundamental layer
-              to the point where a human produces impact.
-            </p>
+            <h2 className="section-heading">Three steps. One loop.</h2>
+            <p className="section-body-sm">Every action feeds the system. Every reaction builds trust. Every threshold unlocks something real.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <PhilosGlobe />
-            <div className="space-y-6">
-              <div className="layer-card">
-                <Layers className="w-4 h-4 shrink-0" style={{ color: '#00d4ff' }} />
-                <div>
-                  <p className="layer-card-title">Cosmos Layer</p>
-                  <p className="layer-card-desc">
-                    Space, matter, and energy — the substrate on which everything operates.
-                    The field that contains all possibility.
-                  </p>
-                </div>
+          <div className="loop-grid">
+            <div className="loop-card">
+              <div className="loop-card-num">1</div>
+              <div className="loop-card-icon" style={{ background: 'rgba(0,212,255,0.08)', borderColor: 'rgba(0,212,255,0.2)' }}>
+                <Zap className="w-6 h-6" style={{ color: '#00d4ff' }} />
               </div>
-              <div className="layer-card">
-                <Layers className="w-4 h-4 shrink-0" style={{ color: '#10b981' }} />
-                <div>
-                  <p className="layer-card-title">Life Layer</p>
-                  <p className="layer-card-desc">
-                    Energy becomes motion. Motion becomes life.
-                    Self-organizing systems that persist and adapt.
-                  </p>
-                </div>
+              <h3 className="loop-card-title">Post an Action</h3>
+              <p className="loop-card-desc">Share something real you did for your community. Education, environment, health — any category.</p>
+            </div>
+            <div className="loop-connector"><ChevronRight className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.1)' }} /></div>
+            <div className="loop-card">
+              <div className="loop-card-num">2</div>
+              <div className="loop-card-icon" style={{ background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.2)' }}>
+                <Flame className="w-6 h-6" style={{ color: '#f59e0b' }} />
               </div>
-              <div className="layer-card">
-                <Eye className="w-4 h-4 shrink-0" style={{ color: '#7c3aed' }} />
-                <div>
-                  <p className="layer-card-title">Human Forces Layer</p>
-                  <p className="layer-card-desc">
-                    Internal drives, external pressures, and the conflict between them.
-                    This is where orientation begins.
-                  </p>
-                </div>
+              <h3 className="loop-card-title">Earn Trust</h3>
+              <p className="loop-card-desc">Others react — Support, Useful, Verified. Each reaction adds to your Trust Score. Verified actions multiply it.</p>
+            </div>
+            <div className="loop-connector"><ChevronRight className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.1)' }} /></div>
+            <div className="loop-card">
+              <div className="loop-card-num">3</div>
+              <div className="loop-card-icon" style={{ background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.2)' }}>
+                <ShieldCheck className="w-6 h-6" style={{ color: '#10b981' }} />
               </div>
-              <div className="layer-card">
-                <Zap className="w-4 h-4 shrink-0" style={{ color: '#f59e0b' }} />
-                <div>
-                  <p className="layer-card-title">Action Layer</p>
-                  <p className="layer-card-desc">
-                    Decision, action, impact. Force is applied to reality
-                    and the collective field shifts.
-                  </p>
-                </div>
-              </div>
+              <h3 className="loop-card-title">Unlock Opportunities</h3>
+              <p className="loop-card-desc">Grants, jobs, collaborations — all gated by Trust Score. Higher trust means more access.</p>
             </div>
           </div>
         </div>
       </Section>
 
-      {/* ═══ PHILOS ARCHITECTURE — 10 deep layers ═══ */}
+      {/* ═══ WHAT YOU GET — product features ═══ */}
+      <Section id="features" className="py-24 sm:py-32 px-4" style={{ background: 'rgba(255,255,255,0.01)' }}>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="section-label" style={{ color: '#10b981' }}>The Platform</div>
+            <div className="section-divider mb-8" />
+            <h2 className="section-heading">Everything you need to build trust.</h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { icon: Zap, color: '#00d4ff', title: 'Action Feed', desc: 'A live stream of verified community actions.' },
+              { icon: Flame, color: '#f59e0b', title: 'Trust Score', desc: 'Earned through reactions. Decays if you stop contributing.' },
+              { icon: Target, color: '#10b981', title: 'Opportunities', desc: 'Jobs, grants, and collabs gated by your Trust Score.' },
+              { icon: MapPin, color: '#7c3aed', title: 'Impact Map', desc: 'See actions visualized by location on a live map.' },
+              { icon: Users, color: '#ec4899', title: 'Community Funds', desc: 'Transparent financial visibility for every community.' },
+              { icon: ShieldCheck, color: '#0ea5e9', title: 'Trust Integrity', desc: 'Anti-spam, verification levels, and decay prevent gaming.' },
+            ].map(f => {
+              const Icon = f.icon;
+              return (
+                <div key={f.title} className="flow-card feature-card">
+                  <Icon className="w-5 h-5 mb-3" style={{ color: f.color }} />
+                  <p className="text-sm font-medium mb-1">{f.title}</p>
+                  <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>{f.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-center mt-10">
+            <button className="cta-btn cta-btn-primary" onClick={onEnterApp} data-testid="cta-explore-platform">
+              Explore the platform <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </Section>
+
+      {/* ═══ THE MODEL — theory (moved lower) ═══ */}
+      <Section id="model" className="py-24 sm:py-32 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="section-label" style={{ color: '#7c3aed' }}>The Model</div>
+            <div className="section-divider mb-8" />
+            <h2 className="section-heading">Built on a computational model of human orientation.</h2>
+            <p className="section-body-sm">
+              Philos isn't just a platform. It's built on a formal model that traces how humans
+              navigate forces, resolve conflict, and produce impact.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {[
+              { icon: Layers, color: '#00d4ff', title: 'Cosmos to Action', desc: 'A 13-stage chain from the substrate of reality to measurable human impact.' },
+              { icon: Zap, color: '#10b981', title: 'Directional Forces', desc: 'Contribution vs. harm, recovery vs. avoidance, order vs. chaos, exploration vs. rigidity.' },
+              { icon: Activity, color: '#f43f5e', title: 'Contradictions', desc: 'Individual vs. collective, stability vs. change, control vs. freedom.' },
+              { icon: Compass, color: '#f59e0b', title: 'V+R+T Engine', desc: 'Value, Risk, and Trust — the three-variable engine that computes orientation.' },
+            ].map(m => {
+              const Icon = m.icon;
+              return (
+                <div key={m.title} className="layer-card">
+                  <Icon className="w-4 h-4 shrink-0" style={{ color: m.color }} />
+                  <div>
+                    <p className="layer-card-title">{m.title}</p>
+                    <p className="layer-card-desc">{m.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-center mt-10">
+            <a href="#architecture" className="cta-btn cta-btn-ghost">
+              Read the full architecture <ChevronRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </Section>
+
+      {/* ═══ ARCHITECTURE — 10 deep layers (investor depth) ═══ */}
       <section id="architecture" className="arch-section" data-testid="architecture-section">
         <div className="arch-header">
-          <div className="section-label" style={{ color: 'var(--pl-cyan)' }}>Philos Architecture</div>
+          <div className="section-label" style={{ color: '#00d4ff' }}>Deep Dive</div>
           <div className="section-divider mb-8" />
           <h2 className="section-heading">10 layers. From substrate to system.</h2>
           <p className="section-body-sm">
-            The complete architecture of the Philos model — from the physical
-            foundation of reality to the application layer.
+            The complete architecture of the Philos model.
           </p>
         </div>
         <div className="arch-layers">
@@ -624,147 +417,18 @@ export default function PlatformLandingPage({ onEnterApp }) {
         </div>
       </section>
 
-      {/* ═══ SYSTEM MAP — Interactive layers ═══ */}
-      <Section id="system-map" className="py-24 sm:py-32 px-4" style={{ background: 'rgba(255,255,255,0.01)' }}>
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="section-label" style={{ color: 'var(--pl-violet)' }}>System Map</div>
-            <div className="section-divider mb-8" />
-            <h2 className="section-heading">13 stages. 4 layers. 1 system.</h2>
-            <p className="section-body-sm">
-              Click each layer to explore the stages within.
-            </p>
-          </div>
-          <SystemMap />
-        </div>
-      </Section>
-
-      {/* ═══ SYSTEM ENGINE — Forces + Contradictions ═══ */}
-      <Section id="engine" className="py-24 sm:py-32 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="section-label" style={{ color: 'var(--pl-emerald)' }}>System Engine</div>
-            <div className="section-divider mb-8" />
-            <h2 className="section-heading">Forces. Contradictions. Orientation.</h2>
-            <p className="section-body-sm">
-              The engine that computes human position in the field.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {/* Forces */}
-            <div className="flow-card" data-testid="forces-flow">
-              <div className="flow-card-header">
-                <Zap className="w-4 h-4" style={{ color: '#00d4ff' }} />
-                <span style={{ color: '#00d4ff' }}>Directional Forces</span>
-              </div>
-              <div className="space-y-3">
-                {FORCES.map(f => (
-                  <div key={f.name} className="force-row">
-                    <div className="force-dot" style={{ background: f.color }} />
-                    <span className="force-name">{f.name}</span>
-                    <div className="force-line" style={{ background: `linear-gradient(90deg, ${f.color}44, ${f.color}11)` }} />
-                    <span className="force-opposite">{f.opposite}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Contradictions */}
-            <div className="flow-card" data-testid="contradictions-flow">
-              <div className="flow-card-header">
-                <Activity className="w-4 h-4" style={{ color: '#f43f5e' }} />
-                <span style={{ color: '#f43f5e' }}>Fundamental Contradictions</span>
-              </div>
-              <div className="space-y-3">
-                {CONTRADICTIONS.map(c => (
-                  <div key={c.left} className="contradiction-row">
-                    <span className="contradiction-pole">{c.left}</span>
-                    <div className="contradiction-line" />
-                    <span className="contradiction-pole">{c.right}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs mt-4" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                These tensions are not bugs. They are the engine of orientation.
-              </p>
-            </div>
-          </div>
-
-          {/* Action Flow */}
-          <div className="flow-card" data-testid="action-flow-section">
-            <div className="flow-card-header mb-6">
-              <Compass className="w-4 h-4" style={{ color: '#10b981' }} />
-              <span style={{ color: '#10b981' }}>Forces &rarr; Conflict &rarr; Orientation &rarr; Decision &rarr; Action &rarr; Impact</span>
-            </div>
-            <ActionFlow />
-          </div>
-        </div>
-      </Section>
-
-      {/* ═══ APPLICATION ═══ */}
-      <Section id="application" className="py-24 sm:py-32 px-4" style={{ background: 'rgba(255,255,255,0.01)' }}>
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="section-label" style={{ color: '#7c3aed' }}>Application</div>
-            <div className="section-divider mb-8" />
-            <h2 className="section-heading">A live system, not a theory.</h2>
-            <p className="section-body-sm">
-              Philos is running. Users enter the system, make decisions,
-              and produce measurable impact on the collective field.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div className="flow-card text-center">
-              <Target className="w-5 h-5 mx-auto mb-3" style={{ color: '#00d4ff' }} />
-              <p className="text-sm font-medium mb-1">Trust Test</p>
-              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>Measure your trust state with a single question.</p>
-            </div>
-            <div className="flow-card text-center">
-              <Compass className="w-5 h-5 mx-auto mb-3" style={{ color: '#10b981' }} />
-              <p className="text-sm font-medium mb-1">Orientation Map</p>
-              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>See where you stand in the directional field.</p>
-            </div>
-            <div className="flow-card text-center">
-              <Activity className="w-5 h-5 mx-auto mb-3" style={{ color: '#7c3aed' }} />
-              <p className="text-sm font-medium mb-1">Collective Field</p>
-              <p className="text-xs" style={{ color: 'var(--pl-muted)' }}>Watch the global field shift in real time.</p>
-            </div>
-          </div>
-
-          <div className="flex justify-center mt-10">
-            <button className="cta-btn cta-btn-primary" onClick={onEnterApp} data-testid="cta-trust-test">
-              Take the trust test <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </Section>
-
-      {/* ═══ VISION ═══ */}
-      <Section id="vision" className="py-24 sm:py-32 px-4">
+      {/* ═══ FINAL CTA ═══ */}
+      <Section id="cta" className="py-24 sm:py-32 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="section-label" style={{ color: '#f59e0b' }}>Vision</div>
-          <div className="section-divider mb-8" />
           <h2 className="section-heading" style={{ lineHeight: 1.5 }}>
-            Build the orientation layer<br />for human decision-making.
+            Ready to turn your actions<br />into measurable trust?
           </h2>
-          <p className="section-body">
-            Every decision platform — from social networks to financial systems —
-            operates without a model of human orientation. Philos provides
-            that missing layer. A computational system that maps forces,
-            resolves contradictions, and produces trust.
+          <p className="section-body" style={{ maxWidth: '480px', margin: '0 auto 2rem' }}>
+            Join a network where what you do matters. Post actions, earn trust,
+            and unlock opportunities that match your impact.
           </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-lg mx-auto mt-12 mb-12">
-            <div className="inv-stat"><div className="inv-stat-number">V+R+T</div><div className="inv-stat-label">Engine</div></div>
-            <div className="inv-stat"><div className="inv-stat-number">4</div><div className="inv-stat-label">Directions</div></div>
-            <div className="inv-stat"><div className="inv-stat-number">13</div><div className="inv-stat-label">System layers</div></div>
-            <div className="inv-stat"><div className="inv-stat-number">1</div><div className="inv-stat-label">Mission</div></div>
-          </div>
-
           <button className="cta-btn cta-btn-primary" onClick={onEnterApp} data-testid="cta-enter-system">
-            Enter the system <ArrowRight className="w-4 h-4" />
+            Enter the network <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </Section>

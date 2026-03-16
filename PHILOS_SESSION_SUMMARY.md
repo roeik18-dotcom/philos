@@ -141,7 +141,7 @@ Fail: "ניצול: רווח אישי גבוה מדי ביחס לקולקטיבי
 
 ### Frontend
 - **Running**: Yes (port 3000)
-- **URL**: https://philos-mvp.preview.emergentagent.com
+- **URL**: https://trust-integrity-hub.preview.emergentagent.com
 - **Status**: LIVE but showing old code (needs restart)
 
 ### Backend  
