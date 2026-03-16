@@ -31,16 +31,19 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - All frontend and backend translated from Hebrew to English
 - LTR layout, English fonts
 
-### Platform Landing Page — Product-First Redesign (Complete - March 2026)
-- **Product-first layout**: Globe hero with "Your actions build trust. Trust unlocks opportunity."
-- Live Stats bar fetching real data (actions, contributors, communities, trust generated)
-- "How It Works" 3-step loop: Post → Earn Trust → Unlock Opportunities
-- Feature grid: Action Feed, Trust Score, Opportunities, Impact Map, Community Funds, Trust Integrity
-- Theory/Model section pushed below product sections
-- 10-layer architecture deep dive (Foundation → Impact) for investor depth
-- Scroll-reveal animations, dark futuristic theme
-- CTAs: "Start contributing", "Explore the platform", "Enter the network"
-- Files: PlatformLandingPage.js, platform.css
+### Entrance Layer Landing Page (Complete - March 2026)
+- Full-screen hero: globe + compass geometry hybrid animated background
+- Headline: "Actions build trust." / "Trust shapes opportunity."
+- Primary CTA: "Enter the App" → /app/feed (pill button, cyan accent)
+- Layer 1: react-globe.gl at 45% opacity with auto-rotation
+- Layer 2: CSS compass geometry (3 rotating rings, crosshairs, tick marks)
+- Layer 3: Gradient overlays (top/bottom fade to background)
+- Three micro-message blocks: Action→Trust, Trust→Visibility, Visibility→Opportunity
+- Scroll-reveal animation via IntersectionObserver
+- Parallax scroll on background (0.15x speed)
+- Bottom CTA + minimal "PHILOS" footer
+- Responsive: 768px/480px breakpoints
+- Files: PlatformLandingPage.js (complete rewrite), platform.css (complete rewrite)
 
 ### SEO & Indexing (Complete - March 2026)
 - sitemap.xml for all public pages (/, /trust-test)
