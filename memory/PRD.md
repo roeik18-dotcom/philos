@@ -125,9 +125,25 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Frontend verification badges (BadgeCheck green, Building2 amber)
 - Files: trust_integrity.py, actions.py updated, scheduler.py updated, ActionFeed.js
 
+### Risk Signal Framework (Complete - March 2026)
+- 8 core risk signals across 4 categories (trust_manipulation, content_integrity, account_behavior, network_anomaly)
+- Detection logic for 6 new signals (reciprocal_boosting, low_effort_content, category_flooding, ghost_reactor, burst_and_vanish, community_monopoly)
+- 2 existing inline signals (reaction_farming, velocity_spike) documented in framework
+- All 8 signals inferable from existing data — no new instrumentation needed
+- Scanner endpoint: POST /api/risk-signals/scan
+- Management endpoints: GET definitions, list, summary, per-user; PATCH status
+- Data model: risk_signals collection with signal_type, category, severity, subject_user_id, related_user_ids, related_action_ids, evidence, status, system_response, timestamps
+- Files: risk_signals.py, risk_signal_models.py, server.py updated
+
 ## Prioritized Backlog
+
+### P2: Risk Signal Framework — Implementation Phase
+The risk signal definitions, detection logic, and APIs are complete. Next steps:
+- Wire scanner into the APScheduler (e.g., daily at 05:00 UTC)
+- Build admin UI to view/manage risk signals
+- Implement system-response enforcement (trust weight adjustments, rate limiting)
+
 ### P2: Expand Trust-Aware AI
-### P2: Define and Map Risk Signals
 ### P3: ProfilePage Refactoring
 ### P3: Legacy Hebrew DB Data Migration
 
