@@ -50,7 +50,7 @@ def _get_action(action_id: str):
 
 
 @router.get("/share/action/{action_id}", response_class=HTMLResponse)
-async def share_action_page(action_id: str):
+async def share_action_page(action_id: str, ref: str = ""):
     """Serve HTML with OG meta tags for social crawlers. Redirects real users to SPA."""
     action = _get_action(action_id)
     if not action:
@@ -65,8 +65,9 @@ async def share_action_page(action_id: str):
     og_title = f"{user_name} helped {community} — {title}" if community else f"{user_name} — {title}"
     og_desc = f"Trust Score: {trust} • Category: {category.capitalize()}"
     og_image = f"{SITE_URL}/api/og/action/{action_id}/image"
-    og_url = f"{SITE_URL}/api/share/action/{action_id}"
-    spa_url = f"{SITE_URL}/app/action/{action_id}"
+    ref_param = f"?ref={ref}" if ref else ""
+    og_url = f"{SITE_URL}/api/share/action/{action_id}{ref_param}"
+    spa_url = f"{SITE_URL}/app/action/{action_id}{ref_param}"
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -215,7 +216,7 @@ def _generate_og_image(action: dict) -> Image.Image:
     # Bottom bar
     draw.line([(0, H - 60), (W, H - 60)], fill=(30, 30, 50), width=1)
     draw.text((pad_x, H - 44), "Philos Orientation System", fill=(0, 212, 255), font=font_brand)
-    draw.text((W - pad_x - 200, H - 44), "philos-mvp.preview.emergentagent.com",
+    draw.text((W - pad_x - 200, H - 44), SITE_URL.replace("https://", ""),
               fill=(80, 80, 100), font=font_small)
 
     return img

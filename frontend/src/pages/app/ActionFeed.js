@@ -40,10 +40,11 @@ function timeAgo(dateStr) {
 
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
-function ShareModal({ action, onClose }) {
+function ShareModal({ action, onClose, user }) {
   const [copied, setCopied] = useState(false);
-  const shareUrl = `${BASE_URL}/api/share/action/${action.id}`;
-  const directUrl = `${BASE_URL}/app/action/${action.id}`;
+  const refParam = user ? `?ref=${user.id}` : '';
+  const shareUrl = `${BASE_URL}/api/share/action/${action.id}${refParam}`;
+  const directUrl = `${BASE_URL}/app/action/${action.id}${refParam}`;
   const trustScore = Math.round(action.trust_signal || 0);
   const shareText = `${action.user_name || 'Someone'} made an impact: "${action.title}"${action.community ? ` for ${action.community}` : ''}${trustScore > 0 ? ` — Trust Score: ${trustScore}` : ''} #Philos`;
 
@@ -298,7 +299,7 @@ export default function ActionFeed({ user }) {
       )}
 
       {sharingAction && (
-        <ShareModal action={sharingAction} onClose={() => setSharingAction(null)} />
+        <ShareModal action={sharingAction} onClose={() => setSharingAction(null)} user={user} />
       )}
     </div>
   );

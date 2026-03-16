@@ -594,6 +594,14 @@
   transition: opacity 0.2s;
 }
 .share-cta-btn:hover { opacity: 0.9; }
+.share-referral-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #00d4ff;
+  margin-bottom: 12px;
+}
 
 /* ═══ POST FORM ═══ */
 .post-form {

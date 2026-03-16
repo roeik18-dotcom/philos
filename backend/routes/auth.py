@@ -90,10 +90,22 @@ async def register_user(data: UserRegister):
             "password_hash": get_password_hash(data.password),
             "created_at": now,
             "last_login_at": now,
-            "invited_by": inviter_id
+            "invited_by": inviter_id,
+            "referral_user_id": data.referral_user_id,
+            "referral_action_id": data.referral_action_id,
         }
 
         await db.users.insert_one(user_doc)
+
+        # Track referral if present (from share links)
+        if data.referral_user_id:
+            await db.referrals.insert_one({
+                "inviter_id": data.referral_user_id,
+                "invited_user_id": user_id,
+                "action_id": data.referral_action_id or "",
+                "source": "share_link",
+                "created_at": now,
+            })
 
         # If invite code was used, track it
         if data.invite_code and inviter_id:
@@ -299,3 +311,19 @@ async def migrate_anonymous_data(anonymous_user_id: str, user = Depends(get_curr
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+
+
+@router.get("/referrals/{user_id}")
+async def get_user_referrals(user_id: str):
+    """Get referrals made by a user (who they brought in via share links)."""
+    referrals = await db.referrals.find(
+        {"inviter_id": user_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+
+    return {
+        "success": True,
+        "user_id": user_id,
+        "referrals": referrals,
+        "total": len(referrals),
+    }

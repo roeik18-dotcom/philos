@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Tag, Users, MapPin, Flame, Heart, ThumbsUp, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Loader2, Tag, Users, MapPin, Flame, Heart, ThumbsUp, ShieldCheck, ArrowLeft, UserPlus } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
+const BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
 const CATEGORY_COLORS = {
   education: '#7c3aed', environment: '#10b981', health: '#f43f5e',
@@ -16,7 +17,18 @@ export default function ActionSharePage() {
   const [action, setAction] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const actionId = window.location.pathname.split('/app/action/')[1];
+  const pathParts = window.location.pathname.split('/app/action/');
+  const actionId = pathParts[1] || '';
+  const params = new URLSearchParams(window.location.search);
+  const refUserId = params.get('ref') || '';
+
+  useEffect(() => {
+    // Store referral info for later use during registration
+    if (refUserId && actionId) {
+      localStorage.setItem('philos_ref_user', refUserId);
+      localStorage.setItem('philos_ref_action', actionId);
+    }
+  }, [refUserId, actionId]);
 
   useEffect(() => {
     if (!actionId) { setLoading(false); return; }
@@ -111,11 +123,16 @@ export default function ActionSharePage() {
           </div>
         )}
 
-        <div className="share-preview-footer">philos-mvp.preview.emergentagent.com</div>
+        <div className="share-preview-footer" data-testid="share-footer">{BASE_URL.replace('https://', '')}</div>
       </div>
 
       {/* CTA */}
       <div className="share-cta">
+        {refUserId && (
+          <p className="share-referral-note" data-testid="share-referral-note">
+            <UserPlus className="w-4 h-4" /> You were invited to Philos
+          </p>
+        )}
         <a href="/app/feed" className="share-cta-btn" data-testid="share-view-feed-btn">
           View more actions
         </a>

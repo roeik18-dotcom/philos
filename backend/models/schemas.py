@@ -19,6 +19,8 @@ class UserRegister(BaseModel):
     email: str
     password: str
     invite_code: Optional[str] = None
+    referral_user_id: Optional[str] = None
+    referral_action_id: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: str
