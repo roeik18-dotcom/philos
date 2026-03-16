@@ -259,18 +259,20 @@ export default function ActionFeed({ user }) {
                     const Icon = r.icon;
                     const active = action.user_reacted?.[r.type];
                     const count = action.reactions[r.type] || 0;
+                    const isOwnAction = user && action.user_id === user.id;
                     return (
                       <button
                         key={r.type}
                         className={`reaction-btn ${active ? 'active' : ''}`}
                         style={{ '--reaction-color': r.color }}
                         onClick={() => handleReact(action.id, r.type)}
-                        disabled={!user || reactingId === `${action.id}-${r.type}`}
+                        disabled={!user || isOwnAction || reactingId === `${action.id}-${r.type}`}
                         data-testid={`react-${r.type}-${action.id}`}
-                        title={user ? r.label : 'Sign in to react'}
+                        title={!user ? 'Sign in to react' : isOwnAction ? 'Cannot react to own action' : `${r.label} (+${r.weight})`}
                       >
                         <Icon className="w-3.5 h-3.5" />
                         {count > 0 && <span className="reaction-count">{count}</span>}
+                        <span className="reaction-weight" data-testid={`weight-${r.type}-${action.id}`}>+{r.weight}</span>
                       </button>
                     );
                   })}

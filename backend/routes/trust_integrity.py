@@ -408,3 +408,76 @@ async def get_integrity_stats():
             "users_decayed": decay_count,
         },
     }
+
+
+
+# ── Trust Score API ──
+
+@router.get("/trust/{user_id}")
+async def get_user_trust(user_id: str):
+    """Get a user's trust score with enforcement context, decay info, and active risk signals."""
+    # Aggregate trust from all user's actions (enforcement-adjusted)
+    actions = list(db.impact_actions.find({"user_id": user_id}))
+    if not actions:
+        return {
+            "success": True,
+            "trust_score": 0,
+            "action_count": 0,
+            "decay_rate": 0.05,
+            "decay_status": "active",
+            "active_risk_signals": [],
+            "risk_signal_count": 0,
+            "enforcement_active": False,
+            "last_updated": None,
+        }
+
+    # Recalculate each action's trust with enforcement
+    total_trust = 0.0
+    for a in actions:
+        total_trust += recalc_trust_signal(a)
+
+    # Get decay info
+    has_burst = db.risk_signals.find_one({
+        "signal_type": "burst_and_vanish",
+        "subject_user_id": user_id,
+        "status": "active",
+    })
+    decay_rate = 0.10 if has_burst else 0.05
+
+    # Check inactivity
+    last_activity = db.user_activity.find_one({"user_id": user_id}, {"_id": 0})
+    last_active = last_activity.get("last_active") if last_activity else None
+    decay_status = "active"
+    if last_active:
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        if last_active < cutoff:
+            decay_status = "decaying"
+
+    # Get active risk signals
+    signals = list(db.risk_signals.find(
+        {"subject_user_id": user_id, "status": "active"},
+        {"_id": 0, "signal_type": 1, "category": 1, "severity": 1, "evidence": 1, "created_at": 1},
+    ))
+
+    # Also check trust_flags for this user's actions
+    user_action_ids = [str(a["_id"]) for a in actions]
+    flags = list(db.trust_flags.find(
+        {"action_id": {"$in": user_action_ids}},
+        {"_id": 0, "type": 1, "severity": 1, "action_id": 1},
+    ))
+
+    enforcement_active = len(signals) > 0 or len(flags) > 0
+
+    return {
+        "success": True,
+        "trust_score": round(total_trust, 1),
+        "action_count": len(actions),
+        "decay_rate": decay_rate,
+        "decay_status": decay_status,
+        "active_risk_signals": signals,
+        "risk_signal_count": len(signals),
+        "trust_flags": flags,
+        "trust_flag_count": len(flags),
+        "enforcement_active": enforcement_active,
+        "last_updated": last_active,
+    }

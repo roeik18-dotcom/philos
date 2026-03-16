@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Tag, Award, Activity, Briefcase, Flame, Sparkles, Lock, CheckCircle } from 'lucide-react';
+import { Loader2, Tag, Award, Activity, Briefcase, Flame, Sparkles, Lock, CheckCircle, ShieldAlert, TrendingDown } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,6 +16,7 @@ const CATEGORY_COLORS = {
 
 export default function ProductProfile({ user }) {
   const [profile, setProfile] = useState(null);
+  const [trustData, setTrustData] = useState(null);
   const [opps, setOpps] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,14 +24,17 @@ export default function ProductProfile({ user }) {
     if (!user?.id) { setLoading(false); return; }
     const fetchAll = async () => {
       try {
-        const [profileRes, oppsRes] = await Promise.all([
+        const [profileRes, oppsRes, trustRes] = await Promise.all([
           fetch(`${API_URL}/api/impact/profile/${user.id}`),
           fetch(`${API_URL}/api/opportunities?user_id=${user.id}`),
+          fetch(`${API_URL}/api/trust/${user.id}`),
         ]);
         const pd = await profileRes.json();
         const od = await oppsRes.json();
+        const td = await trustRes.json();
         if (pd.success) setProfile(pd.profile);
         if (od.success) setOpps(od.opportunities.slice(0, 3));
+        if (td.success) setTrustData(td);
       } catch (err) {
         console.error('Profile fetch error:', err);
       }
@@ -68,13 +72,54 @@ export default function ProductProfile({ user }) {
         <p className="profile-email" data-testid="profile-email">{user.email}</p>
       </div>
 
+      {/* Trust Engine Card */}
+      {trustData && (
+        <div className="profile-section" data-testid="profile-trust-engine">
+          <div className="trust-engine-card">
+            <div className="trust-engine-header">
+              <Flame className="w-5 h-5" style={{ color: '#f59e0b' }} />
+              <span className="trust-engine-title">Trust Score</span>
+              {trustData.enforcement_active && (
+                <span className="trust-engine-enforcement" data-testid="enforcement-badge">
+                  <ShieldAlert className="w-3 h-3" /> Enforcement Active
+                </span>
+              )}
+            </div>
+            <div className="trust-engine-score" data-testid="trust-engine-score">
+              {trustData.trust_score}
+            </div>
+            <div className="trust-engine-meta">
+              <span className="trust-engine-meta-item" data-testid="trust-decay-rate">
+                <TrendingDown className="w-3 h-3" />
+                Decay: {trustData.decay_rate * 100}%/month
+                {trustData.decay_rate > 0.05 && <span className="trust-accelerated"> (accelerated)</span>}
+              </span>
+              <span className="trust-engine-meta-item" data-testid="trust-decay-status">
+                Status: <span className={`trust-status-${trustData.decay_status}`}>{trustData.decay_status}</span>
+              </span>
+              <span className="trust-engine-meta-item" data-testid="trust-action-count">
+                {trustData.action_count} actions
+              </span>
+            </div>
+            {trustData.risk_signal_count > 0 && (
+              <div className="trust-engine-signals" data-testid="trust-risk-signals">
+                <span className="trust-signal-header">
+                  <ShieldAlert className="w-3 h-3" /> {trustData.risk_signal_count} active signal{trustData.risk_signal_count > 1 ? 's' : ''}
+                </span>
+                {trustData.active_risk_signals.map((sig, i) => (
+                  <div key={i} className={`trust-signal-item trust-signal-${sig.severity}`} data-testid={`risk-signal-${sig.signal_type}`}>
+                    <span className="trust-signal-type">{sig.signal_type.replace(/_/g, ' ')}</span>
+                    <span className={`trust-signal-severity severity-${sig.severity}`}>{sig.severity}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Stats grid */}
       <div className="profile-stats" data-testid="profile-stats">
-        <div className="profile-stat-card">
-          <Flame className="w-5 h-5" style={{ color: '#f59e0b' }} />
-          <div className="profile-stat-value" data-testid="stat-trust-score">{profile?.trust_score || 0}</div>
-          <div className="profile-stat-label">Trust Score</div>
-        </div>
         <div className="profile-stat-card">
           <Activity className="w-5 h-5" style={{ color: '#00d4ff' }} />
           <div className="profile-stat-value" data-testid="stat-actions">{profile?.total_actions || 0}</div>
