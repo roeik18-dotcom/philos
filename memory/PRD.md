@@ -150,6 +150,17 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - All values enforcement-adjusted (community_monopoly 0.5x, velocity_spike freeze, etc.)
 - Files: trust_integrity.py (endpoint), ProductProfile.js (Trust Engine card), ActionFeed.js (weight labels), app.css (styles)
 
+### Growth Loop — Shareable Actions + Referral Tracking (Complete - March 2026)
+- Share URLs include `?ref={userId}` referral parameter when user is logged in
+- OG share route passes ref param through to SPA redirect
+- Public action page at `/app/action/{id}` shows trust score, reactions, referral CTA
+- ActionSharePage stores ref info in localStorage for registration flow
+- Registration accepts `referral_user_id` + `referral_action_id`, creates referral record
+- `referrals` collection: inviter_id, invited_user_id, action_id, source, created_at
+- GET /api/referrals/{user_id} returns referrals made by that user
+- Share modal: Copy Link, WhatsApp, LinkedIn, Twitter — all with ref param
+- Files: og_share.py, auth.py (referral endpoints), schemas.py, ActionSharePage.js, ActionFeed.js (ShareModal), AuthScreen.js
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
