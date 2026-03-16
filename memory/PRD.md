@@ -31,14 +31,15 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - All frontend and backend translated from Hebrew to English
 - LTR layout, English fonts
 
-### Platform Landing Page (Complete - March 2026)
-- Dark futuristic design with animated nodes
-- 13-node system chain: Cosmos → Space → Matter → Energy → Motion → Life → Human → Forces → Conflict → Orientation → Decision → Action → Impact
-- Globe-style layered visualization (Cosmos/Life/Human rings)
-- Flow diagrams: Directional Forces, Fundamental Contradictions, Orientation Engine
-- Investor sections: Problem → Model → System Engine → Application → Vision
-- CTA buttons linking to /trust-test
-- Scroll-reveal animations via IntersectionObserver
+### Platform Landing Page — Product-First Redesign (Complete - March 2026)
+- **Product-first layout**: Globe hero with "Your actions build trust. Trust unlocks opportunity."
+- Live Stats bar fetching real data (actions, contributors, communities, trust generated)
+- "How It Works" 3-step loop: Post → Earn Trust → Unlock Opportunities
+- Feature grid: Action Feed, Trust Score, Opportunities, Impact Map, Community Funds, Trust Integrity
+- Theory/Model section pushed below product sections
+- 10-layer architecture deep dive (Foundation → Impact) for investor depth
+- Scroll-reveal animations, dark futuristic theme
+- CTAs: "Start contributing", "Explore the platform", "Enter the network"
 - Files: PlatformLandingPage.js, platform.css
 
 ### SEO & Indexing (Complete - March 2026)

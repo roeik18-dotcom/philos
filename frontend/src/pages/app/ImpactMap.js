@@ -32,17 +32,19 @@ export default function ImpactMap() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchMap = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/actions/map`);
+        const res = await fetch(`${API_URL}/api/actions/map`, { signal: controller.signal });
         const data = await res.json();
         if (data.success) setPoints(data.points);
       } catch (err) {
-        console.error('Map fetch error:', err);
+        if (err.name !== 'AbortError') console.error('Map fetch error:', err);
       }
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     };
     fetchMap();
+    return () => controller.abort();
   }, []);
 
   if (loading) {
