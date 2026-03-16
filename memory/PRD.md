@@ -161,6 +161,15 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Share modal: Copy Link, WhatsApp, LinkedIn, Twitter — all with ref param
 - Files: og_share.py, auth.py (referral endpoints), schemas.py, ActionSharePage.js, ActionFeed.js (ShareModal), AuthScreen.js
 
+### Referral Visibility & Reputation Impact (Complete - March 2026)
+- Profile shows "People You Brought to Philos" with count badges (total, active, pending)
+- Referral list: display name, avatar, status badge (active/pending), trust score, action count
+- Referral status: pending (joined, 0 posts) → active (posted 1+ actions)
+- Trust bonus: +2 per active referral, added to trust_score in /api/trust/{user_id}
+- GET /api/referrals/{user_id}: enriched with status, display_name, trust_score, action_count, active_count, pending_count, referral_trust_bonus
+- Trust engine card shows referral bonus in meta section
+- Files: auth.py (enriched referrals), trust_integrity.py (referral bonus), ProductProfile.js (referral section), app.css
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
