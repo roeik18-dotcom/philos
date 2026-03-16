@@ -48,6 +48,7 @@ from routes.opportunities import router as opportunities_router
 from routes.community import router as community_router
 from routes.leaderboard import router as leaderboard_router
 from routes.trust_integrity import router as trust_integrity_router
+from routes.risk_signals import router as risk_signals_router
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(philos_router, prefix="/api")
@@ -67,6 +68,7 @@ app.include_router(opportunities_router, prefix="/api")
 app.include_router(community_router, prefix="/api")
 app.include_router(leaderboard_router, prefix="/api")
 app.include_router(trust_integrity_router, prefix="/api")
+app.include_router(risk_signals_router, prefix="/api")
 
 # Database shutdown
 from database import client
