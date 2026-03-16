@@ -143,6 +143,13 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - **Scheduler**: daily scan at 05:00 UTC via APScheduler (idempotent, upsert-based)
 - Files: risk_signals.py, risk_signal_models.py, trust_integrity.py (enforcement), scheduler.py (scan job)
 
+### Trust Engine API (Complete - March 2026)
+- GET /api/trust/{user_id}: returns enforcement-adjusted trust_score, decay_rate, decay_status, active_risk_signals, trust_flags, enforcement_active, last_updated
+- Profile page: Trust Engine card with large score, enforcement badge, decay info, active risk signal list with severity labels
+- Feed: reaction buttons show trust impact weights (+1/+2/+5), own-action reactions disabled with tooltip
+- All values enforcement-adjusted (community_monopoly 0.5x, velocity_spike freeze, etc.)
+- Files: trust_integrity.py (endpoint), ProductProfile.js (Trust Engine card), ActionFeed.js (weight labels), app.css (styles)
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
