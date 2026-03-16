@@ -133,15 +133,20 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Scanner endpoint: POST /api/risk-signals/scan
 - Management endpoints: GET definitions, list, summary, per-user; PATCH status
 - Data model: risk_signals collection with signal_type, category, severity, subject_user_id, related_user_ids, related_action_ids, evidence, status, system_response, timestamps
-- Files: risk_signals.py, risk_signal_models.py, server.py updated
+- **Enforcement layer**: integrated into recalc_trust_signal() with safe fallback
+  - velocity_spike: freezes trust score (no recalculation)
+  - reaction_farming: fully suppresses flagged reactor's contributions
+  - reciprocal_boosting: 0.5x discount on mutual reactions
+  - ghost_reactor: 0.5x weight on ghost reactor reactions
+  - community_monopoly: 0.5x cap on monopolized community trust
+  - burst_and_vanish: 10% accelerated decay (vs standard 5%)
+- **Scheduler**: daily scan at 05:00 UTC via APScheduler (idempotent, upsert-based)
+- Files: risk_signals.py, risk_signal_models.py, trust_integrity.py (enforcement), scheduler.py (scan job)
 
 ## Prioritized Backlog
 
-### P2: Risk Signal Framework — Implementation Phase
-The risk signal definitions, detection logic, and APIs are complete. Next steps:
-- Wire scanner into the APScheduler (e.g., daily at 05:00 UTC)
-- Build admin UI to view/manage risk signals
-- Implement system-response enforcement (trust weight adjustments, rate limiting)
+### P2: Risk Signal Framework — Remaining Work
+- Build admin UI to view/manage risk signals (currently API-only)
 
 ### P2: Expand Trust-Aware AI
 ### P3: ProfilePage Refactoring
