@@ -4,6 +4,7 @@ import {
   ArrowRight, ArrowLeft, Lock, Globe, Loader2,
   TrendingDown, AlertTriangle, Check,
 } from 'lucide-react';
+import { useBackendReady } from '../hooks/useBackendReady';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -26,6 +27,7 @@ const STATUS_ICONS = {
 export default function ActionFlow({ user, onExit }) {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState('forward');
+  const { isReady, enqueue } = useBackendReady();
 
   // Data across steps
   const [baseline, setBaseline] = useState(null);
@@ -105,7 +107,8 @@ export default function ActionFlow({ user, onExit }) {
   const handlePost = async () => {
     setError('');
     setSubmitting(true);
-    try {
+
+    const doPost = async () => {
       const res = await fetch(`${API_URL}/api/actions/post`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -118,10 +121,20 @@ export default function ActionFlow({ user, onExit }) {
       } else {
         setError(data.detail || 'Failed to post action.');
       }
-    } catch {
-      setError('Network error.');
+      setSubmitting(false);
+    };
+
+    if (!isReady) {
+      // Queue the action — it will fire when backend wakes
+      enqueue(doPost);
+    } else {
+      try {
+        await doPost();
+      } catch {
+        setError('Connection issue — retrying...');
+        enqueue(doPost);
+      }
     }
-    setSubmitting(false);
   };
 
   const StatusIcon = STATUS_ICONS[baseline?.status?.icon] || ArrowRight;

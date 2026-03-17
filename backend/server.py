@@ -87,3 +87,8 @@ async def start_background_tasks():
     asyncio.create_task(_demo_event_loop())
     start_scheduler()
     logger.info("All background tasks started")
+
+
+@app.get("/api/health")
+async def health_check():
+    return {"ok": True}
