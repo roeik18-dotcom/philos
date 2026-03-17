@@ -1,57 +1,46 @@
 """
 Philos AI Interpretation Layer.
-Fallback version WITHOUT external LLM (no emergentintegrations).
-Returns simple deterministic sentences so server won't crash.
+Temporary fallback implementation with no external LLM dependency.
 """
-
 import logging
 
 logger = logging.getLogger("philos_ai")
 
 
 async def interpret_action(direction_he, base_he=None):
-    """Return simple safe sentence."""
-    try:
-        base = f" from {base_he}" if base_he else ""
-        return f"A movement toward {direction_he}{base} is taking place."
-    except Exception as e:
-        logger.error(f"interpret_action error: {e}")
-        return ""
+    """Fallback action interpretation."""
+    if base_he:
+        return f"The movement leans toward {direction_he}, shaped by a base of {base_he}."
+    return f"The movement leans toward {direction_he} in the field."
 
 
 async def interpret_field(dominant_he, momentum_he, secondary_he=None, region_count=0):
-    """Return simple safe sentence."""
-    try:
-        parts = [f"The field is moving toward {dominant_he}", f"with {momentum_he} momentum"]
-        if secondary_he:
-            parts.append(f"and a secondary pull toward {secondary_he}")
-        if region_count > 3:
-            parts.append("across multiple regions")
-        return " ".join(parts) + "."
-    except Exception as e:
-        logger.error(f"interpret_field error: {e}")
-        return ""
+    """Fallback field interpretation."""
+    parts = [f"The field currently leans toward {dominant_he}"]
+    if secondary_he:
+        parts.append(f"while {secondary_he} remains present")
+    if momentum_he:
+        parts.append(f"with a sense of {momentum_he}")
+    if region_count and region_count > 3:
+        parts.append("across several active regions")
+    sentence = " ".join(parts).strip()
+    if not sentence.endswith("."):
+        sentence += "."
+    return sentence
 
 
 async def interpret_profile(alias, dominant_he, total_actions, streak, invited_count=0, trust_data=None):
-    """Return simple safe sentence."""
-    try:
-        state = "stable"
-
-        if trust_data:
-            vs = trust_data.get("value_score", 0)
-            rs = trust_data.get("risk_score", 0)
-
-            if rs > vs:
-                state = "restricted"
-            elif vs < 5:
-                state = "fragile"
-            elif vs < 15:
-                state = "building"
-            else:
-                state = "stable"
-
-        return f"{alias} is in a {state} state with {total_actions} actions and direction toward {dominant_he}."
-    except Exception as e:
-        logger.error(f"interpret_profile error: {e}")
-        return ""
+    """Fallback profile interpretation."""
+    if trust_data:
+        vs = trust_data.get("value_score", 0)
+        rs = trust_data.get("risk_score", 0)
+        if vs > rs:
+            state_text = "value is ahead of risk"
+        elif vs < rs:
+            state_text = "risk is ahead of value"
+        else:
+            state_text = "value and risk are balanced"
+        return f"{alias} is oriented toward {dominant_he}, and {state_text} in the field."
+    if streak and streak > 1:
+        return f"{alias} is oriented toward {dominant_he} with a steady streak of action."
+    return f"{alias} is oriented toward {dominant_he} with {total_actions} actions in the field."
