@@ -195,6 +195,25 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - PositionBar.js shared component with AbortController, conditional rendering for logged-in users
 - Files: trust_integrity.py (position endpoint), PositionBar.js, ActionFeed.js, ProductProfile.js, PostAction.js, app.css
 
+### Daily Orientation Layer (Complete - March 2026)
+- Rule-based guidance card: one recommendation per user based on position + trust + activity
+- GET /api/orientation/{user_id}: returns message, action_type, cta, context
+- Decision rules (first match wins):
+  1. No actions → "Post your first action"
+  2. Only private → "Make one action visible"
+  3. Inactive 7+ days → "Post one action to maintain position"
+  4. Self → "Publish public action to move toward Emerging"
+  5. Emerging + low reactors → "Engage with others' actions"
+  6. Emerging → "Keep posting to move toward Contributing"
+  7. Contributing + no referrals → "Share to invite others"
+  8. Contributing → "Engage more to move toward Connected"
+  9. Connected → "Keep contributing"
+  10. Network → "Verify others' actions"
+- OrientationCard.js: compass icon, message, contextual CTA button
+- Displayed on feed (after position bar) and profile (after position bar)
+- CTA navigates to post or feed based on action_type
+- Files: trust_integrity.py (orientation endpoint), OrientationCard.js, ActionFeed.js, ProductProfile.js, ProductApp.js, app.css
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
