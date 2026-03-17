@@ -8,7 +8,7 @@
 
 ```bash
 # Preview URL
-https://trust-integrity-hub.preview.emergentagent.com
+https://philos-status.preview.emergentagent.com
 
 # Resume file
 /app/frontend/src/components/philos/sections/DailyOrientationQuestion.js

@@ -510,7 +510,7 @@ async def get_user_position(user_id: str):
     # Only count public actions
     public_actions = list(db.impact_actions.find(
         {"user_id": user_id, "visibility": {"$ne": "private"}},
-        {"_id": 0, "reactions": 1, "trust_signal": 1},
+        {"_id": 0, "reactions": 1, "trust_signal": 1, "created_at": 1},
     ))
     public_count = len(public_actions)
     private_count = db.impact_actions.count_documents(

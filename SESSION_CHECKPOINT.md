@@ -64,5 +64,5 @@ Tasks:
 
 ---
 
-**Preview URL:** https://trust-integrity-hub.preview.emergentagent.com  
+**Preview URL:** https://philos-status.preview.emergentagent.com  
 **Test Credentials:** newuser@test.com / password123

@@ -341,7 +341,7 @@ Historical data and sessions:
 
 ## Preview URL
 
-https://trust-integrity-hub.preview.emergentagent.com
+https://philos-status.preview.emergentagent.com
 
 ---
 

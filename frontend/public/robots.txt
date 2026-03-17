@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://trust-integrity-hub.preview.emergentagent.com/sitemap.xml
+Sitemap: https://philos-status.preview.emergentagent.com/sitemap.xml

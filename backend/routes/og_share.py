@@ -16,7 +16,7 @@ from pymongo import MongoClient
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 
-SITE_URL = os.environ.get("SITE_URL", "https://trust-integrity-hub.preview.emergentagent.com")
+SITE_URL = os.environ.get("SITE_URL", "https://philos-status.preview.emergentagent.com")
 
 # Fonts
 FONT_BOLD = "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"

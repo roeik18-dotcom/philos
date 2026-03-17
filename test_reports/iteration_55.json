@@ -120,5 +120,5 @@
   "api_endpoints_tested": [
     "GET /api/profile/{user_id}/record - returns identity, action_record, opposition_axes, value_growth, direction_distribution, field_contribution, influence_chain"
   ],
-  "profile_url_format": "https://trust-integrity-hub.preview.emergentagent.com/profile/{user_id}"
+  "profile_url_format": "https://philos-status.preview.emergentagent.com/profile/{user_id}"
 }
