@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Loader2, Tag, Award, Activity, Briefcase, Flame, Sparkles, Lock, CheckCircle, ShieldAlert, TrendingDown, UserPlus, Users } from 'lucide-react';
 import PositionBar from '../../components/PositionBar';
+import OrientationCard from '../../components/OrientationCard';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -15,7 +16,7 @@ const CATEGORY_COLORS = {
   other: '#6b7280',
 };
 
-export default function ProductProfile({ user }) {
+export default function ProductProfile({ user, navigate }) {
   const [profile, setProfile] = useState(null);
   const [trustData, setTrustData] = useState(null);
   const [referralData, setReferralData] = useState(null);
@@ -78,6 +79,7 @@ export default function ProductProfile({ user }) {
       </div>
 
       <PositionBar userId={user.id} />
+      <OrientationCard userId={user.id} onNavigate={navigate} />
 
       {/* Trust Engine Card */}
       {trustData && (

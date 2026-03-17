@@ -588,3 +588,147 @@ async def get_user_position(user_id: str):
             "referrals": round(referrals_factor, 3),
         },
     }
+
+
+
+# ── Daily Orientation API ──
+
+@router.get("/orientation/{user_id}")
+async def get_daily_orientation(user_id: str):
+    """Generate one rule-based recommendation based on position, trust, and activity.
+    Decision rules (first match wins):
+    1. No actions → post first action
+    2. Only private, no public → make one visible
+    3. Inactive 7+ days → re-engage
+    4. Self (< 0.15) → publish public action
+    5. Emerging (< 0.35), low reactors → react to others
+    6. Contributing (< 0.55), no referrals → share to invite
+    7. Connected (< 0.75) → keep contributing
+    8. Network (>= 0.75) → verify others
+    """
+    # Gather data
+    total_actions = db.impact_actions.count_documents({"user_id": user_id})
+    public_count = db.impact_actions.count_documents(
+        {"user_id": user_id, "visibility": {"$ne": "private"}}
+    )
+    private_count = total_actions - public_count
+
+    # Last activity
+    last_action = db.impact_actions.find_one(
+        {"user_id": user_id}, sort=[("created_at", -1)],
+        projection={"_id": 0, "created_at": 1}
+    )
+    days_inactive = 0
+    if last_action:
+        try:
+            last_dt = datetime.fromisoformat(last_action["created_at"])
+            days_inactive = (datetime.now(timezone.utc) - last_dt).days
+        except Exception:
+            pass
+
+    # Position
+    position = 0.0
+    label = "Self"
+    unique_reactors = 0
+    active_referrals = 0
+    try:
+        # Inline position calc (avoid circular call)
+        pub_actions = list(db.impact_actions.find(
+            {"user_id": user_id, "visibility": {"$ne": "private"}},
+            {"_id": 0, "reactions": 1, "trust_signal": 1}
+        ))
+        pc = len(pub_actions)
+        reactors = set()
+        total_trust = 0.0
+        for a in pub_actions:
+            total_trust += a.get("trust_signal", 0)
+            for rt in ["support", "useful", "verified"]:
+                reactors.update(a.get("reactions", {}).get(rt, []))
+        reactors.discard(user_id)
+        unique_reactors = len(reactors)
+
+        refs = list(db.referrals.find({"inviter_id": user_id}, {"invited_user_id": 1, "_id": 0}))
+        for ref in refs:
+            if db.impact_actions.count_documents({"user_id": ref["invited_user_id"]}) > 0:
+                active_referrals += 1
+
+        af = min(pc / 15, 1.0) * 0.35
+        rf = min(unique_reactors / 10, 1.0) * 0.25
+        tf = min(total_trust / 50, 1.0) * 0.25
+        rrf = min(active_referrals / 5, 1.0) * 0.15
+        position = round(af + rf + tf + rrf, 3)
+        position = min(position, 1.0)
+
+        if position < 0.15: label = "Self"
+        elif position < 0.35: label = "Emerging"
+        elif position < 0.55: label = "Contributing"
+        elif position < 0.75: label = "Connected"
+        else: label = "Network"
+    except Exception:
+        pass
+
+    # ── Decision rules (first match wins) ──
+    msg = ""
+    action_type = ""
+    cta = ""
+
+    if total_actions == 0:
+        msg = "Post your first action to begin building trust."
+        action_type = "post"
+        cta = "Create Action"
+    elif public_count == 0 and private_count > 0:
+        msg = "Your private layer is active — make one action visible to start building trust."
+        action_type = "visibility"
+        cta = "Post Public Action"
+    elif days_inactive >= 7:
+        msg = f"You've been away {days_inactive} days — post one action to maintain your position."
+        action_type = "re_engage"
+        cta = "Post Action"
+    elif label == "Self":
+        msg = "Publish one public action to move toward Emerging."
+        action_type = "post"
+        cta = "Create Action"
+    elif label == "Emerging" and unique_reactors < 3:
+        msg = "Engage with others' actions to strengthen your network position."
+        action_type = "react"
+        cta = "View Feed"
+    elif label == "Emerging":
+        msg = "Keep posting public actions to move toward Contributing."
+        action_type = "post"
+        cta = "Create Action"
+    elif label == "Contributing" and active_referrals == 0:
+        msg = "Share an action to invite others and move toward Connected."
+        action_type = "share"
+        cta = "Go to Feed"
+    elif label == "Contributing":
+        msg = "You're contributing well — engage with more people to move toward Connected."
+        action_type = "react"
+        cta = "View Feed"
+    elif label == "Connected":
+        msg = "Keep contributing — you're building real influence in the network."
+        action_type = "post"
+        cta = "Create Action"
+    elif label == "Network":
+        msg = "You're deeply connected. Help verify others' actions to strengthen the network."
+        action_type = "verify"
+        cta = "View Feed"
+    else:
+        msg = "Post a public action to build trust."
+        action_type = "post"
+        cta = "Create Action"
+
+    return {
+        "success": True,
+        "message": msg,
+        "action_type": action_type,
+        "cta": cta,
+        "context": {
+            "position": position,
+            "label": label,
+            "public_actions": public_count,
+            "private_actions": private_count,
+            "days_inactive": days_inactive,
+            "unique_reactors": unique_reactors,
+            "active_referrals": active_referrals,
+        },
+    }

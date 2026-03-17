@@ -73,13 +73,13 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
       case 'action': return <ActionSharePage />;
       case 'post': return <PostAction user={user} onPosted={() => navigate('feed')} />;
       case 'map': return <ImpactMap />;
-      case 'profile': return <ProductProfile user={user} />;
+      case 'profile': return <ProductProfile user={user} navigate={navigate} />;
       case 'dashboard': return <DailyDashboard user={user} />;
       case 'opportunities': return <OpportunitiesPage user={user} />;
       case 'community-funds': return <CommunityFundsPage />;
       case 'leaderboard': return <LeaderboardPage user={user} />;
       case 'report': return <WeeklyReportPage user={user} />;
-      default: return <ActionFeed user={user} />;
+      default: return <ActionFeed user={user} navigate={navigate} />;
     }
   };
 

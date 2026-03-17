@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MapPin, Tag, Users, Clock, Loader2, Heart, ThumbsUp, ShieldCheck, Flame, Share2, Copy, Check, X, BadgeCheck, Building2, Globe, Lock, ArrowRight } from 'lucide-react';
 import PositionBar from '../../components/PositionBar';
+import OrientationCard from '../../components/OrientationCard';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -104,7 +105,7 @@ function ShareModal({ action, onClose, user }) {
   );
 }
 
-export default function ActionFeed({ user }) {
+export default function ActionFeed({ user, navigate }) {
   const [actions, setActions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('');
@@ -182,6 +183,7 @@ export default function ActionFeed({ user }) {
       </div>
 
       {user && <PositionBar userId={user.id} />}
+      {user && <OrientationCard userId={user.id} onNavigate={navigate} />}
 
       {/* Visibility tabs */}
       {user && (

@@ -1002,6 +1002,61 @@
   border: 1px solid color-mix(in srgb, var(--factor-color) 12%, transparent);
 }
 
+/* ═══ ORIENTATION CARD ═══ */
+.orientation-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: rgba(0,212,255,0.02);
+  border: 1px solid rgba(0,212,255,0.08);
+}
+.orientation-icon {
+  flex: 0 0 auto;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(0,212,255,0.06);
+  color: #00d4ff;
+  display: flex; align-items: center; justify-content: center;
+}
+.orientation-body {
+  flex: 1;
+  min-width: 0;
+}
+.orientation-msg {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.6);
+}
+.orientation-cta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,212,255,0.15);
+  background: rgba(0,212,255,0.04);
+  color: #00d4ff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+}
+.orientation-cta:hover {
+  background: rgba(0,212,255,0.08);
+  border-color: rgba(0,212,255,0.25);
+}
+
+@media (max-width: 600px) {
+  .orientation-card { flex-wrap: wrap; }
+  .orientation-cta { width: 100%; justify-content: center; margin-top: 4px; }
+}
+
+
 
 /* ═══ MAP ═══ */
 .map-container {
