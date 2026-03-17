@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 # Create the main app
 app = FastAPI()
 
+# ✅ ROOT ROUTE (FIX FOR EMPTY SCREEN)
+@app.get("/")
+async def root():
+    return {"status": "backend alive"}
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -63,7 +68,8 @@ from services.scheduler import start_scheduler, stop_scheduler
 @app.on_event("shutdown")
 async def shutdown_db_client():
     stop_scheduler()
-    client.close()
+    if client:  # ✅ FIX (avoid crash)
+        client.close()
 
 # Demo agents background loop
 from services.demo import _demo_event_loop
