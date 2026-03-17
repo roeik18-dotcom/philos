@@ -2,10 +2,14 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 import os
 from auth_utils import get_current_user
+from utils.status_calculator import (
+    calculate_status, get_consequence_multiplier,
+    CONSEQUENCE_MULTIPLIERS, ENFORCEMENT_CAP,
+)
 
 router = APIRouter()
 
@@ -36,9 +40,25 @@ class ReactionRequest(BaseModel):
     reaction_type: str
 
 
-def serialize_action(a, viewer_id=""):
+def serialize_action(a, viewer_id="", author_multiplier=1.0):
     raw_reactions = a.get("reactions", {})
     verification = a.get("verification_level", "self_reported")
+    trust_signal = a.get("trust_signal", 0)
+    reaction_count = sum(len(raw_reactions.get(rt, [])) for rt in ["support", "useful", "verified"])
+
+    # ── Rank score: recency + trust + reactions, weighted by author status ──
+    created = a.get("created_at", "")
+    recency_score = 0.0
+    if created:
+        try:
+            age_hours = max(0, (datetime.now(timezone.utc) - datetime.fromisoformat(created)).total_seconds() / 3600)
+            recency_score = max(0, 1.0 - (age_hours / 168))  # decays over 7 days
+        except Exception:
+            pass
+    base_score = (recency_score * 50) + (trust_signal * 2) + (reaction_count * 3)
+    rank_score = round(base_score * author_multiplier, 2)
+    visibility_weight = round(author_multiplier, 2)
+
     return {
         "id": str(a["_id"]),
         "user_id": a.get("user_id", ""),
@@ -58,11 +78,13 @@ def serialize_action(a, viewer_id=""):
             "useful": viewer_id in raw_reactions.get("useful", []),
             "verified": viewer_id in raw_reactions.get("verified", []),
         } if viewer_id else {"support": False, "useful": False, "verified": False},
-        "trust_signal": a.get("trust_signal", 0),
+        "trust_signal": trust_signal,
         "visibility": a.get("visibility", "public"),
         "verification_level": verification,
         "verification_multiplier": VERIFICATION_MULTIPLIERS.get(verification, 1),
-        "created_at": a.get("created_at", ""),
+        "rank_score": rank_score,
+        "visibility_weight": visibility_weight,
+        "created_at": created,
     }
 
 
@@ -119,8 +141,10 @@ async def post_action(req: PostActionRequest, user=Depends(get_current_user)):
 
 @router.get("/actions/feed")
 async def get_feed(skip: int = 0, limit: int = 20, category: str = "", viewer_id: str = "", visibility: str = ""):
-    """Public feed of actions. Pass viewer_id to get user_reacted flags.
-    visibility filter: '' = public + viewer's private, 'public' = public only, 'private' = viewer's private only."""
+    """Public feed of actions, ranked by status-weighted score.
+    Ranking formula: rank_score = (recency*50 + trust*2 + reactions*3) * author_status_multiplier
+    Status multipliers: Rising=1.15, Stable=1.0, Decaying=0.85, AtRisk=0.7
+    Enforcement override: active risk signals cap multiplier at 0.7."""
     query = {}
     if category and category in CATEGORIES:
         query["category"] = category
@@ -140,14 +164,101 @@ async def get_feed(skip: int = 0, limit: int = 20, category: str = "", viewer_id
         else:
             query["visibility"] = {"$ne": "private"}
 
+    # Fetch more than needed for re-ranking (2x buffer for skip+limit)
+    fetch_limit = min((skip + limit) * 2, 200)
     actions = list(
         db.impact_actions.find(query)
         .sort("created_at", -1)
-        .skip(skip)
-        .limit(min(limit, 50))
+        .limit(fetch_limit)
     )
 
-    return {"success": True, "actions": [serialize_action(a, viewer_id) for a in actions]}
+    if not actions:
+        return {"success": True, "actions": []}
+
+    # ── Batch-compute author status multipliers ──
+    author_ids = list(set(a.get("user_id", "") for a in actions if a.get("user_id")))
+    author_multipliers = _get_author_multipliers(author_ids)
+
+    # Serialize with per-author multiplier
+    serialized = []
+    for a in actions:
+        uid = a.get("user_id", "")
+        mult = author_multipliers.get(uid, 1.0)
+        serialized.append(serialize_action(a, viewer_id, author_multiplier=mult))
+
+    # Sort by rank_score descending (status-weighted ranking)
+    serialized.sort(key=lambda x: x["rank_score"], reverse=True)
+
+    # Apply skip/limit after ranking
+    page = serialized[skip : skip + limit]
+
+    return {"success": True, "actions": page}
+
+
+def _get_author_multipliers(user_ids: list[str]) -> dict[str, float]:
+    """Compute status consequence multiplier for each user in batch.
+    Uses latest position snapshot + risk signal check."""
+    if not user_ids:
+        return {}
+
+    now = datetime.now(timezone.utc)
+    three_days_ago = (now - timedelta(days=3)).isoformat()
+    result = {}
+
+    for uid in user_ids:
+        try:
+            # Get latest snapshot
+            snap = db.position_snapshots.find_one(
+                {"user_id": uid}, sort=[("created_at", -1)],
+                projection={"_id": 0, "position": 1, "trust": 1},
+            )
+            # Get previous snapshot (2nd most recent)
+            prev_snaps = list(db.position_snapshots.find(
+                {"user_id": uid},
+                projection={"_id": 0, "position": 1, "trust": 1},
+            ).sort("created_at", -1).limit(2))
+            prev_snap = prev_snaps[1] if len(prev_snaps) > 1 else None
+
+            # Recent activity
+            recent_count = db.impact_actions.count_documents({
+                "user_id": uid,
+                "created_at": {"$gte": three_days_ago},
+            })
+
+            # Days since last action
+            last_action = db.impact_actions.find_one(
+                {"user_id": uid}, sort=[("created_at", -1)],
+                projection={"_id": 0, "created_at": 1},
+            )
+            days_since = 999
+            if last_action:
+                try:
+                    days_since = max(0, (now - datetime.fromisoformat(last_action["created_at"])).days)
+                except Exception:
+                    pass
+
+            has_risk = db.risk_signals.count_documents(
+                {"subject_user_id": uid, "status": "active"}
+            ) > 0
+
+            current_pos = snap["position"] if snap else 0.0
+            current_trust = snap["trust"] if snap else 0.0
+
+            status = calculate_status(
+                current_position=current_pos,
+                current_trust=current_trust,
+                prev_position=prev_snap["position"] if prev_snap else None,
+                prev_trust=prev_snap["trust"] if prev_snap else None,
+                recent_action_count=recent_count,
+                days_since_last_action=days_since,
+                has_active_risk_signals=has_risk,
+            )
+
+            result[uid] = get_consequence_multiplier(status["status"], has_risk)
+        except Exception:
+            result[uid] = 1.0
+
+    return result
 
 
 @router.get("/actions/{action_id}")

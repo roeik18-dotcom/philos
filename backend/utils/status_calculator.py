@@ -8,6 +8,13 @@ Rules (deterministic, first match wins):
   Rising   (rising)  — (position increased OR trust increased) AND recent activity
   Decaying (decaying) — no recent activity (7d) OR negative position/trust change
   Stable   (stable)  — default: still active, no significant change
+
+Consequence multipliers (applied to feed ranking / visibility):
+  Rising:   1.15x  — modest boost to public action visibility
+  Stable:   1.00x  — neutral baseline
+  Decaying: 0.85x  — modest reduction
+  At Risk:  0.70x  — stronger reduction + warning state
+  Enforcement override: if active risk signals exist, multiplier is capped at 0.70x
 """
 from datetime import datetime, timezone, timedelta
 
@@ -25,6 +32,15 @@ STATUS_META = {
     "decaying": {"icon": "down",    "label": "Decaying", "color": "#ef4444"},
     "atRisk":   {"icon": "warning", "label": "At Risk",  "color": "#dc2626"},
 }
+
+# ── Consequence multipliers ──
+CONSEQUENCE_MULTIPLIERS = {
+    "rising":   1.15,
+    "stable":   1.00,
+    "decaying": 0.85,
+    "atRisk":   0.70,
+}
+ENFORCEMENT_CAP = 0.70  # max multiplier when enforcement is active
 
 
 def calculate_status(
@@ -99,3 +115,13 @@ def _result(status: str, reason: str) -> dict:
         "color": meta["color"],
         "reason": reason,
     }
+
+
+def get_consequence_multiplier(status: str, has_active_risk_signals: bool = False) -> float:
+    """Return the visibility/ranking multiplier for a given status.
+    Enforcement override: if risk signals are active, cap at ENFORCEMENT_CAP."""
+    base = CONSEQUENCE_MULTIPLIERS.get(status, 1.0)
+    if has_active_risk_signals:
+        return min(base, ENFORCEMENT_CAP)
+    return base
+

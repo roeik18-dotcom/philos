@@ -1,0 +1,62 @@
+{
+  "summary": "Status Consequence Layer feature fully tested. All 20 backend tests passed. Frontend UI verified: PositionBar displays status badge (AT RISK) with warning icon. OrientationCard displays updated status-aware message ('Your account has active risk signals — your actions have reduced visibility.'). Feed loads correctly with actions sorted by rank_score.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_status_consequence_layer.py",
+    "/app/test_reports/pytest/pytest_status_consequence_layer.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "GET /api/actions/feed correctly returns rank_score and visibility_weight fields for each action",
+    "Feed is properly sorted by rank_score descending (not chronological)",
+    "Ranking formula correctly implemented: rank_score = (recency*50 + trust*2 + reactions*3) * author_multiplier",
+    "GET /api/position/{user_id} correctly returns consequence_multiplier field",
+    "GET /api/orientation/{user_id} correctly returns consequence_multiplier field",
+    "At Risk users correctly have consequence_multiplier=0.70 in both position and orientation endpoints",
+    "Orientation message for At Risk users correctly mentions 'reduced visibility'",
+    "Enforcement override working: users with active risk signals are capped at multiplier 0.70",
+    "CONSEQUENCE_MULTIPLIERS dict correctly defined: Rising=1.15, Stable=1.0, Decaying=0.85, AtRisk=0.70",
+    "ENFORCEMENT_CAP=0.70 correctly enforced via get_consequence_multiplier() function",
+    "Status calculation in utils/status_calculator.py correctly passes has_active_risk_signals to multiplier function",
+    "PositionBar (data-testid='position-bar') correctly displays status badge with AT RISK label and warning icon",
+    "OrientationCard (data-testid='orientation-card') correctly displays status-aware message for At Risk users"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_status_consequence_layer.py"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20 tests passed)",
+    "frontend": "100% (all UI elements verified via browser automation)"
+  },
+  "test_credentials": {
+    "user_1": "newuser@test.com / password123 / user_id=05d47b99-88f1-44b3-a879-6c995634eaa0 (At Risk, active risk signals, consequence_multiplier=0.70)",
+    "user_2": "trust_fragile@test.com / password123 / user_id=0c98a493-3148-4c72-88e7-662baa393d11 (At Risk, active risk signals)"
+  },
+  "seed_data_creation": "None - used existing test users",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Status Consequence Layer fully implemented and tested. Key new features: 1) Feed now includes rank_score and visibility_weight for each action. 2) Feed is sorted by rank_score (not created_at). 3) Position and Orientation endpoints return consequence_multiplier field. 4) Consequence multipliers: Rising=1.15, Stable=1.0, Decaying=0.85, AtRisk=0.70. 5) Enforcement override: active risk signals cap multiplier at 0.70 regardless of status. 6) Orientation message for At Risk users mentions 'reduced visibility'. Test users newuser@test.com and trust_fragile@test.com have active risk signals and show consequence_multiplier=0.70.",
+  "features_verified": {
+    "GET /api/actions/feed returns rank_score and visibility_weight": "PASS",
+    "Feed sorted by rank_score descending": "PASS",
+    "At Risk user visibility_weight=0.70": "PASS",
+    "GET /api/position/{user_id} returns consequence_multiplier": "PASS",
+    "GET /api/orientation/{user_id} returns consequence_multiplier": "PASS",
+    "At Risk user consequence_multiplier=0.70 in position": "PASS",
+    "At Risk user consequence_multiplier=0.70 in orientation": "PASS",
+    "Orientation message mentions 'reduced visibility' for At Risk": "PASS",
+    "Enforcement override caps multiplier at 0.70": "PASS",
+    "PositionBar displays status badge correctly": "PASS",
+    "OrientationCard displays status tag and message correctly": "PASS",
+    "Feed loads after login with ranked actions": "PASS",
+    "Ranking formula applied correctly": "PASS"
+  }
+}

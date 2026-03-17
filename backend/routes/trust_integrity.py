@@ -6,7 +6,7 @@ from bson import ObjectId
 import os
 import logging
 from auth_utils import get_current_user
-from utils.status_calculator import calculate_status
+from utils.status_calculator import calculate_status, get_consequence_multiplier
 
 router = APIRouter()
 logger = logging.getLogger("trust_integrity")
@@ -561,6 +561,7 @@ async def get_user_position(user_id: str):
             "active_referrals": 0,
             "factors": {"actions": 0, "reactors": 0, "trust": 0, "referrals": 0},
             "status": status_zero,
+            "consequence_multiplier": get_consequence_multiplier(status_zero["status"], has_risk_zero),
         }
 
     # Factor 1: Public actions (max 0.35)
@@ -684,6 +685,7 @@ async def get_user_position(user_id: str):
             "referrals": round(referrals_factor, 3),
         },
         "status": status_result,
+        "consequence_multiplier": get_consequence_multiplier(status_result["status"], has_risk),
     }
 
 
@@ -802,9 +804,9 @@ async def get_daily_orientation(user_id: str):
     # Status-aware overrides for At Risk and Decaying
     if status_key == "atRisk" and total_actions > 0:
         if has_risk_ori:
-            msg = "Your account has active risk signals — focus on authentic contributions to recover."
+            msg = "Your account has active risk signals — your actions have reduced visibility. Focus on authentic contributions to recover."
         else:
-            msg = f"You've been inactive for {days_inactive} days. Post one action to avoid further decay."
+            msg = f"You've been inactive for {days_inactive} days — your actions have reduced visibility. Post one action to start recovering."
         action_type = "post"
         cta = "Post Action"
     elif total_actions == 0:
@@ -816,7 +818,7 @@ async def get_daily_orientation(user_id: str):
         action_type = "visibility"
         cta = "Post Public Action"
     elif status_key == "decaying":
-        msg = "Your position is decaying — post an action to reverse the trend."
+        msg = "Your position is decaying and your actions are losing visibility — post an action to reverse the trend."
         action_type = "post"
         cta = "Post Action"
     elif label == "Self":
@@ -828,7 +830,7 @@ async def get_daily_orientation(user_id: str):
         action_type = "react"
         cta = "View Feed"
     elif label == "Emerging":
-        prefix = "You're rising — k" if status_key == "rising" else "K"
+        prefix = "You're rising and your actions are getting boosted — k" if status_key == "rising" else "K"
         msg = f"{prefix}eep posting public actions to move toward Contributing."
         action_type = "post"
         cta = "Create Action"
@@ -837,11 +839,13 @@ async def get_daily_orientation(user_id: str):
         action_type = "share"
         cta = "Go to Feed"
     elif label == "Contributing":
-        msg = "You're contributing well — engage with more people to move toward Connected."
+        prefix = "Your rising status gives your actions a visibility boost — " if status_key == "rising" else ""
+        msg = f"{prefix}You're contributing well — engage with more people to move toward Connected."
         action_type = "react"
         cta = "View Feed"
     elif label == "Connected":
-        msg = "Keep contributing — you're building real influence in the network."
+        prefix = "Your rising status gives your actions a visibility boost. " if status_key == "rising" else ""
+        msg = f"{prefix}Keep contributing — you're building real influence in the network."
         action_type = "post"
         cta = "Create Action"
     elif label == "Network":
@@ -868,4 +872,5 @@ async def get_daily_orientation(user_id: str):
             "active_referrals": active_referrals,
         },
         "status": status_ori,
+        "consequence_multiplier": get_consequence_multiplier(status_ori["status"], has_risk_ori),
     }
