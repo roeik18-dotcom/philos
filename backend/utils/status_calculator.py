@@ -125,3 +125,39 @@ def get_consequence_multiplier(status: str, has_active_risk_signals: bool = Fals
         return min(base, ENFORCEMENT_CAP)
     return base
 
+
+def get_consequence_panel(
+    status: str,
+    multiplier: float,
+    has_active_risk_signals: bool,
+    days_since_last_action: int,
+    recent_action_count: int,
+) -> dict:
+    """Return meaning + next_step for the Consequence Transparency Panel."""
+
+    if status == "atRisk":
+        if has_active_risk_signals:
+            meaning = "Your public actions have significantly reduced visibility due to active risk signals."
+            next_step = "Post authentic public actions to begin resolving risk signals."
+        else:
+            meaning = "Your public actions have significantly reduced visibility due to extended inactivity."
+            next_step = "Post 1 public action to start recovering toward Decaying."
+    elif status == "decaying":
+        meaning = "Your public actions currently receive reduced visibility."
+        if days_since_last_action >= INACTIVITY_DAYS:
+            next_step = "Post 1 public action to recover toward Stable."
+        else:
+            next_step = "Continue posting to stabilize your position."
+    elif status == "stable":
+        meaning = "Your public actions have normal visibility."
+        next_step = "Post 1 more public action to move toward Rising."
+    elif status == "rising":
+        meaning = "Your public actions are getting a visibility boost."
+        next_step = "Keep it up — maintain activity to keep your boost."
+    else:
+        meaning = "Your public actions have normal visibility."
+        next_step = "Post a public action to build trust."
+
+    return {"meaning": meaning, "next_step": next_step}
+
+

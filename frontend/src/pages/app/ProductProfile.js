@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, Tag, Award, Activity, Briefcase, Flame, Sparkles, Lock, CheckCircle, ShieldAlert, TrendingDown, UserPlus, Users } from 'lucide-react';
 import PositionBar from '../../components/PositionBar';
 import OrientationCard from '../../components/OrientationCard';
+import ConsequencePanel from '../../components/ConsequencePanel';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -80,6 +81,7 @@ export default function ProductProfile({ user, navigate }) {
 
       <PositionBar userId={user.id} />
       <OrientationCard userId={user.id} onNavigate={navigate} />
+      <ConsequencePanel userId={user.id} />
 
       {/* Trust Engine Card */}
       {trustData && (

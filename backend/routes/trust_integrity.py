@@ -6,7 +6,7 @@ from bson import ObjectId
 import os
 import logging
 from auth_utils import get_current_user
-from utils.status_calculator import calculate_status, get_consequence_multiplier
+from utils.status_calculator import calculate_status, get_consequence_multiplier, get_consequence_panel
 
 router = APIRouter()
 logger = logging.getLogger("trust_integrity")
@@ -550,6 +550,11 @@ async def get_user_position(user_id: str):
             days_since_last_action=days_zero,
             has_active_risk_signals=has_risk_zero,
         )
+        panel_zero = get_consequence_panel(
+            status_zero["status"],
+            get_consequence_multiplier(status_zero["status"], has_risk_zero),
+            has_risk_zero, days_zero, recent_zero,
+        )
         return {
             "success": True,
             "position": 0.0,
@@ -562,6 +567,7 @@ async def get_user_position(user_id: str):
             "factors": {"actions": 0, "reactors": 0, "trust": 0, "referrals": 0},
             "status": status_zero,
             "consequence_multiplier": get_consequence_multiplier(status_zero["status"], has_risk_zero),
+            "consequence_panel": panel_zero,
         }
 
     # Factor 1: Public actions (max 0.35)
@@ -669,6 +675,12 @@ async def get_user_position(user_id: str):
         upsert=True,
     )
 
+    multiplier = get_consequence_multiplier(status_result["status"], has_risk)
+    panel = get_consequence_panel(
+        status_result["status"], multiplier,
+        has_risk, days_since_last, recent_action_count,
+    )
+
     return {
         "success": True,
         "position": position,
@@ -685,7 +697,8 @@ async def get_user_position(user_id: str):
             "referrals": round(referrals_factor, 3),
         },
         "status": status_result,
-        "consequence_multiplier": get_consequence_multiplier(status_result["status"], has_risk),
+        "consequence_multiplier": multiplier,
+        "consequence_panel": panel,
     }
 
 
