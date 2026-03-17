@@ -1918,3 +1918,445 @@
   color: #f59e0b;
   font-weight: 600;
 }
+
+
+/* ═══════════════════════════════════════════
+   ACTION FLOW — behavioral engine
+   ═══════════════════════════════════════════ */
+
+.action-flow {
+  position: relative;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px;
+  overflow: hidden;
+}
+
+/* ── Step content area ── */
+.action-flow-page {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 20px 40px;
+}
+.flow-step-content {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Slide animations ── */
+.flow-animate-forward {
+  animation: flowSlideIn 0.35s ease both;
+}
+.flow-animate-backward {
+  animation: flowSlideBack 0.35s ease both;
+}
+@keyframes flowSlideIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes flowSlideBack {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Step header ── */
+.flow-step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.flow-step-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  margin: 0;
+}
+.flow-step-icon {
+  width: 20px;
+  height: 20px;
+  color: #00d4ff;
+}
+.flow-step-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  margin: -16px 0 0;
+}
+
+/* ── Loading ── */
+.flow-loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+  color: rgba(255,255,255,0.2);
+}
+.spin { animation: spinAnim 0.8s linear infinite; }
+@keyframes spinAnim {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── CTA button ── */
+.flow-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #00d4ff;
+  color: #060612;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  margin-top: auto;
+}
+.flow-cta:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.flow-cta:disabled { opacity: 0.35; cursor: not-allowed; }
+.flow-cta-finish { background: #10b981; }
+
+/* ── Back button ── */
+.flow-back-btn {
+  position: fixed;
+  top: 72px;
+  left: 16px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(6,6,18,0.9);
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+.flow-back-btn:hover { color: rgba(255,255,255,0.8); }
+
+/* ── STEP BAR (bottom) ── */
+.flow-step-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(6,6,18,0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+}
+.flow-step-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.2);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: color 0.2s;
+  position: relative;
+}
+.flow-step-btn.done { color: rgba(0,212,255,0.4); }
+.flow-step-btn.active { color: #00d4ff; }
+.flow-step-btn:disabled { cursor: default; }
+.flow-step-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: #00d4ff;
+  transition: width 0.4s ease;
+  border-radius: 1px;
+}
+
+/* ── NEED step ── */
+.flow-need-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.flow-need-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.flow-need-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.3);
+}
+.flow-need-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.flow-need-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+}
+
+/* ── Suggestion ── */
+.flow-suggestion {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(0,212,255,0.04);
+  border: 1px solid rgba(0,212,255,0.08);
+}
+.flow-suggestion p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.55);
+  margin: 0;
+}
+
+/* ── CHOICE step ── */
+.flow-choice-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.flow-choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 2px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  text-align: center;
+}
+.flow-choice-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+}
+.flow-choice-card.selected {
+  border-color: #00d4ff;
+  background: rgba(0,212,255,0.06);
+  color: #00d4ff;
+}
+.flow-choice-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+.flow-choice-desc {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  line-height: 1.4;
+}
+.flow-choice-card.selected .flow-choice-desc {
+  color: rgba(0,212,255,0.5);
+}
+
+/* ── ACTION step ── */
+.flow-action-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.flow-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.85);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.flow-input:focus { border-color: rgba(0,212,255,0.3); }
+.flow-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.85);
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.flow-textarea:focus { border-color: rgba(0,212,255,0.3); }
+.flow-category-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.flow-category-pill {
+  padding: 5px 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255,255,255,0.35);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.flow-category-pill.active {
+  border-color: #00d4ff;
+  background: rgba(0,212,255,0.08);
+  color: #00d4ff;
+}
+.flow-error {
+  color: #ef4444;
+  font-size: 12px;
+  margin: 0;
+}
+
+/* ── REACTION step ── */
+.flow-reaction-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.flow-reaction-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.flow-reaction-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.85);
+  font-family: monospace;
+}
+.flow-reaction-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ── RESULT step ── */
+.flow-result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.flow-result-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.flow-result-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.3);
+}
+.flow-result-delta {
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.6);
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.flow-result-delta.positive { color: #10b981; }
+.flow-result-delta.negative { color: #ef4444; }
+
+/* ── REWARD step ── */
+.flow-reward-mult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 32px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.flow-reward-value {
+  font-size: 36px;
+  font-weight: 900;
+  font-family: monospace;
+  color: rgba(255,255,255,0.7);
+}
+.flow-reward-value.reduced { color: #ef4444; }
+.flow-reward-value.boosted { color: #10b981; }
+.flow-reward-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.25);
+}
+.flow-reward-meaning {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+  margin: 0;
+}
+.flow-reward-next {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #00d4ff;
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Flow on mobile: full bottom bar ── */
+@media (max-width: 768px) {
+  .action-flow { min-height: calc(100vh - 60px); }
+  .flow-need-grid { grid-template-columns: repeat(3, 1fr); }
+  .flow-choice-options { grid-template-columns: 1fr 1fr; }
+  .action-flow-page { padding: 20px 16px 32px; }
+}

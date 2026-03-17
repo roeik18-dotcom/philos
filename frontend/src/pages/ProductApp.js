@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { List, PlusCircle, Map, User, BarChart3, LogOut, Menu, X, Home, Sparkles, Wallet, Trophy, Calendar } from 'lucide-react';
+import { List, PlusCircle, Map, User, BarChart3, LogOut, Menu, X, Home, Sparkles, Wallet, Trophy, Calendar, Zap } from 'lucide-react';
 import ActionFeed from './app/ActionFeed';
 import PostAction from './app/PostAction';
 import ImpactMap from './app/ImpactMap';
@@ -12,12 +12,13 @@ import LeaderboardPage from './app/LeaderboardPage';
 import WeeklyReportPage from './app/WeeklyReportPage';
 import AuthScreen from '../components/auth/AuthScreen';
 import StatusChangeNotifier from '../components/StatusChangeNotifier';
+import ActionFlow from '../components/ActionFlow';
 import { Toaster } from 'sonner';
 import './app.css';
 
 const NAV_ITEMS = [
   { id: 'feed', label: 'Feed', icon: List, path: '/app/feed', auth: false },
-  { id: 'post', label: 'Post', icon: PlusCircle, path: '/app/post', auth: true },
+  { id: 'flow', label: 'Flow', icon: Zap, path: '/app/flow', auth: true },
   { id: 'map', label: 'Map', icon: Map, path: '/app/map', auth: false },
   { id: 'opportunities', label: 'Opportunities', icon: Sparkles, path: '/app/opportunities', auth: false },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/app/leaderboard', auth: false },
@@ -35,6 +36,7 @@ const ALL_NAV = [...NAV_ITEMS, ...MORE_NAV];
 function getActiveTab() {
   const p = window.location.pathname;
   if (p.startsWith('/app/action/')) return 'action';
+  if (p.startsWith('/app/flow')) return 'flow';
   const match = ALL_NAV.find(n => p.startsWith(n.path));
   return match?.id || 'feed';
 }
@@ -73,6 +75,7 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
   const renderPage = () => {
     switch (tab) {
       case 'action': return <ActionSharePage />;
+      case 'flow': return <ActionFlow user={user} onExit={() => navigate('feed')} />;
       case 'post': return <PostAction user={user} onPosted={() => navigate('feed')} />;
       case 'map': return <ImpactMap />;
       case 'profile': return <ProductProfile user={user} navigate={navigate} />;
@@ -187,23 +190,25 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
         {renderPage()}
       </main>
 
-      {/* Bottom tab bar (mobile) — show primary nav only */}
-      <nav className="app-bottom-bar" data-testid="app-bottom-bar">
-        {NAV_ITEMS.map(item => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              className={`app-bottom-btn ${tab === item.id ? 'active' : ''}`}
-              onClick={() => navigate(item.id)}
-              data-testid={`bottom-nav-${item.id}`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+      {/* Bottom tab bar (mobile) — hidden when in flow (flow has own step bar) */}
+      {tab !== 'flow' && (
+        <nav className="app-bottom-bar" data-testid="app-bottom-bar">
+          {NAV_ITEMS.map(item => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                className={`app-bottom-btn ${tab === item.id ? 'active' : ''}`}
+                onClick={() => navigate(item.id)}
+                data-testid={`bottom-nav-${item.id}`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
