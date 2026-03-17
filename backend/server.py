@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 import logging
-import asyncio
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 # Create the main app
 app = FastAPI()
+
+@app.get("/")
+async def root():
+    return {"status": "backend alive"}
 
 # CORS
 app.add_middleware(
@@ -58,18 +61,14 @@ app.include_router(invites_router, prefix="/api")
 
 # Database shutdown
 from database import client
-from services.scheduler import start_scheduler, stop_scheduler
+from services.scheduler import stop_scheduler
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
     stop_scheduler()
-    client.close()
-
-# Demo agents background loop
-from services.demo import _demo_event_loop
+    if client:
+        client.close()
 
 @app.on_event("startup")
 async def start_background_tasks():
-    asyncio.create_task(_demo_event_loop())
-    start_scheduler()
-    logger.info("All background tasks started")
+    logger.info("Startup clean")
