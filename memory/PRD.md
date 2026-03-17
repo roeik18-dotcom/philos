@@ -310,6 +310,17 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - 'Post' nav replaced with 'Flow' (Zap icon) in NAV_ITEMS
 - Files: ActionFlow.js (new), ProductApp.js (updated), app.css (flow styles)
 
+### Action Flow — Real-User Testing Optimization (Complete - March 2026)
+- Simplified Step 1 (Need): single entry message + one insight (was 3-card grid)
+  - First-time users: "Post one action to see how the system works."
+  - Returning users: "One action moves your position."
+  - One insight card with status-colored dot + orientation message
+- Simplified Step 3 (Action): removed category pills, description optional, single "Publish" CTA
+  - Only title required to submit
+  - Category defaults to 'community' internally
+- Goal: maximize first-time flow completion rate
+- Files: ActionFlow.js, app.css
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
