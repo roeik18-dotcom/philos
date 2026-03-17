@@ -277,6 +277,22 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Frontend: integrated into ConsequencePanel.js with progress bar (cyan #00d4ff)
 - Files: status_calculator.py, trust_integrity.py, ConsequencePanel.js, app.css
 
+### Status Change Notification (Complete - March 2026)
+- Subtle toast notification on login/page load when user's status changed since last seen
+- Persistence: last_seen_status stored in localStorage per user (key: philos_last_status_{userId})
+- Notification rules:
+  - Only fires when previous status exists AND differs from current
+  - Does not repeat once acknowledged (localStorage updated immediately)
+  - Downward changes: toast.error() with 8s duration (red icon)
+  - Upward changes: toast.success() with 6s duration (green icon)
+  - Neutral: toast() with 6s duration
+- Messages include previous + new status + one explanation:
+  - Down: "Your status dropped to At Risk — your actions have reduced visibility. Take action to recover."
+  - Up: "You recovered from Decaying to Stable — your visibility is back to normal."
+- Uses sonner toast library, rendered via Toaster in ProductApp.js (dark theme, top-center)
+- StatusChangeNotifier is a renderless component (returns null)
+- Files: StatusChangeNotifier.js, ProductApp.js
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
