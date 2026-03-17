@@ -29,6 +29,7 @@ class PostActionRequest(BaseModel):
     location_name: str = ""
     location_lat: Optional[float] = None
     location_lng: Optional[float] = None
+    visibility: str = "public"
 
 
 class ReactionRequest(BaseModel):
@@ -58,6 +59,7 @@ def serialize_action(a, viewer_id=""):
             "verified": viewer_id in raw_reactions.get("verified", []),
         } if viewer_id else {"support": False, "useful": False, "verified": False},
         "trust_signal": a.get("trust_signal", 0),
+        "visibility": a.get("visibility", "public"),
         "verification_level": verification,
         "verification_multiplier": VERIFICATION_MULTIPLIERS.get(verification, 1),
         "created_at": a.get("created_at", ""),
@@ -93,6 +95,7 @@ async def post_action(req: PostActionRequest, user=Depends(get_current_user)):
         "category": req.category if req.category in CATEGORIES else "other",
         "community": req.community,
         "location": location,
+        "visibility": req.visibility if req.visibility in ("public", "private") else "public",
         "reactions": {"support": [], "useful": [], "verified": []},
         "trust_signal": 0.0,
         "verification_level": "self_reported",
@@ -115,11 +118,27 @@ async def post_action(req: PostActionRequest, user=Depends(get_current_user)):
 
 
 @router.get("/actions/feed")
-async def get_feed(skip: int = 0, limit: int = 20, category: str = "", viewer_id: str = ""):
-    """Public feed of actions. Pass viewer_id to get user_reacted flags."""
+async def get_feed(skip: int = 0, limit: int = 20, category: str = "", viewer_id: str = "", visibility: str = ""):
+    """Public feed of actions. Pass viewer_id to get user_reacted flags.
+    visibility filter: '' = public + viewer's private, 'public' = public only, 'private' = viewer's private only."""
     query = {}
     if category and category in CATEGORIES:
         query["category"] = category
+
+    if visibility == "private" and viewer_id:
+        query["visibility"] = "private"
+        query["user_id"] = viewer_id
+    elif visibility == "public":
+        query["visibility"] = {"$ne": "private"}
+    else:
+        # Default: show all public + viewer's own private
+        if viewer_id:
+            query["$or"] = [
+                {"visibility": {"$ne": "private"}},
+                {"visibility": "private", "user_id": viewer_id},
+            ]
+        else:
+            query["visibility"] = {"$ne": "private"}
 
     actions = list(
         db.impact_actions.find(query)

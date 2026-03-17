@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Tag, Users, Clock, Loader2, Heart, ThumbsUp, ShieldCheck, Flame, Share2, Copy, Check, X, BadgeCheck, Building2 } from 'lucide-react';
+import { MapPin, Tag, Users, Clock, Loader2, Heart, ThumbsUp, ShieldCheck, Flame, Share2, Copy, Check, X, BadgeCheck, Building2, Globe, Lock, ArrowRight } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -107,6 +107,7 @@ export default function ActionFeed({ user }) {
   const [actions, setActions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('');
+  const [visFilter, setVisFilter] = useState('');
   const [reactingId, setReactingId] = useState(null);
   const [sharingAction, setSharingAction] = useState(null);
 
@@ -115,6 +116,7 @@ export default function ActionFeed({ user }) {
     try {
       let url = `${API_URL}/api/actions/feed?`;
       if (category) url += `category=${category}&`;
+      if (visFilter) url += `visibility=${visFilter}&`;
       if (user?.id) url += `viewer_id=${user.id}`;
       const res = await fetch(url);
       const data = await res.json();
@@ -123,7 +125,7 @@ export default function ActionFeed({ user }) {
       console.error('Feed fetch error:', err);
     }
     setLoading(false);
-  }, [category, user]);
+  }, [category, visFilter, user]);
 
   useEffect(() => { fetchFeed(); }, [fetchFeed]);
 
@@ -178,6 +180,30 @@ export default function ActionFeed({ user }) {
         <p className="feed-subtitle">Real actions. Real impact. Real people.</p>
       </div>
 
+      {/* Visibility tabs */}
+      {user && (
+        <div className="feed-vis-tabs" data-testid="feed-vis-tabs">
+          {[
+            { key: '', label: 'All', icon: null },
+            { key: 'public', label: 'Public', icon: Globe },
+            { key: 'private', label: 'My Private', icon: Lock },
+          ].map(tab => {
+            const TIcon = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                className={`feed-vis-tab ${visFilter === tab.key ? 'active' : ''}`}
+                onClick={() => setVisFilter(tab.key)}
+                data-testid={`vis-tab-${tab.key || 'all'}`}
+              >
+                {TIcon && <TIcon className="w-3.5 h-3.5" />}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="feed-filters" data-testid="feed-filters">
         {categories.map(cat => (
           <button
@@ -212,6 +238,10 @@ export default function ActionFeed({ user }) {
                 >
                   <Tag className="w-3 h-3" />
                   {action.category}
+                </span>
+                <span className={`feed-vis-badge vis-${action.visibility || 'public'}`} data-testid={`vis-badge-${action.id}`}>
+                  {action.visibility === 'private' ? <Lock className="w-2.5 h-2.5" /> : <Globe className="w-2.5 h-2.5" />}
+                  {action.visibility || 'public'}
                 </span>
                 <span className="feed-card-time" data-testid="action-time">
                   <Clock className="w-3 h-3" />
@@ -279,9 +309,14 @@ export default function ActionFeed({ user }) {
                   })}
                 </div>
                 {action.trust_signal > 0 && (
-                  <div className="feed-trust-score" data-testid={`trust-score-${action.id}`}>
-                    <Flame className="w-3.5 h-3.5" />
-                    <span>{Math.round(action.trust_signal)}</span>
+                  <div className="feed-trust-outcome" data-testid={`trust-outcome-${action.id}`}>
+                    <div className="feed-trust-score" data-testid={`trust-score-${action.id}`}>
+                      <Flame className="w-3.5 h-3.5" />
+                      <span>{Math.round(action.trust_signal)}</span>
+                    </div>
+                    <span className="trust-outcome-label">
+                      <ArrowRight className="w-2.5 h-2.5" /> profile
+                    </span>
                   </div>
                 )}
                 <button
