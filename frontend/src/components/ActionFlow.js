@@ -2,20 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Eye, GitBranch, Send, Heart, TrendingUp, Award,
   ArrowRight, ArrowLeft, Lock, Globe, Loader2,
-  TrendingDown, AlertTriangle, Target, Check,
+  TrendingDown, AlertTriangle, Check,
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-
-const CATEGORIES = [
-  { value: 'education', label: 'Education' },
-  { value: 'environment', label: 'Environment' },
-  { value: 'health', label: 'Health' },
-  { value: 'community', label: 'Community' },
-  { value: 'technology', label: 'Technology' },
-  { value: 'mentorship', label: 'Mentorship' },
-  { value: 'volunteering', label: 'Volunteering' },
-];
 
 const FLOW_STEPS = [
   { key: 'need',     label: 'Need',     icon: Eye },
@@ -137,46 +127,37 @@ export default function ActionFlow({ user, onExit }) {
   const StatusIcon = STATUS_ICONS[baseline?.status?.icon] || ArrowRight;
 
   // ═══ STEP RENDERERS ═══
-  const renderNeed = () => (
-    <div className="flow-step-content" data-testid="flow-step-need">
-      <div className="flow-step-header">
-        <Eye className="flow-step-icon" />
-        <h2>Your Current State</h2>
+  const renderNeed = () => {
+    const isFirstTime = baseline && baseline.public_actions === 0 && baseline.private_actions === 0;
+    const statusColor = baseline?.status?.color || '#f59e0b';
+    const insight = orientation?.message || (baseline
+      ? `You're at ${baseline.label} with ${baseline.consequence_multiplier}x visibility.`
+      : '');
+
+    return (
+      <div className="flow-step-content" data-testid="flow-step-need">
+        <div className="flow-entry-msg" data-testid="flow-entry-msg">
+          {isFirstTime
+            ? 'Post one action to see how the system works.'
+            : 'One action moves your position.'}
+        </div>
+        {baseline ? (
+          <div className="flow-need-insight" data-testid="flow-need-insight">
+            <span
+              className="flow-need-status-dot"
+              style={{ background: statusColor }}
+            />
+            <p>{insight}</p>
+          </div>
+        ) : (
+          <div className="flow-loading"><Loader2 className="w-5 h-5 spin" /></div>
+        )}
+        <button className="flow-cta" onClick={goNext} data-testid="flow-cta-need">
+          Take Action <ArrowRight className="w-4 h-4" />
+        </button>
       </div>
-      {baseline ? (
-        <div className="flow-need-grid">
-          <div className="flow-need-card">
-            <span className="flow-need-label">Position</span>
-            <span className="flow-need-value">{baseline.label}</span>
-            <span className="flow-need-sub">{Math.round(baseline.position * 100)}%</span>
-          </div>
-          <div className="flow-need-card">
-            <span className="flow-need-label">Status</span>
-            <span className="flow-need-value" style={{ color: baseline.status?.color }}>
-              <StatusIcon className="w-4 h-4" /> {baseline.status?.label}
-            </span>
-            <span className="flow-need-sub">{baseline.consequence_multiplier}x visibility</span>
-          </div>
-          <div className="flow-need-card">
-            <span className="flow-need-label">Trust</span>
-            <span className="flow-need-value">{baseline.total_trust}</span>
-            <span className="flow-need-sub">score</span>
-          </div>
-        </div>
-      ) : (
-        <div className="flow-loading"><Loader2 className="w-5 h-5 spin" /></div>
-      )}
-      {orientation && (
-        <div className="flow-suggestion" data-testid="flow-suggestion">
-          <Target className="w-4 h-4" style={{ color: '#00d4ff' }} />
-          <p>{orientation.message}</p>
-        </div>
-      )}
-      <button className="flow-cta" onClick={goNext} data-testid="flow-cta-need">
-        Take Action <ArrowRight className="w-4 h-4" />
-      </button>
-    </div>
-  );
+    );
+  };
 
   const renderChoice = () => (
     <div className="flow-step-content" data-testid="flow-step-choice">
@@ -220,46 +201,35 @@ export default function ActionFlow({ user, onExit }) {
     <div className="flow-step-content" data-testid="flow-step-action">
       <div className="flow-step-header">
         <Send className="flow-step-icon" />
-        <h2>Create Action</h2>
+        <h2>What did you do?</h2>
       </div>
       <div className="flow-action-form">
         <input
           className="flow-input"
-          placeholder="What did you do?"
+          placeholder="e.g. Helped a neighbor, organized a cleanup..."
           value={form.title}
           onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+          autoFocus
           data-testid="flow-input-title"
         />
         <textarea
           className="flow-textarea"
-          placeholder="Describe your action..."
+          placeholder="Add details (optional)"
           value={form.description}
           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-          rows={3}
+          rows={2}
           data-testid="flow-input-description"
         />
-        <div className="flow-category-row">
-          {CATEGORIES.map(c => (
-            <button
-              key={c.value}
-              className={`flow-category-pill ${form.category === c.value ? 'active' : ''}`}
-              onClick={() => setForm(f => ({ ...f, category: c.value }))}
-              data-testid={`flow-cat-${c.value}`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
         {error && <p className="flow-error">{error}</p>}
       </div>
       <button
         className="flow-cta"
         onClick={handlePost}
-        disabled={submitting || !form.title.trim() || !form.description.trim()}
+        disabled={submitting || !form.title.trim()}
         data-testid="flow-cta-action"
       >
         {submitting ? <Loader2 className="w-4 h-4 spin" /> : <Send className="w-4 h-4" />}
-        {submitting ? 'Publishing...' : `Publish ${visibility === 'public' ? 'Public' : 'Private'}`}
+        {submitting ? 'Publishing...' : 'Publish'}
       </button>
     </div>
   );
