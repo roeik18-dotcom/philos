@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Send, MapPin, Loader2, Globe, Lock, Check, ArrowRight, Flame, Users, UserCheck } from 'lucide-react';
+import PositionBar from '../../components/PositionBar';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -97,6 +98,8 @@ export default function PostAction({ user, onPosted }) {
             {form.visibility === 'public' ? 'Visible to the network' : 'Stored privately'}
           </p>
 
+          {user && form.visibility === 'public' && <PositionBar userId={user.id} />}
+
           <div className="post-flow-outcome" data-testid="post-flow-outcome">
             <div className="flow-outcome-step">
               <Users className="w-4 h-4" />
@@ -132,6 +135,8 @@ export default function PostAction({ user, onPosted }) {
 
   return (
     <div className="post-page" data-testid="post-action-page">
+      {user && <PositionBar userId={user.id} />}
+
       {/* ═══ STEP INDICATOR ═══ */}
       <div className="post-steps" data-testid="post-steps">
         {STEPS.map((s, i) => (

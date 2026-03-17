@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MapPin, Tag, Users, Clock, Loader2, Heart, ThumbsUp, ShieldCheck, Flame, Share2, Copy, Check, X, BadgeCheck, Building2, Globe, Lock, ArrowRight } from 'lucide-react';
+import PositionBar from '../../components/PositionBar';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -179,6 +180,8 @@ export default function ActionFeed({ user }) {
         <h1 className="feed-title" data-testid="feed-title">Action Feed</h1>
         <p className="feed-subtitle">Real actions. Real impact. Real people.</p>
       </div>
+
+      {user && <PositionBar userId={user.id} />}
 
       {/* Visibility tabs */}
       {user && (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2, Tag, Award, Activity, Briefcase, Flame, Sparkles, Lock, CheckCircle, ShieldAlert, TrendingDown, UserPlus, Users } from 'lucide-react';
+import PositionBar from '../../components/PositionBar';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -75,6 +76,8 @@ export default function ProductProfile({ user }) {
         <h1 className="profile-name" data-testid="profile-name">{user.name || user.email?.split('@')[0]}</h1>
         <p className="profile-email" data-testid="profile-email">{user.email}</p>
       </div>
+
+      <PositionBar userId={user.id} />
 
       {/* Trust Engine Card */}
       {trustData && (

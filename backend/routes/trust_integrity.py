@@ -496,3 +496,95 @@ async def get_user_trust(user_id: str):
         "enforcement_active": enforcement_active,
         "last_updated": last_active,
     }
+
+
+
+# ── Position Score API ──
+
+@router.get("/position/{user_id}")
+async def get_user_position(user_id: str):
+    """Calculate user's position on the Self ↔ Network spectrum.
+    0.0 = Self (no public engagement), 1.0 = Full Network.
+    Private actions do not affect position."""
+
+    # Only count public actions
+    public_actions = list(db.impact_actions.find(
+        {"user_id": user_id, "visibility": {"$ne": "private"}},
+        {"_id": 0, "reactions": 1, "trust_signal": 1},
+    ))
+    public_count = len(public_actions)
+    private_count = db.impact_actions.count_documents(
+        {"user_id": user_id, "visibility": "private"}
+    )
+
+    if public_count == 0:
+        return {
+            "success": True,
+            "position": 0.0,
+            "label": "Self",
+            "public_actions": 0,
+            "private_actions": private_count,
+            "unique_reactors": 0,
+            "total_trust": 0.0,
+            "active_referrals": 0,
+            "factors": {"actions": 0, "reactors": 0, "trust": 0, "referrals": 0},
+        }
+
+    # Factor 1: Public actions (max 0.35)
+    actions_factor = min(public_count / 15, 1.0) * 0.35
+
+    # Factor 2: Unique reactors across public actions (max 0.25)
+    all_reactors = set()
+    for a in public_actions:
+        for rtype in ["support", "useful", "verified"]:
+            all_reactors.update(a.get("reactions", {}).get(rtype, []))
+    all_reactors.discard(user_id)  # exclude self
+    reactor_count = len(all_reactors)
+    reactors_factor = min(reactor_count / 10, 1.0) * 0.25
+
+    # Factor 3: Trust score from public actions (max 0.25)
+    total_trust = sum(a.get("trust_signal", 0) for a in public_actions)
+    trust_factor = min(total_trust / 50, 1.0) * 0.25
+
+    # Factor 4: Active referrals (max 0.15)
+    referral_count = 0
+    try:
+        referrals = list(db.referrals.find({"inviter_id": user_id}, {"invited_user_id": 1, "_id": 0}))
+        for ref in referrals:
+            if db.impact_actions.count_documents({"user_id": ref["invited_user_id"]}) > 0:
+                referral_count += 1
+    except Exception:
+        pass
+    referrals_factor = min(referral_count / 5, 1.0) * 0.15
+
+    position = round(actions_factor + reactors_factor + trust_factor + referrals_factor, 3)
+    position = min(position, 1.0)
+
+    # Label based on position
+    if position < 0.15:
+        label = "Self"
+    elif position < 0.35:
+        label = "Emerging"
+    elif position < 0.55:
+        label = "Contributing"
+    elif position < 0.75:
+        label = "Connected"
+    else:
+        label = "Network"
+
+    return {
+        "success": True,
+        "position": position,
+        "label": label,
+        "public_actions": public_count,
+        "private_actions": private_count,
+        "unique_reactors": reactor_count,
+        "total_trust": round(total_trust, 1),
+        "active_referrals": referral_count,
+        "factors": {
+            "actions": round(actions_factor, 3),
+            "reactors": round(reactors_factor, 3),
+            "trust": round(trust_factor, 3),
+            "referrals": round(referrals_factor, 3),
+        },
+    }
