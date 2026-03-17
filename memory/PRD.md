@@ -264,6 +264,19 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Visual: header "Action Visibility", status pill, multiplier (red/green/neutral), meaning, cyan next-step
 - Files: status_calculator.py, trust_integrity.py, ConsequencePanel.js, ProductProfile.js, app.css
 
+### Recovery Progress Indicator (Complete - March 2026)
+- Minimal progress indicator for Decaying/At Risk users only (null for Rising/Stable)
+- Shows: current status, target status, one requirement, progress bar
+- Recovery paths (deterministic, one per status):
+  - At Risk (risk signals) → Decaying: need 3 recent public actions
+  - At Risk (inactivity) → Stable: need 1 recent public action
+  - Decaying (inactivity) → Stable: need 1 recent public action
+  - Decaying (negative change) → Stable: need 2 recent public actions
+- When action target met but risk signals remain: "Actions met — risk signals still active"
+- Backend: get_recovery_progress() in status_calculator.py, added to position endpoint as recovery_progress
+- Frontend: integrated into ConsequencePanel.js with progress bar (cyan #00d4ff)
+- Files: status_calculator.py, trust_integrity.py, ConsequencePanel.js, app.css
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
