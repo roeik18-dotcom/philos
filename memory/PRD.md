@@ -229,6 +229,26 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Status metadata: icon (up/right/down/warning), label, color, reason
 - Files: utils/status_calculator.py, trust_integrity.py, PositionBar.js, OrientationCard.js, app.css
 
+### Status Consequence Layer — Product-Level Visibility Effects (Complete - March 2026)
+- Status now affects feed ranking and action visibility, not just display
+- Consequence multipliers (deterministic):
+  - Rising: 1.15x visibility boost
+  - Stable: 1.00x neutral
+  - Decaying: 0.85x reduction
+  - At Risk: 0.70x stronger reduction + warning state
+- Enforcement override: active risk signals always cap multiplier at 0.70x (ENFORCEMENT_CAP)
+- Feed ranking formula: rank_score = (recency*50 + trust*2 + reactions*3) * author_multiplier
+  - recency decays linearly from 1.0 to 0.0 over 168 hours (7 days)
+  - Feed sorted by rank_score descending (no longer pure chronological)
+- Batch author multiplier computation via _get_author_multipliers() using position_snapshots + risk_signals
+- rank_score and visibility_weight added to every action in feed response
+- consequence_multiplier field added to position and orientation endpoint responses
+- Orientation messages updated to mention consequences:
+  - At Risk: "your actions have reduced visibility"
+  - Decaying: "your actions are losing visibility"
+  - Rising: "your actions are getting boosted"
+- Files: utils/status_calculator.py (multipliers), actions.py (ranking), trust_integrity.py (responses+messaging)
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
