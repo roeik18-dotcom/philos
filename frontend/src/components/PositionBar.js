@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, Globe } from 'lucide-react';
+import { User, Globe, TrendingUp, ArrowRight, TrendingDown, AlertTriangle } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -8,6 +8,13 @@ const FACTOR_COLORS = {
   reactors: '#7c3aed',
   trust: '#f59e0b',
   referrals: '#10b981',
+};
+
+const STATUS_ICONS = {
+  up: TrendingUp,
+  right: ArrowRight,
+  down: TrendingDown,
+  warning: AlertTriangle,
 };
 
 export default function PositionBar({ userId }) {
@@ -27,6 +34,8 @@ export default function PositionBar({ userId }) {
   if (!data) return null;
 
   const pct = Math.round(data.position * 100);
+  const status = data.status || {};
+  const StatusIcon = STATUS_ICONS[status.icon] || ArrowRight;
 
   return (
     <div className="position-bar-wrap" data-testid="position-bar">
@@ -49,19 +58,31 @@ export default function PositionBar({ userId }) {
         </div>
       </div>
 
-      <div className="position-bar-factors" data-testid="position-factors">
-        {Object.entries(data.factors).map(([key, val]) => (
-          val > 0 && (
-            <span
-              key={key}
-              className="position-factor"
-              style={{ '--factor-color': FACTOR_COLORS[key] }}
-              data-testid={`position-factor-${key}`}
-            >
-              {key}
-            </span>
-          )
-        ))}
+      <div className="position-bar-bottom">
+        {status.label && (
+          <span
+            className="position-status-badge"
+            style={{ '--status-color': status.color || '#f59e0b' }}
+            data-testid="position-status-badge"
+          >
+            <StatusIcon className="w-3 h-3" />
+            {status.label}
+          </span>
+        )}
+        <div className="position-bar-factors" data-testid="position-factors">
+          {Object.entries(data.factors).map(([key, val]) => (
+            val > 0 && (
+              <span
+                key={key}
+                className="position-factor"
+                style={{ '--factor-color': FACTOR_COLORS[key] }}
+                data-testid={`position-factor-${key}`}
+              >
+                {key}
+              </span>
+            )
+          ))}
+        </div>
       </div>
     </div>
   );

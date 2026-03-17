@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Compass, ArrowRight, Send, Share2, Heart, ShieldCheck } from 'lucide-react';
+import { Compass, ArrowRight, Send, Share2, Heart, ShieldCheck, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -10,6 +10,13 @@ const ACTION_ICONS = {
   react: Heart,
   share: Share2,
   verify: ShieldCheck,
+};
+
+const STATUS_ICONS = {
+  up: TrendingUp,
+  right: ArrowRight,
+  down: TrendingDown,
+  warning: AlertTriangle,
 };
 
 export default function OrientationCard({ userId, onNavigate }) {
@@ -31,6 +38,9 @@ export default function OrientationCard({ userId, onNavigate }) {
   const ctaTarget = data.action_type === 'post' || data.action_type === 'visibility' || data.action_type === 're_engage'
     ? 'post' : 'feed';
 
+  const status = data.status || {};
+  const StatusIcon = STATUS_ICONS[status.icon] || null;
+
   return (
     <div className="orientation-card" data-testid="orientation-card">
       <div className="orientation-icon">
@@ -38,6 +48,16 @@ export default function OrientationCard({ userId, onNavigate }) {
       </div>
       <div className="orientation-body">
         <p className="orientation-msg" data-testid="orientation-msg">{data.message}</p>
+        {status.label && (
+          <span
+            className="orientation-status-tag"
+            style={{ '--status-color': status.color || '#f59e0b' }}
+            data-testid="orientation-status-tag"
+          >
+            {StatusIcon && <StatusIcon className="w-3 h-3" />}
+            {status.label}
+          </span>
+        )}
       </div>
       <button
         className="orientation-cta"

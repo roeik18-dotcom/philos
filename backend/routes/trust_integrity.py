@@ -6,6 +6,7 @@ from bson import ObjectId
 import os
 import logging
 from auth_utils import get_current_user
+from utils.status_calculator import calculate_status
 
 router = APIRouter()
 logger = logging.getLogger("trust_integrity")
@@ -518,6 +519,37 @@ async def get_user_position(user_id: str):
     )
 
     if public_count == 0:
+        # Still compute status for zero-position users
+        now_zero = datetime.now(timezone.utc)
+        last_a = db.impact_actions.find_one(
+            {"user_id": user_id}, sort=[("created_at", -1)],
+            projection={"_id": 0, "created_at": 1},
+        )
+        days_zero = 999
+        if last_a:
+            try:
+                days_zero = max(0, (now_zero - datetime.fromisoformat(last_a["created_at"])).days)
+            except Exception:
+                pass
+        recent_zero = db.impact_actions.count_documents({
+            "user_id": user_id,
+            "created_at": {"$gte": (now_zero - timedelta(days=3)).isoformat()},
+        })
+        has_risk_zero = db.risk_signals.count_documents(
+            {"subject_user_id": user_id, "status": "active"}
+        ) > 0
+        prev_zero = db.position_snapshots.find_one(
+            {"user_id": user_id}, sort=[("created_at", -1)],
+            projection={"_id": 0, "position": 1, "trust": 1},
+        )
+        status_zero = calculate_status(
+            current_position=0.0, current_trust=0.0,
+            prev_position=prev_zero["position"] if prev_zero else None,
+            prev_trust=prev_zero["trust"] if prev_zero else None,
+            recent_action_count=recent_zero,
+            days_since_last_action=days_zero,
+            has_active_risk_signals=has_risk_zero,
+        )
         return {
             "success": True,
             "position": 0.0,
@@ -528,6 +560,7 @@ async def get_user_position(user_id: str):
             "total_trust": 0.0,
             "active_referrals": 0,
             "factors": {"actions": 0, "reactors": 0, "trust": 0, "referrals": 0},
+            "status": status_zero,
         }
 
     # Factor 1: Public actions (max 0.35)
@@ -572,6 +605,69 @@ async def get_user_position(user_id: str):
     else:
         label = "Network"
 
+    # ── Status calculation (movement-based) ──
+    now = datetime.now(timezone.utc)
+    three_days_ago = (now - timedelta(days=3)).isoformat()
+
+    # Recent activity count (last 3 days)
+    recent_action_count = 0
+    for a in public_actions:
+        if a.get("created_at", "") >= three_days_ago:
+            recent_action_count += 1
+    # Also count private actions in recent window
+    recent_action_count += db.impact_actions.count_documents({
+        "user_id": user_id, "visibility": "private",
+        "created_at": {"$gte": three_days_ago},
+    })
+
+    # Days since last action
+    last_action = db.impact_actions.find_one(
+        {"user_id": user_id}, sort=[("created_at", -1)],
+        projection={"_id": 0, "created_at": 1},
+    )
+    days_since_last = 999
+    if last_action:
+        try:
+            last_dt = datetime.fromisoformat(last_action["created_at"])
+            days_since_last = max(0, (now - last_dt).days)
+        except Exception:
+            pass
+
+    # Active risk signals
+    has_risk = db.risk_signals.count_documents(
+        {"subject_user_id": user_id, "status": "active"}
+    ) > 0
+
+    # Previous snapshot
+    prev_snap = db.position_snapshots.find_one(
+        {"user_id": user_id}, sort=[("created_at", -1)],
+        projection={"_id": 0, "position": 1, "trust": 1},
+    )
+
+    status_result = calculate_status(
+        current_position=position,
+        current_trust=round(total_trust, 1),
+        prev_position=prev_snap["position"] if prev_snap else None,
+        prev_trust=prev_snap["trust"] if prev_snap else None,
+        recent_action_count=recent_action_count,
+        days_since_last_action=days_since_last,
+        has_active_risk_signals=has_risk,
+    )
+
+    # Save snapshot (one per user per day)
+    today_str = now.strftime("%Y-%m-%d")
+    db.position_snapshots.update_one(
+        {"user_id": user_id, "date": today_str},
+        {"$set": {
+            "user_id": user_id,
+            "date": today_str,
+            "position": position,
+            "trust": round(total_trust, 1),
+            "created_at": now.isoformat(),
+        }},
+        upsert=True,
+    )
+
     return {
         "success": True,
         "position": position,
@@ -587,6 +683,7 @@ async def get_user_position(user_id: str):
             "trust": round(trust_factor, 3),
             "referrals": round(referrals_factor, 3),
         },
+        "status": status_result,
     }
 
 
@@ -667,12 +764,50 @@ async def get_daily_orientation(user_id: str):
     except Exception:
         pass
 
+    # ── Compute status for orientation context ──
+    now_ori = datetime.now(timezone.utc)
+    three_days_ago_ori = (now_ori - timedelta(days=3)).isoformat()
+    recent_ori_count = db.impact_actions.count_documents({
+        "user_id": user_id,
+        "created_at": {"$gte": three_days_ago_ori},
+    })
+    has_risk_ori = db.risk_signals.count_documents(
+        {"subject_user_id": user_id, "status": "active"}
+    ) > 0
+    prev_snap_ori = db.position_snapshots.find_one(
+        {"user_id": user_id}, sort=[("created_at", -1)],
+        projection={"_id": 0, "position": 1, "trust": 1},
+    )
+    ori_trust = 0.0
+    try:
+        ori_trust = total_trust
+    except Exception:
+        pass
+    status_ori = calculate_status(
+        current_position=position,
+        current_trust=round(ori_trust, 1),
+        prev_position=prev_snap_ori["position"] if prev_snap_ori else None,
+        prev_trust=prev_snap_ori["trust"] if prev_snap_ori else None,
+        recent_action_count=recent_ori_count,
+        days_since_last_action=days_inactive,
+        has_active_risk_signals=has_risk_ori,
+    )
+
     # ── Decision rules (first match wins) ──
     msg = ""
     action_type = ""
     cta = ""
+    status_key = status_ori["status"]
 
-    if total_actions == 0:
+    # Status-aware overrides for At Risk and Decaying
+    if status_key == "atRisk" and total_actions > 0:
+        if has_risk_ori:
+            msg = "Your account has active risk signals — focus on authentic contributions to recover."
+        else:
+            msg = f"You've been inactive for {days_inactive} days. Post one action to avoid further decay."
+        action_type = "post"
+        cta = "Post Action"
+    elif total_actions == 0:
         msg = "Post your first action to begin building trust."
         action_type = "post"
         cta = "Create Action"
@@ -680,9 +815,9 @@ async def get_daily_orientation(user_id: str):
         msg = "Your private layer is active — make one action visible to start building trust."
         action_type = "visibility"
         cta = "Post Public Action"
-    elif days_inactive >= 7:
-        msg = f"You've been away {days_inactive} days — post one action to maintain your position."
-        action_type = "re_engage"
+    elif status_key == "decaying":
+        msg = "Your position is decaying — post an action to reverse the trend."
+        action_type = "post"
         cta = "Post Action"
     elif label == "Self":
         msg = "Publish one public action to move toward Emerging."
@@ -693,7 +828,8 @@ async def get_daily_orientation(user_id: str):
         action_type = "react"
         cta = "View Feed"
     elif label == "Emerging":
-        msg = "Keep posting public actions to move toward Contributing."
+        prefix = "You're rising — k" if status_key == "rising" else "K"
+        msg = f"{prefix}eep posting public actions to move toward Contributing."
         action_type = "post"
         cta = "Create Action"
     elif label == "Contributing" and active_referrals == 0:
@@ -731,4 +867,5 @@ async def get_daily_orientation(user_id: str):
             "unique_reactors": unique_reactors,
             "active_referrals": active_referrals,
         },
+        "status": status_ori,
     }
