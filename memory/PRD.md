@@ -214,6 +214,21 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - CTA navigates to post or feed based on action_type
 - Files: trust_integrity.py (orientation endpoint), OrientationCard.js, ActionFeed.js, ProductProfile.js, ProductApp.js, app.css
 
+### Position Status Layer — Movement-Based Trajectory (Complete - March 2026)
+- Status determined by MOVEMENT, not time alone: position_delta + trust_delta + recent_activity
+- 4 statuses with deterministic rules (first match wins):
+  1. At Risk: active risk signals OR 14+ days inactive with 0 activity
+  2. Rising: (position increased OR trust increased) AND recent activity (3d)
+  3. Decaying: inactive 7+ days OR negative position/trust change
+  4. Stable: active, no significant change (default)
+- Comparison via position_snapshots collection (one per user per day)
+- First snapshot approximated from current values
+- Backend: utils/status_calculator.py (pure function), integrated into GET /api/position/{user_id} and GET /api/orientation/{user_id}
+- Frontend: PositionBar.js shows status badge with icon + label; OrientationCard.js shows status tag
+- Orientation messages are status-aware (At Risk mentions risk signals, Decaying urges action)
+- Status metadata: icon (up/right/down/warning), label, color, reason
+- Files: utils/status_calculator.py, trust_integrity.py, PositionBar.js, OrientationCard.js, app.css
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
@@ -225,3 +240,4 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 
 ## Test Credentials
 - Email: `newuser@test.com` | Password: `password123`
+- Email: `trust_fragile@test.com` | Password: `password123`
