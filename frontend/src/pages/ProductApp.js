@@ -11,6 +11,8 @@ import CommunityFundsPage from './app/CommunityFundsPage';
 import LeaderboardPage from './app/LeaderboardPage';
 import WeeklyReportPage from './app/WeeklyReportPage';
 import AuthScreen from '../components/auth/AuthScreen';
+import StatusChangeNotifier from '../components/StatusChangeNotifier';
+import { Toaster } from 'sonner';
 import './app.css';
 
 const NAV_ITEMS = [
@@ -85,6 +87,20 @@ export default function ProductApp({ user, onLogout, onAuthSuccess }) {
 
   return (
     <div className="product-app" data-testid="product-app">
+      <Toaster
+        position="top-center"
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: 'rgba(15, 15, 20, 0.95)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'rgba(255,255,255,0.85)',
+            fontSize: '13px',
+            backdropFilter: 'blur(12px)',
+          },
+        }}
+      />
+      {user && <StatusChangeNotifier userId={user.id} />}
       {/* Top bar */}
       <header className="app-topbar" data-testid="app-topbar">
         <div className="app-topbar-inner">
