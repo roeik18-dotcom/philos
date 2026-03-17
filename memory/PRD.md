@@ -321,6 +321,16 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Goal: maximize first-time flow completion rate
 - Files: ActionFlow.js, app.css
 
+### Backend Wake System — Invisible Cold Start Handling (Complete - March 2026)
+- Silent backend wake: /api/health endpoint pinged every 2.5s on app load
+- Minimal branded loading state: just "Philos" text with subtle pulse — no spinners, no technical messages
+- Auth check gated by isReady signal (runs only after backend responds)
+- Action queue: enqueue() stores lambdas that execute when backend is ready
+- ActionFlow handlePost uses enqueue fallback for pre-ready submissions
+- Retry logic: AbortController with 4s timeout, silent retry every 2.5s
+- User never sees backend state — system feels instantly responsive
+- Files: server.py (health endpoint), useBackendReady.js (new hook), App.js (provider + wake screen), ActionFlow.js (enqueue), App.css (wake styles)
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
