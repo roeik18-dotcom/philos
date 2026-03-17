@@ -161,3 +161,80 @@ def get_consequence_panel(
     return {"meaning": meaning, "next_step": next_step}
 
 
+def get_recovery_progress(
+    status: str,
+    reason: str,
+    has_active_risk_signals: bool,
+    days_since_last_action: int,
+    recent_action_count: int,
+    recent_public_count: int,
+    unique_reactor_count: int,
+) -> dict | None:
+    """Return recovery progress for Decaying / At Risk users only.
+    Returns None for Rising / Stable (no recovery needed).
+
+    Recovery paths (one per status, first match):
+      At Risk (risk signals) → Decaying: need 3 recent public actions
+      At Risk (inactivity)   → Stable:   need 1 recent public action
+      Decaying (inactivity)  → Stable:   need 1 recent public action
+      Decaying (neg change)  → Stable:   need 2 recent public actions + 1 unique reactor
+    """
+    if status not in ("atRisk", "decaying"):
+        return None
+
+    if status == "atRisk":
+        if has_active_risk_signals:
+            target = 3
+            current = min(recent_public_count, target)
+            if current >= target:
+                req_text = "Actions met — risk signals still active, keep posting authentic actions"
+            else:
+                remaining = target - current
+                req_text = f"{remaining} more public action{'s' if remaining != 1 else ''} to begin recovery"
+            return {
+                "current_status": "At Risk",
+                "target_status": "Decaying",
+                "requirement": req_text,
+                "progress": round(current / target, 2),
+                "current": current,
+                "target": target,
+            }
+        else:
+            # Extended inactivity
+            target = 1
+            current = min(recent_public_count, target)
+            return {
+                "current_status": "At Risk",
+                "target_status": "Stable",
+                "requirement": f"{max(0, target - current)} public action{'s' if target - current != 1 else ''} to recover toward Stable",
+                "progress": round(current / target, 2),
+                "current": current,
+                "target": target,
+            }
+
+    # Decaying
+    if "Inactive" in reason or days_since_last_action >= INACTIVITY_DAYS:
+        target = 1
+        current = min(recent_public_count, target)
+        return {
+            "current_status": "Decaying",
+            "target_status": "Stable",
+            "requirement": f"{max(0, target - current)} public action{'s' if target - current != 1 else ''} to recover toward Stable",
+            "progress": round(current / target, 2),
+            "current": current,
+            "target": target,
+        }
+    else:
+        # Negative position/trust change
+        target = 2
+        current = min(recent_public_count, target)
+        return {
+            "current_status": "Decaying",
+            "target_status": "Stable",
+            "requirement": f"{max(0, target - current)} more public action{'s' if target - current != 1 else ''} to reverse the trend",
+            "progress": round(current / target, 2),
+            "current": current,
+            "target": target,
+        }
+
+

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, ArrowRight, TrendingDown, AlertTriangle, Eye } from 'lucide-react';
+import { TrendingUp, ArrowRight, TrendingDown, AlertTriangle, Eye, Target } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -25,7 +25,7 @@ export default function ConsequencePanel({ userId }) {
 
   if (!data || !data.consequence_panel) return null;
 
-  const { status, consequence_multiplier, consequence_panel } = data;
+  const { status, consequence_multiplier, consequence_panel, recovery_progress } = data;
   const StatusIcon = STATUS_ICONS[status?.icon] || ArrowRight;
   const mult = consequence_multiplier ?? 1.0;
   const isReduced = mult < 1.0;
@@ -64,6 +64,30 @@ export default function ConsequencePanel({ userId }) {
         <p className="consequence-next-step" data-testid="consequence-next-step">
           {consequence_panel.next_step}
         </p>
+
+        {recovery_progress && (
+          <div className="recovery-indicator" data-testid="recovery-indicator">
+            <div className="recovery-header">
+              <Target className="w-3.5 h-3.5" />
+              <span className="recovery-target-label" data-testid="recovery-target-label">
+                Recovery: {recovery_progress.current_status} &rarr; {recovery_progress.target_status}
+              </span>
+              <span className="recovery-pct" data-testid="recovery-pct">
+                {Math.round(recovery_progress.progress * 100)}%
+              </span>
+            </div>
+            <div className="recovery-bar-track" data-testid="recovery-bar-track">
+              <div
+                className="recovery-bar-fill"
+                style={{ width: `${Math.round(recovery_progress.progress * 100)}%` }}
+                data-testid="recovery-bar-fill"
+              />
+            </div>
+            <p className="recovery-requirement" data-testid="recovery-requirement">
+              {recovery_progress.requirement}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

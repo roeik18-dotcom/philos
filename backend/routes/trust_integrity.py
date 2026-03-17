@@ -6,7 +6,7 @@ from bson import ObjectId
 import os
 import logging
 from auth_utils import get_current_user
-from utils.status_calculator import calculate_status, get_consequence_multiplier, get_consequence_panel
+from utils.status_calculator import calculate_status, get_consequence_multiplier, get_consequence_panel, get_recovery_progress
 
 router = APIRouter()
 logger = logging.getLogger("trust_integrity")
@@ -555,6 +555,15 @@ async def get_user_position(user_id: str):
             get_consequence_multiplier(status_zero["status"], has_risk_zero),
             has_risk_zero, days_zero, recent_zero,
         )
+        recovery_zero = get_recovery_progress(
+            status=status_zero["status"],
+            reason=status_zero["reason"],
+            has_active_risk_signals=has_risk_zero,
+            days_since_last_action=days_zero,
+            recent_action_count=recent_zero,
+            recent_public_count=0,
+            unique_reactor_count=0,
+        )
         return {
             "success": True,
             "position": 0.0,
@@ -568,6 +577,7 @@ async def get_user_position(user_id: str):
             "status": status_zero,
             "consequence_multiplier": get_consequence_multiplier(status_zero["status"], has_risk_zero),
             "consequence_panel": panel_zero,
+            "recovery_progress": recovery_zero,
         }
 
     # Factor 1: Public actions (max 0.35)
@@ -681,6 +691,22 @@ async def get_user_position(user_id: str):
         has_risk, days_since_last, recent_action_count,
     )
 
+    # Recent public action count (for recovery progress)
+    recent_public_count = 0
+    for a in public_actions:
+        if a.get("created_at", "") >= three_days_ago:
+            recent_public_count += 1
+
+    recovery = get_recovery_progress(
+        status=status_result["status"],
+        reason=status_result["reason"],
+        has_active_risk_signals=has_risk,
+        days_since_last_action=days_since_last,
+        recent_action_count=recent_action_count,
+        recent_public_count=recent_public_count,
+        unique_reactor_count=reactor_count,
+    )
+
     return {
         "success": True,
         "position": position,
@@ -699,6 +725,7 @@ async def get_user_position(user_id: str):
         "status": status_result,
         "consequence_multiplier": multiplier,
         "consequence_panel": panel,
+        "recovery_progress": recovery,
     }
 
 
