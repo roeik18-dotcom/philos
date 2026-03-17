@@ -249,6 +249,21 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
   - Rising: "your actions are getting boosted"
 - Files: utils/status_calculator.py (multipliers), actions.py (ranking), trust_integrity.py (responses+messaging)
 
+### Consequence Transparency Panel (Complete - March 2026)
+- Minimal panel on profile page: status, multiplier, meaning, next step
+- Backend: get_consequence_panel() in status_calculator.py returns {meaning, next_step}
+- Panel data included in GET /api/position/{user_id} as consequence_panel field
+- Next-step rules by status:
+  - At Risk + risk signals: "Post authentic public actions to begin resolving risk signals"
+  - At Risk + inactivity: "Post 1 public action to start recovering toward Decaying"
+  - Decaying + inactive: "Post 1 public action to recover toward Stable"
+  - Decaying + negative change: "Continue posting to stabilize your position"
+  - Stable: "Post 1 more public action to move toward Rising"
+  - Rising: "Keep it up — maintain activity to keep your boost"
+- Frontend: ConsequencePanel.js component, placed on ProductProfile.js
+- Visual: header "Action Visibility", status pill, multiplier (red/green/neutral), meaning, cyan next-step
+- Files: status_calculator.py, trust_integrity.py, ConsequencePanel.js, ProductProfile.js, app.css
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
