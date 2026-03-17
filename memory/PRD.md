@@ -173,6 +173,18 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Trust engine card shows referral bonus in meta section
 - Files: auth.py (enriched referrals), trust_integrity.py (referral bonus), ProductProfile.js (referral section), app.css
 
+### Action Flow & Visibility System (Complete - March 2026)
+- 3-step post wizard: Create → Visibility → Publish with step indicators
+- Step 1 (Create): title, description, category, community, location with geolocation detect
+- Step 2 (Visibility): Public (reactions→trust→profile flow) or Private (personal record)
+- Step 3 (Review): preview with visibility badge, trust flow steps 4-5-6 for public
+- Post success: "Action Published" with outcome indicators (Reactions→Trust Score→Profile)
+- Feed: visibility tabs (All/Public/My Private), visibility badges on cards
+- Backend: visibility field on actions, feed filtered by visibility + viewer_id
+- Private actions only visible to owner, no reactions, no trust impact
+- Trust outcome indicator on feed cards (score → profile arrow)
+- Files: PostAction.js (rewrite), ActionFeed.js (tabs/badges), actions.py (visibility), app.css
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work

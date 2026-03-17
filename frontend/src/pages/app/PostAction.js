@@ -78,7 +78,7 @@ export default function PostAction({ user, onPosted }) {
       if (data.success) {
         setPosted(true);
       } else {
-        setError(data.detail || 'Failed to post action.');
+        setError(data.detail || data.message || 'Failed to post action.');
       }
     } catch (err) {
       setError('Network error. Try again.');
