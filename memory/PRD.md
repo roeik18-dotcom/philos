@@ -185,6 +185,16 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - Trust outcome indicator on feed cards (score → profile arrow)
 - Files: PostAction.js (rewrite), ActionFeed.js (tabs/badges), actions.py (visibility), app.css
 
+### Position Bar — Self ↔ Network Spectrum (Complete - March 2026)
+- Persistent position bar across feed, profile, and post pages
+- GET /api/position/{user_id}: calculates 0.0 (Self) to 1.0 (Network) score
+- 4 factors: public actions (max 0.35), unique reactors (max 0.25), trust (max 0.25), active referrals (max 0.15)
+- Private actions do NOT affect position — only public engagement counts
+- Labels: Self → Emerging → Contributing → Connected → Network
+- Visual: gradient fill bar, glowing cyan marker, factor tag pills
+- PositionBar.js shared component with AbortController, conditional rendering for logged-in users
+- Files: trust_integrity.py (position endpoint), PositionBar.js, ActionFeed.js, ProductProfile.js, PostAction.js, app.css
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
