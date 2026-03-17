@@ -293,6 +293,23 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - StatusChangeNotifier is a renderless component (returns null)
 - Files: StatusChangeNotifier.js, ProductApp.js
 
+### Action Flow — Behavioral Engine (Complete - March 2026)
+- Replaced bottom tab navigation with a 6-step dynamic action flow: Need → Choice → Action → Reaction → Result → Reward
+- Each step is interactive with real user data:
+  1. Need: position/status/trust + orientation suggestion (from /api/position + /api/orientation)
+  2. Choice: public vs private action selection
+  3. Action: simplified post form (title, description, category) → POST /api/actions/post
+  4. Reaction: live engagement data (reactions, trust signal, visibility weight)
+  5. Result: position delta, trust delta, status change (baseline vs fresh fetch)
+  6. Reward: consequence multiplier + meaning + next step
+- Animated transitions between steps (slide forward/backward)
+- Step indicator bar at bottom (replaces bottom nav when flow is active)
+- Back navigation on pre-submit steps only (steps 0-2)
+- Flow resets on completion (Done button)
+- Bottom tab bar hidden during flow (flow has its own step bar)
+- 'Post' nav replaced with 'Flow' (Zap icon) in NAV_ITEMS
+- Files: ActionFlow.js (new), ProductApp.js (updated), app.css (flow styles)
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
