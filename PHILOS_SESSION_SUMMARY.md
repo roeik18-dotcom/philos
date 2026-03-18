@@ -141,7 +141,7 @@ Fail: "ניצול: רווח אישי גבוה מדי ביחס לקולקטיבי
 
 ### Frontend
 - **Running**: Yes (port 3000)
-- **URL**: https://philos-english.preview.emergentagent.com
+- **URL**: https://philos-status.preview.emergentagent.com
 - **Status**: LIVE but showing old code (needs restart)
 
 ### Backend  

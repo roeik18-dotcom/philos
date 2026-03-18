@@ -674,7 +674,7 @@ User Input → evaluateAction() → setHistory() → saveDecision() → MongoDB
 
 ## Preview URL
 
-https://philos-english.preview.emergentagent.com
+https://philos-status.preview.emergentagent.com
 
 ---
 

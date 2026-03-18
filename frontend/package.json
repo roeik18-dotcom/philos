@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "homepage": "/",
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-accordion": "^1.2.8",
@@ -41,6 +42,7 @@
     "embla-carousel-react": "^8.6.0",
     "html-to-image": "^1.11.13",
     "input-otp": "^1.4.2",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.507.0",
     "next-themes": "^0.4.6",
     "react": "18.2.0",
@@ -48,6 +50,7 @@
     "react-dom": "18.2.0",
     "react-globe.gl": "^2.37.0",
     "react-hook-form": "^7.56.2",
+    "react-leaflet": "^5.0.0",
     "react-resizable-panels": "^3.0.1",
     "react-router-dom": "6.22.3",
     "react-scripts": "5.0.1",
@@ -89,7 +92,15 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17"
   },
+<<<<<<< HEAD
   "engines": {
     "node": "18.x"
   }
 }
+=======
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "engines": {
+    "node": "24.x"
+  }
+}
+>>>>>>> 0aa79b6d393a0911b56afb2b97c1e8f10142764d

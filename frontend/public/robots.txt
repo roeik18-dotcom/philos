@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://philos-status.preview.emergentagent.com/sitemap.xml

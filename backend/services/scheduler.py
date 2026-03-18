@@ -181,8 +181,44 @@ def start_scheduler():
         replace_existing=True,
         misfire_grace_time=3600,
     )
+    # Trust integrity decay — runs daily at 4:00 UTC
+    scheduler.add_job(
+        _run_trust_integrity_decay,
+        trigger=CronTrigger(hour=4, minute=0),
+        id="trust_integrity_decay",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+    # Risk signal scan — runs daily at 5:00 UTC
+    scheduler.add_job(
+        _run_risk_signal_scan,
+        trigger=CronTrigger(hour=5, minute=0),
+        id="risk_signal_scan",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
     scheduler.start()
-    logger.info("Decay scheduler started — next run at 03:00 UTC daily")
+    logger.info("Decay scheduler started — next run at 03:00 UTC daily, trust integrity at 04:00 UTC, risk signal scan at 05:00 UTC")
+
+
+async def _run_trust_integrity_decay():
+    """Run trust decay for inactive users (30+ days → 5% reduction)."""
+    try:
+        from routes.trust_integrity import run_trust_decay
+        count = run_trust_decay()
+        logger.info(f"Trust integrity decay: {count} users processed")
+    except Exception as e:
+        logger.error(f"Trust integrity decay failed: {e}")
+
+
+async def _run_risk_signal_scan():
+    """Run the full risk signal scanner. Idempotent — signals are upserted, not duplicated."""
+    try:
+        from routes.risk_signals import run_full_scan
+        results = run_full_scan()
+        logger.info(f"Risk signal scan complete: {results}")
+    except Exception as e:
+        logger.error(f"Risk signal scan failed: {e}")
 
 
 def stop_scheduler():

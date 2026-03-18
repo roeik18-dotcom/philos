@@ -45,6 +45,13 @@ from routes.trust import router as trust_router
 from routes.system import router as system_router
 from routes.analytics import router as analytics_router
 from routes.invites import router as invites_router
+from routes.actions import router as actions_router
+from routes.og_share import router as og_share_router
+from routes.opportunities import router as opportunities_router
+from routes.community import router as community_router
+from routes.leaderboard import router as leaderboard_router
+from routes.trust_integrity import router as trust_integrity_router
+from routes.risk_signals import router as risk_signals_router
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(philos_router, prefix="/api")
@@ -58,6 +65,13 @@ app.include_router(trust_router, prefix="/api")
 app.include_router(system_router, prefix="/api")
 app.include_router(analytics_router, prefix="/api")
 app.include_router(invites_router, prefix="/api")
+app.include_router(actions_router, prefix="/api")
+app.include_router(og_share_router, prefix="/api")
+app.include_router(opportunities_router, prefix="/api")
+app.include_router(community_router, prefix="/api")
+app.include_router(leaderboard_router, prefix="/api")
+app.include_router(trust_integrity_router, prefix="/api")
+app.include_router(risk_signals_router, prefix="/api")
 
 # Database shutdown
 from database import client
@@ -71,4 +85,15 @@ async def shutdown_db_client():
 
 @app.on_event("startup")
 async def start_background_tasks():
+<<<<<<< HEAD
     logger.info("Startup clean")
+=======
+    asyncio.create_task(_demo_event_loop())
+    start_scheduler()
+    logger.info("All background tasks started")
+
+
+@app.get("/api/health")
+async def health_check():
+    return {"ok": True}
+>>>>>>> 0aa79b6d393a0911b56afb2b97c1e8f10142764d

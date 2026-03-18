@@ -57,9 +57,15 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
 
     try {
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const refUser = localStorage.getItem('philos_ref_user') || '';
+      const refAction = localStorage.getItem('philos_ref_action') || '';
       const body = mode === 'login'
         ? { email, password }
-        : { email, password, ...(inviteCode ? { invite_code: inviteCode } : {}) };
+        : {
+            email, password,
+            ...(inviteCode ? { invite_code: inviteCode } : {}),
+            ...(refUser ? { referral_user_id: refUser, referral_action_id: refAction } : {}),
+          };
 
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
@@ -94,8 +100,10 @@ export default function AuthScreen({ onAuthSuccess, onSkip }) {
         }
         
         onAuthSuccess(data.user);
-        // Clear pending invite
+        // Clear pending invite and referral
         localStorage.removeItem('philos_pending_invite');
+        localStorage.removeItem('philos_ref_user');
+        localStorage.removeItem('philos_ref_action');
       } else {
         setError(data.message || 'An error occurred');
       }

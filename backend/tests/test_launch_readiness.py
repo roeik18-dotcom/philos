@@ -7,7 +7,7 @@ import requests
 import os
 import re
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://philos-english.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://philos-status.preview.emergentagent.com')
 
 # Hebrew character pattern (Unicode 0590-05FF)
 HEBREW_PATTERN = re.compile(r'[\u0590-\u05FF]')
