@@ -331,6 +331,15 @@ Build a comprehensive "Value + Risk + Trust" system for the "Philos Orientation"
 - User never sees backend state — system feels instantly responsive
 - Files: server.py (health endpoint), useBackendReady.js (new hook), App.js (provider + wake screen), ActionFlow.js (enqueue), App.css (wake styles)
 
+### Production 404 Fix (Complete - March 2026)
+- Added SPA fallback files: `_redirects` (Netlify/CDN), `vercel.json`, `static.json`
+- All route `/*` to `/index.html` with 200 status
+- Fixed JWT_SECRET_KEY: removed hardcoded fallback, now uses env var only
+- Added `homepage: "/"` to package.json for correct asset paths in production build
+- Verified: production build includes index.html + _redirects at root
+- All routes (/, /app, /app/feed, /app/flow, /trust-test) return 200
+- Files: _redirects, vercel.json, static.json, package.json, auth_utils.py, backend/.env
+
 ## Prioritized Backlog
 
 ### P2: Risk Signal Framework — Remaining Work
